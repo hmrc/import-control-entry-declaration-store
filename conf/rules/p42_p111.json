@@ -1,0 +1,12 @@
+{
+  "element": "/GOOITEGDS/IDEMEATRAGI970/IdeMeaTraGIMEATRA971",
+  "name": "p42_p111",
+  "asserts": [
+    {
+      "test": "!(number('../../../HEAHEA/TraModAtBorHEA76') == 1 || number('../../../HEAHEA/TraModAtBorHEA76') == 8) || applyRegex('.', '\\\\s*[0-9]{7,8}\\\\s*')",
+      "localErrorMessage": "IF [Transport mode at border] = '1' or '8' THEN [Identity of means of transport crossing border] consists either of the International Maritime Organisation (IMO) ship identification number or of the European Vessel Identification Number (ENI)",
+      "errorMessage": "If 'Transport Mode at Border' = '1' or '8' Then 'Identity of means of transport crossing border' consists either of the International Maritime organisation (IMO) ship identification number (format n7 – leading '0' allowed) OR of the European Vessel Identification Number (ENI) (format n8 – leading '0' allowed) (C514)",
+      "errorCode": "8114"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+# microservice specific routes
+
+POST        /                                                       uk.gov.hmrc.entrydeclarationstore.controllers.EntryDeclarationSubmissionController.postSubmission
+PUT         /:mrn                                                   uk.gov.hmrc.entrydeclarationstore.controllers.EntryDeclarationSubmissionController.putAmendment(mrn)
+
+# internal routes
+GET         /import-control/entry-summary-declaration/:id           uk.gov.hmrc.entrydeclarationstore.controllers.EntryDeclarationRetrievalController.getSubmission(id)
+
+GET         /import-control/amendment/acceptance-enrichment/:id     uk.gov.hmrc.entrydeclarationstore.controllers.EnrichmentController.getAcceptanceEnrichment(id)
+GET         /import-control/declaration/acceptance-enrichment/:id   uk.gov.hmrc.entrydeclarationstore.controllers.EnrichmentController.getAcceptanceEnrichment(id)
+GET         /import-control/amendment/rejection-enrichment/:id      uk.gov.hmrc.entrydeclarationstore.controllers.EnrichmentController.getAmendmentRejectionEnrichment(id)

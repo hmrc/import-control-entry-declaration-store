@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema attributeFormDefault="unqualified"
+    elementFormDefault="qualified" id="Error-Response"
+    targetNamespace="http://www.govtalk.gov.uk/CM/errorresponse"
+    version="2.0" xmlns:err="http://www.govtalk.gov.uk/CM/errorresponse"
+    xmlns:gt="http://www.govtalk.gov.uk/CM/core" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <xsd:annotation>
+        <xsd:documentation>This schema is used for errors returned by
+            business systems. In these circumstances, the header
+            contains a single Error element of type &quot;business&quot;
+            and the Body contains further information.</xsd:documentation>
+        <xsd:appinfo>
+            <gt:KeyWords>business, error, response</gt:KeyWords>
+        </xsd:appinfo>
+    </xsd:annotation>
+    <xsd:element name="ErrorResponse">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element minOccurs="0" ref="err:Application"/>
+                <xsd:element maxOccurs="unbounded" name="Error">
+                    <xsd:complexType>
+                        <xsd:sequence>
+                            <xsd:element name="RaisedBy" type="xsd:string"/>
+                            <xsd:element minOccurs="0" name="Number" type="xsd:integer"/>
+                            <xsd:element name="Type" type="xsd:string"/>
+                            <xsd:element maxOccurs="unbounded"
+                                minOccurs="0" name="Text" type="xsd:string"/>
+                            <xsd:element minOccurs="0" name="Location" type="xsd:string"/>
+                            <xsd:element minOccurs="0" ref="err:Application"/>
+                        </xsd:sequence>
+                    </xsd:complexType>
+                </xsd:element>
+            </xsd:sequence>
+            <xsd:attribute name="SchemaVersion" use="required"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="Application">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:any maxOccurs="unbounded" minOccurs="0"
+                    namespace="##any" processContents="lax"/>
+            </xsd:sequence>
+            <xsd:anyAttribute namespace="##any"/>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>

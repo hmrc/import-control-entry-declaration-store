@@ -1,0 +1,12 @@
+{
+  "element": "/PERLODSUMDEC/TINPLD1",
+  "name": "p62_p132",
+  "asserts": [
+    {
+      "test": "getValue('.').startsWith('GB')",
+      "localErrorMessage": "[TIN] must begin with 'GB'",
+      "errorMessage": "[TIN] must begin with 'GB'",
+      "errorCode": "8692"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "element": "/TRAREP/PosCodTRE1",
+  "name": "p54_p124",
+  "asserts": [
+    {
+      "test": "not(('.'))",
+      "localErrorMessage": "[Postal code] should not be present",
+      "errorMessage": "The 'Postcode' field of (Representative) Trader must not be present if the 'TIN' has been declared (C501)",
+      "errorCode": "8658"
+    }
+  ]
+}

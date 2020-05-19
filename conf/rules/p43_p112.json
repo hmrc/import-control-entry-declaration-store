@@ -1,0 +1,36 @@
+{
+  "element": "/GOOITEGDS/PACGS2",
+  "name": "p43_p112",
+  "asserts": [
+    {
+      "test": "!((trim('KinOfPacGS23') == 'VQ' || trim('KinOfPacGS23') == 'VG' || trim('KinOfPacGS23') == 'VL' || trim('KinOfPacGS23') == 'VY' || trim('KinOfPacGS23') == 'VR' || trim('KinOfPacGS23') == 'VS' || trim('KinOfPacGS23') == 'VO')) || (not('NumOfPacGS24') && not('NumOfPieGS25'))",
+      "localErrorMessage": "IF ‘Kind of packages’ (Box 31) indicates ‘BULK’ (UNECE rec 21 : ‘VQ’, ‘VG’, ‘VL’, ‘VY’, ‘VR’, ‘VS’ or ‘VO’) THEN ‘Number of packages’ (box 31) can not be used, ‘Number of Pieces’ (box 31) can not be used.",
+      "errorMessage": "The fields 'Number of Packages (box 31)' and 'Number of Pieces (box31)' cannot be used if 'Kind of Packages (box31)' indicates 'BULK' (UNECE rec 21 : 'VQ', 'VG', 'VL', 'VY', 'VR', 'VS' or 'VO') (C062)",
+      "errorCode": "8149"
+    },
+    {
+      "test": "!((trim('KinOfPacGS23') == 'NE' || trim('KinOfPacGS23') == 'NF' || trim('KinOfPacGS23') == 'NG')) || ( not('NumOfPacGS24') && exists('NumOfPieGS25'))",
+      "localErrorMessage": "IF ‘Kind of packages’ (Box 31) indicates ‘UNPACKED’ (UNECE rec 21 : = ‘NE’, 'NF' or 'NG') THEN ‘Number of packages’ can not be used, ‘Number of Pieces’ (box 31) = ‘R’",
+      "errorMessage": "The field 'Number of Pieces (box 31)' is required but 'Number of packages' can not be used if 'Kind of packages (box 31)' indicates 'UNPACKED' (UNECE rec 21 : = 'NE', 'NF' or 'NG') (C062)",
+      "errorCode": "8150"
+    },
+    {
+      "test": "(trim('KinOfPacGS23') == 'VQ' || trim('KinOfPacGS23') == 'VG' || trim('KinOfPacGS23') == 'VL' || trim('KinOfPacGS23') == 'VY' || trim('KinOfPacGS23') == 'VR' || trim('KinOfPacGS23') == 'VS' || trim('KinOfPacGS23') == 'VO') || (trim('KinOfPacGS23') == 'NE' || trim('KinOfPacGS23') == 'NF' || trim('KinOfPacGS23') == 'NG') || ( exists('NumOfPacGS24') && not('NumOfPieGS25'))",
+      "localErrorMessage": "IF 'Kind of packages' (Box 31) indicates neither 'BULK' nor 'UNPACKED' THEN ‘Number of packages’ (box 31) = ‘R’, ‘Number of Pieces’ (box 31) can not be used",
+      "errorMessage": "The field 'Number of packages (box31)' is required but 'number of pieces (box 31)' cannot be used if 'Kind of packages (box 31)' is neither 'BULK' (UNECE rec 21 : 'VQ', 'VG', 'VL', 'VY', 'VR', 'VS' or 'VO') nor 'UNPACKED' (UNECE rec 21 : = 'NE', 'NF' or 'NG') (C062)",
+      "errorCode": "8151"
+    },
+    {
+      "test": "(trim('KinOfPacGS23') == 'VQ' || trim('KinOfPacGS23') == 'VG' || trim('KinOfPacGS23') == 'VL' || trim('KinOfPacGS23') == 'VY' || trim('KinOfPacGS23') == 'VR' || trim('KinOfPacGS23') == 'VS' || trim('KinOfPacGS23') == 'VO') || (trim('KinOfPacGS23') == 'NE' || trim('KinOfPacGS23') == 'NF' || trim('KinOfPacGS23') == 'NG') || exists('../../HEAHEA/SpeCirIndHEA1') || exists('MarNumOfPacGSL21')",
+      "localErrorMessage": "IF 'Kind of packages' (Box 31) indicates neither 'BULK' nor 'UNPACKED' and the attribute 'Specific circumstance indicator' is not used THEN the attribute 'Marks &amp; numbers of Packages (Box 31)' = 'R' ELSE the attribute 'Marks &amp; numbers of Packages (Box 31)' = 'O'",
+      "errorMessage": "If the field 'Kind of packages (box 31)' is neither 'BULK' (UNECE rec 21 : 'VQ', 'VG', 'VL', 'VY', 'VR', 'VS' or 'VO') nor 'UNPACKED' (UNECE rec 21 : = 'NE', 'NF' or 'NG') and the attribute 'Specific circumstance indicator' is not used then 'Marks and numbers of packages (box 31)' is required (C062)",
+      "errorCode": "8152"
+    },
+    {
+      "test": "number('NumOfPacGS24') != 0 || exists('../../GOOITEGDS/PACGS2', {ContextHelper current, ContextHelper local ->  local.intOrElse('NumOfPacGS24', 0) > 0 && local.exists('MarNumOfPacGSL21') && current.exists('MarNumOfPacGSL21') && current.trim('MarNumOfPacGSL21') == local.trim('MarNumOfPacGSL21')})",
+      "localErrorMessage": "In case the value of a MESSAGE.GOODS ITEM.PACKAGES.Number of Packages is ‘0’ then there should exist at least one GOODS ITEM with the same 'Marks and Numbers of Packages', and 'Number of Packages' with value greater than ‘0’",
+      "errorMessage": "If MESSAGE.GOODS.ITEM.PACKAGES 'Number of Packages' is '0' then there should exist at least one GOODS ITEM with the same 'Marks and Numbers of Packages' and 'Number of Packages' with value greater than '0' (TR0022)",
+      "errorCode": "8153"
+    }
+  ]
+}

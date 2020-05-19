@@ -1,0 +1,12 @@
+{
+  "element": "/GOOITEGDS/PACGS2/NumOfPieGS25",
+  "name": "p45_p114",
+  "asserts": [
+    {
+      "test": "trim('.').take(1) != '0' || trim('.').length() <= 1",
+      "localErrorMessage": "[Number of pieces] should not have leading zeros",
+      "errorMessage": "The 'Number of Pieces' field within 'Packages' must not contain leading zeros.",
+      "errorCode": "8681"
+    }
+  ]
+}

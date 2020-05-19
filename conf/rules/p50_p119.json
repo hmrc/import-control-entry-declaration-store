@@ -1,0 +1,12 @@
+{
+  "element": "/GOOITEGDS/PRTNOT640/CtyPRTNOT643",
+  "name": "p50_p119",
+  "asserts": [
+    {
+      "test": "not('../TINPRTNOT641') || !(getValue('../TINPRTNOT641').startsWith('GB'))",
+      "localErrorMessage": "[City] should not be present if GB [TIN] is present",
+      "errorMessage": "The field 'City' within Goods Item.Notify Party must not be present if the GB 'TIN' has been declared (C501)",
+      "errorCode": "8654"
+    }
+  ]
+}

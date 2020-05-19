@@ -1,0 +1,36 @@
+{
+  "element": "/TRACARENT601",
+  "name": "p63_p133_non_GB_Eori_CR",
+  "asserts": [
+    {
+      "test": "not('TINTRACARENT602') || getValue('TINTRACARENT602').startsWith('GB') || exists('NamTRACARENT604')",
+      "localErrorMessage": "[Name] should be present for a non-GB [TIN]",
+      "errorMessage": "The field 'Name' within Trader at Entry (Carrier) is required if a non-GB TIN has been declared (C501)",
+      "errorCode": "8259"
+    },
+    {
+      "test": "not('TINTRACARENT602') || getValue('TINTRACARENT602').startsWith('GB') || exists('StrNumTRACARENT607')",
+      "localErrorMessage": "[Street and number] should be present for a non-GB [TIN]",
+      "errorMessage": "The field 'Street and Number' within Trader at Entry (Carrier) is required if a non-GB TIN has been declared (C501)",
+      "errorCode": "8260"
+    },
+    {
+      "test": "not('TINTRACARENT602') || getValue('TINTRACARENT602').startsWith('GB') || exists('PstCodTRACARENT606')",
+      "localErrorMessage": "[Postal code] should be present for a non-GB [TIN]",
+      "errorMessage": "The field 'Postcode' within Trader at Entry (Carrier) is required if a non-GB TIN has been declared (C501)",
+      "errorCode": "8261"
+    },
+    {
+      "test": "not('TINTRACARENT602') || getValue('TINTRACARENT602').startsWith('GB') || exists('CtyTRACARENT603')",
+      "localErrorMessage": "[City] should be present for a non-GB [TIN]",
+      "errorMessage": "The field 'City' within Trader at Entry (Carrier) is required if a non-GB TIN has been declared (C501)",
+      "errorCode": "8262"
+    },
+    {
+      "test": "not('TINTRACARENT602') || getValue('TINTRACARENT602').startsWith('GB') || exists('CouCodTRACARENT605')",
+      "localErrorMessage": "[Country code] should be present for a non-GB [TIN]",
+      "errorMessage": "The field 'Country Code' within Trader at Entry (Carrier) is required if a non-GB TIN has been declared (C501)",
+      "errorCode": "8263"
+    }
+  ]
+}

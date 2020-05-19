@@ -1,0 +1,36 @@
+{
+  "element": "/GOOITEGDS/TRACONCE2",
+  "name": "p35_p104_non_GB_Eori_CR",
+  "asserts": [
+    {
+      "test": "not('TINCE259') || getValue('TINCE259').startsWith('GB') || exists('NamCE27')",
+      "localErrorMessage": "[Name] should be present for a non-GB [TIN]",
+      "errorMessage": "The field 'Name (box 8)' within Goods Item.Trader Consignee is required if a non-GB TIN has been declared (C501)",
+      "errorCode": "8242"
+    },
+    {
+      "test": "not('TINCE259') || getValue('TINCE259').startsWith('GB') || exists('StrAndNumCE222')",
+      "localErrorMessage": "[Street and number] should be present for a non-GB [TIN]",
+      "errorMessage": "The field 'Street and Number (box 8)' within Goods Item.Trader Consignee is required if a non-GB TIN has been declared (C501)",
+      "errorCode": "8243"
+    },
+    {
+      "test": "not('TINCE259') || getValue('TINCE259').startsWith('GB') || exists('PosCodCE223')",
+      "localErrorMessage": "[Postal code] should be present for a non-GB [TIN]",
+      "errorMessage": "The field 'Postcode (box 8)' within Goods Item.Trader Consignee is required if a non-GB TIN has been declared (C501)",
+      "errorCode": "8244"
+    },
+    {
+      "test": "not('TINCE259') || getValue('TINCE259').startsWith('GB') || exists('CitCE224')",
+      "localErrorMessage": "[City] should be present for a non-GB [TIN]",
+      "errorMessage": "The field 'City (box 8)' within Goods Item.Trader Consignee is required if a non-GB TIN has been declared (C501)",
+      "errorCode": "8245"
+    },
+    {
+      "test": "not('TINCE259') || getValue('TINCE259').startsWith('GB') || exists('CouCE225')",
+      "localErrorMessage": "[Country code] should be present for a non-GB [TIN]",
+      "errorMessage": "The field 'Country (box 8)' within Goods Item.Trader Consignee is required if a non-GB TIN has been declared (C501)",
+      "errorCode": "8246"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://www.govtalk.gov.uk/enforcement/ICS/responsedata/7" xmlns:cm="http://www.govtalk.gov.uk/enforcement/ICS/commontypes/7" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" targetNamespace="http://www.govtalk.gov.uk/enforcement/ICS/responsedata/7" elementFormDefault="qualified" attributeFormDefault="unqualified" version="7.0">
+	<xs:import namespace="http://www.govtalk.gov.uk/enforcement/ICS/commontypes/7" schemaLocation="ICS_cm-v7-0.xsd"/>
+	<xs:element name="ICSResponseData">
+		<xs:annotation>
+			<xs:documentation>ICS specific response data; to be included within ResponseData element of the success response message, returned after a successful submission.</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="CorrelationId" type="cm:CorIdeMES25"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

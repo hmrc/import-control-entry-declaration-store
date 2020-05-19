@@ -1,0 +1,19 @@
+{
+  "parties": {
+    "declarant": {
+      "eori": "YZ^"
+    },
+    "representative": {
+      "eori": "YZ^"
+    }
+  },
+  "itinerary": {
+    "officeOfFirstEntry": {
+      "reference": "AB3C4D5E"
+    }
+  },
+  "amendment": {
+    "movementReferenceNumber": "00REFNUM1234567890",
+    "dateTime": "2003-02-11T12:34:00.000Z"
+  }
+}

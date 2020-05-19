@@ -1,0 +1,12 @@
+{
+  "element": "/TRACONCO1/NamCO17",
+  "name": "p6_p75",
+  "asserts": [
+    {
+      "test": "not('../TINCO159') || !(getValue('../TINCO159').startsWith('GB'))",
+      "localErrorMessage": "[Name] should not be present if GB [TIN] is present",
+      "errorMessage": "The field 'Name (box 2)' within  Import Operation.Trader Consignor must not be present if the GB 'TIN' has been declared (C501)",
+      "errorCode": "8626"
+    }
+  ]
+}

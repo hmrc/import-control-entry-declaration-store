@@ -1,0 +1,6 @@
+<ns:SuccessResponse xmlns:xd="http://www.w3.org/2000/09/xmldsig#" xmlns:ns="http://www.hmrc.gov.uk/successresponse/2"
+                    xmlns="http://www.govtalk.gov.uk/enforcement/ICS/responsedata/7">
+    <ns:ResponseData>
+        <CorrelationId>87491122139921</CorrelationId>
+    </ns:ResponseData>
+</ns:SuccessResponse>

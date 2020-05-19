@@ -1,0 +1,42 @@
+{
+  "element": "/",
+  "name": "p1_p70",
+  "asserts": [
+    {
+      "test": "not('GOOITEGDS/TRACONCO2') || (count('GOOITEGDS/TRACONCO2') >= 2 && (countDistinctChildCount('GOOITEGDS/TRACONCO2') > 1 || countDistinct('GOOITEGDS/TRACONCO2/NamCO27', true) > 1 || countDistinct('GOOITEGDS/TRACONCO2/StrAndNumCO222', true) > 1 || countDistinct('GOOITEGDS/TRACONCO2/PosCodCO223', true) > 1 || countDistinct('GOOITEGDS/TRACONCO2/CitCO224', true) > 1 || countDistinct('GOOITEGDS/TRACONCO2/CouCO225', true) > 1 || countDistinct('GOOITEGDS/TRACONCO2/NADLNGGTCO', true) > 1 || countDistinct('GOOITEGDS/TRACONCO2/TINCO259', false) > 1))",
+      "localErrorMessage": "If any instances of [(Consignor) Trader Type] are present, there must be at least two, and they must not all be the same.",
+      "errorMessage": "If the Trader Consignor field is used within the Goods Item section then there must be at least two declared and they must be different.",
+      "errorCode": "8193"
+    },
+    {
+      "test": "areIndices('GOOITEGDS/IteNumGDS7')",
+      "localErrorMessage": "Each [Item number] is unique throughout the declaration The items shall be numbered in a sequential fashion, starting from '1' for the first item and incrementing the numbering by '1' for each following item.",
+      "errorMessage": "Each 'Item No.' (box 32) is unique throughout the declaration. The items shall be numbered in a sequential fashion, starting from '1' for the first item and incrementing the numbering by '1' for each following item. (R007)",
+      "errorCode": "8102"
+    },
+    {
+      "test": "count('GOOITEGDS') <= 999",
+      "localErrorMessage": "[Goods item] may occur up to 999 times",
+      "errorMessage": "[Goods item] may occur up to 999 times",
+      "errorCode": "8611"
+    },
+    {
+      "test": "exists('GOOITEGDS/PACGS2')",
+      "localErrorMessage": "[Packages] should be present",
+      "errorMessage": "[Packages] must be present",
+      "errorCode": "8688"
+    },
+    {
+      "test": "count('SEAID529') <= 9999",
+      "localErrorMessage": "[Seals ID] may occur up to 9999 times",
+      "errorMessage": "[Seals ID] may occur up to 9999 times",
+      "errorCode": "8617"
+    },
+    {
+      "test": "count('ITI') >= 2",
+      "localErrorMessage": "At least two [Itinerary] should be present",
+      "errorMessage": "The field 'Itinerary' must occur at least twice (min. 2 values) (C570)",
+      "errorCode": "8684"
+    }
+  ]
+}

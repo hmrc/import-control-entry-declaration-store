@@ -1,0 +1,12 @@
+{
+  "element": "/TRACARENT601/TINTRACARENT602",
+  "name": "p69_p139",
+  "asserts": [
+    {
+      "test": "!(getValue('.') == getValue('../../PERLODSUMDEC/TINPLD1'))",
+      "localErrorMessage": "[TIN] is valid if and only if this does not equal [TIN]",
+      "errorMessage": "Trader at Entry (Carrier) data group must be used if it is different from the Person Lodging the Summary Declaration (R806)",
+      "errorCode": "8195"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "element": "/NOTPAR670",
+  "name": "p17_p86",
+  "asserts": [
+    {
+      "test": "not('.') || existsForAll('../GOOITEGDS', 'SPEMENMT2/AddInfCodMT23', '10600')",
+      "localErrorMessage": "[Notify party] is prohibited if there is at least one [Goods item] without an [Additional information coded] equal to '10600'",
+      "errorMessage": "If 'Special Mention Additional Information_id' does not equal '10600' for at least one 'Goods item' then the data group 'Trader notify party' can not be used (C583)",
+      "errorCode": "8619"
+    },
+    {
+      "test": "exists('TINNOTPAR671') || exists('NamNOTPAR672')",
+      "localErrorMessage": "[Name] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'Name' within Import Operation Notify Party is required if no 'TIN' has been declared (C501)",
+      "errorCode": "8130"
+    },
+    {
+      "test": "exists('TINNOTPAR671') || exists('StrNumNOTPAR673')",
+      "localErrorMessage": "[Street and number] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'Street and Number' within Import Operation.Notify Party is required if no TIN has been declared (C501)",
+      "errorCode": "8131"
+    },
+    {
+      "test": "exists('TINNOTPAR671') || exists('PosCodNOTPAR676')",
+      "localErrorMessage": "[Postal code] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'Postcode' within Import Operation.Notify Party is required if no TIN has been declared (C501)",
+      "errorCode": "8132"
+    },
+    {
+      "test": "exists('TINNOTPAR671') || exists('CitNOTPAR674')",
+      "localErrorMessage": "[City] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'City' within Import Operation.Notify Party is required if no TIN has been declared (C501)",
+      "errorCode": "8133"
+    },
+    {
+      "test": "exists('TINNOTPAR671') || exists('CouCodNOTPAR675')",
+      "localErrorMessage": "[Country code] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'Country Code' within Import Operation.Notify Party is required if no TIN has been declared (C501)",
+      "errorCode": "8134"
+    }
+  ]
+}

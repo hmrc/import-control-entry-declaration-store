@@ -1,0 +1,54 @@
+{
+  "element": "/GOOITEGDS/TRACONCE2",
+  "name": "p35_p104",
+  "asserts": [
+    {
+      "test": "not('.') || countEquals('../SPEMENMT2/AddInfCodMT23', '10600') == 0",
+      "localErrorMessage": "[(Consignee) Trader Type] is prohibited if [Additional information coded] eq '10600' for this goods item",
+      "errorMessage": "If 'Special Mention Additional Information_id' = '10600' is used in this GOODS ITEM then the data group 'GOODS ITEM TRADER consignee' can not be used (C584)",
+      "errorCode": "8624"
+    },
+    {
+      "test": "not('.') || not('../../TRACONCE1')",
+      "localErrorMessage": "[(Consignee) Trader Type] is prohibited if [(Consignee) trader] is present.",
+      "errorMessage": "If the data group 'Trader Consignee' is used then the data group 'Goods Item Trader Consignee' can not be used (C584)",
+      "errorCode": "8625"
+    },
+    {
+      "test": "exists('TINCE259') || not('.') || trim('../../HEAHEA/SpeCirIndHEA1') != 'E'",
+      "localErrorMessage": "[TIN] should be present if [Specific circumstance indicator] eq 'E' and [(Consignee) Trader Type]",
+      "errorMessage": "Trader Consignee 'TIN' is required if 'Specific Circumstance Indicator' = 'E' and 'Trader Consignee' is used (C562)",
+      "errorCode": "8208"
+    },
+    {
+      "test": "exists('TINCE259') || exists('NamCE27')",
+      "localErrorMessage": "[Name] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'Name (box 8)' within Goods Item.Trader Consignee is required if no TIN has been declared (C501)",
+      "errorCode": "8142"
+    },
+    {
+      "test": "exists('TINCE259') || exists('StrAndNumCE222')",
+      "localErrorMessage": "[Street name and number] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'Street and Number (box 8)' within Goods Item.Trader Consignee is required if no TIN has been declared (C501)",
+      "errorCode": "8143"
+    },
+    {
+      "test": "exists('TINCE259') || exists('PosCodCE223')",
+      "localErrorMessage": "[Postal code] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'Postcode (box 8)' within Goods Item.Trader Consignee is required if no TIN has been declared (C501)",
+      "errorCode": "8144"
+    },
+    {
+      "test": "exists('TINCE259') || exists('CitCE224')",
+      "localErrorMessage": "[City] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'City (box 8)' within Goods Item.Trader Consignee is required if no TIN has been declared (C501)",
+      "errorCode": "8145"
+    },
+    {
+      "test": "exists('TINCE259') || exists('CouCE225')",
+      "localErrorMessage": "[Country code] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'Country (box 8)' within Goods Item.Trader Consignee is required if no TIN has been declared (C501)",
+      "errorCode": "8146"
+    }
+  ]
+}

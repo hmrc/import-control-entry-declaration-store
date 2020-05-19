@@ -1,0 +1,42 @@
+{
+  "element": "/TRACONCO1",
+  "name": "p5_p74",
+  "asserts": [
+    {
+      "test": "exists('TINCO159') || exists('NamCO17')",
+      "localErrorMessage": "[Name] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'Name (box 2)' wiithin  Import Operation.Trader Consignor is required if no 'TIN' has been declared (C501)",
+      "errorCode": "8120"
+    },
+    {
+      "test": "exists('TINCO159') || exists('StrAndNumCO122')",
+      "localErrorMessage": "[Street and number] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'Street and Number (box 2)' within Import Operation.Trader Consignor is required if no TIN has been declared (C501)",
+      "errorCode": "8121"
+    },
+    {
+      "test": "exists('TINCO159') || exists('PosCodCO123')",
+      "localErrorMessage": "[Postal code] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'Postcode (box 2)' within Import Operation.Trader Consignor is required if no TIN has been declared (C501)",
+      "errorCode": "8122"
+    },
+    {
+      "test": "exists('TINCO159') || exists('CitCO124')",
+      "localErrorMessage": "[City] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'City (box 2)' within Import Operation.Trader Consignor is required if no TIN has been declared (C501)",
+      "errorCode": "8123"
+    },
+    {
+      "test": "exists('TINCO159') || exists('CouCO125')",
+      "localErrorMessage": "[Country code] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'Country (box 2)' within Import Operation.Trader Consignor is required if no 'TIN' has been declared (C501)",
+      "errorCode": "8124"
+    },
+    {
+      "test": "not('../GOOITEGDS/TRACONCO2')",
+      "localErrorMessage": "[(Consignor) Trader] should not be present if [(Consignor) Trader Type]",
+      "errorMessage": "The 'Trader Consignor (box 2)' on Import Operation can only be used if one 'Trader Consignor' is declared for all goods items (C511)",
+      "errorCode": "8119"
+    }
+  ]
+}

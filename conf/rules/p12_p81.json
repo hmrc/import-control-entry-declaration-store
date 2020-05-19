@@ -1,0 +1,12 @@
+{
+  "element": "/TRACONCE1/NamCE17",
+  "name": "p12_p81",
+  "asserts": [
+    {
+      "test": "not('../TINCE159') || !(getValue('../TINCE159').startsWith('GB'))",
+      "localErrorMessage": "[Name] should not be present if GB [TIN] is present",
+      "errorMessage": "The field 'Name (box 8)' within Import Operation.Trader Consignee must not be present if the GB 'TIN' has been declared (C501)",
+      "errorCode": "8631"
+    }
+  ]
+}

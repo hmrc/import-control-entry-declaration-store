@@ -1,0 +1,12 @@
+{
+  "element": "/GOOITEGDS/PRTNOT640/StrNumPRTNOT646",
+  "name": "p48_p117",
+  "asserts": [
+    {
+      "test": "not('../TINPRTNOT641') || !(getValue('../TINPRTNOT641').startsWith('GB'))",
+      "localErrorMessage": "[Street name and number] should not be present if GB [TIN] is present",
+      "errorMessage": "The field 'Street and Number' within Goods Item.Notify Party must not be present if the GB 'TIN' has been declared (C501)",
+      "errorCode": "8652"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "element": "/PERLODSUMDEC/StrAndNumPLD1",
+  "name": "p58_p128",
+  "asserts": [
+    {
+      "test": "not(('.'))",
+      "localErrorMessage": "[Street and number] should not be present",
+      "errorMessage": "The 'Street and Number' field of Person Lodging the Summary Declaration must not be present if the 'TIN' has been declared (C501)",
+      "errorCode": "8662"
+    }
+  ]
+}

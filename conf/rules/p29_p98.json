@@ -1,0 +1,42 @@
+{
+  "element": "/GOOITEGDS/TRACONCO2",
+  "name": "p29_p98",
+  "asserts": [
+    {
+      "test": "exists('TINCO259') || exists('NamCO27')",
+      "localErrorMessage": "[Name] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'Name (box 2)' within Goods Item.Trader Consignor is required if no TIN has been declared (C501)",
+      "errorCode": "8137"
+    },
+    {
+      "test": "exists('TINCO259') || exists('StrAndNumCO222')",
+      "localErrorMessage": "[Street name and number] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'Street and Number (box 2)' within Goods Item.Trader consignor  is required if no TIN has been declared (C501)",
+      "errorCode": "8138"
+    },
+    {
+      "test": "exists('TINCO259') || exists('PosCodCO223')",
+      "localErrorMessage": "[Postal code] should be present if not ( [TIN] )",
+      "errorMessage": "The 'Postcode (box 2)' within Goods Item.Trader Consignor is required if no TIN has been declared (C501)",
+      "errorCode": "8139"
+    },
+    {
+      "test": "exists('TINCO259') || exists('CitCO224')",
+      "localErrorMessage": "[City] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'City (box 2)' within Goods Item.Trader Consignor is required if no TIN has been declared (C501)",
+      "errorCode": "8140"
+    },
+    {
+      "test": "exists('TINCO259') || exists('CouCO225')",
+      "localErrorMessage": "[Country code] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'Country (box 2)' within Goods Item.Trader Consignor is required if no TIN has been declared (C501)",
+      "errorCode": "8141"
+    },
+    {
+      "test": "!(exists('.') && exists('../../TRACONCO1'))",
+      "localErrorMessage": "[(Consignor) Trader Type] should not be present if [(Consignor) trader]",
+      "errorMessage": "The 'Trader Consignor (box 2)' on Import Operation can only be used if one 'Trader Consignor' is declared for all goods items (C511)",
+      "errorCode": "8119"
+    }
+  ]
+}

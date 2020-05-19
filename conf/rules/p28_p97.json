@@ -1,0 +1,12 @@
+{
+  "element": "/GOOITEGDS/PlaUnlGOOITE333",
+  "name": "p28_p97",
+  "asserts": [
+    {
+      "test": "!(exists('.') && exists('../../HEAHEA/PlaUnlGOOITE334'))",
+      "localErrorMessage": "[Place of unloading] should not be present if [Place of unloading]",
+      "errorMessage": "The field Goods Item 'Unloading Place' can not be used if the field Import operation 'Unloading place' is used (C579)",
+      "errorCode": "8171"
+    }
+  ]
+}

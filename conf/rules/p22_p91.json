@@ -1,0 +1,12 @@
+{
+  "element": "/NOTPAR670/CouCodNOTPAR675",
+  "name": "p22_p91",
+  "asserts": [
+    {
+      "test": "not('../TINNOTPAR671') || !(getValue('../TINNOTPAR671').startsWith('GB'))",
+      "localErrorMessage": "[Country code] should not be present if GB [TIN] is present",
+      "errorMessage": "The field 'Country Code' within Import Operation.Notify Party must not be present if the GB 'TIN' has been declared (C501)",
+      "errorCode": "8640"
+    }
+  ]
+}

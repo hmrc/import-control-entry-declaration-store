@@ -1,0 +1,48 @@
+{
+  "element": "/TRACONCE1",
+  "name": "p11_p80",
+  "asserts": [
+    {
+      "test": "not('.') || countEquals('../GOOITEGDS/SPEMENMT2/AddInfCodMT23', '10600') == 0",
+      "localErrorMessage": "[(Consignee) trader] is prohibited if [Additional information coded] eq '10600' for at least one goods item",
+      "errorMessage": "If 'Special Mention Additional Information_id' = '10600' and is used for at least one 'Goods Item' then data group 'Trader Consignee' can not be used (C583)",
+      "errorCode": "8204"
+    },
+    {
+      "test": "exists('TINCE159') || not('.') || trim('../HEAHEA/SpeCirIndHEA1') != 'E'",
+      "localErrorMessage": "[TIN] should be present if [Specific circumstance indicator] eq 'E'",
+      "errorMessage": "Trader Consignee 'TIN' is required if 'Specific Circumstance Indicator' = 'E' (C562)",
+      "errorCode": "8105"
+    },
+    {
+      "test": "exists('TINCE159') || exists('NamCE17')",
+      "localErrorMessage": "[Name] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'Name (box 8)' within Import Operation.Trader Consignee is required if no 'TIN' has been declared (C501)",
+      "errorCode": "8125"
+    },
+    {
+      "test": "exists('TINCE159') || exists('StrAndNumCE122')",
+      "localErrorMessage": "[Street and number] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'Street and Number (box 8) within Import Operation.Trader Consignee is required if no 'TIN' has been declared (C501)",
+      "errorCode": "8126"
+    },
+    {
+      "test": "exists('TINCE159') || exists('PosCodCE123')",
+      "localErrorMessage": "[Postal code] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'Postcode (box 8)' within Import Operation.Trader Consignee is required if no 'TIN' has been declared (C501)",
+      "errorCode": "8127"
+    },
+    {
+      "test": "exists('TINCE159') || exists('CitCE124')",
+      "localErrorMessage": "[City] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'City (box 8)' within Import Operation.Trader Consignee is required if no 'TIN' has been declared (C501)",
+      "errorCode": "8128"
+    },
+    {
+      "test": "exists('TINCE159') || exists('CouCE125')",
+      "localErrorMessage": "[Country code] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'Country (box 8)' within Import Operation.Trader Consignee 'Country is required if no 'TIN' has been declared (C501)",
+      "errorCode": "8129"
+    }
+  ]
+}

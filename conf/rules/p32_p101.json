@@ -1,0 +1,12 @@
+{
+  "element": "/GOOITEGDS/TRACONCO2/PosCodCO223",
+  "name": "p32_p101",
+  "asserts": [
+    {
+      "test": "not('../TINCO259') || !(getValue('../TINCO259').startsWith('GB'))",
+      "localErrorMessage": "[Postal code] should not be present if GB [TIN] is present",
+      "errorMessage": "The field 'Postcode (box 2)' within Goods Item.Trader Consignor must not be present if the GB 'TIN' has been declared (C501)",
+      "errorCode": "8643"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "element": "/CUSOFFLON/RefNumCOL1",
+  "name": "p121",
+  "asserts": [
+    {
+      "test": "!(trim('.') == trim('../../CUSOFFFENT730/RefNumCUSOFFFENT731'))",
+      "localErrorMessage": "[Reference number] is valid if and only if this does not equal [Reference number]",
+      "errorMessage": "Office of Lodgement is only valid if this does not equal Customs Office of First Entry",
+      "errorCode": "8616"
+    }
+  ]
+}

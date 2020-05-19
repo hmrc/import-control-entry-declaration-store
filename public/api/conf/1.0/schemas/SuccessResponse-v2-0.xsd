@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema attributeFormDefault="unqualified"
+    elementFormDefault="qualified" id="SuccessResponse"
+    targetNamespace="http://www.hmrc.gov.uk/successresponse/2"
+    version="2.0" xmlns="http://www.hmrc.gov.uk/successresponse/2"
+    xmlns:dsig="http://www.w3.org/2000/09/xmldsig#" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <xsd:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="xmldsig-core-schema.xsd"/>
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="xml.xsd"/>
+    <xsd:element name="SuccessResponse">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element maxOccurs="unbounded" minOccurs="0"
+                    name="Message" type="MessageType">
+                    <xsd:annotation>
+                        <xsd:documentation>
+                            Service-specific advisory text messages (if
+                            any). It is possible for    more than one
+                            message to be returned per response. Each
+                            message must    be presented to the user.
+                            Service-specific message codes are carried
+                            in the &quot;code&quot; attribute (see
+                            Service-specific documentation for details).                       </xsd:documentation>
+                    </xsd:annotation>
+                </xsd:element>
+                <xsd:element minOccurs="0" name="AcceptedTime" type="xsd:dateTime">
+                    <xsd:annotation>
+                        <xsd:documentation>Placeholder for future use.  </xsd:documentation>
+                    </xsd:annotation>
+                </xsd:element>
+                <xsd:element minOccurs="0" name="ResponseData">
+                    <xsd:annotation>
+                        <xsd:documentation>    Container for
+                            service-specific response data if any (e.g.
+                            MSD returned    payment reference). See
+                            additional service-specific response data
+                            Schema (if any) and documentation for
+                            details.                      </xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:complexType>
+                        <xsd:sequence>
+                            <xsd:any namespace="##other" processContents="lax"/>
+                        </xsd:sequence>
+                    </xsd:complexType>
+                </xsd:element>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:complexType name="MessageType">
+        <xsd:simpleContent>
+            <xsd:extension base="xsd:string">
+                <xsd:attribute name="code" type="xsd:integer" use="required"/>
+                <xsd:attribute default="en-GB" ref="xml:lang" use="optional"/>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+</xsd:schema>

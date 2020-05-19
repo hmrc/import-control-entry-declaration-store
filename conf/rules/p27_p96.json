@@ -1,0 +1,12 @@
+{
+  "element": "/GOOITEGDS/PlaLoaGOOITE333",
+  "name": "p27_p96",
+  "asserts": [
+    {
+      "test": "not(('.')) || not('../../HEAHEA/PlaLoaGOOITE334')",
+      "localErrorMessage": "[Place of loading] should not be present if [Place of loading]",
+      "errorMessage": "The field Goods Item 'Loading Place' can not be used if Import Operation 'Loading Place' is used (C574)",
+      "errorCode": "8136"
+    }
+  ]
+}

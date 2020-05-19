@@ -1,0 +1,12 @@
+{
+  "element": "/TRACONCO1/StrAndNumCO122",
+  "name": "p7_p76",
+  "asserts": [
+    {
+      "test": "not('../TINCO159') || !(getValue('../TINCO159').startsWith('GB'))",
+      "localErrorMessage": "[Street and number] should not be present if GB [TIN] is present",
+      "errorMessage": "The field 'Street and Number (box 2)' within Import Operation. Trader Consignor must not be present if the GB 'TIN' has been declared (C501)",
+      "errorCode": "8627"
+    }
+  ]
+}

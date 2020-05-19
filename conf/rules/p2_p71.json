@@ -1,0 +1,12 @@
+{
+  "element": "/MesSenMES3",
+  "name": "p2_p71",
+  "asserts": [
+    {
+      "test": "applyRegex('.', '\\\\s*[A-Z]{2}([\\\\s]+|[^\\\\n\\\\r]){1,15}/[0-9]{10}\\\\s*')",
+      "localErrorMessage": "[Message sender] must match pattern \"[A-Z]{2}[^\\n\\r]{1,15}/[0-9]{10}\".",
+      "errorMessage": "Invalid content found at element 'MesSenMES3'",
+      "errorCode": "4065"
+    }
+  ]
+}

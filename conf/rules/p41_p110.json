@@ -1,0 +1,18 @@
+{
+  "element": "/GOOITEGDS/IDEMEATRAGI970",
+  "name": "p41_p110",
+  "asserts": [
+    {
+      "test": "exists('NatIDEMEATRAGI973') || number('../../HEAHEA/TraModAtBorHEA76') == 2",
+      "localErrorMessage": "[Nationality] should be present if not ([Transport mode at border] eq 2)",
+      "errorMessage": "The field 'Nationality crossing border (ex. Box 21)' is required if 'Transport mode at border (box 25)' does not equal '2' (C020)",
+      "errorCode": "8147"
+    },
+    {
+      "test": "not('.') || !(exists('../../HEAHEA/IdeOfMeaOfTraCroHEA85') || number('../../HEAHEA/TraModAtBorHEA76') == 4)",
+      "localErrorMessage": "[(Means of transport at border) Identity] should not be present if [Identity of means of transport crossing border] or ( [Transport mode at border] equals 4 )",
+      "errorMessage": "Identity of Means of Transport at Border (ex Box 21)' can not be used if 'Identity crossing border (box 21)' is present OR 'Transport Mode at Border (box 25)' = '4' (C019)",
+      "errorCode": "8198"
+    }
+  ]
+}

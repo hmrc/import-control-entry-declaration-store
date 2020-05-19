@@ -1,0 +1,48 @@
+{
+  "element": "/GOOITEGDS/PRTNOT640",
+  "name": "p46_p115",
+  "asserts": [
+    {
+      "test": "exists('TINPRTNOT641') || exists('NamPRTNOT642')",
+      "localErrorMessage": "[Name] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'Name' within Goods Item.Notify Party is required if no TIN has been declared (C501)",
+      "errorCode": "8154"
+    },
+    {
+      "test": "exists('TINPRTNOT641') || exists('StrNumPRTNOT646')",
+      "localErrorMessage": "[Street name and number] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'Street and Number' within Goods Item.Notify Party is required if no TIN has been declared (C501)",
+      "errorCode": "8155"
+    },
+    {
+      "test": "exists('TINPRTNOT641') || exists('PstCodPRTNOT644')",
+      "localErrorMessage": "[Postal code] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'Postcode' within Goods Item.Notify Party is required if no TIN has been declared (C501)",
+      "errorCode": "8156"
+    },
+    {
+      "test": "exists('TINPRTNOT641') || exists('CtyPRTNOT643')",
+      "localErrorMessage": "[City] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'City' within Goods Item.Notify Party is required if no TIN has been declared (C501)",
+      "errorCode": "8157"
+    },
+    {
+      "test": "exists('TINPRTNOT641') || exists('CouCodGINOT647')",
+      "localErrorMessage": "[Country code] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'Country Code' within Goods Item.Notify Party is required if no TIN has been declared (C501)",
+      "errorCode": "8158"
+    },
+    {
+      "test": "not('.') || countEquals('../SPEMENMT2/AddInfCodMT23', '10600') > 0",
+      "localErrorMessage": "[Notify party] is prohibited if this [Goods item] does not have an [Additional information coded] equal to '10600'",
+      "errorMessage": "If 'Special Mention Additional Information_id' does not equal '10600' within this 'Goods item' then the data group 'Goods ItemTrader notify party' can not be used (C584)",
+      "errorCode": "8620"
+    },
+    {
+      "test": "not('.') || not('../../NOTPAR670')",
+      "localErrorMessage": "[Notify party] is prohibited if [Notify party] is present",
+      "errorMessage": "If the data group 'Trader notify party' is used then the data group 'Goods Item Trader Notify party' can not be used (C584)",
+      "errorCode": "8621"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "element": "/TRAREP/CitTRE1",
+  "name": "p55_p125",
+  "asserts": [
+    {
+      "test": "not(('.'))",
+      "localErrorMessage": "[City] should not be present",
+      "errorMessage": "The 'City' field of (Representative) Trader must not be present if the 'TIN' has been declared (C501)",
+      "errorCode": "8659"
+    }
+  ]
+}

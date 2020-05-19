@@ -1,0 +1,120 @@
+#%RAML 1.0
+uses:
+  sec: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/securitySchemes.raml
+  headers: headers.raml
+  annotations: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/annotations.raml
+  types: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/types.raml
+  errors: errors.raml
+
+title: Safety and security import control entry summary declarations
+version: v1
+protocols: [ HTTPS ]
+baseUri: https://api.service.hmrc.gov.uk/
+mediaType: application/xml
+
+documentation:
+  - title: Overview
+    content: !include docs/overview.md
+  - title: Versioning
+    content: !include https://developer.service.hmrc.gov.uk/api-documentation/assets/common/docs/versioning.md
+  - title: Errors
+    content: !include https://developer.service.hmrc.gov.uk/api-documentation/assets/common/docs/errors.md
+  - title: Testing
+    content: !include docs/testing.md
+
+/customs/imports:
+  /declarations:
+    /:
+      post:
+        is:
+          - headers.contentTypeXml
+          - headers.acceptXml
+          - errors.eoriMismatch
+        displayName: Submit a new entry summary declaration (ENS)
+        description: | 
+          This endpoint allows a developer to create a new entry summary (IE315) declaration.  
+          A correlation ID is returned in the XML response.
+        (annotations.scope): "write:import-control-system"
+        securedBy: [ sec.oauth_2_0: { scopes: [ "write:import-control-system" ] } ]
+        body:
+          application/xml:
+            example:
+              (annotations.documentation): |
+                The body of the request must conform to the CC315A schema: [http://ics.dgtaxud.ec/CC315A](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/CC315A-v11-1.xsd).
+
+                This schema imports a number of other schemas:
+
+                * [http://ics.dgtaxud.ec/doc](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/doc-v11-1.xsd)
+                * [http://ics.dgtaxud.ec/complex_ics](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/complex_types_ics-v11-1.xsd)
+                * [http://ics.dgtaxud.ec/simple](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/simple_types-v11-1.xsd)
+                * [http://ics.dgtaxud.ec/tcl](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/tcl-v11-1.xsd)
+
+                The body will be validated against this schema and against a number of business rules.
+
+                A 400 (Bad Request) response will be returned for requests that fail vaildation. The response body
+                (schema [http://www.govtalk.gov.uk/CM/errorresponse](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/errorresponse-v2.0.xsd))
+                will contain the validation errors found in the request.
+
+                This is an example request:
+              value: !include examples/validSubmission.xml
+        responses:
+          200:
+            body:
+              example:
+                (annotations.documentation): |
+                  A success response
+                  (schema [http://www.hmrc.gov.uk/successresponse/2](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/SuccessResponse-v2-0.xsd))
+                  contains the correlation ID used to track the submission.
+
+                  This is an example response:
+                value: !include examples/validResponse.xml
+
+    /{movement-reference-number}:
+      uriParameters:
+        movement-reference-number:
+          description: 'The Movement Reference Number obtained as part of a successful outcome for the ENS to be amended.'
+          required: true
+      put:
+        is:
+          - headers.contentTypeXml
+          - headers.acceptXml
+          - errors.eoriMismatch
+        displayName: Amend an existing entry summary declaration (ENS)
+        description: |
+          This endpoint allows a developer to amend an existing ENS submission.
+          You will need to provide the movement reference number when you created the original ENS.
+          A correlation ID will be returned in the XML response.
+        (annotations.scope): "write:import-control-system"
+        securedBy: [ sec.oauth_2_0: { scopes: [ "write:import-control-system" ] } ]
+        body:
+          application/xml:
+            example:
+              (annotations.documentation): |
+                The body of the request must conform to the CC313A schema: [http://ics.dgtaxud.ec/CC313A](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/CC313A-v11-1.xsd).
+
+                This schema imports a number of other schemas:
+
+                * [http://ics.dgtaxud.ec/doc](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/doc-v11-1.xsd)
+                * [http://ics.dgtaxud.ec/complex_ics](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/complex_types_ics-v11-1.xsd)
+                * [http://ics.dgtaxud.ec/simple](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/simple_types-v11-1.xsd)
+                * [http://ics.dgtaxud.ec/tcl](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/tcl-v11-1.xsd)
+
+                The body will be validated against this schema and against a number of business rules.
+
+                A 400 (Bad Request) response will be returned for requests that fail vaildation. The response body
+                (schema [http://www.govtalk.gov.uk/CM/errorresponse](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/errorresponse-v2.0.xsd))
+                will contain the validation errors found in the request.
+
+                This is an example request:
+              value: !include examples/validAmendment.xml
+        responses:
+          200:
+            body:
+              example:
+                (annotations.documentation): |
+                  A success response
+                  (schema [http://www.hmrc.gov.uk/successresponse/2](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/SuccessResponse-v2-0.xsd))
+                  contains the correlation ID used to track the submission.
+
+                  This is an example response:
+                value: !include examples/validResponse.xml

@@ -1,0 +1,36 @@
+{
+  "element": "/NOTPAR670",
+  "name": "p17_p86_non_GB_Eori_CR",
+  "asserts": [
+    {
+      "test": "not('TINNOTPAR671') || getValue('TINNOTPAR671').startsWith('GB') || exists('NamNOTPAR672')",
+      "localErrorMessage": "[Name] should be present for a non-GB [TIN]",
+      "errorMessage": "The field 'Name' within Import Operation Notify Party is required if a non-GB TIN has been declared (C501)",
+      "errorCode": "8230"
+    },
+    {
+      "test": "not('TINNOTPAR671') || getValue('TINNOTPAR671').startsWith('GB') || exists('StrNumNOTPAR673')",
+      "localErrorMessage": "[Street and number] should be present for a non-GB [TIN]",
+      "errorMessage": "The field 'Street and Number' within Import Operation.Notify Party is required if a non-GB TIN has been declared (C501)",
+      "errorCode": "8231"
+    },
+    {
+      "test": "not('TINNOTPAR671') || getValue('TINNOTPAR671').startsWith('GB') || exists('PosCodNOTPAR676')",
+      "localErrorMessage": "[Postal code] should be present for a non-GB [TIN]",
+      "errorMessage": "The field 'Postcode' within Import Operation.Notify Party is required if a non-GB TIN has been declared (C501)",
+      "errorCode": "8232"
+    },
+    {
+      "test": "not('TINNOTPAR671') || getValue('TINNOTPAR671').startsWith('GB') || exists('CitNOTPAR674')",
+      "localErrorMessage": "[City] should be present for a non-GB [TIN]",
+      "errorMessage": "The field 'City' within Import Operation.Notify Party is required if a non-GB TIN has been declared (C501)",
+      "errorCode": "8233"
+    },
+    {
+      "test": "not('TINNOTPAR671') || getValue('TINNOTPAR671').startsWith('GB') || exists('CouCodNOTPAR675')",
+      "localErrorMessage": "[Country code] should be present for a non-GB [TIN]",
+      "errorMessage": "The field 'Country Code' within Import Operation.Notify Party is required if a non-GB TIN has been declared (C501)",
+      "errorCode": "8234"
+    }
+  ]
+}

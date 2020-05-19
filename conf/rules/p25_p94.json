@@ -1,0 +1,36 @@
+{
+  "element": "/GOOITEGDS/GroMasGDS46",
+  "name": "p25_p94",
+  "asserts": [
+    {
+      "test": "applyRegex('.', '^\\\\s*[+-]*([1-9.][0-9.]*|0(\\\\.[0-9]*)?)\\\\s*$')",
+      "localErrorMessage": "Value should not have leading zeros",
+      "errorMessage": "Value must not have leading zeros",
+      "errorCode": "8674"
+    },
+    {
+      "test": "applyRegex('.', '^\\\\s*([\\\\.+-]*[0-9][\\\\.+-]?){1,11}\\\\s*$')",
+      "localErrorMessage": "Value should not have more than 11 digits",
+      "errorMessage": "Value must not have more than 11 digits",
+      "errorCode": "8675"
+    },
+    {
+      "test": "substringAfter(trim('.'), '.').length() <= 3",
+      "localErrorMessage": "Value should not have more than 3 decimal digits",
+      "errorMessage": "Value must not have more than 3 decimal digits",
+      "errorCode": "8676"
+    },
+    {
+      "test": "applyRegex('.', '^\\\\s*[+-]?([^\\\\.\\\\s]*|[0-9]+\\\\.[0-9]+)\\\\s*$')",
+      "localErrorMessage": "Value should have at least one digit before and after the decimal point if the decimal point is present",
+      "errorMessage": "Value must have at least one digit before and after the decimal point if the decimal point is present",
+      "errorCode": "8677"
+    },
+    {
+      "test": "!getValue('.').contains('+') && !getValue('.').contains('-')",
+      "localErrorMessage": "[Gross mass] should not have a sign",
+      "errorMessage": "The field 'Gross Mass' within 'Goods Item' has a decimal value and only a decimal point may be used. No other symbols are permitted as decimal separators.",
+      "errorCode": "8679"
+    }
+  ]
+}

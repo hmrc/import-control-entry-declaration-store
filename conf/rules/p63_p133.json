@@ -1,0 +1,42 @@
+{
+  "element": "/TRACARENT601",
+  "name": "p63_p133",
+  "asserts": [
+    {
+      "test": "exists('TINTRACARENT602') || exists('NamTRACARENT604')",
+      "localErrorMessage": "[Name] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'Name' within Trader at Entry (Carrier) is required if no TIN has been declared (C501)",
+      "errorCode": "8159"
+    },
+    {
+      "test": "exists('TINTRACARENT602') || exists('StrNumTRACARENT607')",
+      "localErrorMessage": "[Street and number] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'Street and Number' within Trader at Entry (Carrier) is required if no TIN has been declared (C501)",
+      "errorCode": "8160"
+    },
+    {
+      "test": "exists('TINTRACARENT602') || exists('PstCodTRACARENT606')",
+      "localErrorMessage": "[Postal code] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'Postcode' within Trader at Entry (Carrier) is required if no TIN has been declared (C501)",
+      "errorCode": "8161"
+    },
+    {
+      "test": "exists('TINTRACARENT602') || exists('CtyTRACARENT603')",
+      "localErrorMessage": "[City] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'City' within Trader at Entry (Carrier) is required if no TIN has been declared (C501)",
+      "errorCode": "8162"
+    },
+    {
+      "test": "exists('TINTRACARENT602') || exists('CouCodTRACARENT605')",
+      "localErrorMessage": "[Country code] should be present if not ( [TIN] )",
+      "errorMessage": "The field 'Country Code' within Trader at Entry (Carrier) is required if no TIN has been declared (C501)",
+      "errorCode": "8163"
+    },
+    {
+      "test": "exists('TINTRACARENT602') || !(number('../HEAHEA/TraModAtBorHEA76') == 1 || number('../HEAHEA/TraModAtBorHEA76') == 4 || number('../HEAHEA/TraModAtBorHEA76') == 8 || number('../HEAHEA/TraModAtBorHEA76') == 10 || number('../HEAHEA/TraModAtBorHEA76') == 11)",
+      "localErrorMessage": "[TIN] should be present if [Transport mode at border] eq 1 or [Transport mode at border] eq 4 or [Transport mode at border] eq 8 or [Transport mode at border] eq 10 or [Transport mode at border] eq 11",
+      "errorMessage": "The TIN is required if 'Transport mode at border' = '1', '4', '8', '10', or '11' (C502)",
+      "errorCode": "8164"
+    }
+  ]
+}

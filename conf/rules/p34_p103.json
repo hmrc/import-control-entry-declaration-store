@@ -1,0 +1,12 @@
+{
+  "element": "/GOOITEGDS/TRACONCO2/CouCO225",
+  "name": "p34_p103",
+  "asserts": [
+    {
+      "test": "not('../TINCO259') || !(getValue('../TINCO259').startsWith('GB'))",
+      "localErrorMessage": "[Country code] should not be present if GB [TIN] is present",
+      "errorMessage": "The field 'Country (box 2)' within Goods Item.Trader Consignor must not be present if the GB 'TIN' has been declared (C501)",
+      "errorCode": "8645"
+    }
+  ]
+}

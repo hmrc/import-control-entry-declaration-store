@@ -1,0 +1,101 @@
+/*
+ * Copyright 2020 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.gov.hmrc.entrydeclarationstore.controllers
+
+import play.api.libs.json.{JsString, JsValue, Json}
+import play.api.mvc.Result
+import play.api.test.Helpers._
+import play.api.test.{FakeRequest, Helpers}
+import play.mvc.Http.MimeTypes
+import uk.gov.hmrc.entrydeclarationstore.models.SubmissionIdLookupResult
+import uk.gov.hmrc.entrydeclarationstore.services.MockEntryDeclarationRetrievalService
+import uk.gov.hmrc.play.test.UnitSpec
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
+class EntryDeclarationRetrievalControllerSpec extends UnitSpec with MockEntryDeclarationRetrievalService {
+
+  private val controller =
+    new EntryDeclarationRetrievalController(Helpers.stubControllerComponents(), mockEntryDeclarationRetrievalService)
+
+  val eori             = "eori"
+  val submissionId     = "submissionId"
+  val correlationId    = "correlationId"
+  val receivedDateTime = "receivedDateTime"
+  val receivedDateTimeAndSubmissionID: SubmissionIdLookupResult =
+    SubmissionIdLookupResult("dateTime", "housekeepingAt", "ConvID")
+
+  "EntryDeclarationRetrievalController" when {
+    "getting submissionId from eori and correlationId" when {
+      "id exists" must {
+        "return OK with the submissionId in a JSON object" in {
+          MockEntryDeclarationRetrievalService
+            .retrieveSubmissionIdAndReceivedDateTime(eori, correlationId)
+            .returns(Future.successful(Some(receivedDateTimeAndSubmissionID)))
+
+          val result: Future[Result] = controller.retrieveDataFromMongo(eori, correlationId)(FakeRequest())
+
+          status(result)        shouldBe OK
+          contentAsJson(result) shouldBe Json.toJson(receivedDateTimeAndSubmissionID)
+          contentType(result)   shouldBe Some(MimeTypes.JSON)
+        }
+      }
+
+      "id does not exist" must {
+        "return NOT_FOUND" in {
+          MockEntryDeclarationRetrievalService
+            .retrieveSubmissionIdAndReceivedDateTime(eori, correlationId)
+            .returns(Future.successful(None))
+
+          val result: Future[Result] = controller.retrieveDataFromMongo(eori, correlationId)(FakeRequest())
+
+          status(result) shouldBe NOT_FOUND
+        }
+      }
+    }
+
+    "getting payload from submissionId" when {
+      "id exists" must {
+        "return OK with the xml body" in {
+          val payload: JsValue = JsString("payload")
+          MockEntryDeclarationRetrievalService
+            .retrieveSubmission(submissionId)
+            .returns(Future.successful(Some(payload)))
+
+          val result: Future[Result] = controller.getSubmission(submissionId)(FakeRequest())
+
+          status(result) shouldBe OK
+
+          contentAsString(result) shouldBe payload.toString
+
+          contentType(result) shouldBe Some("application/json")
+        }
+      }
+
+      "id does not exist" must {
+        "return NOT_FOUND" in {
+          MockEntryDeclarationRetrievalService.retrieveSubmission(submissionId).returns(Future.successful(None))
+
+          val result: Future[Result] = controller.getSubmission(submissionId)(FakeRequest())
+
+          status(result) shouldBe NOT_FOUND
+        }
+      }
+    }
+  }
+}

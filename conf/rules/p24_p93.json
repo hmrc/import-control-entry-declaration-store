@@ -1,0 +1,12 @@
+{
+  "element": "/GOOITEGDS/IteNumGDS7",
+  "name": "p24_p93",
+  "asserts": [
+    {
+      "test": "trim('.').take(1) != '0' || trim('.').length() <= 1",
+      "localErrorMessage": "[Item number] should not have leading zeros",
+      "errorMessage": "The field 'Item Number' within 'Goods Item' must not contain leading zeros",
+      "errorCode": "8678"
+    }
+  ]
+}

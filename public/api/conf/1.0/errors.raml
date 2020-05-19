@@ -1,0 +1,20 @@
+#%RAML 1.0 Library
+
+uses:
+  types: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/types.raml
+
+traits:
+  eoriMismatch:
+    responses:
+      403:
+        body:
+          application/xml:
+            type: types.errorResponse
+            examples:
+              eoriMismatch:
+                description: |
+                  The client is not authorised to make the ENS submission.
+                  This is normally because the EORI in the submission does not match the EORI under which the trader or CSP has been enroled.
+                value:
+                  code: FORBIDDEN
+

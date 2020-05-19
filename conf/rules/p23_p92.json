@@ -1,0 +1,60 @@
+{
+  "element": "/GOOITEGDS",
+  "name": "p23_p92",
+  "asserts": [
+    {
+      "test": "exists('GooDesGDS23') || exists('COMCODGODITM')",
+      "localErrorMessage": "[(Code) commodity] should be present if not ( [Goods description] )",
+      "errorMessage": "The field '(Code) Commodity' is required if 'Goods Item Description' is not used (C585)",
+      "errorCode": "8207"
+    },
+    {
+      "test": "exists('PlaUnlGOOITE333') || ( exists('../HEAHEA/PlaUnlGOOITE334') || trim('../HEAHEA/SpeCirIndHEA1') == 'E'    )",
+      "localErrorMessage": "[Place of unloading] should be present if not ( [Place of unloading] is present ) and not ( [Specific circumstance indicator] equals 'E' )",
+      "errorMessage": "If the field 'Specific Circumstance Indicator' does not = 'E' and Import Operation 'Unloading Place' is not used then Goods Item 'Unloading Place' is required (C579)",
+      "errorCode": "8687"
+    },
+    {
+      "test": "exists('IDEMEATRAGI970') || exists('../HEAHEA/IdeOfMeaOfTraCroHEA85') || number('../HEAHEA/TraModAtBorHEA76') == 4",
+      "localErrorMessage": "[(Means of transport at border) Identity] should be present if not ( [Identity of means of transport crossing border] is present or ( [Transport mode at border] equals '4' ) )",
+      "errorMessage": "'Identity of Means of Transport at Border (ex Box 21)' is required if 'Identity Crossing Border (box 21)' is not present and 'Transport Mode at Border (box 25)' does not equal '4'",
+      "errorCode": "8199"
+    },
+    {
+      "test": "exists('PRTNOT640') || countEquals('SPEMENMT2/AddInfCodMT23', '10600') == 0 || exists('../NOTPAR670')",
+      "localErrorMessage": "[Notify party] should be present if this [Goods item] has an [Additional information coded] equal to '10600' and [Notify party] is absent",
+      "errorMessage": "If 'Special Mention Additional Information_id' = '10600' is used in this GOODS ITEM and the data group 'Trader Notify party' is not used THEN the data group 'GOODS ITEM TRADER Notify party' is Required (C584)",
+      "errorCode": "8622"
+    },
+    {
+      "test": "exists('TRACONCE2') || countEquals('SPEMENMT2/AddInfCodMT23', '10600') > 0 || exists('../TRACONCE1')",
+      "localErrorMessage": "[(Consignee) Trader Type] is mandatory if no [Additional information coded] eq '10600' for this goods item, and [(Consignee) trader] is not present",
+      "errorMessage": "If Special Mention Additional Information_id does not equal '10600' and the field Trader consigneee is not used THEN the field GOODS ITEM TRADER Consignee is Required (C584)",
+      "errorCode": "8623"
+    },
+    {
+      "test": "count('IDEMEATRAGI970') <= 999",
+      "localErrorMessage": "[(Means of transport at border) Identity] can occur up to 999 times",
+      "errorMessage": "[(Means of transport at border) Identity] can occur up to 999 times",
+      "errorCode": "8612"
+    },
+    {
+      "test": "exists('GroMasGDS46') || trim('../HEAHEA/SpeCirIndHEA1') == 'E' || exists('../HEAHEA/TotGroMasHEA307')",
+      "localErrorMessage": "[Gross mass] should be present if not ([Specific circumstance indicator] eq 'E' or [Total gross mass])",
+      "errorMessage": "Gross Mass' should be present if 'Specific Circumstance indicator' does not equal 'E' OR there is no 'Total Gross Mass' (C592)",
+      "errorCode": "8103"
+    },
+    {
+      "test": "exists('PlaLoaGOOITE333') || exists('../HEAHEA/PlaLoaGOOITE334')",
+      "localErrorMessage": "[Place of loading] should be present if not [Place of loading]",
+      "errorMessage": "If 'Import operation.Loading place' is not used Then 'Goods Item.Loading place' is required (C574)",
+      "errorCode": "8104"
+    },
+    {
+      "test": "exists('PRODOCDC2') || exists('ComRefNumGIM1') || exists('../HEAHEA/ComRefNumHEA')",
+      "localErrorMessage": "[Produced documents and certificates] should be present if not ( [Commercial reference number] is present or [Commercial reference number] is present )",
+      "errorMessage": "[Produced documents and certificates] must be present if neither ( [Commercial reference number] is present or [Commercial reference number] is present )",
+      "errorCode": "8170"
+    }
+  ]
+}

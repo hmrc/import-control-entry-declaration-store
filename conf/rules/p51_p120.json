@@ -1,0 +1,12 @@
+{
+  "element": "/GOOITEGDS/PRTNOT640/CouCodGINOT647",
+  "name": "p51_p120",
+  "asserts": [
+    {
+      "test": "not('../TINPRTNOT641') || !(getValue('../TINPRTNOT641').startsWith('GB'))",
+      "localErrorMessage": "[Country code] should not be present if GB [TIN] is present",
+      "errorMessage": "The field 'Country Code' within Goods Item.Notify Party must not be present if the GB 'TIN' has been declared (C501)",
+      "errorCode": "8655"
+    }
+  ]
+}

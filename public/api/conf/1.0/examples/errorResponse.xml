@@ -1,0 +1,12 @@
+<err:ErrorResponse SchemaVersion="2.0" xmlns:err="http://www.govtalk.gov.uk/CM/errorresponse">
+    <err:Application>
+        <err:MessageCount>1</err:MessageCount>
+    </err:Application>
+    <err:Error>
+        <err:RaisedBy>HMRC</err:RaisedBy>
+        <err:Number>4065</err:Number>
+        <err:Type>business</err:Type>
+        <err:Text>Invalid content found at element 'MesSenMES3'</err:Text>
+        <err:Location>/ie:CC315A[1]/MesSenMES3[1]</err:Location>
+    </err:Error>
+</err:ErrorResponse>

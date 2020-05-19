@@ -1,0 +1,12 @@
+{
+  "element": "/GOOITEGDS/TRACONCO2/StrAndNumCO222",
+  "name": "p31_p100",
+  "asserts": [
+    {
+      "test": "not('../TINCO259') || !(getValue('../TINCO259').startsWith('GB'))",
+      "localErrorMessage": "[Street name and number] should not be present if GB [TIN] is present",
+      "errorMessage": "The field 'Street and Number (box 2)' within Goods Item.Trader Consignor must not be present if the GB 'TIN' has been declared (C501)",
+      "errorCode": "8642"
+    }
+  ]
+}

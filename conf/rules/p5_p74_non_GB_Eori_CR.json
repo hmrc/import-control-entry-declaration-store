@@ -1,0 +1,36 @@
+{
+  "element": "/TRACONCO1",
+  "name": "p5_p74_non_GB_Eori_CR",
+  "asserts": [
+    {
+      "test": "not('TINCO159') || getValue('TINCO159').startsWith('GB') || exists('NamCO17')",
+      "localErrorMessage": "[Name] should be present for a non-GB [TIN]",
+      "errorMessage": "The field 'Name (box 2)' within Import Operation.Trader Consignor is required if a non-GB TIN has been declared (C501)",
+      "errorCode": "8220"
+    },
+    {
+      "test": "not('TINCO159') || getValue('TINCO159').startsWith('GB') || exists('StrAndNumCO122')",
+      "localErrorMessage": "[Street and number] should be present for a non-GB [TIN]",
+      "errorMessage": "The field 'Street and Number (box 2)' within Import Operation.Trader Consignor is required if a non-GB TIN has been declared (C501)",
+      "errorCode": "8221"
+    },
+    {
+      "test": "not('TINCO159') || getValue('TINCO159').startsWith('GB') || exists('PosCodCO123')",
+      "localErrorMessage": "[Postal code] should be present for a non-GB [TIN]",
+      "errorMessage": "The field 'Postcode (box 2)' within Import Operation.Trader Consignor is required if a non-GB TIN has been declared (C501)",
+      "errorCode": "8222"
+    },
+    {
+      "test": "not('TINCO159') || getValue('TINCO159').startsWith('GB') || exists('CitCO124')",
+      "localErrorMessage": "[City] should be present for a non-GB [TIN]",
+      "errorMessage": "The field 'City (box 2)' within Import Operation.Trader Consignor is required if a non-GB TIN has been declared (C501)",
+      "errorCode": "8223"
+    },
+    {
+      "test": "not('TINCO159') || getValue('TINCO159').startsWith('GB') || exists('CouCO125')",
+      "localErrorMessage": "[Country code] should be present for a non-GB [TIN]",
+      "errorMessage": "The field 'Country (box 2)' within Import Operation.Trader Consignor is required if a non-GB TIN has been declared (C501)",
+      "errorCode": "8224"
+    }
+  ]
+}

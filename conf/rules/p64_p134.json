@@ -1,0 +1,12 @@
+{
+  "element": "/TRACARENT601/NamTRACARENT604",
+  "name": "p64_p134",
+  "asserts": [
+    {
+      "test": "not('../TINTRACARENT602') || !(getValue('../TINTRACARENT602').startsWith('GB'))",
+      "localErrorMessage": "[Name] should not be present if GB [TIN] is present",
+      "errorMessage": "The field 'Name' within Trader at Entry (Carrier) must not be present if the GB 'TIN' has been declared (C501)",
+      "errorCode": "8666"
+    }
+  ]
+}
