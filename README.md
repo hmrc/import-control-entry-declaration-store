@@ -7,17 +7,12 @@ The Import Control Entry Declaration Store responsibilities:
 ## Development Setup
 - MongoDB instance
 - Run locally: `sbt run` which runs on port `9818` by default
-- Run all associated services: `sm --start ICED_ALL -f`
 - Run with test end points: `sbt 'run -Dapplication.router=testOnlyDoNotUseInAppConf.Routes'`
 
 ## Tests
 Run Unit Tests: `sbt test`
 
 Run Integration Tests: `sbt it:test`
-
-Run Acceptance Tests: [Instructions here](https://github.com/hmrc/import-control-entry-declaration-api-acceptance-tests)
-
-Run Performance Tests: [Instructions here](https://github.com/hmrc/import-control-entry-declaration-api-performance-tests)
 
 ## API
 
