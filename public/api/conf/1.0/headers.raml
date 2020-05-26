@@ -10,11 +10,11 @@ traits:
         description: Specifies the format of the request body, which must be XML.
         type: string
         required: true
-        example: application/xml
+        example: application/xml; charset=UTF-8
   acceptXml:
     headers:
       Accept:
         description: Specifies the response format and the version of the API to be used.
         type: string
         required: true
-        example: 'application/vnd.hmrc.1.0+xml'
+        example: application/vnd.hmrc.1.0+xml
