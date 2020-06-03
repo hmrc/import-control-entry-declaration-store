@@ -88,9 +88,8 @@ class EisConnectorSpec
   val mockScheduler: Scheduler = virtualTime.scheduler
 
   class Test(scheduler: Scheduler = mockScheduler, callTimeout: FiniteDuration = defaultCallTimeout) {
-    val newUrl      = "/safetyandsecurity/newenssubmission/v1"
-    val amendUrl    = "/safetyandsecurity/amendsubmission/v1"
-    val bearerToken = "my-bearer-token"
+    val newUrl   = "/safetyandsecurity/newenssubmission/v1"
+    val amendUrl = "/safetyandsecurity/amendsubmission/v1"
 
     MockAppConfig.eisHost returns s"http://localhost:$port" anyNumberOfTimes ()
     MockAppConfig.eisNewEnsUrlPath returns newUrl anyNumberOfTimes ()
@@ -99,7 +98,6 @@ class EisConnectorSpec
     MockAppConfig.eisCircuitBreakerMaxFailures returns maxCallFailures anyNumberOfTimes ()
     MockAppConfig.eisCircuitBreakerCallTimeout returns callTimeout anyNumberOfTimes ()
     MockAppConfig.eisCircuitBreakerResetTimeout returns resetTimeout anyNumberOfTimes ()
-    MockAppConfig.eisBearerToken returns bearerToken anyNumberOfTimes ()
 
     val connector           = new EisConnectorImpl(ws, mockAppConfig, mockPagerDutyLogger, mockHeaderGenerator)(scheduler)
     val submissionId        = "743aa85b-5077-438f-8f30-01ab2a39d945"

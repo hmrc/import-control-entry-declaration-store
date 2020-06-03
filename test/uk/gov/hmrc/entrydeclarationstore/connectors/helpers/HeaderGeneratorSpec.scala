@@ -25,12 +25,14 @@ class HeaderGeneratorSpec extends WordSpec with Matchers with HeaderNames with M
   val testHeaderGenerator = new HeaderGenerator(mockDateTimeUtils, mockAppConfig)
   val submissionId        = "someId"
   val authToken           = "someToken"
+  val env                 = "someEnv"
 
   "HeaderGenerator.headersForEIS" must {
 
     "create correct headers with CONTENT_TYPE" in {
       MockDateTimeUtils.currentDateInRFC1123Format returns "Thu, 13 Aug 2015 13:28:22 GMT"
       MockAppConfig.eisBearerToken returns authToken
+      MockAppConfig.eisEnvironment returns env
       implicit val hc: HeaderCarrier = HeaderCarrier()
       val headers                    = testHeaderGenerator.headersForEIS(submissionId).toMap
 
@@ -38,12 +40,14 @@ class HeaderGeneratorSpec extends WordSpec with Matchers with HeaderNames with M
       headers(CONTENT_TYPE)       shouldBe MimeTypes.JSON
       headers(ACCEPT)             shouldBe MimeTypes.JSON
       headers(AUTHORIZATION)      shouldBe s"Bearer $authToken"
+      headers("Environment")      shouldBe env
       headers(DATE)               shouldBe "Thu, 13 Aug 2015 13:28:22 GMT"
     }
 
     "include the Authorization header if it is supplied in AppConf" in {
       MockDateTimeUtils.currentDateInRFC1123Format returns "Thu, 13 Aug 2015 13:28:22 GMT"
       MockAppConfig.eisBearerToken returns authToken
+      MockAppConfig.eisEnvironment returns env
       implicit val hc: HeaderCarrier = HeaderCarrier()
       val headers                    = testHeaderGenerator.headersForEIS(submissionId).toMap
 
@@ -53,6 +57,7 @@ class HeaderGeneratorSpec extends WordSpec with Matchers with HeaderNames with M
     "not include the Authorization header if it is empty string in AppConf" in {
       MockDateTimeUtils.currentDateInRFC1123Format returns "Thu, 13 Aug 2015 13:28:22 GMT"
       MockAppConfig.eisBearerToken returns ""
+      MockAppConfig.eisEnvironment returns env
       implicit val hc: HeaderCarrier = HeaderCarrier()
       val headers                    = testHeaderGenerator.headersForEIS(submissionId).toMap
 
@@ -62,6 +67,7 @@ class HeaderGeneratorSpec extends WordSpec with Matchers with HeaderNames with M
     "not duplicate Authorization headers" in {
       MockDateTimeUtils.currentDateInRFC1123Format returns "Thu, 13 Aug 2015 13:28:22 GMT"
       MockAppConfig.eisBearerToken returns authToken
+      MockAppConfig.eisEnvironment returns env
       implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = Seq(AUTHORIZATION -> "bearerToken"))
       val headers                    = testHeaderGenerator.headersForEIS(submissionId).toMap
 
@@ -71,6 +77,7 @@ class HeaderGeneratorSpec extends WordSpec with Matchers with HeaderNames with M
     "include whitelisted headers" in {
       MockDateTimeUtils.currentDateInRFC1123Format returns "Thu, 13 Aug 2015 13:28:22 GMT"
       MockAppConfig.eisBearerToken returns authToken
+      MockAppConfig.eisEnvironment returns env
       implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = Seq("latencyInMs" -> "100"))
       val headers                    = testHeaderGenerator.headersForEIS(submissionId).toMap
 

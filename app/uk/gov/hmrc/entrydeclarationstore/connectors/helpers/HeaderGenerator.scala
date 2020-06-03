@@ -30,7 +30,8 @@ class HeaderGenerator @Inject()(dateTimeUtils: DateTimeUtils, appConfig: AppConf
       DATE               -> dateTimeUtils.currentDateInRFC1123Format,
       "X-Correlation-ID" -> submissionId,
       CONTENT_TYPE       -> MimeTypes.JSON,
-      ACCEPT             -> MimeTypes.JSON
+      ACCEPT             -> MimeTypes.JSON,
+      "Environment"      -> appConfig.eisEnvironment
     )
     appConfig.eisBearerToken match {
       case ""          => headers
