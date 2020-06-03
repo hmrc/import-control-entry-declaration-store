@@ -24,8 +24,8 @@ case class EntryDeclarationMetadata(
   submissionId: String,
   messageType: MessageType,
   modeOfTransport: String,
-  receiveDateTime: Instant,
-  mrn: Option[String]
+  receivedDateTime: Instant,
+  movementReferenceNumber: Option[String]
 )
 
 object EntryDeclarationMetadata extends InstantFormatter {

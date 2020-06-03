@@ -72,7 +72,7 @@ class EisConnectorImpl @Inject()(
     implicit ec: ExecutionContext,
     hc: HeaderCarrier): Future[Option[EISSendFailure]] =
     withCircuitBreaker {
-      val (url, httpMethod) = if (metadata.mrn.isDefined) (amendUrl, "PUT") else (newUrl, "POST")
+      val (url, httpMethod) = if (metadata.movementReferenceNumber.isDefined) (amendUrl, "PUT") else (newUrl, "POST")
       Logger.info(s"sending $httpMethod request to $url")
 
       ws.url(url)

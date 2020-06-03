@@ -29,7 +29,7 @@ class EntryDeclarationMetadataSpec extends UnitSpec {
         submissionId    = "submissionId",
         messageType     = MessageType.IE315,
         modeOfTransport = "12",
-        receiveDateTime = Instant.parse("2001-12-12T12:34:56.567Z"),
+        receivedDateTime = Instant.parse("2001-12-12T12:34:56.567Z"),
         None
       )
 
@@ -38,7 +38,7 @@ class EntryDeclarationMetadataSpec extends UnitSpec {
                                                |  "submissionId": "submissionId",
                                                |  "messageType": "IE315",
                                                |  "modeOfTransport": "12",
-                                               |  "receiveDateTime": "2001-12-12T12:34:56.567Z"
+                                               |  "receivedDateTime": "2001-12-12T12:34:56.567Z"
                                                |}
                                                |""".stripMargin)
     }
@@ -48,7 +48,7 @@ class EntryDeclarationMetadataSpec extends UnitSpec {
         submissionId    = "submissionId",
         messageType     = MessageType.IE313,
         modeOfTransport = "12",
-        receiveDateTime = Instant.parse("2001-12-12T12:34:56.567Z"),
+        receivedDateTime = Instant.parse("2001-12-12T12:34:56.567Z"),
         Some("123456789012345678")
       )
 
@@ -56,9 +56,9 @@ class EntryDeclarationMetadataSpec extends UnitSpec {
                                                |{
                                                |  "submissionId": "submissionId",
                                                |  "messageType": "IE313",
-                                               |  "mrn":"123456789012345678",
+                                               |  "movementReferenceNumber":"123456789012345678",
                                                |  "modeOfTransport": "12",
-                                               |  "receiveDateTime": "2001-12-12T12:34:56.567Z"
+                                               |  "receivedDateTime": "2001-12-12T12:34:56.567Z"
                                                |}
                                                |""".stripMargin)
     }
@@ -68,7 +68,7 @@ class EntryDeclarationMetadataSpec extends UnitSpec {
         submissionId    = "submissionId",
         messageType     = MessageType.IE315,
         modeOfTransport = "12",
-        receiveDateTime = Instant.parse("2001-12-12T12:34:56Z"),
+        receivedDateTime = Instant.parse("2001-12-12T12:34:56Z"),
         None
       )
 
@@ -77,7 +77,7 @@ class EntryDeclarationMetadataSpec extends UnitSpec {
                                                |  "submissionId": "submissionId",
                                                |  "messageType": "IE315",
                                                |  "modeOfTransport": "12",
-                                               |  "receiveDateTime": "2001-12-12T12:34:56.000Z"
+                                               |  "receivedDateTime": "2001-12-12T12:34:56.000Z"
                                                |}
                                                |""".stripMargin)
     }

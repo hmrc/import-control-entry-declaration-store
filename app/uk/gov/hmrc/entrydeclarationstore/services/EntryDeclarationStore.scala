@@ -94,7 +94,7 @@ class EntryDeclarationStoreImpl @Inject()(
           payload,
           transportMode,
           clientType)
-        submitToEIS(eori, correlationId, submissionId, xmlPayload, mrn, transportMode, receivedDateTime)
+        submitToEIS(eori, correlationId, submissionId, mrn, transportMode, receivedDateTime)
         SuccessResponse(entryDeclaration.correlationId)
       }
 
@@ -105,7 +105,6 @@ class EntryDeclarationStoreImpl @Inject()(
     eori: String,
     correlationId: String,
     submissionId: String,
-    xmlPayload: NodeSeq,
     mrn: Option[String],
     transportMode: String,
     time: Instant)(implicit hc: HeaderCarrier): Unit =
