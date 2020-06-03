@@ -53,6 +53,8 @@ trait AppConfig {
 
   def eisBearerToken: String
 
+  def eisEnvironment: String
+
   def validateXMLtoJsonTransformation: Boolean
 
   def businessRules315: Seq[String]
@@ -112,6 +114,8 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
   lazy val eisNewEnsUrlPath: String = eisConfig.get[String]("new-ens-url-path")
 
   lazy val eisAmendEnsUrlPath: String = eisConfig.get[String]("amend-ens-url-path")
+
+  lazy val eisEnvironment: String = eisConfig.get[String]("environment")
 
   lazy val eisBearerToken: String = eisConfig.get[String]("bearerToken")
 
