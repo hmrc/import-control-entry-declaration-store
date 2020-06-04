@@ -62,6 +62,9 @@ trait MockAppConfig extends MockFactory {
     def businessRules313: CallHandler[Seq[String]] = mockAppConfig.businessRules313 _ expects ()
 
     def businessRules315: CallHandler[Seq[String]] = mockAppConfig.businessRules315 _ expects ()
+
+    def headerWhitelist: CallHandler[Seq[String]] = mockAppConfig.headerWhitelist _ expects ()
+
   }
 
 }

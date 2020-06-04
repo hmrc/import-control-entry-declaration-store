@@ -33,6 +33,7 @@ class HeaderGeneratorSpec extends WordSpec with Matchers with HeaderNames with M
       MockDateTimeUtils.currentDateInRFC1123Format returns "Thu, 13 Aug 2015 13:28:22 GMT"
       MockAppConfig.eisBearerToken returns authToken
       MockAppConfig.eisEnvironment returns env
+      MockAppConfig.headerWhitelist returns Seq()
       implicit val hc: HeaderCarrier = HeaderCarrier()
       val headers                    = testHeaderGenerator.headersForEIS(submissionId).toMap
 
@@ -48,6 +49,7 @@ class HeaderGeneratorSpec extends WordSpec with Matchers with HeaderNames with M
       MockDateTimeUtils.currentDateInRFC1123Format returns "Thu, 13 Aug 2015 13:28:22 GMT"
       MockAppConfig.eisBearerToken returns authToken
       MockAppConfig.eisEnvironment returns env
+      MockAppConfig.headerWhitelist returns Seq()
       implicit val hc: HeaderCarrier = HeaderCarrier()
       val headers                    = testHeaderGenerator.headersForEIS(submissionId).toMap
 
@@ -58,30 +60,24 @@ class HeaderGeneratorSpec extends WordSpec with Matchers with HeaderNames with M
       MockDateTimeUtils.currentDateInRFC1123Format returns "Thu, 13 Aug 2015 13:28:22 GMT"
       MockAppConfig.eisBearerToken returns ""
       MockAppConfig.eisEnvironment returns env
+      MockAppConfig.headerWhitelist returns Seq()
       implicit val hc: HeaderCarrier = HeaderCarrier()
       val headers                    = testHeaderGenerator.headersForEIS(submissionId).toMap
 
       headers.contains(AUTHORIZATION) shouldBe false
     }
 
-    "not duplicate Authorization headers" in {
-      MockDateTimeUtils.currentDateInRFC1123Format returns "Thu, 13 Aug 2015 13:28:22 GMT"
-      MockAppConfig.eisBearerToken returns authToken
-      MockAppConfig.eisEnvironment returns env
-      implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = Seq(AUTHORIZATION -> "bearerToken"))
-      val headers                    = testHeaderGenerator.headersForEIS(submissionId).toMap
-
-      headers(AUTHORIZATION) shouldBe s"Bearer $authToken"
-    }
-
     "include whitelisted headers" in {
       MockDateTimeUtils.currentDateInRFC1123Format returns "Thu, 13 Aug 2015 13:28:22 GMT"
       MockAppConfig.eisBearerToken returns authToken
       MockAppConfig.eisEnvironment returns env
-      implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = Seq("latencyInMs" -> "100"))
+      MockAppConfig.headerWhitelist returns Seq("latencyInMs", "testHeader") anyNumberOfTimes()
+      implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = Seq("TESTHEADER" -> "test", "blacklistheader" -> "200", "latencyInMs" -> "100"))
       val headers                    = testHeaderGenerator.headersForEIS(submissionId).toMap
 
       headers("latencyInMs") shouldBe "100"
+      headers("TESTHEADER") shouldBe "test"
+      headers.get("blacklistheader") shouldBe None
     }
   }
 }

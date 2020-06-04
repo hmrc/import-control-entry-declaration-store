@@ -61,6 +61,8 @@ trait AppConfig {
 
   def businessRules313: Seq[String]
 
+  def headerWhitelist: Seq[String]
+
   def eisCircuitBreakerMaxFailures: Int
 
   def eisCircuitBreakerCallTimeout: FiniteDuration
@@ -125,6 +127,8 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
   lazy val businessRules315: Seq[String] = config.get[Seq[String]]("businessRules315")
 
   lazy val businessRules313: Seq[String] = config.get[Seq[String]]("businessRules313")
+
+  lazy val headerWhitelist: Seq[String] = config.get[Seq[String]]("httpHeadersWhitelist")
 
   lazy val eisCircuitBreakerMaxFailures: Int = eisConfig.get[Int]("circuitBreaker.maxFailures")
 
