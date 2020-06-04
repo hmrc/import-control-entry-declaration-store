@@ -25,7 +25,6 @@ import uk.gov.hmrc.http.HeaderCarrier
 @Singleton
 class HeaderGenerator @Inject()(dateTimeUtils: DateTimeUtils, appConfig: AppConfig) {
 
-
   def headersForEIS(submissionId: String)(implicit hc: HeaderCarrier): Seq[(String, String)] = {
     val upperCasedWhitelist = appConfig.headerWhitelist.map(_.toUpperCase)
     val whiteListedHeaders = hc.headers.filter{
