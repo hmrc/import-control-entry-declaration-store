@@ -17,12 +17,11 @@
 package uk.gov.hmrc.entrydeclarationstore.connectors
 
 import org.scalamock.handlers.CallHandler
-import org.scalamock.matchers.ArgCapture.CaptureOne
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.entrydeclarationstore.models.EntryDeclarationMetadata
 import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 trait MockEisConnector extends MockFactory {
   val mockEisConnector: EisConnector = mock[EisConnector]
@@ -30,8 +29,8 @@ trait MockEisConnector extends MockFactory {
   object MockEisConnector {
     def submitMetadata(metadata: EntryDeclarationMetadata): CallHandler[Future[Option[EISSendFailure]]] =
       (mockEisConnector
-        .submitMetadata(_: EntryDeclarationMetadata)(_: ExecutionContext, _: HeaderCarrier))
-        .expects(metadata, *, *)
+        .submitMetadata(_: EntryDeclarationMetadata)(_: HeaderCarrier))
+        .expects(metadata, *)
   }
 
 }

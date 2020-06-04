@@ -22,30 +22,28 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.http.Status
 import play.api.http.Status._
-import play.api.libs.json.Json
-import play.api.libs.ws.WSClient
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.helpers.HeaderGenerator
 import uk.gov.hmrc.entrydeclarationstore.models.EntryDeclarationMetadata
 import uk.gov.hmrc.entrydeclarationstore.utils.PagerDutyLogger
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
 trait EisConnector {
-  def submitMetadata(metadata: EntryDeclarationMetadata)(
-    implicit ec: ExecutionContext,
-    hc: HeaderCarrier): Future[Option[EISSendFailure]]
+  def submitMetadata(metadata: EntryDeclarationMetadata)(implicit hc: HeaderCarrier): Future[Option[EISSendFailure]]
 }
 
 @Singleton
 class EisConnectorImpl @Inject()(
-  ws: WSClient,
+  client: HttpClient,
   appConfig: AppConfig,
   pagerDutyLogger: PagerDutyLogger,
-  headerGenerator: HeaderGenerator)(implicit scheduler: Scheduler)
+  headerGenerator: HeaderGenerator)(implicit scheduler: Scheduler, executionContext: ExecutionContext)
     extends EisConnector {
   val newUrl: String   = s"${appConfig.eisHost}${appConfig.eisNewEnsUrlPath}"
   val amendUrl: String = s"${appConfig.eisHost}${appConfig.eisAmendEnsUrlPath}"
@@ -68,22 +66,37 @@ class EisConnectorImpl @Inject()(
 
   }
 
-  def submitMetadata(metadata: EntryDeclarationMetadata)(
-    implicit ec: ExecutionContext,
-    hc: HeaderCarrier): Future[Option[EISSendFailure]] =
-    withCircuitBreaker {
-      val (url, httpMethod) = if (metadata.movementReferenceNumber.isDefined) (amendUrl, "PUT") else (newUrl, "POST")
-      Logger.info(s"sending $httpMethod request to $url")
+  // Replace default HttpReads[HttpResponse] so that we can fully control error handling
+  implicit object ResultReads extends HttpReads[HttpResponse] {
+    override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
+  }
 
-      ws.url(url)
-        .withHttpHeaders(headerGenerator.headersForEIS(metadata.submissionId): _*)
-        .withBody(Json.toJson(metadata))
-        .execute(httpMethod)
-        .map(resp => Result.ResponseReceived(resp.status))
+  implicit val emptyHeaderCarrier: HeaderCarrier = HeaderCarrier()
+
+  def submitMetadata(metadata: EntryDeclarationMetadata)(implicit hc: HeaderCarrier): Future[Option[EISSendFailure]] =
+    withCircuitBreaker {
+
+      val isAmendment = metadata.movementReferenceNumber.isDefined
+      val headers     = headerGenerator.headersForEIS(metadata.submissionId)(hc)
+
+      val result = if (isAmendment) putAmendment(metadata, headers) else postNew(metadata, headers)
+
+      result.map(resp => Result.ResponseReceived(resp.status))
     }
 
-  private[connectors] def withCircuitBreaker(code: => Future[Result])(
-    implicit ec: ExecutionContext): Future[Option[EISSendFailure]] = {
+  private def putAmendment(metadata: EntryDeclarationMetadata, headers: Seq[(String, String)]) = {
+    Logger.info(s"sending PUT request to $amendUrl")
+    client
+      .PUT[JsValue, HttpResponse](amendUrl, Json.toJson(metadata), headers)
+  }
+
+  private def postNew(metadata: EntryDeclarationMetadata, headers: Seq[(String, String)]) = {
+    Logger.info(s"sending POST request to $newUrl")
+    client
+      .POST[JsValue, HttpResponse](newUrl, Json.toJson(metadata), headers)
+  }
+
+  private[connectors] def withCircuitBreaker(code: => Future[Result]): Future[Option[EISSendFailure]] = {
 
     val promise = Promise[Result]
 

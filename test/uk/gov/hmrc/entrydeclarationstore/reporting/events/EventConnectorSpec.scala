@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.entrydeclarationstore.reporting.events
 
-import akka.actor.ActorSystem
 import akka.stream.actor.ActorPublisherMessage.Request
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
@@ -28,7 +27,6 @@ import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
-import play.api.libs.ws.WSClient
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits, Injecting}
 import play.api.{Application, Environment, Mode}
 import play.mvc.Http.Status.{BAD_REQUEST, CREATED}
@@ -36,6 +34,7 @@ import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.models.MessageType
 import uk.gov.hmrc.entrydeclarationstore.utils.MockPagerDutyLogger
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.ExecutionContext
 
@@ -55,8 +54,7 @@ class EventConnectorSpec
     .configure("metrics.enabled" -> "false")
     .build()
 
-  val ws: WSClient             = inject[WSClient]
-  val actorSystem: ActorSystem = inject[ActorSystem]
+  val httpClient: HttpClient = inject[HttpClient]
 
   implicit val hc: HeaderCarrier    = HeaderCarrier()
   implicit val ec: ExecutionContext = ExecutionContext.global
@@ -79,7 +77,7 @@ class EventConnectorSpec
     MockAppConfig.eventsHost returns s"http://localhost:$port"
     val url = "/import-control/event"
 
-    val connector    = new EventConnectorImpl(ws, mockAppConfig, mockPagerDutyLogger)
+    val connector    = new EventConnectorImpl(httpClient, mockAppConfig, mockPagerDutyLogger)
     val submissionId = "743aa85b-5077-438f-8f30-01ab2a39d945"
     val event: Event = Event(
       EventCode.ENS_REC,
