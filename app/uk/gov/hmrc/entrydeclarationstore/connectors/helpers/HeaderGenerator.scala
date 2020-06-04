@@ -26,7 +26,11 @@ import uk.gov.hmrc.http.HeaderCarrier
 class HeaderGenerator @Inject()(dateTimeUtils: DateTimeUtils, appConfig: AppConfig) {
 
   def headersForEIS(submissionId: String)(implicit hc: HeaderCarrier): Seq[(String, String)] = {
-    val headers = hc.headers ++ Seq(
+    val upperCasedWhitelist = appConfig.headerWhitelist.map(_.toUpperCase)
+    val whiteListedHeaders = hc.headers.filter{
+      case (name, _) => upperCasedWhitelist contains name.toUpperCase
+    }
+    val headers = whiteListedHeaders ++ Seq(
       DATE               -> dateTimeUtils.currentDateInRFC1123Format,
       "X-Correlation-ID" -> submissionId,
       CONTENT_TYPE       -> MimeTypes.JSON,
