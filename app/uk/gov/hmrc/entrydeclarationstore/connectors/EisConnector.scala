@@ -22,7 +22,6 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.http.Status
 import play.api.http.Status._
-import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.helpers.HeaderGenerator
 import uk.gov.hmrc.entrydeclarationstore.models.EntryDeclarationMetadata
@@ -84,16 +83,16 @@ class EisConnectorImpl @Inject()(
       result.map(resp => Result.ResponseReceived(resp.status))
     }
 
-  private def putAmendment(metadata: EntryDeclarationMetadata, headers: Seq[(String, String)]) = {
+  private def putAmendment(metadata: EntryDeclarationMetadata, headers: Seq[(String, String)]): Future[HttpResponse] = {
     Logger.info(s"sending PUT request to $amendUrl")
     client
-      .PUT[JsValue, HttpResponse](amendUrl, Json.toJson(metadata), headers)
+      .PUT(amendUrl, metadata, headers)
   }
 
-  private def postNew(metadata: EntryDeclarationMetadata, headers: Seq[(String, String)]) = {
+  private def postNew(metadata: EntryDeclarationMetadata, headers: Seq[(String, String)]): Future[HttpResponse] = {
     Logger.info(s"sending POST request to $newUrl")
     client
-      .POST[JsValue, HttpResponse](newUrl, Json.toJson(metadata), headers)
+      .POST(newUrl, metadata, headers)
   }
 
   private[connectors] def withCircuitBreaker(code: => Future[Result]): Future[Option[EISSendFailure]] = {

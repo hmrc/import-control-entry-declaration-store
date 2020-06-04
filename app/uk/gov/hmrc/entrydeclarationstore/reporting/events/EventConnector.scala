@@ -18,7 +18,6 @@ package uk.gov.hmrc.entrydeclarationstore.reporting.events
 
 import javax.inject.{Inject, Singleton}
 import play.api.http.Status._
-import play.api.libs.json.Json
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.utils.PagerDutyLogger
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
@@ -47,7 +46,7 @@ class EventConnectorImpl @Inject()(client: HttpClient, appConfig: AppConfig, pag
 
   def sendEvent(event: Event)(implicit hc: HeaderCarrier): Future[Unit] =
     client
-      .POST(url, Json.toJson(event))
+      .POST(url, event)
       .recover {
         case NonFatal(e) => pagerDutyLogger.logEventError(e)
       }
