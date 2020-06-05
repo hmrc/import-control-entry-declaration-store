@@ -75,9 +75,6 @@ class EisConnectorImpl @Inject()(
       val (url, httpMethod) = if (metadata.movementReferenceNumber.isDefined) (amendUrl, "PUT") else (newUrl, "POST")
       Logger.info(s"sending $httpMethod request to $url")
 
-      val headerInfo = headerGenerator.headersForEIS(metadata.submissionId)
-      Logger.info(s"sending headers $headerInfo")
-
       ws.url(url)
         .withHttpHeaders(headerGenerator.headersForEIS(metadata.submissionId): _*)
         .withBody(Json.toJson(metadata))
