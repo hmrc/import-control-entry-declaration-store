@@ -65,7 +65,7 @@ class EisConnectorImpl @Inject()(
 
   }
 
-  // Replace default HttpReads[HttpResponse] so that we can fully control error handling
+  // This replaces the default HttpReads[HttpResponse] so that we can fully control error handling
   implicit object ResultReads extends HttpReads[HttpResponse] {
     override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
   }
