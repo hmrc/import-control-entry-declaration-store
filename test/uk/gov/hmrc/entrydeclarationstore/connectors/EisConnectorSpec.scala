@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.connectors
 
+import play.api.http.HeaderNames._
 import java.io.IOException
 
 import akka.actor.{ActorSystem, Scheduler}
@@ -28,9 +29,9 @@ import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import com.miguno.akka.testing.VirtualTime
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.http.MimeTypes
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
-import play.api.libs.ws.WSClient
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits, Injecting}
 import play.api.{Application, Environment, Mode}
 import play.mvc.Http.Status._
@@ -39,6 +40,7 @@ import uk.gov.hmrc.entrydeclarationstore.connectors.helpers.MockHeaderGenerator
 import uk.gov.hmrc.entrydeclarationstore.models.{EntryDeclarationMetadata, MessageType}
 import uk.gov.hmrc.entrydeclarationstore.utils.MockPagerDutyLogger
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -60,10 +62,14 @@ class EisConnectorSpec
     .configure("metrics.enabled" -> "false")
     .build()
 
-  val ws: WSClient             = inject[WSClient]
+  val httpClient: HttpClient   = inject[HttpClient]
   val actorSystem: ActorSystem = inject[ActorSystem]
 
-  implicit val hc: HeaderCarrier    = HeaderCarrier()
+  // So that we can check that only those headers from the HeaderGenerator are included
+  private val extraHeader = "extraHeader"
+  private val otherHeader = "otherHeader"
+  implicit val hc: HeaderCarrier =
+    HeaderCarrier(extraHeaders = Seq(extraHeader -> "someValue"), otherHeaders = Seq(otherHeader -> "someOtherValue"))
   implicit val ec: ExecutionContext = ExecutionContext.global
   implicit val request: Request     = Request(0L)
 
@@ -99,7 +105,8 @@ class EisConnectorSpec
     MockAppConfig.eisCircuitBreakerCallTimeout returns callTimeout anyNumberOfTimes ()
     MockAppConfig.eisCircuitBreakerResetTimeout returns resetTimeout anyNumberOfTimes ()
 
-    val connector           = new EisConnectorImpl(ws, mockAppConfig, mockPagerDutyLogger, mockHeaderGenerator)(scheduler)
+    val connector =
+      new EisConnectorImpl(httpClient, mockAppConfig, mockPagerDutyLogger, mockHeaderGenerator)(scheduler, implicitly)
     val submissionId        = "743aa85b-5077-438f-8f30-01ab2a39d945"
     val mrn: Option[String] = Some("123456789012345678")
 
@@ -119,8 +126,10 @@ class EisConnectorSpec
       mrn
     )
 
+    val expectedHeader      = "expectedHeader"
+    val expectedHeaderValue = "expectedHeaderValue"
     MockHeaderGenerator
-      .headersForEIS(submissionId) returns Seq("someHeader" -> "someHeaderValue") anyNumberOfTimes ()
+      .headersForEIS(submissionId) returns Seq(expectedHeader -> expectedHeaderValue) anyNumberOfTimes ()
 
     def stubResponse(statusCode: Int): StubMapping =
       wireMockServer
@@ -128,7 +137,7 @@ class EisConnectorSpec
           post(urlPathEqualTo(newUrl))
             .withRequestBody(equalToJson(Json.toJson(declarationMetadata).toString()))
             .willReturn(aResponse()
-              .withHeader("Content-Type", "application/json")
+              .withHeader(CONTENT_TYPE, MimeTypes.JSON)
               .withStatus(statusCode)))
 
     def stubDelayedResponse(delay: FiniteDuration, statusCode: Int): StubMapping =
@@ -184,25 +193,35 @@ class EisConnectorSpec
         "executing a post for a declaration" in new Test {
           wireMockServer.stubFor(
             post(urlPathEqualTo(newUrl))
-              .withHeader("someHeader", equalTo("someHeaderValue"))
+              .withHeader(expectedHeader, equalTo(expectedHeaderValue))
               .withRequestBody(equalToJson(Json.toJson(declarationMetadata).toString))
               .willReturn(aResponse()
-                .withHeader("Content-Type", "application/json")
+                .withHeader(CONTENT_TYPE, MimeTypes.JSON)
                 .withStatus(ACCEPTED)))
 
           await(connector.submitMetadata(declarationMetadata)) shouldBe None
+
+          verify(
+            postRequestedFor(urlPathEqualTo(newUrl))
+              .withoutHeader(extraHeader)
+              .withoutHeader(otherHeader))
         }
 
         "executing a put for an amendment" in new Test {
           wireMockServer.stubFor(
             put(urlPathEqualTo(amendUrl))
-              .withHeader("someHeader", equalTo("someHeaderValue"))
+              .withHeader(expectedHeader, equalTo(expectedHeaderValue))
               .withRequestBody(equalToJson(Json.toJson(amendmentMetadata).toString))
               .willReturn(aResponse()
-                .withHeader("Content-Type", "application/json")
+                .withHeader(CONTENT_TYPE, MimeTypes.JSON)
                 .withStatus(ACCEPTED)))
 
           await(connector.submitMetadata(amendmentMetadata)) shouldBe None
+
+          verify(
+            putRequestedFor(urlPathEqualTo(amendUrl))
+              .withoutHeader(extraHeader)
+              .withoutHeader(otherHeader))
         }
       }
     }
