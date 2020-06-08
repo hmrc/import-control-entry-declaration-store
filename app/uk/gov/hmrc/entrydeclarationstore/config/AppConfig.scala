@@ -53,6 +53,8 @@ trait AppConfig {
 
   def eisBearerToken: String
 
+  def eisInboundBearerToken: String
+
   def eisEnvironment: String
 
   def validateXMLtoJsonTransformation: Boolean
@@ -120,6 +122,9 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
   lazy val eisEnvironment: String = eisConfig.get[String]("environment")
 
   lazy val eisBearerToken: String = eisConfig.get[String]("bearerToken")
+
+  lazy val eisInboundBearerToken: String =
+    config.get[String]("microservice.services.import-control-entry-declaration-eis.inboundBearerToken")
 
   lazy val validateXMLtoJsonTransformation: Boolean =
     config.getOptional[Boolean]("validateXMLtoJsonTransformation").getOrElse(false)

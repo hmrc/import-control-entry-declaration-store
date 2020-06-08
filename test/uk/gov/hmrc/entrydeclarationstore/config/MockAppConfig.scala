@@ -42,6 +42,8 @@ trait MockAppConfig extends MockFactory {
 
     def eisBearerToken: CallHandler[String] = mockAppConfig.eisBearerToken _ expects ()
 
+    def eisInboundBearerToken: CallHandler[String] = mockAppConfig.eisInboundBearerToken _ expects ()
+
     def eisEnvironment: CallHandler[String] = mockAppConfig.eisEnvironment _ expects ()
 
     def xmlFormatConfig: CallHandler[XmlFormatConfig] = mockAppConfig.xmlFormatConfig _ expects ()

@@ -19,15 +19,17 @@ package uk.gov.hmrc.entrydeclarationstore.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.services.EntryDeclarationRetrievalService
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.ExecutionContext
 
 @Singleton()
-class EntryDeclarationRetrievalController @Inject()(cc: ControllerComponents, service: EntryDeclarationRetrievalService)(
-  implicit ec: ExecutionContext)
-    extends BackendController(cc) {
+class EntryDeclarationRetrievalController @Inject()(
+  cc: ControllerComponents,
+  service: EntryDeclarationRetrievalService,
+  appConfig: AppConfig)(implicit ec: ExecutionContext)
+    extends EisInboundAuthorisedController(cc, appConfig) {
 
   def retrieveDataFromMongo(eori: String, correlationId: String): Action[AnyContent] = Action.async {
     implicit request =>
@@ -38,7 +40,7 @@ class EntryDeclarationRetrievalController @Inject()(cc: ControllerComponents, se
       }
   }
 
-  def getSubmission(id: String): Action[AnyContent] = Action.async { implicit request =>
+  def getSubmission(id: String): Action[AnyContent] = authorisedAction.async { implicit request =>
     service.retrieveSubmission(id).map {
       case Some(payload) => Ok(payload)
       case None          => NotFound
