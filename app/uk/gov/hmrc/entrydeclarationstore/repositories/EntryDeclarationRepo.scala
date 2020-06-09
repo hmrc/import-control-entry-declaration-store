@@ -19,7 +19,8 @@ package uk.gov.hmrc.entrydeclarationstore.repositories
 import java.time.Instant
 
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json.{JsObject, JsPath, JsValue, Json}
+import play.api.Logger
+import play.api.libs.json.{JsError, JsObject, JsPath, JsSuccess, JsValue, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
@@ -47,7 +48,7 @@ trait EntryDeclarationRepo {
 
   def lookupAmendmentRejectionEnrichment(submissionId: String): Future[Option[AmendmentRejectionEnrichment]]
 
-  def lookupMetadata(submissionId: String): Future[Option[EntryDeclarationMetadata]] = ???
+  def lookupMetadata(submissionId: String): Future[Either[MetadataLookupError, EntryDeclarationMetadata]]
 }
 
 @Singleton
@@ -150,6 +151,31 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
           ))
       )
       .one[AmendmentRejectionEnrichment](ReadPreference.primaryPreferred)
+
+  override def lookupMetadata(submissionId: String): Future[Either[MetadataLookupError, EntryDeclarationMetadata]] =
+    collection
+      .find(
+        Json.obj("submissionId" -> submissionId),
+        Some(
+          Json.obj(
+            "submissionId"                              -> 1,
+            "payload.metadata.messageType"              -> 1,
+            "payload.itinerary.modeOfTransportAtBorder" -> 1,
+            "mrn"                                       -> 1,
+            "receivedDateTime"                          -> 1
+          ))
+      )
+      .one[JsValue](ReadPreference.primaryPreferred)
+      .map {
+        case Some(json) =>
+          json.validate[EntryDeclarationMetadataPersisted] match {
+            case JsSuccess(value, _) => Right(value.toDomain)
+            case JsError(errs) =>
+              Logger.warn(s"Unable to read metadata for submissionId $submissionId: $errs")
+              Left(MetadataLookupError.DataFormatError)
+          }
+        case None => Left(MetadataLookupError.MetadataNotFound)
+      }
 
   def getExpireAfterSeconds: Future[Option[Long]] =
     collection.indexesManager.list().map { indexes =>

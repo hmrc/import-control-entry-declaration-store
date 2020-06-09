@@ -20,10 +20,10 @@ import java.time.Instant
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits, Injecting}
 import play.api.{Application, Environment, Mode}
-import uk.gov.hmrc.entrydeclarationstore.models.{AcceptanceEnrichment, AmendmentRejectionEnrichment, EntryDeclarationModel, SubmissionIdLookupResult}
+import uk.gov.hmrc.entrydeclarationstore.models._
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -58,26 +58,27 @@ class EntryDeclarationRepoISpec
   val messageSender              = "messageSender"
   val messageRecipient           = "messageRecipient"
   val eori                       = "eori"
-  val time: Instant              = Instant.now
-  val housekeepingAt: Instant    = time.plusMillis(defaultTtl.toMillis)
-  val payload: JsValue           = ResourceUtils.withInputStreamFor("jsons/313SpecificFields.json")(Json.parse)
+  val receivedDateTime: Instant  = Instant.now
+  val housekeepingAt: Instant    = receivedDateTime.plusMillis(defaultTtl.toMillis)
+  val payload313: JsValue        = ResourceUtils.withInputStreamFor("jsons/313SpecificFields.json")(Json.parse)
+  val payload315: JsValue        = ResourceUtils.withInputStreamFor("jsons/315NoOptional.json")(Json.parse)
 
   val entryDeclaration313: EntryDeclarationModel = EntryDeclarationModel(
     correlationId313,
     submissionId313,
     eori,
-    payload,
+    payload313,
     Some("00REFNUM1234567890"),
-    time
+    receivedDateTime
   )
 
   val entryDeclaration315: EntryDeclarationModel = EntryDeclarationModel(
     correlationId315,
     submissionId315,
     eori,
-    payload,
+    payload315,
     None,
-    time
+    receivedDateTime
   )
 
   def lookupEntryDeclaration(submissionId: String): Option[EntryDeclarationModel] =
@@ -134,7 +135,7 @@ class EntryDeclarationRepoISpec
     "a document with the eori & correlationId exists in the database" must {
       "return its submissionId" in {
         await(repository.lookupSubmissionId(eori, correlationId313)) shouldBe
-          Some(SubmissionIdLookupResult(time.toString, housekeepingAt.toString, submissionId313))
+          Some(SubmissionIdLookupResult(receivedDateTime.toString, housekeepingAt.toString, submissionId313))
       }
     }
 
@@ -161,7 +162,7 @@ class EntryDeclarationRepoISpec
   "looking up an entry-declaration from a submissionId" when {
     "a document with the submissionId exists in the database" must {
       "return its xml submission" in {
-        await(repository.lookupEntryDeclaration(submissionId313)) shouldBe Some(payload)
+        await(repository.lookupEntryDeclaration(submissionId313)) shouldBe Some(payload313)
       }
     }
 
@@ -198,7 +199,7 @@ class EntryDeclarationRepoISpec
         await(repository.lookupAcceptanceEnrichment("submissionId313")) shouldBe
           Some(
             AcceptanceEnrichment(
-              payload
+              payload313
             ))
       }
     }
@@ -226,6 +227,64 @@ class EntryDeclarationRepoISpec
     "no document with the submissionId exists in the database" must {
       "return None" in {
         await(repository.lookupAmendmentRejectionEnrichment("unknownsubmissionId313")) shouldBe None
+      }
+    }
+  }
+
+  "looking up metadata" when {
+    "a IE313 submission with the submissionId exists in the database" must {
+      "return the metadata" in {
+        await(repository.lookupMetadata("submissionId313")) shouldBe
+          Right(
+            EntryDeclarationMetadata(
+              submissionId            = "submissionId313",
+              messageType             = MessageType.IE313,
+              modeOfTransport         = "2",
+              receivedDateTime        = receivedDateTime,
+              movementReferenceNumber = Some("00REFNUM1234567890")
+            )
+          )
+      }
+    }
+
+    "a IE315 submission with the submissionId exists in the database" must {
+      "return the metadata" in {
+        await(repository.lookupMetadata("submissionId315")) shouldBe
+          Right(
+            EntryDeclarationMetadata(
+              submissionId            = "submissionId315",
+              messageType             = MessageType.IE315,
+              modeOfTransport         = "2",
+              receivedDateTime        = receivedDateTime,
+              movementReferenceNumber = None
+            )
+          )
+      }
+    }
+
+    // Because when we are replaying we don't want a single bad document
+    // to cause the whole batch to fail or the whole replay to be aborted,
+    // so we need to be able to catch this scenario...
+    "invalid data is stored in the database" must {
+      "return a DataFormatError" in {
+        await(
+          repository
+            .save(
+              entryDeclaration315
+                .copy(
+                  submissionId  = "badPayloadSubmissionID",
+                  correlationId = "badPayloadCorrelationId",
+                  payload       = JsObject.empty))) shouldBe true
+
+        await(repository.lookupMetadata("badPayloadSubmissionID")) shouldBe
+          Left(MetadataLookupError.DataFormatError)
+      }
+    }
+
+    "no document with the submissionId exists in the database" must {
+      "return None" in {
+        await(repository.lookupMetadata("unknownsubmissionId313")) shouldBe
+          Left(MetadataLookupError.MetadataNotFound)
       }
     }
   }
