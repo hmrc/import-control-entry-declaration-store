@@ -16,11 +16,13 @@
 
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
+import play.api.http.HeaderNames
 import play.api.libs.json.{JsString, JsValue, Json}
 import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import play.mvc.Http.MimeTypes
+import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.models.SubmissionIdLookupResult
 import uk.gov.hmrc.entrydeclarationstore.services.MockEntryDeclarationRetrievalService
 import uk.gov.hmrc.play.test.UnitSpec
@@ -28,10 +30,16 @@ import uk.gov.hmrc.play.test.UnitSpec
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class EntryDeclarationRetrievalControllerSpec extends UnitSpec with MockEntryDeclarationRetrievalService {
+class EntryDeclarationRetrievalControllerSpec
+    extends UnitSpec
+    with MockEntryDeclarationRetrievalService
+    with MockAppConfig {
 
   private val controller =
-    new EntryDeclarationRetrievalController(Helpers.stubControllerComponents(), mockEntryDeclarationRetrievalService)
+    new EntryDeclarationRetrievalController(
+      Helpers.stubControllerComponents(),
+      mockEntryDeclarationRetrievalService,
+      mockAppConfig)
 
   val eori             = "eori"
   val submissionId     = "submissionId"
@@ -39,6 +47,8 @@ class EntryDeclarationRetrievalControllerSpec extends UnitSpec with MockEntryDec
   val receivedDateTime = "receivedDateTime"
   val receivedDateTimeAndSubmissionID: SubmissionIdLookupResult =
     SubmissionIdLookupResult("dateTime", "housekeepingAt", "ConvID")
+
+  val bearerToken: String = "bearerToken"
 
   "EntryDeclarationRetrievalController" when {
     "getting submissionId from eori and correlationId" when {
@@ -70,14 +80,18 @@ class EntryDeclarationRetrievalControllerSpec extends UnitSpec with MockEntryDec
     }
 
     "getting payload from submissionId" when {
+      val requestWithAuth = FakeRequest()
+        .withHeaders(HeaderNames.AUTHORIZATION -> s"Bearer $bearerToken")
+
       "id exists" must {
         "return OK with the xml body" in {
           val payload: JsValue = JsString("payload")
           MockEntryDeclarationRetrievalService
             .retrieveSubmission(submissionId)
             .returns(Future.successful(Some(payload)))
+          MockAppConfig.eisInboundBearerToken returns bearerToken
 
-          val result: Future[Result] = controller.getSubmission(submissionId)(FakeRequest())
+          val result: Future[Result] = controller.getSubmission(submissionId)(requestWithAuth)
 
           status(result) shouldBe OK
 
@@ -90,10 +104,21 @@ class EntryDeclarationRetrievalControllerSpec extends UnitSpec with MockEntryDec
       "id does not exist" must {
         "return NOT_FOUND" in {
           MockEntryDeclarationRetrievalService.retrieveSubmission(submissionId).returns(Future.successful(None))
+          MockAppConfig.eisInboundBearerToken returns bearerToken
 
-          val result: Future[Result] = controller.getSubmission(submissionId)(FakeRequest())
+          val result: Future[Result] = controller.getSubmission(submissionId)(requestWithAuth)
 
           status(result) shouldBe NOT_FOUND
+        }
+      }
+
+      "return 401" when {
+        "no authentication fails" in {
+          MockAppConfig.eisInboundBearerToken returns "differentBearerToken"
+
+          val result: Future[Result] = controller.getSubmission(submissionId)(requestWithAuth)
+
+          status(result) shouldBe UNAUTHORIZED
         }
       }
     }
