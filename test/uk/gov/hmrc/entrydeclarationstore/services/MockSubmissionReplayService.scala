@@ -16,10 +16,17 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
+import org.scalamock.handlers.CallHandler
+import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.entrydeclarationstore.models.{ReplayError, ReplayResult}
 
 import scala.concurrent.Future
 
-class SubmissionReplayService {
-  def replaySubmission(submissionIds: Seq[String]): Future[Either[ReplayError, ReplayResult]] = ???
+trait MockSubmissionReplayService extends MockFactory {
+  val mockSubmissionReplayService: SubmissionReplayService = mock[SubmissionReplayService]
+
+  object MockSubmissionReplayService {
+    def replaySubmission(submissionIds: Seq[String]): CallHandler[Future[Either[ReplayError, ReplayResult]]] =
+      (mockSubmissionReplayService.replaySubmission(_: Seq[String])) expects submissionIds
+  }
 }

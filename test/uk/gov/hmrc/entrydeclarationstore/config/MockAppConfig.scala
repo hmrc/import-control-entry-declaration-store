@@ -67,6 +67,8 @@ trait MockAppConfig extends MockFactory {
 
     def headerWhitelist: CallHandler[Seq[String]] = mockAppConfig.headerWhitelist _ expects ()
 
+    def replayBatchSizeLimit: CallHandler[Int] = mockAppConfig.replayBatchSizeLimit _ expects ()
+
   }
 
 }
