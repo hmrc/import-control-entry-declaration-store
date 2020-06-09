@@ -28,7 +28,7 @@ import reactivemongo.bson.{BSONDocument, BSONObjectID}
 import reactivemongo.core.errors.DatabaseException
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
-import uk.gov.hmrc.entrydeclarationstore.models.{AcceptanceEnrichment, AmendmentRejectionEnrichment, EntryDeclarationModel, SubmissionIdLookupResult}
+import uk.gov.hmrc.entrydeclarationstore.models.{AcceptanceEnrichment, AmendmentRejectionEnrichment, EntryDeclarationMetadata, EntryDeclarationModel, SubmissionIdLookupResult}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
@@ -46,6 +46,8 @@ trait EntryDeclarationRepo {
   def lookupAcceptanceEnrichment(submissionId: String): Future[Option[AcceptanceEnrichment]]
 
   def lookupAmendmentRejectionEnrichment(submissionId: String): Future[Option[AmendmentRejectionEnrichment]]
+
+  def lookupMetadata(submissionId: String): Future[Option[EntryDeclarationMetadata]] = ???
 }
 
 @Singleton
