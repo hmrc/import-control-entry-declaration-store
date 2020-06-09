@@ -41,7 +41,7 @@ class SubmissionReplayControllerSpec extends UnitSpec with MockSubmissionReplayS
     "replay successful" should {
       "return 200 with the success and failure counts" in {
         val replayResult = ReplayResult(2, 3)
-        MockAppConfig.replayBatchSize.returns(3)
+        MockAppConfig.replayBatchSizeLimit.returns(3)
         MockSubmissionReplayService
           .replaySubmission(submissionIds.submissionIds)
           .returns(Future.successful(Right(replayResult)))
@@ -54,16 +54,16 @@ class SubmissionReplayControllerSpec extends UnitSpec with MockSubmissionReplayS
       }
     }
     "replay unsuccessful" should {
-      "return 503" in {
+      "return 500" in {
         val replayError = Left(ReplayError.EISEventError)
-        MockAppConfig.replayBatchSize.returns(3)
+        MockAppConfig.replayBatchSizeLimit.returns(3)
         MockSubmissionReplayService
           .replaySubmission(submissionIds.submissionIds)
           .returns(Future.successful(replayError))
 
         val result: Future[Result] = controller.replay(request)
 
-        status(result)      shouldBe SERVICE_UNAVAILABLE
+        status(result)      shouldBe INTERNAL_SERVER_ERROR
         contentType(result) shouldBe None
       }
     }
@@ -78,7 +78,7 @@ class SubmissionReplayControllerSpec extends UnitSpec with MockSubmissionReplayS
     }
     "list length exceeds the limit" should {
       "return 400" in {
-        MockAppConfig.replayBatchSize.returns(1) //List has 2 entries.
+        MockAppConfig.replayBatchSizeLimit.returns(1) //List has 2 entries.
         val result: Future[Result] = controller.replay(request)
 
         status(result)      shouldBe BAD_REQUEST
