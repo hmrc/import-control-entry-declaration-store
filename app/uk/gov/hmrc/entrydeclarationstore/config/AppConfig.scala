@@ -72,6 +72,8 @@ trait AppConfig {
   def eisCircuitBreakerResetTimeout: FiniteDuration
 
   def defaultTtl: FiniteDuration
+
+  def replayBatchSize: Int
 }
 
 @Singleton
@@ -142,4 +144,6 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
   lazy val eisCircuitBreakerResetTimeout: FiniteDuration = getFiniteDuration(eisConfig, "circuitBreaker.resetTimeout")
 
   lazy val defaultTtl: FiniteDuration = getFiniteDuration(config.get[Configuration](s"mongodb"), "defaultTtl")
+
+  lazy val replayBatchSize: Int = config.get[Int]("replay.batchSize")
 }

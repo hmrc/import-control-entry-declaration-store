@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.entrydeclarationstore.services
+package uk.gov.hmrc.entrydeclarationstore.models
 
-import uk.gov.hmrc.entrydeclarationstore.models.{ReplayError, ReplayResult}
+import play.api.libs.json.{Json, Reads}
 
-import scala.concurrent.Future
+case class ReplaySubmissionIds(submissionIds: Seq[String])
 
-class SubmissionReplayService {
-  def replaySubmission(submissionIds: Seq[String]): Future[Either[ReplayError, ReplayResult]] = ???
+object ReplaySubmissionIds {
+  implicit val reads: Reads[ReplaySubmissionIds] = Json.reads[ReplaySubmissionIds]
 }

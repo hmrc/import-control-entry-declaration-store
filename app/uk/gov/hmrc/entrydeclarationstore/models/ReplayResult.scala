@@ -13,9 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package uk.gov.hmrc.entrydeclarationstore.models
+
+import play.api.libs.json.{Json, Writes}
 
 case class ReplayResult(
   successCount: Int,
   failureCount: Int
 )
+object ReplayResult {
+  implicit val writes: Writes[ReplayResult] = Json.writes[ReplayResult]
+}
