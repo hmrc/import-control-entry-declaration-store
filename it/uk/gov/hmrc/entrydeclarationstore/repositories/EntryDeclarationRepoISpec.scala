@@ -282,7 +282,7 @@ class EntryDeclarationRepoISpec
     }
 
     "no document with the submissionId exists in the database" must {
-      "return None" in {
+      "return MetadataNotFound" in {
         await(repository.lookupMetadata("unknownsubmissionId313")) shouldBe
           Left(MetadataLookupError.MetadataNotFound)
       }

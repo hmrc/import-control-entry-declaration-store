@@ -174,7 +174,9 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
               Logger.warn(s"Unable to read metadata for submissionId $submissionId: $errs")
               Left(MetadataLookupError.DataFormatError)
           }
-        case None => Left(MetadataLookupError.MetadataNotFound)
+        case None =>
+          Logger.info(s"No metadata found for submissionId $submissionId")
+          Left(MetadataLookupError.MetadataNotFound)
       }
 
   def getExpireAfterSeconds: Future[Option[Long]] =
