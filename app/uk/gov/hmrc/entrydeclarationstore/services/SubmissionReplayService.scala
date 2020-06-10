@@ -16,10 +16,47 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
-import uk.gov.hmrc.entrydeclarationstore.models.{ReplayError, ReplayResult}
+import javax.inject.{Inject, Singleton}
+import play.api.http.Status.BAD_REQUEST
+import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, EisConnector}
+import uk.gov.hmrc.entrydeclarationstore.models.{EntryDeclarationMetadata, ReplayError, ReplayResult}
+import uk.gov.hmrc.entrydeclarationstore.reporting.ReportSender
+import uk.gov.hmrc.entrydeclarationstore.repositories.EntryDeclarationRepo
+import uk.gov.hmrc.entrydeclarationstore.repositories.MetadataLookupError.{DataFormatError, MetadataNotFound}
+import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-class SubmissionReplayService {
-  def replaySubmission(submissionIds: Seq[String]): Future[Either[ReplayError, ReplayResult]] = ???
+@Singleton
+class SubmissionReplayService @Inject()(
+  entryDeclarationRepo: EntryDeclarationRepo,
+  eisConnector: EisConnector,
+  reportSender: ReportSender)(implicit ec: ExecutionContext) {
+  def replaySubmission(submissionIds: Seq[String]): Future[Either[ReplayError, ReplayResult]] = {
+    //perhaps a for comprehension
+    //Left maps to ReplayError, right needs to hold success/failure? Option[Success]?
+    implicit val hc: HeaderCarrier = HeaderCarrier()
+    val submissionId: String       = "abc" //change to foreach
+    for {
+      metadata <- getMetadata(submissionId)
+//      _ <- submitToEis(metadata.right.getOrElse(Right(None)))
+    } yield metadata
+  }
+
+  private def getMetadata(submissionId: String): Future[Either[ReplayError, Option[EntryDeclarationMetadata]]] =
+    entryDeclarationRepo.lookupMetadata(submissionId).map {
+      case Right(metadata)        => Right(Some(metadata))
+      case Left(MetadataNotFound) => Right(None)
+      case Left(DataFormatError)  => Left(ReplayError.MetadataRetrievalError)
+    }
+
+  private def submitToEis(metadata: EntryDeclarationMetadata)(
+    implicit hc: HeaderCarrier): Future[Either[ReplayError, Option[Unit]]] =
+    eisConnector
+      .submitMetadata(metadata)
+      .map {
+        case None                                            => Right(Some((): Unit))
+        case Some(EISSendFailure.ErrorResponse(BAD_REQUEST)) => Right(None)
+        case _                                               => Left(ReplayError.EISSubmitError)
+      }
 }
