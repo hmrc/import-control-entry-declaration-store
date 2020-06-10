@@ -39,9 +39,8 @@ class SubmissionReplayService @Inject()(
   case class Abort(error: ReplayError)
   case class Counts(successCount: Int, failureCount: Int)
 
-  def replaySubmission(submissionIds: Seq[String]): Future[Either[ReplayError, ReplayResult]] = {
-    implicit val hc: HeaderCarrier = HeaderCarrier() //make implicit param to method
-
+  def replaySubmission(submissionIds: Seq[String])(
+    implicit hc: HeaderCarrier): Future[Either[ReplayError, ReplayResult]] =
     submissionIds
       .foldLeft(Future.successful(Counts(0, 0).asRight[Abort]): Future[Either[Abort, Counts]]) { (acc, submissionId) =>
         acc.flatMap {
@@ -56,7 +55,7 @@ class SubmissionReplayService @Inject()(
       .recover {
         case _: ReactiveMongoException => Left(ReplayError.MetadataRetrievalError)
       }
-  }
+
   //try akka streams using list as source
   private def replaySubmissionId(submissionId: String, state: Counts)(
     implicit hc: HeaderCarrier): Future[Either[Abort, Counts]] = {
@@ -84,6 +83,7 @@ class SubmissionReplayService @Inject()(
       .recover {
         case _: ReactiveMongoException => Left(Abort(ReplayError.MetadataRetrievalError))
       }
+
   private def doEisSubmit(optionReplayMetadata: Option[ReplayMetadata])(
     implicit hc: HeaderCarrier): Future[Either[Abort, Boolean]] =
     optionReplayMetadata match {
@@ -104,6 +104,7 @@ class SubmissionReplayService @Inject()(
         }
       case None => Future.successful(Right(false))
     }
+
   private def sendEvent(replayMetadata: ReplayMetadata, eISSendFailure: Option[EISSendFailure])(
     implicit hc: HeaderCarrier): Future[Boolean] =
     reportSender

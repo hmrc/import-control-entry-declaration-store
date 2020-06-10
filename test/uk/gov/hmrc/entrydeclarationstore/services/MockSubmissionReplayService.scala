@@ -19,6 +19,7 @@ package uk.gov.hmrc.entrydeclarationstore.services
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.entrydeclarationstore.models.{ReplayError, ReplayResult}
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
@@ -27,6 +28,6 @@ trait MockSubmissionReplayService extends MockFactory {
 
   object MockSubmissionReplayService {
     def replaySubmission(submissionIds: Seq[String]): CallHandler[Future[Either[ReplayError, ReplayResult]]] =
-      (mockSubmissionReplayService.replaySubmission(_: Seq[String])) expects submissionIds
+      (mockSubmissionReplayService.replaySubmission(_: Seq[String])(_: HeaderCarrier)) expects (submissionIds, *)
   }
 }
