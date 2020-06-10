@@ -166,13 +166,13 @@ class EisConnectorSpec
       maxCallFailures + extraCalls
     }
 
-    def checkCircuitBreakerDoesNotOpen(expectedError: EISSendFailure): Int = {
+    def checkCircuitBreakerDoesNotOpen(expectedError: Option[EISSendFailure]): Int = {
       wireMockServer.resetRequests()
 
       val totalCalls = maxCallFailures + 10
 
       (0 until totalCalls) foreach { _ =>
-        await(connector.submitMetadata(declarationMetadata)) shouldBe Some(expectedError)
+        await(connector.submitMetadata(declarationMetadata)) shouldBe expectedError
       }
 
       verifyRequestCount(totalCalls)
@@ -253,21 +253,30 @@ class EisConnectorSpec
         MockPagerDutyLogger.logEISCircuitBreakerOpen repeated (totalCalls - maxCallFailures)
       }
 
+      "not open after 202 responses" in new Test {
+        stubResponse(ACCEPTED)
+
+        checkCircuitBreakerDoesNotOpen(None)
+
+        MockPagerDutyLogger.logEISFailure never ()
+        MockPagerDutyLogger.logEISCircuitBreakerOpen never ()
+      }
+
       "not open after 200 responses" in new Test {
         stubResponse(OK)
 
-        checkCircuitBreakerDoesNotOpen(EISSendFailure.ErrorResponse(OK))
+        val totalCalls: Int = checkCircuitBreakerDoesNotOpen(Some(EISSendFailure.ErrorResponse(OK)))
 
-        MockPagerDutyLogger.logEISFailure never ()
+        MockPagerDutyLogger.logEISFailure repeated totalCalls
         MockPagerDutyLogger.logEISCircuitBreakerOpen never ()
       }
 
       "not open after 400 responses" in new Test {
         stubResponse(BAD_REQUEST)
 
-        checkCircuitBreakerDoesNotOpen(EISSendFailure.ErrorResponse(BAD_REQUEST))
+        val totalCalls: Int = checkCircuitBreakerDoesNotOpen(Some(EISSendFailure.ErrorResponse(BAD_REQUEST)))
 
-        MockPagerDutyLogger.logEISFailure never ()
+        MockPagerDutyLogger.logEISFailure repeated totalCalls
         MockPagerDutyLogger.logEISCircuitBreakerOpen never ()
       }
 
