@@ -16,45 +16,104 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
+import cats.data.EitherT
+import cats.implicits._
 import javax.inject.{Inject, Singleton}
 import play.api.http.Status.BAD_REQUEST
+import reactivemongo.core.errors.ReactiveMongoException
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, EisConnector}
-import uk.gov.hmrc.entrydeclarationstore.models.{EntryDeclarationMetadata, ReplayError, ReplayResult}
-import uk.gov.hmrc.entrydeclarationstore.reporting.ReportSender
-import uk.gov.hmrc.entrydeclarationstore.repositories.EntryDeclarationRepo
+import uk.gov.hmrc.entrydeclarationstore.models.{ReplayError, ReplayMetadata, ReplayResult}
+import uk.gov.hmrc.entrydeclarationstore.reporting.{ReportSender, SubmissionSentToEIS}
+import uk.gov.hmrc.entrydeclarationstore.repositories.{EntryDeclarationRepo, MetadataLookupError}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
 
 @Singleton
 class SubmissionReplayService @Inject()(
   entryDeclarationRepo: EntryDeclarationRepo,
   eisConnector: EisConnector,
   reportSender: ReportSender)(implicit ec: ExecutionContext) {
-  def replaySubmission(submissionIds: Seq[String]): Future[Either[ReplayError, ReplayResult]] = {
-    //perhaps a for comprehension
-    //Left maps to ReplayError, right needs to hold success/failure? Option[Success]?
-    implicit val hc: HeaderCarrier = HeaderCarrier()
-    val submissionId: String       = "abc" //change to foreach
-    for {
-      metadata <- getMetadata(submissionId)
-//      _ <- submitToEis(metadata.right.getOrElse(Right(None)))
-    } yield metadata
-  }
-//try akka streams using list as source
-  private def getMetadata(submissionId: String): Future[Either[ReplayError, Option[EntryDeclarationMetadata]]] =
-    entryDeclarationRepo.lookupMetadata(submissionId).map {
-      case Right(metadata) => Right(Some(metadata))
-      case Left(_)         => Right(None)
-    }
 
-  private def submitToEis(metadata: EntryDeclarationMetadata)(
-    implicit hc: HeaderCarrier): Future[Either[ReplayError, Option[Unit]]] =
-    eisConnector
-      .submitMetadata(metadata)
-      .map {
-        case None                                            => Right(Some((): Unit))
-        case Some(EISSendFailure.ErrorResponse(BAD_REQUEST)) => Right(None)
-        case _                                               => Left(ReplayError.EISSubmitError)
+  case class Abort(error: ReplayError)
+  case class Counts(successCount: Int, failureCount: Int)
+
+  def replaySubmission(submissionIds: Seq[String]): Future[Either[ReplayError, ReplayResult]] = {
+    implicit val hc: HeaderCarrier = HeaderCarrier() //make implicit param to method
+
+    submissionIds
+      .foldLeft(Future.successful(Counts(0, 0).asRight[Abort]): Future[Either[Abort, Counts]]) { (acc, submissionId) =>
+        acc.flatMap {
+          case Right(counts)              => replaySubmissionId(submissionId, counts)
+          case abort: Left[Abort, Counts] => Future.successful(abort)
+        }
       }
+      .map {
+        case Right(counts) => Right(ReplayResult(counts.successCount, counts.failureCount))
+        case Left(abort)   => Left(abort.error)
+      }
+      .recover {
+        case _: ReactiveMongoException => Left(ReplayError.MetadataRetrievalError)
+      }
+  }
+  //try akka streams using list as source
+  private def replaySubmissionId(submissionId: String, state: Counts)(
+    implicit hc: HeaderCarrier): Future[Either[Abort, Counts]] = {
+    val result = for {
+      replayMetadata <- EitherT(doMetadataLookup(submissionId))
+      sendSuccess    <- EitherT(doEisSubmit(replayMetadata))
+    } yield {
+      if (sendSuccess) {
+        Counts(state.successCount + 1, state.failureCount)
+      } else {
+        Counts(state.successCount, state.failureCount + 1)
+      }
+    }
+    result.value
+  }
+
+  private def doMetadataLookup(submissionId: String): Future[Either[Abort, Option[ReplayMetadata]]] =
+    entryDeclarationRepo
+      .lookupMetadata(submissionId)
+      .map {
+        case Right(metadata)                            => Right(Some(metadata))
+        case Left(MetadataLookupError.MetadataNotFound) => Right(None)
+        case Left(MetadataLookupError.DataFormatError)  => Right(None)
+      }
+      .recover {
+        case _: ReactiveMongoException => Left(Abort(ReplayError.MetadataRetrievalError))
+      }
+  private def doEisSubmit(optionReplayMetadata: Option[ReplayMetadata])(
+    implicit hc: HeaderCarrier): Future[Either[Abort, Boolean]] =
+    optionReplayMetadata match {
+      case Some(replayMetadata) =>
+        for {
+          replayError <- eisConnector.submitMetadata(replayMetadata.metadata)
+          eventSent   <- sendEvent(replayMetadata, replayError)
+        } yield {
+          if (eventSent) {
+            replayError match {
+              case None                                            => Right(true)
+              case Some(EISSendFailure.ErrorResponse(BAD_REQUEST)) => Right(false)
+              case Some(_)                                         => Left(Abort(ReplayError.EISSubmitError))
+            }
+          } else {
+            Left(Abort(ReplayError.EISEventError))
+          }
+        }
+      case None => Future.successful(Right(false))
+    }
+  private def sendEvent(replayMetadata: ReplayMetadata, eISSendFailure: Option[EISSendFailure])(
+    implicit hc: HeaderCarrier): Future[Boolean] =
+    reportSender
+      .sendReport(
+        SubmissionSentToEIS(
+          replayMetadata.eori,
+          replayMetadata.correlationId,
+          replayMetadata.metadata.submissionId,
+          replayMetadata.metadata.messageType,
+          eISSendFailure))
+      .map(_ => true)
+      .recover { case NonFatal(_) => false }
 }

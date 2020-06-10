@@ -21,7 +21,7 @@ import java.time.Instant
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
 import play.api.libs.json.JsValue
-import uk.gov.hmrc.entrydeclarationstore.models.{AcceptanceEnrichment, AmendmentRejectionEnrichment, EntryDeclarationMetadata, EntryDeclarationModel, SubmissionIdLookupResult}
+import uk.gov.hmrc.entrydeclarationstore.models._
 
 import scala.concurrent.Future
 
@@ -50,8 +50,7 @@ trait MockEntryDeclarationRepo extends MockFactory {
       submissionId: String): CallHandler[Future[Option[AmendmentRejectionEnrichment]]] =
       mockEntryDeclarationRepo.lookupAmendmentRejectionEnrichment _ expects submissionId
 
-    def lookupMetadata(
-      submissionId: String): CallHandler[Future[Either[MetadataLookupError, EntryDeclarationMetadata]]] =
+    def lookupMetadata(submissionId: String): CallHandler[Future[Either[MetadataLookupError, ReplayMetadata]]] =
       mockEntryDeclarationRepo.lookupMetadata _ expects submissionId
   }
 
