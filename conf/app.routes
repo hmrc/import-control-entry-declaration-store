@@ -10,4 +10,4 @@ GET         /import-control/amendment/acceptance-enrichment/:id     uk.gov.hmrc.
 GET         /import-control/declaration/acceptance-enrichment/:id   uk.gov.hmrc.entrydeclarationstore.controllers.EnrichmentController.getAcceptanceEnrichment(id)
 GET         /import-control/amendment/rejection-enrichment/:id      uk.gov.hmrc.entrydeclarationstore.controllers.EnrichmentController.getAmendmentRejectionEnrichment(id)
 
-POST        /import-control/replays                                 uk.gov.hmrc.entrydeclarationstore.controllers.SubmissionReplayController.replay
+POST        /import-control/replay-batch                            uk.gov.hmrc.entrydeclarationstore.controllers.SubmissionReplayController.replay
