@@ -17,7 +17,7 @@
 package uk.gov.hmrc.entrydeclarationstore.connectors
 
 import akka.actor.Scheduler
-import akka.pattern.CircuitBreaker
+import akka.pattern.{CircuitBreaker, CircuitBreakerOpenException}
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.http.Status
@@ -29,7 +29,7 @@ import uk.gov.hmrc.entrydeclarationstore.utils.PagerDutyLogger
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
-import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.concurrent.{ExecutionContext, Future, TimeoutException}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
@@ -53,18 +53,6 @@ class EisConnectorImpl @Inject()(
     appConfig.eisCircuitBreakerCallTimeout,
     appConfig.eisCircuitBreakerResetTimeout)
 
-  sealed trait Result
-
-  object Result {
-
-    case object Timeout extends Result
-
-    case object Open extends Result
-
-    case class ResponseReceived(status: Int) extends Result
-
-  }
-
   // This replaces the default HttpReads[HttpResponse] so that we can fully control error handling
   implicit object ResultReads extends HttpReads[HttpResponse] {
     override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
@@ -74,13 +62,10 @@ class EisConnectorImpl @Inject()(
 
   def submitMetadata(metadata: EntryDeclarationMetadata)(implicit hc: HeaderCarrier): Future[Option[EISSendFailure]] =
     withCircuitBreaker {
-
       val isAmendment = metadata.movementReferenceNumber.isDefined
       val headers     = headerGenerator.headersForEIS(metadata.submissionId)(hc)
 
-      val result = if (isAmendment) putAmendment(metadata, headers) else postNew(metadata, headers)
-
-      result.map(resp => Result.ResponseReceived(resp.status))
+      if (isAmendment) putAmendment(metadata, headers) else postNew(metadata, headers)
     }
 
   private def putAmendment(metadata: EntryDeclarationMetadata, headers: Seq[(String, String)]): Future[HttpResponse] = {
@@ -95,62 +80,41 @@ class EisConnectorImpl @Inject()(
       .POST(newUrl, metadata, headers)
   }
 
-  private[connectors] def withCircuitBreaker(code: => Future[Result]): Future[Option[EISSendFailure]] = {
+  private[connectors] def withCircuitBreaker(code: => Future[HttpResponse]): Future[Option[EISSendFailure]] =
+    circuitBreaker
+      .withCircuitBreaker(code, failureFunction)
+      .map { response =>
+        val status = response.status
+        Logger.info(s"Send to EIS returned status code: $status")
 
-    val promise = Promise[Result]
-
-    if (circuitBreaker.isOpen) {
-      promise.trySuccess(Result.Open)
-    } else {
-      scheduler.scheduleOnce(appConfig.eisCircuitBreakerCallTimeout) {
-        promise.trySuccess(Result.Timeout)
-      }
-
-      promise.completeWith(materialize(code))
-    }
-
-    promise.future
-      .andThen(updateCircuitBreakerAndLog)
-      .map {
-        case Result.ResponseReceived(status) =>
-          Logger.info(s"Send to EIS returned status code: $status")
-          if (status == ACCEPTED) None else Some(EISSendFailure.ErrorResponse(status))
-        case Result.Open    => Some(EISSendFailure.CircuitBreakerOpen)
-        case Result.Timeout => Some(EISSendFailure.Timeout)
+        if (status == ACCEPTED) {
+          None
+        } else {
+          pagerDutyLogger.logEISFailure(status)
+          Some(EISSendFailure.ErrorResponse(status))
+        }
       }
       .recover {
-        case NonFatal(_) => Some(EISSendFailure.ExceptionThrown)
+        case _: CircuitBreakerOpenException =>
+          pagerDutyLogger.logEISCircuitBreakerOpen()
+          Some(EISSendFailure.CircuitBreakerOpen)
+
+        case _: TimeoutException =>
+          pagerDutyLogger.logEISTimeout()
+          Some(EISSendFailure.Timeout)
+
+        case NonFatal(e) =>
+          pagerDutyLogger.logEISError(e)
+          Some(EISSendFailure.ExceptionThrown)
       }
+
+  private val failureFunction: Try[HttpResponse] => Boolean = {
+    case Success(response) =>
+      // 400s should be submission-specific issues and not open
+      // circuit breaker (esp since their replays would also likely fail
+      // and affect ongoing submissions).
+      !(Status.isSuccessful(response.status) || response.status == BAD_REQUEST)
+
+    case Failure(_) => true
   }
-
-  private val updateCircuitBreakerAndLog: PartialFunction[Try[Result], Unit] = {
-    case Success(Result.ResponseReceived(status)) =>
-      // Don't open for any 200s
-      if (Status.isSuccessful(status)) {
-        circuitBreaker.succeed()
-      } else {
-        circuitBreaker.fail()
-        pagerDutyLogger.logEISFailure(status)
-      }
-
-    case Success(Result.Open) =>
-      circuitBreaker.fail()
-      pagerDutyLogger.logEISCircuitBreakerOpen()
-
-    case Success(Result.Timeout) =>
-      circuitBreaker.fail()
-      pagerDutyLogger.logEISTimeout()
-
-    case Failure(e) =>
-      circuitBreaker.fail()
-      pagerDutyLogger.logEISError(e)
-  }
-
-  // Converts code throwing exception to a failed future
-  private def materialize[U](code: => Future[U]): Future[U] =
-    try code
-    catch {
-      case NonFatal(t) => Future.failed(t)
-    }
-
 }
