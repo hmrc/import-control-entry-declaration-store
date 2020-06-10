@@ -125,8 +125,10 @@ class EisConnectorImpl @Inject()(
 
   private val updateCircuitBreakerAndLog: PartialFunction[Try[Result], Unit] = {
     case Success(Result.ResponseReceived(status)) =>
-      // Don't open for any 200s
-      if (Status.isSuccessful(status)) {
+      // 400s should be submission-specific issues and not open
+      // circuit breaker (esp since their replays would also likely fail
+      // and affect ongoing submissions).
+      if (Status.isSuccessful(status) || status == BAD_REQUEST) {
         circuitBreaker.succeed()
       } else {
         circuitBreaker.fail()

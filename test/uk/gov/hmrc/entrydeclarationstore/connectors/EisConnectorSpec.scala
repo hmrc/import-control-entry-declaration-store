@@ -253,10 +253,19 @@ class EisConnectorSpec
         MockPagerDutyLogger.logEISCircuitBreakerOpen repeated (totalCalls - maxCallFailures)
       }
 
-      "not open after (200) responses" in new Test {
+      "not open after 200 responses" in new Test {
         stubResponse(OK)
 
         checkCircuitBreakerDoesNotOpen(EISSendFailure.ErrorResponse(OK))
+
+        MockPagerDutyLogger.logEISFailure never ()
+        MockPagerDutyLogger.logEISCircuitBreakerOpen never ()
+      }
+
+      "not open after 400 responses" in new Test {
+        stubResponse(BAD_REQUEST)
+
+        checkCircuitBreakerDoesNotOpen(EISSendFailure.ErrorResponse(BAD_REQUEST))
 
         MockPagerDutyLogger.logEISFailure never ()
         MockPagerDutyLogger.logEISCircuitBreakerOpen never ()
