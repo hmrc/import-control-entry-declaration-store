@@ -63,18 +63,19 @@ class ReportSenderSpec extends UnitSpec with MockAuditHandler with MockEventConn
       reportSender.sendReport(Report).futureValue shouldBe ((): Unit)
     }
 
-    "audit if the event microservice send fails" in {
+    "send event to the event microservice if the audit fails" in {
       MockAuditHandler.audit(auditEvent) returns Future.failed(new RuntimeException with NoStackTrace)
       MockEventConnector.sendEvent(event) returns Future.successful(())
 
       reportSender.sendReport(Report).futureValue shouldBe ((): Unit)
     }
 
-    "send event to the event microservice if the audit fails" in {
+    "audit if the event microservice send fails" in {
+      val exception = new RuntimeException with NoStackTrace
       MockAuditHandler.audit(auditEvent) returns Future.successful(())
-      MockEventConnector.sendEvent(event) returns Future.failed(new RuntimeException with NoStackTrace)
+      MockEventConnector.sendEvent(event) returns Future.failed(exception)
 
-      reportSender.sendReport(Report).futureValue shouldBe ((): Unit)
+      reportSender.sendReport(Report).failed.futureValue shouldBe exception
     }
 
     "only audit if no event microservice send required" in {

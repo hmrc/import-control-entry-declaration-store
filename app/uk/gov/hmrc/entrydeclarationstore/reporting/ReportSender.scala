@@ -34,14 +34,17 @@ class ReportSender @Inject()(
     extends Timer
     with EventLogger {
   def sendReport[R: EventSources](timestamp: Instant, report: R)(implicit hc: HeaderCarrier): Future[Unit] = {
-
     val eventSources: EventSources[R] = implicitly
 
-    eventSources.eventFor(timestamp, report).foreach(event => sendEvent(event))
+    // Note: auditing is performed asynchronously
+    eventSources
+      .auditEventFor(report)
+      .foreach(event => audit(event))
 
-    eventSources.auditEventFor(report).foreach(event => audit(event))
-
-    Future.successful(())
+    eventSources.eventFor(timestamp, report) match {
+      case Some(event) => sendEvent(event)
+      case None        => Future.successful(())
+    }
   }
 
   def sendReport[R: EventSources](report: R)(implicit hc: HeaderCarrier): Future[Unit] =
