@@ -22,7 +22,6 @@ import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, EisConnecto
 import uk.gov.hmrc.entrydeclarationstore.models.{EntryDeclarationMetadata, ReplayError, ReplayResult}
 import uk.gov.hmrc.entrydeclarationstore.reporting.ReportSender
 import uk.gov.hmrc.entrydeclarationstore.repositories.EntryDeclarationRepo
-import uk.gov.hmrc.entrydeclarationstore.repositories.MetadataLookupError.{DataFormatError, MetadataNotFound}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -42,12 +41,11 @@ class SubmissionReplayService @Inject()(
 //      _ <- submitToEis(metadata.right.getOrElse(Right(None)))
     } yield metadata
   }
-
+//try akka streams using list as source
   private def getMetadata(submissionId: String): Future[Either[ReplayError, Option[EntryDeclarationMetadata]]] =
     entryDeclarationRepo.lookupMetadata(submissionId).map {
-      case Right(metadata)        => Right(Some(metadata))
-      case Left(MetadataNotFound) => Right(None)
-      case Left(DataFormatError)  => Left(ReplayError.MetadataRetrievalError)
+      case Right(metadata) => Right(Some(metadata))
+      case Left(_)         => Right(None)
     }
 
   private def submitToEis(metadata: EntryDeclarationMetadata)(

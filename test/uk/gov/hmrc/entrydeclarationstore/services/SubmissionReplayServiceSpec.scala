@@ -21,7 +21,7 @@ import java.time.Instant
 import org.scalatest.concurrent.ScalaFutures
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, MockEisConnector}
 import uk.gov.hmrc.entrydeclarationstore.models.{EntryDeclarationMetadata, MessageType, ReplayError, ReplayResult}
-import uk.gov.hmrc.entrydeclarationstore.reporting.MockReportSender
+import uk.gov.hmrc.entrydeclarationstore.reporting.{MockReportSender, SubmissionSentToEIS}
 import uk.gov.hmrc.entrydeclarationstore.repositories.{MetadataLookupError, MockEntryDeclarationRepo}
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -38,6 +38,14 @@ class SubmissionReplayServiceSpec
   val submissionIds: Seq[String] = Seq("subId1")
   val metadata: EntryDeclarationMetadata =
     EntryDeclarationMetadata("submissionId", MessageType.IE315, "5", Instant.now, None)
+  private def submissionSentToEISReport(messageType: MessageType, failure: Option[EISSendFailure]) =
+    SubmissionSentToEIS(
+      eori          = eori,
+      correlationId = correlationId,
+      submissionId  = submissionId,
+      messageType,
+      failure
+    )
 
   "SubmissionReplayService" when {
     "replaying a submission" when {
@@ -52,14 +60,19 @@ class SubmissionReplayServiceSpec
       }
 
       "Metadata retrieval unsuccessful" must {
-        "increment failure count" in { //Which MetadataLookupError
+        "increment failure count" in {
           MockEntryDeclarationRepo
             .lookupMetadata(submissionIds.head)
+            //WLOG
             .returns(Future.successful(Left(MetadataLookupError.DataFormatError)))
 
           service.replaySubmission(submissionIds).futureValue shouldBe Right(ReplayResult(0, 1))
         }
-        "terminate and return Left" in { //Which MetadataLookupError
+        "terminate and return Left" in {
+          MockEntryDeclarationRepo
+            .lookupMetadata(submissionIds.head)
+            .returns(Future.failed(new Exception)) //change exception
+
           fail
 
           service.replaySubmission(submissionIds).futureValue shouldBe Left(ReplayError.MetadataRetrievalError)
