@@ -47,7 +47,7 @@ class EisConnectorImpl @Inject()(
   val newUrl: String   = s"${appConfig.eisHost}${appConfig.eisNewEnsUrlPath}"
   val amendUrl: String = s"${appConfig.eisHost}${appConfig.eisAmendEnsUrlPath}"
 
-  private val circuitBreaker = CircuitBreaker(
+  val circuitBreaker: CircuitBreaker = CircuitBreaker(
     scheduler,
     appConfig.eisCircuitBreakerMaxFailures,
     appConfig.eisCircuitBreakerCallTimeout,

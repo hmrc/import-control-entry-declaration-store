@@ -27,6 +27,7 @@ import com.github.tomakehurst.wiremock.client.{CountMatchingStrategy, WireMock}
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import com.miguno.akka.testing.VirtualTime
+import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.MimeTypes
@@ -55,7 +56,8 @@ class EisConnectorSpec
     with Injecting
     with MockAppConfig
     with MockPagerDutyLogger
-    with MockHeaderGenerator {
+    with MockHeaderGenerator
+    with Eventually {
 
   override lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
@@ -157,6 +159,10 @@ class EisConnectorSpec
       (0 until maxCallFailures) foreach { _ =>
         await(connector.submitMetadata(declarationMetadata)) shouldBe Some(expectedError)
       }
+
+      // Open state gets set asynchronously - wait before we make futher calls...
+      eventually(connector.circuitBreaker.isOpen shouldBe true)
+
       (0 until extraCalls) foreach { _ =>
         await(connector.submitMetadata(declarationMetadata)) shouldBe Some(EISSendFailure.CircuitBreakerOpen)
       }
