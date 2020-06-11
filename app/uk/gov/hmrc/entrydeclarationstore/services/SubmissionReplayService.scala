@@ -56,7 +56,6 @@ class SubmissionReplayService @Inject()(
         case _: ReactiveMongoException => Left(ReplayError.MetadataRetrievalError)
       }
 
-  //try akka streams using list as source
   private def replaySubmissionId(submissionId: String, state: Counts)(
     implicit hc: HeaderCarrier): Future[Either[Abort, Counts]] = {
     val result = for {

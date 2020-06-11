@@ -93,24 +93,38 @@ class SubmissionReplayServiceSpec
       }
 
       "Metadata retrieval unsuccessful" must {
-        "increment failure count" in {
-          val submissionIds = Seq(subId1)
+        "increment failure count" when {
+          "MetadataLookupError is DataFormatError" in {
+            val submissionIds = Seq(subId1)
 
-          MockEntryDeclarationRepo
-            .lookupMetadata(submissionIds.head)
-            //WLOG
-            .returns(Future.successful(Left(MetadataLookupError.DataFormatError)))
+            MockEntryDeclarationRepo
+              .lookupMetadata(submissionIds.head)
+              //WLOG
+              .returns(Future.successful(Left(MetadataLookupError.DataFormatError)))
 
-          service.replaySubmission(submissionIds).futureValue shouldBe Right(ReplayResult(0, 1))
+            service.replaySubmission(submissionIds).futureValue shouldBe Right(ReplayResult(0, 1))
+          }
+          "MetadataLookupError is MetadataNotFound" in {
+            val submissionIds = Seq(subId1)
+
+            MockEntryDeclarationRepo
+              .lookupMetadata(submissionIds.head)
+              //WLOG
+              .returns(Future.successful(Left(MetadataLookupError.MetadataNotFound)))
+
+            service.replaySubmission(submissionIds).futureValue shouldBe Right(ReplayResult(0, 1))
+          }
         }
-        "terminate and return Left" in {
-          val submissionIds = Seq(subId1, subId2)
+        "terminate and return Left" when {
+          "an exception is thrown" in {
+            val submissionIds = Seq(subId1, subId2)
 
-          MockEntryDeclarationRepo
-            .lookupMetadata(submissionIds.head)
-            .returns(Future.failed(GenericDatabaseException("abc", None)))
+            MockEntryDeclarationRepo
+              .lookupMetadata(submissionIds.head)
+              .returns(Future.failed(GenericDatabaseException("abc", None)))
 
-          service.replaySubmission(submissionIds).futureValue shouldBe Left(ReplayError.MetadataRetrievalError)
+            service.replaySubmission(submissionIds).futureValue shouldBe Left(ReplayError.MetadataRetrievalError)
+          }
         }
       }
 
@@ -140,14 +154,31 @@ class SubmissionReplayServiceSpec
           }
         }
         "terminate and return Left" when {
-          "EISSendFailure is CircuitBreakerOpen" in new Test(EISSendFailure.CircuitBreakerOpen)
-          "EISSendFailure is ExceptionThrown" in new Test(EISSendFailure.ExceptionThrown)
-          "EISSendFailure is Timeout" in new Test(EISSendFailure.Timeout)
-          "EISSendFailure is ErrorResponse(401)" in new Test(EISSendFailure.ErrorResponse(UNAUTHORIZED))
-          "EISSendFailure is ErrorResponse(403)" in new Test(EISSendFailure.ErrorResponse(FORBIDDEN))
-          "EISSendFailure is ErrorResponse(499)" in new Test(EISSendFailure.ErrorResponse(499))
-          "EISSendFailure is ErrorResponse(500)" in new Test(EISSendFailure.ErrorResponse(INTERNAL_SERVER_ERROR))
-          "EISSendFailure is ErrorResponse(503)" in new Test(EISSendFailure.ErrorResponse(SERVICE_UNAVAILABLE))
+          def abortEisSendFailure(eisSendFailure: EISSendFailure): Unit = {
+            val submissionIds = Seq(subId1, subId2)
+
+            MockEntryDeclarationRepo
+              .lookupMetadata(subId1)
+              .returns(Future.successful(Right(replayMetadata(subId1))))
+            MockEisConnector
+              .submitMetadata(metadata(subId1))
+              .returns(Future.successful(Some(eisSendFailure)))
+            MockReportSender
+              .sendReport(submissionSentToEISReport(subId1, Some(eisSendFailure)))
+              .returns(Future.successful((): Unit))
+
+            service.replaySubmission(submissionIds).futureValue shouldBe Left(ReplayError.EISSubmitError)
+          }
+          "EISSendFailure is CircuitBreakerOpen" in abortEisSendFailure(EISSendFailure.CircuitBreakerOpen)
+          "EISSendFailure is ExceptionThrown" in abortEisSendFailure(EISSendFailure.ExceptionThrown)
+          "EISSendFailure is Timeout" in abortEisSendFailure(EISSendFailure.Timeout)
+          "EISSendFailure is ErrorResponse(401)" in abortEisSendFailure(EISSendFailure.ErrorResponse(UNAUTHORIZED))
+          "EISSendFailure is ErrorResponse(403)" in abortEisSendFailure(EISSendFailure.ErrorResponse(FORBIDDEN))
+          "EISSendFailure is ErrorResponse(499)" in abortEisSendFailure(EISSendFailure.ErrorResponse(499))
+          "EISSendFailure is ErrorResponse(500)" in
+            abortEisSendFailure(EISSendFailure.ErrorResponse(INTERNAL_SERVER_ERROR))
+          "EISSendFailure is ErrorResponse(503)" in
+            abortEisSendFailure(EISSendFailure.ErrorResponse(SERVICE_UNAVAILABLE))
         }
       }
 
@@ -164,20 +195,5 @@ class SubmissionReplayServiceSpec
         }
       }
     }
-  }
-  class Test(eisSendFailure: EISSendFailure) {
-    val submissionIds = Seq(subId1, subId2)
-
-    MockEntryDeclarationRepo
-      .lookupMetadata(subId1)
-      .returns(Future.successful(Right(replayMetadata(subId1))))
-    MockEisConnector
-      .submitMetadata(metadata(subId1))
-      .returns(Future.successful(Some(eisSendFailure)))
-    MockReportSender
-      .sendReport(submissionSentToEISReport(subId1, Some(eisSendFailure)))
-      .returns(Future.successful((): Unit))
-
-    service.replaySubmission(submissionIds).futureValue shouldBe Left(ReplayError.EISSubmitError)
   }
 }
