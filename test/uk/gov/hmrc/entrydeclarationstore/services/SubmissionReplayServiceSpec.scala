@@ -140,30 +140,14 @@ class SubmissionReplayServiceSpec
           }
         }
         "terminate and return Left" when {
-          "EISSendFailure is CircuitBreakerOpen" in {
-            behave like abortFromEisFailure(EISSendFailure.CircuitBreakerOpen)
-          }
-          "EISSendFailure is ExceptionThrown" in {
-            behave like abortFromEisFailure(EISSendFailure.ExceptionThrown)
-          }
-          "EISSendFailure is Timeout" in {
-            behave like abortFromEisFailure(EISSendFailure.Timeout)
-          }
-          "EISSendFailure is ErrorResponse(401)" in {
-            behave like abortFromEisFailure(EISSendFailure.ErrorResponse(UNAUTHORIZED))
-          }
-          "EISSendFailure is ErrorResponse(403)" in {
-            behave like abortFromEisFailure(EISSendFailure.ErrorResponse(FORBIDDEN))
-          }
-          "EISSendFailure is ErrorResponse(499)" in {
-            behave like abortFromEisFailure(EISSendFailure.ErrorResponse(499))
-          }
-          "EISSendFailure is ErrorResponse(500)" in {
-            behave like abortFromEisFailure(EISSendFailure.ErrorResponse(INTERNAL_SERVER_ERROR))
-          }
-          "EISSendFailure is ErrorResponse(503)" in {
-            behave like abortFromEisFailure(EISSendFailure.ErrorResponse(SERVICE_UNAVAILABLE))
-          }
+          "EISSendFailure is CircuitBreakerOpen" in new Test(EISSendFailure.CircuitBreakerOpen)
+          "EISSendFailure is ExceptionThrown" in new Test(EISSendFailure.ExceptionThrown)
+          "EISSendFailure is Timeout" in new Test(EISSendFailure.Timeout)
+          "EISSendFailure is ErrorResponse(401)" in new Test(EISSendFailure.ErrorResponse(UNAUTHORIZED))
+          "EISSendFailure is ErrorResponse(403)" in new Test(EISSendFailure.ErrorResponse(FORBIDDEN))
+          "EISSendFailure is ErrorResponse(499)" in new Test(EISSendFailure.ErrorResponse(499))
+          "EISSendFailure is ErrorResponse(500)" in new Test(EISSendFailure.ErrorResponse(INTERNAL_SERVER_ERROR))
+          "EISSendFailure is ErrorResponse(503)" in new Test(EISSendFailure.ErrorResponse(SERVICE_UNAVAILABLE))
         }
       }
 
@@ -181,8 +165,7 @@ class SubmissionReplayServiceSpec
       }
     }
   }
-
-  private def abortFromEisFailure(eisSendFailure: EISSendFailure) = {
+  class Test(eisSendFailure: EISSendFailure) {
     val submissionIds = Seq(subId1, subId2)
 
     MockEntryDeclarationRepo
