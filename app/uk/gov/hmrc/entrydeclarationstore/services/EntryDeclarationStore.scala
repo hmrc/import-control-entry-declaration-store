@@ -34,6 +34,7 @@ import uk.gov.hmrc.entrydeclarationstore.validation.ValidationHandler
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
 import scala.xml.NodeSeq
 
@@ -81,19 +82,19 @@ class EntryDeclarationStoreImpl @Inject()(
           receivedDateTime = receivedDateTime
         )
         _ <- EitherT(saveToDatabase(entryDeclaration))
+        transportMode = (xmlPayload \\ "TraModAtBorHEA76").head.text
+        _ <- EitherT(
+              sendSubmissionReceivedReport(
+                receivedDateTime,
+                eori,
+                correlationId,
+                submissionId,
+                mrn,
+                entryDeclarationAsJson,
+                payload,
+                transportMode,
+                clientType))
       } yield {
-        val transportMode = (xmlPayload \\ "TraModAtBorHEA76").head.text
-
-        sendSubmissionReceivedReport(
-          receivedDateTime,
-          eori,
-          correlationId,
-          submissionId,
-          mrn,
-          entryDeclarationAsJson,
-          payload,
-          transportMode,
-          clientType)
         submitToEIS(eori, correlationId, submissionId, mrn, transportMode, receivedDateTime)
         SuccessResponse(entryDeclaration.correlationId)
       }
@@ -153,20 +154,23 @@ class EntryDeclarationStoreImpl @Inject()(
     xmlPayload: String,
     transportMode: String,
     clientType: ClientType
-  )(implicit hc: HeaderCarrier): Unit =
-    reportSender.sendReport(
-      received,
-      SubmissionReceived(
-        eori          = eori,
-        correlationId = correlationId,
-        submissionId  = submissionId,
-        MessageType.apply(mrn.isDefined),
-        body          = body,
-        transportMode = transportMode,
-        clientType    = clientType,
-        bodyLength    = xmlPayload.length
+  )(implicit hc: HeaderCarrier): Future[Either[ErrorWrapper[_], Unit]] =
+    reportSender
+      .sendReport(
+        received,
+        SubmissionReceived(
+          eori          = eori,
+          correlationId = correlationId,
+          submissionId  = submissionId,
+          MessageType.apply(mrn.isDefined),
+          body          = body,
+          transportMode = transportMode,
+          clientType    = clientType,
+          bodyLength    = xmlPayload.length
+        )
       )
-    )
+      .map(_.asRight[ErrorWrapper[_]])
+      .recover { case NonFatal(_) => Left(ErrorWrapper(ServerError)) }
 
   private def sendSubmissionSendToEISReport(
     eori: String,

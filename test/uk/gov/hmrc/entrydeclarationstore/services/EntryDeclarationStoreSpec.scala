@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
+import java.io.IOException
 import java.time.{Clock, Instant, ZoneOffset}
 
 import com.kenshoo.play.metrics.Metrics
@@ -83,28 +84,18 @@ class EntryDeclarationStoreSpec
   val submissionId  = "submissionId"
 
   val IE315payload: NodeSeq =
-    // @formatter:off
-    <tns:Header/>
-      <tns:Body>
-        <ie:CC315A>
-          <MesSenMES3>{messageSender}</MesSenMES3>
-          <TraModAtBorHEA76>{transportMode}</TraModAtBorHEA76>
-        </ie:CC315A>
-      </tns:Body>
-  // @formatter:on
+    <ie:CC315A>
+      <MesSenMES3>{messageSender}</MesSenMES3>
+      <TraModAtBorHEA76>{transportMode}</TraModAtBorHEA76>
+    </ie:CC315A>
 
   val IE313payload: NodeSeq =
-    // @formatter:off
-      <tns:Header/>
-      <tns:Body>
-        <ie:CC313A>
-          <HEAHEA>
-            <TraModAtBorHEA76>{transportMode}</TraModAtBorHEA76>
-          </HEAHEA>
-          <MesSenMES3>{messageSender}</MesSenMES3>
-        </ie:CC313A>
-      </tns:Body>
-  // @formatter:on
+    <ie:CC313A>
+      <HEAHEA>
+        <TraModAtBorHEA76>{transportMode}</TraModAtBorHEA76>
+      </HEAHEA>
+      <MesSenMES3>{messageSender}</MesSenMES3>
+    </ie:CC313A>
 
   private def declarationWith(mrn: Option[String]) =
     EntryDeclarationModel(correlationId, submissionId, eori, jsonPayload, mrn, now, None)
@@ -152,7 +143,9 @@ class EntryDeclarationStoreSpec
         .saveEntryDeclaration(declarationWith(mrn))
         .returns(Future.successful(true))
 
-      MockReportSender.sendReport(now, submissionReceivedReport(xmlPayload, messageType))
+      MockReportSender
+        .sendReport(now, submissionReceivedReport(xmlPayload, messageType))
+        .returns(Future.successful(()))
       MockReportSender.sendReport(submissionSentToEISReport(messageType, None))
 
       MockEisConnector
@@ -206,6 +199,25 @@ class EntryDeclarationStoreSpec
       }
     }
 
+    "SubmissionReceived event fails to send" should {
+      "return Left(FailureResponse)" in new Test {
+        MockAppConfig.validateXMLtoJsonTransformation.returns(false)
+        MockValidationHandler.handleValidation(payload, mrn) returns Right(xmlPayload)
+        MockDeclarationToJsonConverter.convertToJson(xmlPayload).returns(Right(jsonPayload))
+
+        MockEntryDeclarationRepo
+          .saveEntryDeclaration(declarationWith(mrn))
+          .returns(Future.successful(true))
+
+        MockReportSender
+          .sendReport(now, submissionReceivedReport(xmlPayload, messageType))
+          .returns(Future.failed(new IOException))
+
+        entryDeclarationStore.handleSubmission(payload, mrn, clientType).futureValue shouldBe
+          Left(ErrorWrapper(ServerError))
+      }
+    }
+
     "EIS submission fails" should {
       "Not set submission time" in new Test {
 
@@ -233,7 +245,9 @@ class EntryDeclarationStoreSpec
         // WLOG...
         val eisSendFailure: EISSendFailure.ExceptionThrown.type = EISSendFailure.ExceptionThrown
 
-        MockReportSender.sendReport(now, submissionReceivedReport(xmlPayload, messageType))
+        MockReportSender
+          .sendReport(now, submissionReceivedReport(xmlPayload, messageType))
+          .returns(Future.successful(()))
         MockReportSender.sendReport(submissionSentToEISReport(messageType, Some(eisSendFailure)))
 
         MockEisConnector
@@ -257,7 +271,7 @@ class EntryDeclarationStoreSpec
       }
     }
 
-    "decalation is processed successfully" must {
+    "declaration is processed successfully" must {
       "not wait for EIS submission to complete" in new Test {
         MockAppConfig.validateXMLtoJsonTransformation.returns(false)
         MockValidationHandler.handleValidation(payload, mrn) returns Right(xmlPayload)
@@ -267,7 +281,9 @@ class EntryDeclarationStoreSpec
           .saveEntryDeclaration(declarationWith(mrn))
           .returns(Future.successful(true))
 
-        MockReportSender.sendReport(now, submissionReceivedReport(xmlPayload, messageType))
+        MockReportSender
+          .sendReport(now, submissionReceivedReport(xmlPayload, messageType))
+          .returns(Future.successful(()))
 
         MockEisConnector
           .submitMetadata(metadataWith(messageType, mrn))
@@ -288,7 +304,9 @@ class EntryDeclarationStoreSpec
           .saveEntryDeclaration(declarationWith(mrn))
           .returns(Future.successful(true))
 
-        MockReportSender.sendReport(now, submissionReceivedReport(xmlPayload, messageType))
+        MockReportSender
+          .sendReport(now, submissionReceivedReport(xmlPayload, messageType))
+          .returns(Future.successful(()))
         MockReportSender.sendReport(submissionSentToEISReport(messageType, Some(EISSendFailure.ExceptionThrown)))
 
         MockEisConnector
