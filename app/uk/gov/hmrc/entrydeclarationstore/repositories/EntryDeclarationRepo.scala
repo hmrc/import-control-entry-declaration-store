@@ -20,7 +20,7 @@ import java.time.Instant
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import play.api.libs.json.{JsError, JsObject, JsPath, JsSuccess, JsValue, Json}
+import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
@@ -29,7 +29,7 @@ import reactivemongo.bson.{BSONDocument, BSONObjectID}
 import reactivemongo.core.errors.DatabaseException
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
-import uk.gov.hmrc.entrydeclarationstore.models.{AcceptanceEnrichment, AmendmentRejectionEnrichment, EntryDeclarationMetadata, EntryDeclarationModel, SubmissionIdLookupResult}
+import uk.gov.hmrc.entrydeclarationstore.models._
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
@@ -48,7 +48,7 @@ trait EntryDeclarationRepo {
 
   def lookupAmendmentRejectionEnrichment(submissionId: String): Future[Option[AmendmentRejectionEnrichment]]
 
-  def lookupMetadata(submissionId: String): Future[Either[MetadataLookupError, EntryDeclarationMetadata]]
+  def lookupMetadata(submissionId: String): Future[Either[MetadataLookupError, ReplayMetadata]]
 }
 
 @Singleton
@@ -152,13 +152,15 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
       )
       .one[AmendmentRejectionEnrichment](ReadPreference.primaryPreferred)
 
-  override def lookupMetadata(submissionId: String): Future[Either[MetadataLookupError, EntryDeclarationMetadata]] =
+  override def lookupMetadata(submissionId: String): Future[Either[MetadataLookupError, ReplayMetadata]] =
     collection
       .find(
         Json.obj("submissionId" -> submissionId),
         Some(
           Json.obj(
             "submissionId"                              -> 1,
+            "eori"                                      -> 1,
+            "correlationId"                             -> 1,
             "payload.metadata.messageType"              -> 1,
             "payload.itinerary.modeOfTransportAtBorder" -> 1,
             "mrn"                                       -> 1,

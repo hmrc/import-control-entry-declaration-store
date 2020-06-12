@@ -24,7 +24,7 @@ Run Integration Tests: `sbt it:test`
 |```/import-control/amendment/acceptance-enrichment/:id```  |        GET        | Internal | Endpoint for [Decision microservice](https://github.com/hmrc/import-control-entry-declaration-decision) to get an acceptance enrichment from the amendment in the database. |
 |```/import-control/declaration/acceptance-enrichment/:id```|        GET        | Internal | Endpoint for [Decision microservice](https://github.com/hmrc/import-control-entry-declaration-decision) to get an acceptance enrichment from the declaration in the database. |
 |```/import-control/amendment/rejection-enrichment/:id```   |        GET        | Internal | Endpoint for [Decision microservice](https://github.com/hmrc/import-control-entry-declaration-decision) to get an rejection enrichment from the amendment in the database. |
-|```/import-control/replays```                              |        POST       | Internal | Endpoint to replay messages to C&IT from the database. |
+|```/import-control/replay-batch```                         |        POST       | Internal | Endpoint to replay messages to C&IT from the database. |
 |```/import-control/test-only/submission-ids/:eori/:correlationId``` |        GET        | Test | Endpoint to get submission Id from EORI and Correlation Id |
 
 ## API Reference / Documentation 

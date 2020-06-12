@@ -236,12 +236,16 @@ class EntryDeclarationRepoISpec
       "return the metadata" in {
         await(repository.lookupMetadata("submissionId313")) shouldBe
           Right(
-            EntryDeclarationMetadata(
-              submissionId            = "submissionId313",
-              messageType             = MessageType.IE313,
-              modeOfTransport         = "2",
-              receivedDateTime        = receivedDateTime,
-              movementReferenceNumber = Some("00REFNUM1234567890")
+            ReplayMetadata(
+              eori          = "eori",
+              correlationId = "correlationId313",
+              metadata = EntryDeclarationMetadata(
+                submissionId            = "submissionId313",
+                messageType             = MessageType.IE313,
+                modeOfTransport         = "2",
+                receivedDateTime        = receivedDateTime,
+                movementReferenceNumber = Some("00REFNUM1234567890")
+              )
             )
           )
       }
@@ -251,12 +255,16 @@ class EntryDeclarationRepoISpec
       "return the metadata" in {
         await(repository.lookupMetadata("submissionId315")) shouldBe
           Right(
-            EntryDeclarationMetadata(
-              submissionId            = "submissionId315",
-              messageType             = MessageType.IE315,
-              modeOfTransport         = "2",
-              receivedDateTime        = receivedDateTime,
-              movementReferenceNumber = None
+            ReplayMetadata(
+              eori          = "eori",
+              correlationId = "correlationId315",
+              EntryDeclarationMetadata(
+                submissionId            = "submissionId315",
+                messageType             = MessageType.IE315,
+                modeOfTransport         = "2",
+                receivedDateTime        = receivedDateTime,
+                movementReferenceNumber = None
+              )
             )
           )
       }
