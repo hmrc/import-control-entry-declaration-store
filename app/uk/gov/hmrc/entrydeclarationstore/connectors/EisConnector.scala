@@ -64,7 +64,8 @@ class EisConnectorImpl @Inject()(
     withCircuitBreaker {
       val isAmendment = metadata.movementReferenceNumber.isDefined
       val headers     = headerGenerator.headersForEIS(metadata.submissionId)(hc)
-
+      val submissionId = metadata.submissionId
+      Logger.info(s"submissionId is $submissionId")
       if (isAmendment) putAmendment(metadata, headers) else postNew(metadata, headers)
     }
 
