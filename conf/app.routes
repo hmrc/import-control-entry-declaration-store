@@ -11,3 +11,6 @@ GET         /import-control/declaration/acceptance-enrichment/:id   uk.gov.hmrc.
 GET         /import-control/amendment/rejection-enrichment/:id      uk.gov.hmrc.entrydeclarationstore.controllers.EnrichmentController.getAmendmentRejectionEnrichment(id)
 
 POST        /import-control/replay-batch                            uk.gov.hmrc.entrydeclarationstore.controllers.SubmissionReplayController.replay
+
+GET         /import-control/housekeeping/status                     uk.gov.hmrc.entrydeclarationstore.controllers.HousekeepingController.getStatus
+PUT         /import-control/housekeeping/status                     uk.gov.hmrc.entrydeclarationstore.controllers.HousekeepingController.setStatus
