@@ -22,7 +22,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.commands.Command
+import reactivemongo.api.commands.{Command, UpdateWriteResult}
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
 import reactivemongo.api.{ReadPreference, WriteConcern}
@@ -194,11 +194,12 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
 
   override def setHousekeepingAt(submissionId: String, time: Instant): Future[Boolean] =
     collection
-      .findAndModify(
-        selector = Json.obj("submissionId" -> submissionId),
-        modifier = Update(Json.obj("$set" -> Json.obj("housekeepingAt" -> PersistableDateTime(time))))
+      .update(ordered = false, WriteConcern.Default)
+      .one(
+        Json.obj("submissionId" -> submissionId),
+        Json.obj("$set"         -> Json.obj("housekeepingAt" -> PersistableDateTime(time)))
       )
-      .map(result => result.value.isDefined)
+      .map(result => result.n == 1)
 
   override def enableHousekeeping(value: Boolean): Future[Boolean] = {
     val ttlSecs = if (value) housekeepingOnTTLSecs else housekeepingOffTTLSecs

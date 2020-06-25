@@ -299,6 +299,13 @@ class EntryDeclarationRepoISpec
             .map(_.map(_.housekeepingAt.toInstant))).get shouldBe time
       }
 
+      "return true if no change is made" in {
+        await(repository.removeAll())
+        await(repository.save(entryDeclaration313))                shouldBe true
+        await(repository.setHousekeepingAt(submissionId313, time)) shouldBe true
+        await(repository.setHousekeepingAt(submissionId313, time)) shouldBe true
+      }
+
       "return false if no submission exists" in {
         await(repository.setHousekeepingAt("unknownSubmissionId", time)) shouldBe false
       }
@@ -325,6 +332,11 @@ class EntryDeclarationRepoISpec
         await(repository.getHousekeepingStatus)     shouldBe HousekeepingStatus.Off
       }
 
+      "allow turning off when already off" in {
+        await(repository.enableHousekeeping(false)) shouldBe true
+        await(repository.getHousekeepingStatus)     shouldBe HousekeepingStatus.Off
+      }
+
       "not be effective when off" in {
         await(repository.removeAll())
         await(repository.save(entryDeclaration313)) shouldBe true
@@ -336,6 +348,11 @@ class EntryDeclarationRepoISpec
       }
 
       "be updatable (to turn on housekeeping)" in {
+        await(repository.enableHousekeeping(true)) shouldBe true
+        await(repository.getHousekeepingStatus)    shouldBe HousekeepingStatus.On
+      }
+
+      "allow turning on when already on" in {
         await(repository.enableHousekeeping(true)) shouldBe true
         await(repository.getHousekeepingStatus)    shouldBe HousekeepingStatus.On
       }
