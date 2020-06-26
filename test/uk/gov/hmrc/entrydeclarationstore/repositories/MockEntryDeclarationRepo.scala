@@ -52,6 +52,12 @@ trait MockEntryDeclarationRepo extends MockFactory {
 
     def lookupMetadata(submissionId: String): CallHandler[Future[Either[MetadataLookupError, ReplayMetadata]]] =
       mockEntryDeclarationRepo.lookupMetadata _ expects submissionId
+
+    def enableHousekeeping(value: Boolean): CallHandler[Future[Boolean]] =
+      mockEntryDeclarationRepo.enableHousekeeping _ expects value
+
+    def getHousekeepingStatus: CallHandler[Future[HousekeepingStatus]] =
+      mockEntryDeclarationRepo.getHousekeepingStatus _ expects ()
   }
 
 }

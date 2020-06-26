@@ -17,12 +17,16 @@ package uk.gov.hmrc.entrydeclarationstore.repositories
 
 import java.time.Instant
 
+import org.scalatest.concurrent.Eventually
+import org.scalatest.concurrent.PatienceConfiguration.Timeout
+import org.scalatest.time.{Seconds, Span}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits, Injecting}
 import play.api.{Application, Environment, Mode}
+import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.entrydeclarationstore.models._
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
 
@@ -36,6 +40,7 @@ class EntryDeclarationRepoISpec
     with DefaultAwaitTimeout
     with GuiceOneAppPerSuite
     with BeforeAndAfterAll
+    with Eventually
     with Injecting {
 
   override lazy val app: Application = new GuiceApplicationBuilder()
@@ -119,180 +124,237 @@ class EntryDeclarationRepoISpec
       }
       "housekeepingAt must be initialised to 7 days" in {
         await(repository.find("submissionId" -> submissionId313)).headOption.map(entryDeclaration =>
-          entryDeclaration.housekeepingAt.$date - entryDeclaration.receivedDateTime.toEpochMilli) shouldBe Some(
-          defaultTtl.toMillis)
+          entryDeclaration.housekeepingAt.$date - entryDeclaration.receivedDateTime.toEpochMilli) shouldBe
+          Some(defaultTtl.toMillis)
+      }
+    }
+
+    "looking up a submissionId from an eori & correlationId" when {
+      "a document with the eori & correlationId exists in the database" must {
+        "return its submissionId" in {
+          await(repository.lookupSubmissionId(eori, correlationId313)) shouldBe
+            Some(SubmissionIdLookupResult(receivedDateTime.toString, housekeepingAt.toString, submissionId313))
+        }
       }
 
-      "expireAfterSeconds" must {
-        "initially be zero" in {
-          await(repository.getExpireAfterSeconds).get shouldBe 0
+      "no document with the eori & correlationId exists in the database" must {
+        "return None" in {
+          await(repository.lookupSubmissionId("unknownEori", "unknownCorrelationId313")) shouldBe None
+        }
+      }
+
+      // Check find uses both fields...
+      "document with the same eori but different correlationId exists in the database" must {
+        "return None" in {
+          await(repository.lookupSubmissionId(eori, "unknownCorrelationId313")) shouldBe None
+        }
+      }
+
+      "document with the different eori but same correlationId exists in the database" must {
+        "return None" in {
+          await(repository.lookupSubmissionId("unknown", correlationId313)) shouldBe None
         }
       }
     }
-  }
 
-  "looking up a submissionId from an eori & correlationId" when {
-    "a document with the eori & correlationId exists in the database" must {
-      "return its submissionId" in {
-        await(repository.lookupSubmissionId(eori, correlationId313)) shouldBe
-          Some(SubmissionIdLookupResult(receivedDateTime.toString, housekeepingAt.toString, submissionId313))
+    "looking up an entry-declaration from a submissionId" when {
+      "a document with the submissionId exists in the database" must {
+        "return its xml submission" in {
+          await(repository.lookupEntryDeclaration(submissionId313)) shouldBe Some(payload313)
+        }
+      }
+
+      "no document with the submissionId exists in the database" must {
+        "return None" in {
+          await(repository.lookupEntryDeclaration("unknownsubmissionId313")) shouldBe None
+        }
+      }
+
+    }
+
+    "setting the submission time" when {
+      val time = Instant.now
+
+      "EntryDeclaration exists" must {
+        "update it and return true" in {
+          await(repository.setSubmissionTime(submissionId313, time)) shouldBe true
+
+          lookupEntryDeclaration(submissionId313) shouldBe
+            Some(entryDeclaration313.copy(eisSubmissionDateTime = Some(time)))
+        }
+      }
+
+      "EntryDeclaration does not exist" must {
+        "return false" in {
+          await(repository.setSubmissionTime("unknownsubmissionId", time)) shouldBe false
+        }
       }
     }
 
-    "no document with the eori & correlationId exists in the database" must {
-      "return None" in {
-        await(repository.lookupSubmissionId("unknownEori", "unknownCorrelationId313")) shouldBe None
+    "looking up an acceptance enrichment" when {
+      "a document with the submissionId exists in the database" must {
+        "return the enrichment" in {
+          await(repository.lookupAcceptanceEnrichment("submissionId313")) shouldBe
+            Some(AcceptanceEnrichment(payload313))
+        }
+      }
+
+      "no document with the submissionId exists in the database" must {
+        "return None" in {
+          await(repository.lookupAcceptanceEnrichment("unknownsubmissionId313")) shouldBe None
+        }
       }
     }
 
-    // Check find uses both fields...
-    "document with the same eori but different correlationId exists in the database" must {
-      "return None" in {
-        await(repository.lookupSubmissionId(eori, "unknownCorrelationId313")) shouldBe None
+    "looking up a rejection enrichment" when {
+      "a document with the submissionId exists in the database" must {
+        "return the enrichment" in {
+          val expected = ResourceUtils.withInputStreamFor("jsons/AmendmentRejectionEnrichmentPayload.json")(Json.parse)
+
+          await(repository.lookupAmendmentRejectionEnrichment("submissionId313")) shouldBe
+            Some(AmendmentRejectionEnrichment(expected))
+        }
+      }
+
+      "no document with the submissionId exists in the database" must {
+        "return None" in {
+          await(repository.lookupAmendmentRejectionEnrichment("unknownsubmissionId313")) shouldBe None
+        }
       }
     }
 
-    "document with the different eori but same correlationId exists in the database" must {
-      "return None" in {
-        await(repository.lookupSubmissionId("unknown", correlationId313)) shouldBe None
+    "looking up metadata" when {
+      "a IE313 submission with the submissionId exists in the database" must {
+        "return the metadata" in {
+          await(repository.lookupMetadata("submissionId313")) shouldBe
+            Right(
+              ReplayMetadata(
+                eori          = "eori",
+                correlationId = "correlationId313",
+                metadata = EntryDeclarationMetadata(
+                  submissionId            = "submissionId313",
+                  messageType             = MessageType.IE313,
+                  modeOfTransport         = "2",
+                  receivedDateTime        = receivedDateTime,
+                  movementReferenceNumber = Some("00REFNUM1234567890")
+                )
+              ))
+        }
       }
-    }
-  }
 
-  "looking up an entry-declaration from a submissionId" when {
-    "a document with the submissionId exists in the database" must {
-      "return its xml submission" in {
-        await(repository.lookupEntryDeclaration(submissionId313)) shouldBe Some(payload313)
+      "a IE315 submission with the submissionId exists in the database" must {
+        "return the metadata" in {
+          await(repository.lookupMetadata("submissionId315")) shouldBe
+            Right(
+              ReplayMetadata(
+                eori          = "eori",
+                correlationId = "correlationId315",
+                EntryDeclarationMetadata(
+                  submissionId            = "submissionId315",
+                  messageType             = MessageType.IE315,
+                  modeOfTransport         = "2",
+                  receivedDateTime        = receivedDateTime,
+                  movementReferenceNumber = None
+                )
+              ))
+        }
       }
-    }
 
-    "no document with the submissionId exists in the database" must {
-      "return None" in {
-        await(repository.lookupEntryDeclaration("unknownsubmissionId313")) shouldBe None
+      // Because when we are replaying we don't want a single bad document
+      // to cause the whole batch to fail or the whole replay to be aborted,
+      // so we need to be able to catch this scenario...
+      "invalid data is stored in the database" must {
+        "return a DataFormatError" in {
+          val badDeclaration = entryDeclaration315.copy(
+            submissionId  = "badPayloadSubmissionID",
+            correlationId = "badPayloadCorrelationId",
+            payload       = JsObject.empty)
+
+          await(repository.save(badDeclaration)) shouldBe true
+          await(repository.lookupMetadata("badPayloadSubmissionID")) shouldBe
+            Left(MetadataLookupError.DataFormatError)
+        }
       }
-    }
 
-  }
-
-  "setting the submission time" when {
-    val time = Instant.now
-
-    "EntryDeclaration exists" must {
-      "update it and return true" in {
-        await(repository.setSubmissionTime(submissionId313, time)) shouldBe true
-
-        lookupEntryDeclaration(submissionId313) shouldBe Some(
-          entryDeclaration313.copy(eisSubmissionDateTime = Some(time)))
-      }
-    }
-
-    "EntryDeclaration does not exist" must {
-      "return false" in {
-        await(repository.setSubmissionTime("unknownsubmissionId", time)) shouldBe false
-      }
-    }
-  }
-
-  "looking up an acceptance enrichment" when {
-    "a document with the submissionId exists in the database" must {
-      "return the enrichment" in {
-        await(repository.lookupAcceptanceEnrichment("submissionId313")) shouldBe
-          Some(
-            AcceptanceEnrichment(
-              payload313
-            ))
-      }
-    }
-
-    "no document with the submissionId exists in the database" must {
-      "return None" in {
-        await(repository.lookupAcceptanceEnrichment("unknownsubmissionId313")) shouldBe None
-      }
-    }
-  }
-
-  "looking up a rejection enrichment" when {
-    "a document with the submissionId exists in the database" must {
-      "return the enrichment" in {
-        val expected = ResourceUtils.withInputStreamFor("jsons/AmendmentRejectionEnrichmentPayload.json")(Json.parse)
-
-        await(repository.lookupAmendmentRejectionEnrichment("submissionId313")) shouldBe
-          Some(
-            AmendmentRejectionEnrichment(
-              expected
-            ))
+      "no document with the submissionId exists in the database" must {
+        "return MetadataNotFound" in {
+          await(repository.lookupMetadata("unknownsubmissionId313")) shouldBe
+            Left(MetadataLookupError.MetadataNotFound)
+        }
       }
     }
 
-    "no document with the submissionId exists in the database" must {
-      "return None" in {
-        await(repository.lookupAmendmentRejectionEnrichment("unknownsubmissionId313")) shouldBe None
-      }
-    }
-  }
+    "housekeepingAt" must {
+      val time = Instant.now.plusSeconds(60)
 
-  "looking up metadata" when {
-    "a IE313 submission with the submissionId exists in the database" must {
-      "return the metadata" in {
-        await(repository.lookupMetadata("submissionId313")) shouldBe
-          Right(
-            ReplayMetadata(
-              eori          = "eori",
-              correlationId = "correlationId313",
-              metadata = EntryDeclarationMetadata(
-                submissionId            = "submissionId313",
-                messageType             = MessageType.IE313,
-                modeOfTransport         = "2",
-                receivedDateTime        = receivedDateTime,
-                movementReferenceNumber = Some("00REFNUM1234567890")
-              )
-            )
-          )
-      }
-    }
+      "be settable" in {
+        await(repository.removeAll())
+        await(repository.save(entryDeclaration313))                shouldBe true
+        await(repository.setHousekeepingAt(submissionId313, time)) shouldBe true
 
-    "a IE315 submission with the submissionId exists in the database" must {
-      "return the metadata" in {
-        await(repository.lookupMetadata("submissionId315")) shouldBe
-          Right(
-            ReplayMetadata(
-              eori          = "eori",
-              correlationId = "correlationId315",
-              EntryDeclarationMetadata(
-                submissionId            = "submissionId315",
-                messageType             = MessageType.IE315,
-                modeOfTransport         = "2",
-                receivedDateTime        = receivedDateTime,
-                movementReferenceNumber = None
-              )
-            )
-          )
-      }
-    }
-
-    // Because when we are replaying we don't want a single bad document
-    // to cause the whole batch to fail or the whole replay to be aborted,
-    // so we need to be able to catch this scenario...
-    "invalid data is stored in the database" must {
-      "return a DataFormatError" in {
         await(
-          repository
-            .save(
-              entryDeclaration315
-                .copy(
-                  submissionId  = "badPayloadSubmissionID",
-                  correlationId = "badPayloadCorrelationId",
-                  payload       = JsObject.empty))) shouldBe true
+          repository.collection
+            .find(Json.obj("submissionId" -> submissionId313), Option.empty[JsObject])
+            .one[EntryDeclarationPersisted]
+            .map(_.map(_.housekeepingAt.toInstant))).get shouldBe time
+      }
 
-        await(repository.lookupMetadata("badPayloadSubmissionID")) shouldBe
-          Left(MetadataLookupError.DataFormatError)
+      "return true if no change is made" in {
+        await(repository.removeAll())
+        await(repository.save(entryDeclaration313))                shouldBe true
+        await(repository.setHousekeepingAt(submissionId313, time)) shouldBe true
+        await(repository.setHousekeepingAt(submissionId313, time)) shouldBe true
+      }
+
+      "return false if no submission exists" in {
+        await(repository.setHousekeepingAt("unknownSubmissionId", time)) shouldBe false
       }
     }
 
-    "no document with the submissionId exists in the database" must {
-      "return MetadataNotFound" in {
-        await(repository.lookupMetadata("unknownsubmissionId313")) shouldBe
-          Left(MetadataLookupError.MetadataNotFound)
+    "expireAfterSeconds" must {
+      "report on when on" in {
+        await(repository.enableHousekeeping(true)) shouldBe true
+        await(repository.getHousekeepingStatus)    shouldBe HousekeepingStatus.On
+      }
+
+      "be effective when on" in {
+        await(repository.removeAll())
+        await(repository.save(entryDeclaration313)) shouldBe true
+        repository.setHousekeepingAt(submissionId313, Instant.now)
+
+        eventually(Timeout(Span(60, Seconds))) {
+          await(repository.lookupEntryDeclaration(submissionId313)) shouldBe None
+        }
+      }
+
+      "be updatable (to turn off housekeeping)" in {
+        await(repository.enableHousekeeping(false)) shouldBe true
+        await(repository.getHousekeepingStatus)     shouldBe HousekeepingStatus.Off
+      }
+
+      "allow turning off when already off" in {
+        await(repository.enableHousekeeping(false)) shouldBe true
+        await(repository.getHousekeepingStatus)     shouldBe HousekeepingStatus.Off
+      }
+
+      "not be effective when off" in {
+        await(repository.removeAll())
+        await(repository.save(entryDeclaration313)) shouldBe true
+        repository.setHousekeepingAt(submissionId313, Instant.now)
+
+        Thread.sleep(60000)
+        await(repository.lookupEntryDeclaration(submissionId313)) should not be None
+
+      }
+
+      "be updatable (to turn on housekeeping)" in {
+        await(repository.enableHousekeeping(true)) shouldBe true
+        await(repository.getHousekeepingStatus)    shouldBe HousekeepingStatus.On
+      }
+
+      "allow turning on when already on" in {
+        await(repository.enableHousekeeping(true)) shouldBe true
+        await(repository.getHousekeepingStatus)    shouldBe HousekeepingStatus.On
       }
     }
   }

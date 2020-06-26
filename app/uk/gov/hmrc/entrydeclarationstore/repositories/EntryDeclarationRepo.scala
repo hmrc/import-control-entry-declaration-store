@@ -22,12 +22,15 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
+import reactivemongo.api.commands.{Command, UpdateWriteResult}
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
 import reactivemongo.api.{ReadPreference, WriteConcern}
 import reactivemongo.bson.{BSONDocument, BSONObjectID}
 import reactivemongo.core.errors.DatabaseException
+import reactivemongo.play.json.commands.JSONFindAndModifyCommand.Update
 import reactivemongo.play.json.ImplicitBSONHandlers._
+import reactivemongo.play.json.JSONSerializationPack
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.models._
 import uk.gov.hmrc.mongo.ReactiveRepository
@@ -49,6 +52,12 @@ trait EntryDeclarationRepo {
   def lookupAmendmentRejectionEnrichment(submissionId: String): Future[Option[AmendmentRejectionEnrichment]]
 
   def lookupMetadata(submissionId: String): Future[Either[MetadataLookupError, ReplayMetadata]]
+
+  def setHousekeepingAt(submissionId: String, time: Instant): Future[Boolean]
+
+  def enableHousekeeping(value: Boolean): Future[Boolean]
+
+  def getHousekeepingStatus: Future[HousekeepingStatus]
 }
 
 @Singleton
@@ -62,6 +71,9 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
       ReactiveMongoFormats.objectIdFormats
     )
     with EntryDeclarationRepo {
+
+  private val housekeepingOnTTLSecs: Long  = 0
+  private val housekeepingOffTTLSecs: Long = Int.MaxValue
 
   override def indexes: Seq[Index] = Seq(
     Index(Seq(("submissionId", Ascending)), name = Some("submissionIdIndex"), unique = true),
@@ -88,7 +100,6 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
             s"Unable to save entry declaration with eori=$eori, correlationId=$correlationId, submissionId=$submissionId",
             e
           )
-
           false
       }
   }
@@ -181,13 +192,60 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
           Left(MetadataLookupError.MetadataNotFound)
       }
 
-  def getExpireAfterSeconds: Future[Option[Long]] =
+  override def setHousekeepingAt(submissionId: String, time: Instant): Future[Boolean] =
+    collection
+      .update(ordered = false, WriteConcern.Default)
+      .one(
+        Json.obj("submissionId" -> submissionId),
+        Json.obj("$set"         -> Json.obj("housekeepingAt" -> PersistableDateTime(time)))
+      )
+      .map(result => result.n == 1)
+
+  override def enableHousekeeping(value: Boolean): Future[Boolean] = {
+    val ttlSecs = if (value) housekeepingOnTTLSecs else housekeepingOffTTLSecs
+
+    val commandDoc = Json.obj(
+      "collMod" -> "entryDeclarationStore",
+      "index"   -> Json.obj("keyPattern" -> Json.obj("housekeepingAt" -> 1), "expireAfterSeconds" -> ttlSecs))
+
+    val runner = Command.CommandWithPackRunner(JSONSerializationPack)
+    runner(mongo.mongoConnector.db(), runner.rawCommand(commandDoc))
+      .cursor[JsObject](ReadPreference.primaryPreferred)
+      .head
+      .map { response =>
+        response.as((JsPath \ "ok").read[Double]) match {
+          case 1.0 =>
+            for {
+              oldTtl <- response.as((JsPath \ "expireAfterSeconds_old").readNullable[Double])
+              newTtl <- response.as((JsPath \ "expireAfterSeconds_new").readNullable[Double])
+            } yield Logger.warn(s"Change to TTL: old TTL $oldTtl, new TTL $newTtl")
+            true
+          case _ =>
+            Logger.warn(s"Change to TTL failed. response: $response")
+            false
+        }
+      }
+  }
+
+  override def getHousekeepingStatus: Future[HousekeepingStatus] =
     collection.indexesManager.list().map { indexes =>
-      for {
+      val optTtlSecs = for {
         idx <- indexes.find(_.key.map(_._1).contains("housekeepingAt"))
         // Read the expiry from JSON (rather than BSON) so that we can control widening to Long
         // (from the more strongly typed BSON values which can be either Int32 or Int64)
         value <- Json.toJson(idx.options).as((JsPath \ "expireAfterSeconds").readNullable[Long])
       } yield value
+
+      optTtlSecs match {
+        case Some(`housekeepingOnTTLSecs`)  => HousekeepingStatus.On
+        case Some(`housekeepingOffTTLSecs`) => HousekeepingStatus.Off
+        case Some(other) =>
+          Logger.warn(
+            s"Cannot get housekeeping status: expireAfterSeconds is $other (neither on: $housekeepingOnTTLSecs nor off: $housekeepingOffTTLSecs)")
+          HousekeepingStatus.Unknown
+        case None =>
+          Logger.warn(s"Cannot housekeeping status: expireAfterSeconds could not be determined")
+          HousekeepingStatus.Unknown
+      }
     }
 }
