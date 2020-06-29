@@ -33,7 +33,7 @@ class DeclarationToJsonConverterSpec extends UnitSpec with Inside {
   "EntrySummaryDeclaration toJson " should {
     "for submission" should {
       val input: InputParameters = InputParameters(
-        isAmendment = false,
+        None,
         "1234567890-1234567890-1234567890-123",
         "correlationID1",
         Instant.parse("1234-12-10T00:34:17Z"))
@@ -60,7 +60,7 @@ class DeclarationToJsonConverterSpec extends UnitSpec with Inside {
     }
     "for amendment" should {
       val input: InputParameters = InputParameters(
-        isAmendment = true,
+        Some("mrn"),
         "1234567890-1234567890-1234567890-123",
         "correlationID1",
         Instant.parse("1234-12-10T00:34:17Z"))
@@ -78,7 +78,7 @@ class DeclarationToJsonConverterSpec extends UnitSpec with Inside {
     "for bad xml" should {
       "return Left(ServerError)" in {
         val input: InputParameters = InputParameters(
-          isAmendment = false,
+          None,
           "1234567890-1234567890-1234567890-123",
           "correlationID1",
           Instant.parse("1234-12-10T00:34:17Z"))
