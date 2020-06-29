@@ -73,7 +73,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
     with EntryDeclarationRepo {
 
   private val housekeepingOnTTLSecs: Long  = 0
-  private val housekeepingOffTTLSecs: Long = Int.MaxValue
+  private val housekeepingOffTTLSecs: Long = Long.MaxValue
 
   override def indexes: Seq[Index] = Seq(
     Index(Seq(("submissionId", Ascending)), name = Some("submissionIdIndex"), unique = true),
