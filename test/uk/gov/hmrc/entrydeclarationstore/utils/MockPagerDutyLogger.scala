@@ -18,28 +18,29 @@ package uk.gov.hmrc.entrydeclarationstore.utils
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
+import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 
 trait MockPagerDutyLogger extends MockFactory {
   val mockPagerDutyLogger: PagerDutyLogger = stub[PagerDutyLogger]
 
   object MockPagerDutyLogger {
     def logEISFailure: CallHandler[Unit] =
-      (mockPagerDutyLogger.logEISFailure _).verify(*)
+      (mockPagerDutyLogger.logEISFailure(_: Int)(_: LoggingContext)).verify(*, *)
 
     def logEISTimeout: CallHandler[Unit] =
-      (mockPagerDutyLogger.logEISTimeout _).verify()
+      (mockPagerDutyLogger.logEISTimeout()(_: LoggingContext)).verify(*)
 
     def logEISError: CallHandler[Unit] =
-      (mockPagerDutyLogger.logEISError _).verify(*)
+      (mockPagerDutyLogger.logEISError(_: Throwable)(_: LoggingContext)).verify(*, *)
 
     def logEISCircuitBreakerOpen: CallHandler[Unit] =
-      (mockPagerDutyLogger.logEISCircuitBreakerOpen _).verify()
+      (mockPagerDutyLogger.logEISCircuitBreakerOpen()(_: LoggingContext)).verify(*)
 
     def logEventFailure: CallHandler[Unit] =
-      (mockPagerDutyLogger.logEventFailure _).verify(*)
+      (mockPagerDutyLogger.logEventFailure(_: Int)(_: LoggingContext)).verify(*, *)
 
     def logEventError: CallHandler[Unit] =
-      (mockPagerDutyLogger.logEventError _).verify(*)
+      (mockPagerDutyLogger.logEventError(_: Throwable)(_: LoggingContext)).verify(*, *)
   }
 
 }

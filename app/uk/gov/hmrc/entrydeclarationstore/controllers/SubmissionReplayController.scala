@@ -35,7 +35,7 @@ class SubmissionReplayController @Inject()(
   def replay: Action[JsValue] = Action.async(parse.json) { implicit request =>
     val model = request.body.validate[ReplaySubmissionIds]
     if (model.isSuccess && model.get.submissionIds.length <= appConfig.replayBatchSizeLimit) {
-      service.replaySubmission(model.get.submissionIds).map {
+      service.replaySubmissions(model.get.submissionIds).map {
         case Right(replayResult) => Ok(Json.toJson(replayResult))
         case Left(_)             => InternalServerError
       }

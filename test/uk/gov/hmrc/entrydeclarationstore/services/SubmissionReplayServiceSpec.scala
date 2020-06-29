@@ -64,7 +64,7 @@ class SubmissionReplayServiceSpec
     )
 
   "SubmissionReplayService" when {
-    "replaying a submission" when {
+    "replaying submissions" when {
       "successful" must {
         "increment success count" in {
           val submissionIds = Seq(subId1)
@@ -75,7 +75,7 @@ class SubmissionReplayServiceSpec
           MockEisConnector.submitMetadata(metadata(subId1)) returns Future.successful(None)
           MockReportSender.sendReport(report) returns Future.successful((): Unit)
 
-          service.replaySubmission(submissionIds).futureValue shouldBe Right(ReplayResult(1, 0))
+          service.replaySubmissions(submissionIds).futureValue shouldBe Right(ReplayResult(1, 0))
         }
         "increment success counts" in {
           val submissionIds = Seq(subId1, subId2)
@@ -88,7 +88,7 @@ class SubmissionReplayServiceSpec
             MockReportSender.sendReport(report) returns Future.successful((): Unit)
           }
 
-          service.replaySubmission(submissionIds).futureValue shouldBe Right(ReplayResult(2, 0))
+          service.replaySubmissions(submissionIds).futureValue shouldBe Right(ReplayResult(2, 0))
         }
       }
 
@@ -102,7 +102,7 @@ class SubmissionReplayServiceSpec
               //WLOG
               .returns(Future.successful(Left(MetadataLookupError.DataFormatError)))
 
-            service.replaySubmission(submissionIds).futureValue shouldBe Right(ReplayResult(0, 1))
+            service.replaySubmissions(submissionIds).futureValue shouldBe Right(ReplayResult(0, 1))
           }
           "MetadataLookupError is MetadataNotFound" in {
             val submissionIds = Seq(subId1)
@@ -112,7 +112,7 @@ class SubmissionReplayServiceSpec
               //WLOG
               .returns(Future.successful(Left(MetadataLookupError.MetadataNotFound)))
 
-            service.replaySubmission(submissionIds).futureValue shouldBe Right(ReplayResult(0, 1))
+            service.replaySubmissions(submissionIds).futureValue shouldBe Right(ReplayResult(0, 1))
           }
         }
         "terminate and return Left" when {
@@ -123,7 +123,7 @@ class SubmissionReplayServiceSpec
               .lookupMetadata(submissionIds.head)
               .returns(Future.failed(GenericDatabaseException("abc", None)))
 
-            service.replaySubmission(submissionIds).futureValue shouldBe Left(ReplayError.MetadataRetrievalError)
+            service.replaySubmissions(submissionIds).futureValue shouldBe Left(ReplayError.MetadataRetrievalError)
           }
         }
       }
@@ -150,7 +150,7 @@ class SubmissionReplayServiceSpec
             MockEisConnector.submitMetadata(metadata(subId2)) returns Future.successful(None)
             MockReportSender.sendReport(successReport) returns Future.successful((): Unit)
 
-            service.replaySubmission(submissionIds).futureValue shouldBe Right(ReplayResult(1, 1))
+            service.replaySubmissions(submissionIds).futureValue shouldBe Right(ReplayResult(1, 1))
           }
         }
         "terminate and return Left" when {
@@ -167,7 +167,7 @@ class SubmissionReplayServiceSpec
               .sendReport(submissionSentToEISReport(subId1, Some(eisSendFailure)))
               .returns(Future.successful((): Unit))
 
-            service.replaySubmission(submissionIds).futureValue shouldBe Left(ReplayError.EISSubmitError)
+            service.replaySubmissions(submissionIds).futureValue shouldBe Left(ReplayError.EISSubmitError)
           }
           "EISSendFailure is CircuitBreakerOpen" in abortEisSendFailure(EISSendFailure.CircuitBreakerOpen)
           "EISSendFailure is ExceptionThrown" in abortEisSendFailure(EISSendFailure.ExceptionThrown)
@@ -191,7 +191,7 @@ class SubmissionReplayServiceSpec
           MockEisConnector.submitMetadata(metadata(subId1)) returns Future.successful(None)
           MockReportSender.sendReport(report) returns Future.failed(new IOException)
 
-          service.replaySubmission(submissionIds).futureValue shouldBe Left(ReplayError.EISEventError)
+          service.replaySubmissions(submissionIds).futureValue shouldBe Left(ReplayError.EISEventError)
         }
       }
     }

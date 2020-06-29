@@ -22,16 +22,16 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.commands.{Command, UpdateWriteResult}
+import reactivemongo.api.commands.Command
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
 import reactivemongo.api.{ReadPreference, WriteConcern}
 import reactivemongo.bson.{BSONDocument, BSONObjectID}
 import reactivemongo.core.errors.DatabaseException
-import reactivemongo.play.json.commands.JSONFindAndModifyCommand.Update
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import reactivemongo.play.json.JSONSerializationPack
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
+import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationstore.models._
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
@@ -39,19 +39,20 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import scala.concurrent.{ExecutionContext, Future}
 
 trait EntryDeclarationRepo {
-  def save(entryDeclaration: EntryDeclarationModel): Future[Boolean]
+  def save(entryDeclaration: EntryDeclarationModel)(implicit lc: LoggingContext): Future[Boolean]
 
   def lookupSubmissionId(eori: String, correlationId: String): Future[Option[SubmissionIdLookupResult]]
 
   def lookupEntryDeclaration(submissionId: String): Future[Option[JsValue]]
 
-  def setSubmissionTime(submissionId: String, time: Instant): Future[Boolean]
+  def setSubmissionTime(submissionId: String, time: Instant)(implicit lc: LoggingContext): Future[Boolean]
 
   def lookupAcceptanceEnrichment(submissionId: String): Future[Option[AcceptanceEnrichment]]
 
   def lookupAmendmentRejectionEnrichment(submissionId: String): Future[Option[AmendmentRejectionEnrichment]]
 
-  def lookupMetadata(submissionId: String): Future[Either[MetadataLookupError, ReplayMetadata]]
+  def lookupMetadata(submissionId: String)(
+    implicit lc: LoggingContext): Future[Either[MetadataLookupError, ReplayMetadata]]
 
   def setHousekeepingAt(submissionId: String, time: Instant): Future[Boolean]
 
@@ -89,17 +90,13 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
     )
   )
 
-  override def save(entryDeclaration: EntryDeclarationModel): Future[Boolean] = {
+  override def save(entryDeclaration: EntryDeclarationModel)(implicit lc: LoggingContext): Future[Boolean] = {
     val entryDeclarationPersisted = EntryDeclarationPersisted.from(entryDeclaration, appConfig.defaultTtl)
     insert(entryDeclarationPersisted)
       .map(result => result.ok)
       .recover {
         case e: DatabaseException =>
-          import entryDeclaration._
-          logger.error(
-            s"Unable to save entry declaration with eori=$eori, correlationId=$correlationId, submissionId=$submissionId",
-            e
-          )
+          ContextLogger.error(s"Unable to save entry declaration", e)
           false
       }
   }
@@ -126,7 +123,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
       .one[JsObject](ReadPreference.primaryPreferred)
       .map(_.map(doc => (doc \ "payload").as[JsValue]))
 
-  override def setSubmissionTime(submissionId: String, time: Instant): Future[Boolean] =
+  override def setSubmissionTime(submissionId: String, time: Instant)(implicit lc: LoggingContext): Future[Boolean] =
     collection
       .update(ordered = false, WriteConcern.Default)
       .one(
@@ -136,10 +133,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
       .map(result => result.nModified > 0)
       .recover {
         case e: DatabaseException =>
-          logger.error(
-            s"Unable to set submission time for entry declaration with submissionId=$submissionId",
-            e
-          )
+          ContextLogger.error(s"Unable to set submission time for entry declaration", e)
           false
       }
 
@@ -163,7 +157,8 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
       )
       .one[AmendmentRejectionEnrichment](ReadPreference.primaryPreferred)
 
-  override def lookupMetadata(submissionId: String): Future[Either[MetadataLookupError, ReplayMetadata]] =
+  override def lookupMetadata(submissionId: String)(
+    implicit lc: LoggingContext): Future[Either[MetadataLookupError, ReplayMetadata]] =
     collection
       .find(
         Json.obj("submissionId" -> submissionId),
@@ -184,11 +179,11 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
           json.validate[EntryDeclarationMetadataPersisted] match {
             case JsSuccess(value, _) => Right(value.toDomain)
             case JsError(errs) =>
-              Logger.warn(s"Unable to read metadata for submissionId $submissionId: $errs")
+              ContextLogger.warn(s"Unable to read metadata: $errs")
               Left(MetadataLookupError.DataFormatError)
           }
         case None =>
-          Logger.info(s"No metadata found for submissionId $submissionId")
+          ContextLogger.info(s"No metadata found")
           Left(MetadataLookupError.MetadataNotFound)
       }
 
@@ -244,7 +239,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
             s"Cannot get housekeeping status: expireAfterSeconds is $other (neither on: $housekeepingOnTTLSecs nor off: $housekeepingOffTTLSecs)")
           HousekeepingStatus.Unknown
         case None =>
-          Logger.warn(s"Cannot housekeeping status: expireAfterSeconds could not be determined")
+          Logger.warn(s"Cannot get housekeeping status: expireAfterSeconds could not be determined")
           HousekeepingStatus.Unknown
       }
     }

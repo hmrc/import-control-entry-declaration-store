@@ -14,20 +14,21 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.entrydeclarationstore.reporting.events
+package uk.gov.hmrc.entrydeclarationstore.logging
 
-import org.scalamock.handlers.CallHandler
-import org.scalamock.scalatest.MockFactory
-import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
-import uk.gov.hmrc.http.HeaderCarrier
-
-import scala.concurrent.Future
-
-trait MockEventConnector extends MockFactory {
-  val mockEventConnector: EventConnector = mock[EventConnector]
-
-  object MockEventConnector {
-    def sendEvent(event: Event): CallHandler[Future[Unit]] =
-      (mockEventConnector.sendEvent(_: Event)(_: HeaderCarrier, _: LoggingContext)) expects (event, *, *)
+case class LoggingContext(
+  eori: Option[String]          = None,
+  correlationId: Option[String] = None,
+  submissionId: Option[String]  = None) {
+  private[logging] lazy val context: String = {
+    Seq(
+      eori.map(v => s"eori=$v"),
+      correlationId.map(v => s"correlationId=$v"),
+      submissionId.map(v => s"submissionId=$v")).flatten.mkString(" ")
   }
+}
+
+object LoggingContext {
+  def apply(eori: String, correlationId: String, submissionId: String): LoggingContext =
+    LoggingContext(Some(eori), Some(correlationId), Some(submissionId))
 }

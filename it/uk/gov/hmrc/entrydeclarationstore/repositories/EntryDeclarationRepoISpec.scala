@@ -27,6 +27,7 @@ import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits, Injecting}
 import play.api.{Application, Environment, Mode}
 import reactivemongo.play.json.ImplicitBSONHandlers._
+import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models._
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
 
@@ -67,6 +68,8 @@ class EntryDeclarationRepoISpec
   val housekeepingAt: Instant    = receivedDateTime.plusMillis(defaultTtl.toMillis)
   val payload313: JsValue        = ResourceUtils.withInputStreamFor("jsons/313SpecificFields.json")(Json.parse)
   val payload315: JsValue        = ResourceUtils.withInputStreamFor("jsons/315NoOptional.json")(Json.parse)
+
+  implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
 
   val entryDeclaration313: EntryDeclarationModel = EntryDeclarationModel(
     correlationId313,

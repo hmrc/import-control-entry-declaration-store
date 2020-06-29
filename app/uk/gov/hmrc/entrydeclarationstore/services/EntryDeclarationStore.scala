@@ -25,6 +25,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, EisConnector}
+import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationstore.models._
 import uk.gov.hmrc.entrydeclarationstore.models.json.{DeclarationToJsonConverter, InputParameters}
 import uk.gov.hmrc.entrydeclarationstore.reporting.{ClientType, ReportSender, SubmissionReceived, SubmissionSentToEIS}
@@ -63,9 +64,15 @@ class EntryDeclarationStoreImpl @Inject()(
     implicit hc: HeaderCarrier): Future[Either[ErrorWrapper[_], SuccessResponse]] =
     timeFuture("Service handleSubmission", "handleSubmission.total") {
 
-      val correlationId          = idGenerator.generateCorrelationId
-      val submissionId           = idGenerator.generateSubmissionId
-      val receivedDateTime       = Instant.now(clock)
+      val correlationId    = idGenerator.generateCorrelationId
+      val submissionId     = idGenerator.generateSubmissionId
+      val receivedDateTime = Instant.now(clock)
+
+      implicit val lc: LoggingContext =
+        LoggingContext(correlationId = Some(correlationId), submissionId = Some(submissionId))
+
+      ContextLogger.info("Handling submission")
+
       val input: InputParameters = InputParameters(mrn.isDefined, submissionId, correlationId, receivedDateTime)
 
       val result = for {
@@ -108,7 +115,7 @@ class EntryDeclarationStoreImpl @Inject()(
     submissionId: String,
     mrn: Option[String],
     transportMode: String,
-    time: Instant)(implicit hc: HeaderCarrier): Unit =
+    time: Instant)(implicit hc: HeaderCarrier, lc: LoggingContext): Unit =
     timeFuture("Submission to EIS", "handleSubmission.submitToEis") {
 
       val messageType = MessageType(amendment = mrn.isDefined)
@@ -124,8 +131,10 @@ class EntryDeclarationStoreImpl @Inject()(
         case None => entryDeclarationRepo.setSubmissionTime(submissionId, Instant.now(clock))
       }
 
-  private def saveToDatabase(entryDeclaration: EntryDeclarationModel): Future[Either[ErrorWrapper[_], Unit]] =
+  private def saveToDatabase(entryDeclaration: EntryDeclarationModel)(
+    implicit lc: LoggingContext): Future[Either[ErrorWrapper[_], Unit]] =
     timeFuture("Save submission to database", "handleSubmission.saveToDatabase") {
+
       entryDeclarationRepo
         .save(entryDeclaration)
         .map(result =>
@@ -154,7 +163,7 @@ class EntryDeclarationStoreImpl @Inject()(
     xmlPayload: String,
     transportMode: String,
     clientType: ClientType
-  )(implicit hc: HeaderCarrier): Future[Either[ErrorWrapper[_], Unit]] =
+  )(implicit hc: HeaderCarrier, lc: LoggingContext): Future[Either[ErrorWrapper[_], Unit]] =
     reportSender
       .sendReport(
         received,
@@ -178,7 +187,7 @@ class EntryDeclarationStoreImpl @Inject()(
     submissionId: String,
     mrn: Option[String],
     eisSendFailure: Option[EISSendFailure]
-  )(implicit hc: HeaderCarrier): Unit =
+  )(implicit hc: HeaderCarrier, lc: LoggingContext): Unit =
     reportSender.sendReport(
       SubmissionSentToEIS(
         eori          = eori,

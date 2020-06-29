@@ -16,24 +16,24 @@
 
 package uk.gov.hmrc.entrydeclarationstore.utils
 
-import play.api.Logger
+import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
 
 class PagerDutyLogger {
-  def logEISFailure(statusCode: Int): Unit =
-    Logger.error(s"Submission failed with status $statusCode")
+  def logEISFailure(statusCode: Int)(implicit lc: LoggingContext): Unit =
+    ContextLogger.error(s"Submission failed with status $statusCode")
 
-  def logEISError(e: Throwable): Unit =
-    Logger.error(s"Submission failed with error", e)
+  def logEISError(e: Throwable)(implicit lc: LoggingContext): Unit =
+    ContextLogger.error(s"Submission failed with error", e)
 
-  def logEISTimeout(): Unit =
-    Logger.error(s"Submission timed out")
+  def logEISTimeout()(implicit lc: LoggingContext): Unit =
+    ContextLogger.error(s"Submission timed out")
 
-  def logEISCircuitBreakerOpen(): Unit =
-    Logger.error(s"Circuit breaker open - submission failed")
+  def logEISCircuitBreakerOpen()(implicit lc: LoggingContext): Unit =
+    ContextLogger.error(s"Circuit breaker open - submission failed")
 
-  def logEventFailure(statusCode: Int): Unit =
-    Logger.error(s"Send event failed with status $statusCode")
+  def logEventFailure(statusCode: Int)(implicit lc: LoggingContext): Unit =
+    ContextLogger.error(s"Send event failed with status $statusCode")
 
-  def logEventError(e: Throwable): Unit =
-    Logger.error(s"Send event failed with error", e)
+  def logEventError(e: Throwable)(implicit lc: LoggingContext): Unit =
+    ContextLogger.error(s"Send event failed with error", e)
 }

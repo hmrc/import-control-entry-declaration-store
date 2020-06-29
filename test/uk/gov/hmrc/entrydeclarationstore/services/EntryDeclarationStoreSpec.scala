@@ -25,6 +25,7 @@ import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import play.api.libs.json.{JsString, JsValue}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, MockEisConnector}
+import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models._
 import uk.gov.hmrc.entrydeclarationstore.models.json.MockDeclarationToJsonConverter
 import uk.gov.hmrc.entrydeclarationstore.reporting.{ClientType, MockReportSender, SubmissionReceived, SubmissionSentToEIS}
@@ -240,7 +241,9 @@ class EntryDeclarationStoreSpec
         MockValidationHandler.handleValidation(payload, mrn) returns Right(xmlPayload)
         MockDeclarationToJsonConverter.convertToJson(xmlPayload).returns(Right(jsonPayload))
 
-        stubEntryDeclarationRepo.save _ when declarationWith(mrn) returns Future.successful(true)
+        (stubEntryDeclarationRepo
+          .save(_: EntryDeclarationModel)(_: LoggingContext))
+          .when(declarationWith(mrn), *) returns Future.successful(true)
 
         // WLOG...
         val eisSendFailure: EISSendFailure.ExceptionThrown.type = EISSendFailure.ExceptionThrown
@@ -255,10 +258,13 @@ class EntryDeclarationStoreSpec
           .returns(Future.successful(Some(eisSendFailure)))
 
         val setSubmissionTimeComplete: Promise[Unit] = Promise[Unit]
-        (stubEntryDeclarationRepo.setSubmissionTime _ when (*, *)).onCall { _ =>
-          setSubmissionTimeComplete.success(())
-          Future.successful(true)
-        }
+        (stubEntryDeclarationRepo
+          .setSubmissionTime(_: String, _: Instant)(_: LoggingContext))
+          .when(*, *, *)
+          .onCall { _ =>
+            setSubmissionTimeComplete.success(())
+            Future.successful(true)
+          }
 
         inside(entryDeclarationStore.handleSubmission(payload, mrn, clientType).futureValue) {
           case Right(response) => response shouldBe a[SuccessResponse]
