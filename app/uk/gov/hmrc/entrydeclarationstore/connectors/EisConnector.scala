@@ -19,11 +19,11 @@ package uk.gov.hmrc.entrydeclarationstore.connectors
 import akka.actor.Scheduler
 import akka.pattern.{CircuitBreaker, CircuitBreakerOpenException}
 import javax.inject.{Inject, Singleton}
-import play.api.Logger
 import play.api.http.Status
 import play.api.http.Status._
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.helpers.HeaderGenerator
+import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationstore.models.EntryDeclarationMetadata
 import uk.gov.hmrc.entrydeclarationstore.utils.PagerDutyLogger
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
@@ -34,7 +34,8 @@ import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
 trait EisConnector {
-  def submitMetadata(metadata: EntryDeclarationMetadata)(implicit hc: HeaderCarrier): Future[Option[EISSendFailure]]
+  def submitMetadata(
+    metadata: EntryDeclarationMetadata)(implicit hc: HeaderCarrier, lc: LoggingContext): Future[Option[EISSendFailure]]
 }
 
 @Singleton
@@ -60,32 +61,37 @@ class EisConnectorImpl @Inject()(
 
   implicit val emptyHeaderCarrier: HeaderCarrier = HeaderCarrier()
 
-  def submitMetadata(metadata: EntryDeclarationMetadata)(implicit hc: HeaderCarrier): Future[Option[EISSendFailure]] =
+  def submitMetadata(metadata: EntryDeclarationMetadata)(
+    implicit hc: HeaderCarrier,
+    lc: LoggingContext): Future[Option[EISSendFailure]] =
     withCircuitBreaker {
       val isAmendment = metadata.movementReferenceNumber.isDefined
       val headers     = headerGenerator.headersForEIS(metadata.submissionId)(hc)
-      Logger.info(s"submissionId is ${metadata.submissionId}")
+      ContextLogger.info(s"sending to EIS")
       if (isAmendment) putAmendment(metadata, headers) else postNew(metadata, headers)
     }
 
-  private def putAmendment(metadata: EntryDeclarationMetadata, headers: Seq[(String, String)]): Future[HttpResponse] = {
-    Logger.info(s"sending PUT request to $amendUrl")
+  private def putAmendment(metadata: EntryDeclarationMetadata, headers: Seq[(String, String)])(
+    implicit lc: LoggingContext): Future[HttpResponse] = {
+    ContextLogger.info(s"sending PUT request to $amendUrl")
     client
       .PUT(amendUrl, metadata, headers)
   }
 
-  private def postNew(metadata: EntryDeclarationMetadata, headers: Seq[(String, String)]): Future[HttpResponse] = {
-    Logger.info(s"sending POST request to $newUrl")
+  private def postNew(metadata: EntryDeclarationMetadata, headers: Seq[(String, String)])(
+    implicit lc: LoggingContext): Future[HttpResponse] = {
+    ContextLogger.info(s"sending POST request to $newUrl")
     client
       .POST(newUrl, metadata, headers)
   }
 
-  private[connectors] def withCircuitBreaker(code: => Future[HttpResponse]): Future[Option[EISSendFailure]] =
+  private[connectors] def withCircuitBreaker(code: => Future[HttpResponse])(
+    implicit lc: LoggingContext): Future[Option[EISSendFailure]] =
     circuitBreaker
       .withCircuitBreaker(code, failureFunction)
       .map { response =>
         val status = response.status
-        Logger.info(s"Send to EIS returned status code: $status")
+        ContextLogger.info(s"Send to EIS returned status code: $status")
 
         if (status == ACCEPTED) {
           None

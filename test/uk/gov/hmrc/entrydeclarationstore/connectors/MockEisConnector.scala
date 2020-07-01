@@ -18,6 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.connectors
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
+import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.EntryDeclarationMetadata
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -29,8 +30,8 @@ trait MockEisConnector extends MockFactory {
   object MockEisConnector {
     def submitMetadata(metadata: EntryDeclarationMetadata): CallHandler[Future[Option[EISSendFailure]]] =
       (mockEisConnector
-        .submitMetadata(_: EntryDeclarationMetadata)(_: HeaderCarrier))
-        .expects(metadata, *)
+        .submitMetadata(_: EntryDeclarationMetadata)(_: HeaderCarrier, _: LoggingContext))
+        .expects(metadata, *, *)
   }
 
 }

@@ -25,6 +25,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, EisConnector}
+import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationstore.models._
 import uk.gov.hmrc.entrydeclarationstore.models.json.{DeclarationToJsonConverter, InputParameters}
 import uk.gov.hmrc.entrydeclarationstore.reporting.{ClientType, ReportSender, SubmissionReceived, SubmissionSentToEIS}
@@ -39,7 +40,7 @@ import scala.util.{Failure, Success}
 import scala.xml.NodeSeq
 
 trait EntryDeclarationStore {
-  def handleSubmission(payload: String, mrn: Option[String], clientType: ClientType)(
+  def handleSubmission(eori: String, payload: String, mrn: Option[String], clientType: ClientType)(
     implicit hc: HeaderCarrier): Future[Either[ErrorWrapper[_], SuccessResponse]]
 }
 
@@ -59,18 +60,22 @@ class EntryDeclarationStoreImpl @Inject()(
     with Timer
     with EventLogger {
 
-  def handleSubmission(payload: String, mrn: Option[String], clientType: ClientType)(
+  def handleSubmission(eori: String, payload: String, mrn: Option[String], clientType: ClientType)(
     implicit hc: HeaderCarrier): Future[Either[ErrorWrapper[_], SuccessResponse]] =
     timeFuture("Service handleSubmission", "handleSubmission.total") {
 
       val correlationId          = idGenerator.generateCorrelationId
       val submissionId           = idGenerator.generateSubmissionId
       val receivedDateTime       = Instant.now(clock)
-      val input: InputParameters = InputParameters(mrn.isDefined, submissionId, correlationId, receivedDateTime)
+      val input: InputParameters = InputParameters(mrn, submissionId, correlationId, receivedDateTime)
+
+      implicit val lc: LoggingContext =
+        LoggingContext(eori = eori, correlationId = correlationId, submissionId = submissionId)
+
+      ContextLogger.info("Handling submission")
 
       val result = for {
-        xmlPayload <- EitherT.fromEither[Future](validationHandler.handleValidation(payload, mrn))
-        eori: String = EoriUtils.eoriFromXml(xmlPayload)
+        xmlPayload             <- EitherT.fromEither[Future](validationHandler.handleValidation(payload, mrn))
         entryDeclarationAsJson <- EitherT.fromEither[Future](convertToJson(xmlPayload, input))
         _ = validateJson(entryDeclarationAsJson)
         entryDeclaration = EntryDeclarationModel(
@@ -84,48 +89,40 @@ class EntryDeclarationStoreImpl @Inject()(
         _ <- EitherT(saveToDatabase(entryDeclaration))
         transportMode = (xmlPayload \\ "TraModAtBorHEA76").head.text
         _ <- EitherT(
-              sendSubmissionReceivedReport(
-                receivedDateTime,
-                eori,
-                correlationId,
-                submissionId,
-                mrn,
-                entryDeclarationAsJson,
-                payload,
-                transportMode,
-                clientType))
+              sendSubmissionReceivedReport(input, eori, entryDeclarationAsJson, payload, transportMode, clientType))
       } yield {
-        submitToEIS(eori, correlationId, submissionId, mrn, transportMode, receivedDateTime)
+        submitToEIS(input, eori, transportMode, receivedDateTime)
         SuccessResponse(entryDeclaration.correlationId)
       }
 
       result.value
     }
 
-  private def submitToEIS(
-    eori: String,
-    correlationId: String,
-    submissionId: String,
-    mrn: Option[String],
-    transportMode: String,
-    time: Instant)(implicit hc: HeaderCarrier): Unit =
-    timeFuture("Submission to EIS", "handleSubmission.submitToEis") {
+  private def submitToEIS(input: InputParameters, eori: String, transportMode: String, time: Instant)(
+    implicit hc: HeaderCarrier,
+    lc: LoggingContext): Unit = {
 
+    import input._
+
+    timeFuture("Submission to EIS", "handleSubmission.submitToEis") {
       val messageType = MessageType(amendment = mrn.isDefined)
       val metadata    = EntryDeclarationMetadata(submissionId, messageType, transportMode, time, mrn)
 
       eisConnector.submitMetadata(metadata)
     }.andThen {
-        case Success(result) => sendSubmissionSendToEISReport(eori, correlationId, submissionId, mrn, result)
+        case Success(result) => sendSubmissionSendToEISReport(input, eori, result)
         case Failure(_) =>
-          sendSubmissionSendToEISReport(eori, correlationId, submissionId, mrn, Some(EISSendFailure.ExceptionThrown))
+          sendSubmissionSendToEISReport(input, eori, Some(EISSendFailure.ExceptionThrown))
       }
       .onSuccess {
         case None => entryDeclarationRepo.setSubmissionTime(submissionId, Instant.now(clock))
       }
+  }
 
-  private def saveToDatabase(entryDeclaration: EntryDeclarationModel): Future[Either[ErrorWrapper[_], Unit]] =
+  private def saveToDatabase(entryDeclaration: EntryDeclarationModel)(
+    implicit lc: LoggingContext): Future[Either[ErrorWrapper[_], Unit]] =
     timeFuture("Save submission to database", "handleSubmission.saveToDatabase") {
+
       entryDeclarationRepo
         .save(entryDeclaration)
         .map(result =>
@@ -136,28 +133,27 @@ class EntryDeclarationStoreImpl @Inject()(
         })
     }
 
-  private def convertToJson(xml: NodeSeq, inputParameters: InputParameters): Either[ErrorWrapper[_], JsValue] =
+  private def convertToJson(xml: NodeSeq, inputParameters: InputParameters)(
+    implicit lc: LoggingContext): Either[ErrorWrapper[_], JsValue] =
     time("Json conversion", "handleSubmission.convertToJson") {
       declarationToJsonConverter.convertToJson(xml, inputParameters)
     }
 
-  private def validateJson(json: JsValue): Unit =
+  private def validateJson(json: JsValue)(implicit lc: LoggingContext): Unit =
     if (appConfig.validateXMLtoJsonTransformation) declarationToJsonConverter.validateJson(json)
 
   private def sendSubmissionReceivedReport(
-    received: Instant,
+    input: InputParameters,
     eori: String,
-    correlationId: String,
-    submissionId: String,
-    mrn: Option[String],
     body: JsValue,
     xmlPayload: String,
     transportMode: String,
     clientType: ClientType
-  )(implicit hc: HeaderCarrier): Future[Either[ErrorWrapper[_], Unit]] =
+  )(implicit hc: HeaderCarrier, lc: LoggingContext): Future[Either[ErrorWrapper[_], Unit]] = {
+    import input._
     reportSender
       .sendReport(
-        received,
+        receivedDateTime,
         SubmissionReceived(
           eori          = eori,
           correlationId = correlationId,
@@ -171,14 +167,14 @@ class EntryDeclarationStoreImpl @Inject()(
       )
       .map(_.asRight[ErrorWrapper[_]])
       .recover { case NonFatal(_) => Left(ErrorWrapper(ServerError)) }
+  }
 
   private def sendSubmissionSendToEISReport(
+    input: InputParameters,
     eori: String,
-    correlationId: String,
-    submissionId: String,
-    mrn: Option[String],
     eisSendFailure: Option[EISSendFailure]
-  )(implicit hc: HeaderCarrier): Unit =
+  )(implicit hc: HeaderCarrier, lc: LoggingContext): Unit = {
+    import input._
     reportSender.sendReport(
       SubmissionSentToEIS(
         eori          = eori,
@@ -187,4 +183,5 @@ class EntryDeclarationStoreImpl @Inject()(
         MessageType.apply(mrn.isDefined),
         eisSendFailure
       ))
+  }
 }

@@ -45,7 +45,7 @@ class MetadataSpec extends UnitSpec with Inside {
 
           inside(
             Metadata
-              .reader(InputParameters(isAmendment = false, submissionId, correlationId, receivedDateTime))
+              .reader(InputParameters(None, submissionId, correlationId, receivedDateTime))
               .read(xml)) {
             case ParseSuccess(metadata) =>
               metadata shouldBe

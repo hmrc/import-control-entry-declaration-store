@@ -14,17 +14,21 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.entrydeclarationstore.utils
+package uk.gov.hmrc.entrydeclarationstore.logging
 
-import scala.xml.NodeSeq
+case class LoggingContext(
+  eori: Option[String]          = None,
+  correlationId: Option[String] = None,
+  submissionId: Option[String]  = None) {
+  private[logging] lazy val context: String = {
+    Seq(
+      eori.map(v => s"eori=$v"),
+      correlationId.map(v => s"correlationId=$v"),
+      submissionId.map(v => s"submissionId=$v")).flatten.mkString(" ")
+  }
+}
 
-object EoriUtils {
-
-  private val eoriRegex = raw"(?s)<MesSenMES3>(.*)</MesSenMES3>".r.unanchored
-
-  def eoriFromXmlString(xml: String): String =
-    xml match {
-      case eoriRegex(eori) => eori.split("/").head.trim
-      case _               => ""
-    }
+object LoggingContext {
+  def apply(eori: String, correlationId: String, submissionId: String): LoggingContext =
+    LoggingContext(Some(eori), Some(correlationId), Some(submissionId))
 }

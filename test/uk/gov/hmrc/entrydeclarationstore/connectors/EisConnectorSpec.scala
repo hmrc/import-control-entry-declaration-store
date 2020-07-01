@@ -38,6 +38,7 @@ import play.api.{Application, Environment, Mode}
 import play.mvc.Http.Status._
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.helpers.MockHeaderGenerator
+import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.{EntryDeclarationMetadata, MessageType}
 import uk.gov.hmrc.entrydeclarationstore.utils.MockPagerDutyLogger
 import uk.gov.hmrc.http.HeaderCarrier
@@ -74,6 +75,7 @@ class EisConnectorSpec
     HeaderCarrier(extraHeaders = Seq(extraHeader -> "someValue"), otherHeaders = Seq(otherHeader -> "someOtherValue"))
   implicit val ec: ExecutionContext = ExecutionContext.global
   implicit val request: Request     = Request(0L)
+  implicit val lc: LoggingContext   = LoggingContext("eori", "corrId", "subId")
 
   private val wireMockServer = new WireMockServer(WireMockConfiguration.wireMockConfig().dynamicPort())
 

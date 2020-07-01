@@ -160,7 +160,7 @@ class EntryDeclarationSubmissionControllerSpec extends UnitSpec with MockEntryDe
       "The submission fails with ValidationErrors" in {
         MockAuthService.authenticate() returns Some((eori, clientType))
         MockEntryDeclarationStore
-          .handleSubmission(payload.toString(), mrn, clientType)
+          .handleSubmission(eori, payload.toString(), mrn, clientType)
           .returns(Future.successful(Left(ErrorWrapper(validationErrors))))
 
         val result: Future[Result] = handler(fakeRequest)
@@ -178,7 +178,7 @@ class EntryDeclarationSubmissionControllerSpec extends UnitSpec with MockEntryDe
       "The submission fails with a ServerError (e.g. database problem)" in {
         MockAuthService.authenticate() returns Some((eori, clientType))
         MockEntryDeclarationStore
-          .handleSubmission(payload.toString(), mrn, clientType)
+          .handleSubmission(eori, payload.toString(), mrn, clientType)
           .returns(Future.successful(Left(ErrorWrapper(ServerError))))
         val result: Future[Result] = handler(fakeRequest)
 
@@ -198,7 +198,7 @@ class EntryDeclarationSubmissionControllerSpec extends UnitSpec with MockEntryDe
       "The submission is handled successfully" in {
         MockAuthService.authenticate() returns Some((eori, clientType))
         MockEntryDeclarationStore
-          .handleSubmission(payload.toString(), None, clientType)
+          .handleSubmission(eori, payload.toString(), None, clientType)
           .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
 
         val result: Future[Result] = controller.postSubmission(fakeRequest)
@@ -220,7 +220,7 @@ class EntryDeclarationSubmissionControllerSpec extends UnitSpec with MockEntryDe
       "The submission is handled successfully" in {
         MockAuthService.authenticate() returns Some((eori, clientType))
         MockEntryDeclarationStore
-          .handleSubmission(payload.toString(), Some(mrn), clientType)
+          .handleSubmission(eori, payload.toString(), Some(mrn), clientType)
           .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
         val result = controller.putAmendment(mrn)(fakeRequest)
 
@@ -236,7 +236,7 @@ class EntryDeclarationSubmissionControllerSpec extends UnitSpec with MockEntryDe
       "The MRN in the body doesnt match the MRN in URL" in {
         MockAuthService.authenticate() returns Some((eori, clientType))
         MockEntryDeclarationStore
-          .handleSubmission(payload.toString(), Some(mrn), clientType)
+          .handleSubmission(eori, payload.toString(), Some(mrn), clientType)
           .returns(Future.successful(Left(ErrorWrapper(MRNMismatchError))))
 
         val result = controller.putAmendment(mrn)(fakeRequest)

@@ -28,6 +28,6 @@ trait MockSubmissionReplayService extends MockFactory {
 
   object MockSubmissionReplayService {
     def replaySubmission(submissionIds: Seq[String]): CallHandler[Future[Either[ReplayError, ReplayResult]]] =
-      (mockSubmissionReplayService.replaySubmission(_: Seq[String])(_: HeaderCarrier)) expects (submissionIds, *)
+      (mockSubmissionReplayService.replaySubmissions(_: Seq[String])(_: HeaderCarrier)) expects (submissionIds, *)
   }
 }

@@ -21,6 +21,7 @@ import java.time.{Clock, Duration, Instant, ZoneOffset}
 import com.kenshoo.play.metrics.Metrics
 import org.scalatest.concurrent.ScalaFutures
 import play.api.libs.json.JsObject
+import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.MessageType
 import uk.gov.hmrc.entrydeclarationstore.reporting.audit.{AuditEvent, MockAuditHandler}
 import uk.gov.hmrc.entrydeclarationstore.reporting.events.{Event, EventCode, MockEventConnector}
@@ -42,7 +43,8 @@ class ReportSenderSpec extends UnitSpec with MockAuditHandler with MockEventConn
   val event: Event           = Event(EventCode.ENS_TO_EIS, now, "subId", "eori", "corrId", MessageType.IE313, None)
   val auditEvent: AuditEvent = AuditEvent("type", "trans", JsObject.empty)
 
-  implicit val hc: HeaderCarrier = HeaderCarrier()
+  implicit val hc: HeaderCarrier  = HeaderCarrier()
+  implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
 
   val mockedMetrics: Metrics = new MockMetrics
 

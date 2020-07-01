@@ -20,6 +20,7 @@ import java.time.Instant
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
+import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -30,11 +31,11 @@ trait MockReportSender extends MockFactory {
   object MockReportSender {
     def sendReport[R](timestamp: Instant, report: R): CallHandler[Future[Unit]] =
       (mockReportSender
-        .sendReport(_: Instant, _: R)(_: EventSources[R], _: HeaderCarrier)) expects (timestamp, report, *, *)
+        .sendReport(_: Instant, _: R)(_: EventSources[R], _: HeaderCarrier, _: LoggingContext)) expects (timestamp, report, *, *, *)
 
     def sendReport[R](report: R): CallHandler[Future[Unit]] =
       (mockReportSender
-        .sendReport(_: R)(_: EventSources[R], _: HeaderCarrier)) expects (report, *, *)
+        .sendReport(_: R)(_: EventSources[R], _: HeaderCarrier, _: LoggingContext)) expects (report, *, *, *)
   }
 
 }

@@ -25,6 +25,7 @@ import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import play.api.libs.json.{JsString, JsValue}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, MockEisConnector}
+import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models._
 import uk.gov.hmrc.entrydeclarationstore.models.json.MockDeclarationToJsonConverter
 import uk.gov.hmrc.entrydeclarationstore.reporting.{ClientType, MockReportSender, SubmissionReceived, SubmissionSentToEIS}
@@ -158,7 +159,7 @@ class EntryDeclarationStoreSpec
         Future.successful(true)
       }
 
-      entryDeclarationStore.handleSubmission(payload, mrn, clientType).futureValue shouldBe Right(
+      entryDeclarationStore.handleSubmission(eori, payload, mrn, clientType).futureValue shouldBe Right(
         SuccessResponse(correlationId))
 
       await(setSubmissionTimeComplete)
@@ -180,7 +181,7 @@ class EntryDeclarationStoreSpec
 
         MockValidationHandler.handleValidation(payload, mrn) returns Left(errorWrapper)
 
-        entryDeclarationStore.handleSubmission(payload, mrn, clientType).futureValue shouldBe Left(errorWrapper)
+        entryDeclarationStore.handleSubmission(eori, payload, mrn, clientType).futureValue shouldBe Left(errorWrapper)
       }
     }
 
@@ -194,7 +195,7 @@ class EntryDeclarationStoreSpec
           .saveEntryDeclaration(declarationWith(mrn))
           .returns(Future.successful(false))
 
-        entryDeclarationStore.handleSubmission(payload, mrn, clientType).futureValue shouldBe
+        entryDeclarationStore.handleSubmission(eori, payload, mrn, clientType).futureValue shouldBe
           Left(ErrorWrapper(ServerError))
       }
     }
@@ -213,7 +214,7 @@ class EntryDeclarationStoreSpec
           .sendReport(now, submissionReceivedReport(xmlPayload, messageType))
           .returns(Future.failed(new IOException))
 
-        entryDeclarationStore.handleSubmission(payload, mrn, clientType).futureValue shouldBe
+        entryDeclarationStore.handleSubmission(eori, payload, mrn, clientType).futureValue shouldBe
           Left(ErrorWrapper(ServerError))
       }
     }
@@ -240,7 +241,9 @@ class EntryDeclarationStoreSpec
         MockValidationHandler.handleValidation(payload, mrn) returns Right(xmlPayload)
         MockDeclarationToJsonConverter.convertToJson(xmlPayload).returns(Right(jsonPayload))
 
-        stubEntryDeclarationRepo.save _ when declarationWith(mrn) returns Future.successful(true)
+        (stubEntryDeclarationRepo
+          .save(_: EntryDeclarationModel)(_: LoggingContext))
+          .when(declarationWith(mrn), *) returns Future.successful(true)
 
         // WLOG...
         val eisSendFailure: EISSendFailure.ExceptionThrown.type = EISSendFailure.ExceptionThrown
@@ -255,12 +258,15 @@ class EntryDeclarationStoreSpec
           .returns(Future.successful(Some(eisSendFailure)))
 
         val setSubmissionTimeComplete: Promise[Unit] = Promise[Unit]
-        (stubEntryDeclarationRepo.setSubmissionTime _ when (*, *)).onCall { _ =>
-          setSubmissionTimeComplete.success(())
-          Future.successful(true)
-        }
+        (stubEntryDeclarationRepo
+          .setSubmissionTime(_: String, _: Instant)(_: LoggingContext))
+          .when(*, *, *)
+          .onCall { _ =>
+            setSubmissionTimeComplete.success(())
+            Future.successful(true)
+          }
 
-        inside(entryDeclarationStore.handleSubmission(payload, mrn, clientType).futureValue) {
+        inside(entryDeclarationStore.handleSubmission(eori, payload, mrn, clientType).futureValue) {
           case Right(response) => response shouldBe a[SuccessResponse]
         }
 
@@ -289,7 +295,7 @@ class EntryDeclarationStoreSpec
           .submitMetadata(metadataWith(messageType, mrn))
           .returns(Promise[Option[EISSendFailure]].future)
 
-        entryDeclarationStore.handleSubmission(payload, mrn, clientType).futureValue shouldBe Right(
+        entryDeclarationStore.handleSubmission(eori, payload, mrn, clientType).futureValue shouldBe Right(
           SuccessResponse(correlationId))
       }
     }
@@ -313,7 +319,7 @@ class EntryDeclarationStoreSpec
           .submitMetadata(metadataWith(messageType, mrn))
           .returns(Future.failed(new RuntimeException with NoStackTrace))
 
-        entryDeclarationStore.handleSubmission(payload, mrn, clientType).futureValue shouldBe Right(
+        entryDeclarationStore.handleSubmission(eori, payload, mrn, clientType).futureValue shouldBe Right(
           SuccessResponse(correlationId))
       }
     }

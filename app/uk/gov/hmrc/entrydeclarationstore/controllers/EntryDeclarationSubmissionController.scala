@@ -61,8 +61,8 @@ class EntryDeclarationSubmissionController @Inject()(
 
   private def handleSubmission(mrn: Option[String])(implicit request: Request[String]) =
     authenticate.flatMap {
-      case Right(clientType) =>
-        service.handleSubmission(request.body, mrn, clientType).map {
+      case Right((eori, clientType)) =>
+        service.handleSubmission(eori, request.body, mrn, clientType).map {
           case Left(failure @ ErrorWrapper(err)) =>
             err match {
               case _: ValidationErrors => BadRequest(failure.toXml)
@@ -74,12 +74,13 @@ class EntryDeclarationSubmissionController @Inject()(
       case Left(failure @ ErrorWrapper(err)) => Future.successful(Status(err.status)(failure.toXml))
     }
 
-  private def authenticate(implicit request: Request[String]): Future[Either[ErrorWrapper[StandardError], ClientType]] =
+  private def authenticate(
+    implicit request: Request[String]): Future[Either[ErrorWrapper[StandardError], (String, ClientType)]] =
     timeFuture("Handle authentication", "handleSubmissionController.authentication") {
       authService.authenticate().map {
         case Some((eori, clientType)) =>
           val eoriInXML = EoriUtils.eoriFromXmlString(request.body)
-          if (eori == eoriInXML) Right(clientType) else Left(ErrorWrapper(StandardError.forbidden))
+          if (eori == eoriInXML) Right((eori, clientType)) else Left(ErrorWrapper(StandardError.forbidden))
         case None => Left(ErrorWrapper(StandardError.unauthorized))
       }
     }

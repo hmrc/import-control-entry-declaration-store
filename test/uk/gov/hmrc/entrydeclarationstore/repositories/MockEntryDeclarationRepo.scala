@@ -21,6 +21,7 @@ import java.time.Instant
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
 import play.api.libs.json.JsValue
+import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models._
 
 import scala.concurrent.Future
@@ -29,8 +30,8 @@ trait MockEntryDeclarationRepo extends MockFactory {
   val mockEntryDeclarationRepo: EntryDeclarationRepo = mock[EntryDeclarationRepo]
 
   object MockEntryDeclarationRepo {
-    def saveEntryDeclaration(declation: EntryDeclarationModel): CallHandler[Future[Boolean]] =
-      mockEntryDeclarationRepo.save _ expects declation
+    def saveEntryDeclaration(declaration: EntryDeclarationModel): CallHandler[Future[Boolean]] =
+      (mockEntryDeclarationRepo.save(_: EntryDeclarationModel)(_: LoggingContext)) expects (declaration, *)
 
     def lookupSubmissionIdAndReceivedDateTime(
       eori: String,
@@ -41,7 +42,8 @@ trait MockEntryDeclarationRepo extends MockFactory {
       mockEntryDeclarationRepo.lookupEntryDeclaration _ expects submissionId
 
     def setSubmissionTime(submissionId: String, time: Instant): CallHandler[Future[Boolean]] =
-      mockEntryDeclarationRepo.setSubmissionTime _ expects (submissionId, time)
+      (mockEntryDeclarationRepo
+        .setSubmissionTime(_: String, _: Instant)(_: LoggingContext)) expects (submissionId, time, *)
 
     def lookupAcceptanceEnrichment(submissionId: String): CallHandler[Future[Option[AcceptanceEnrichment]]] =
       mockEntryDeclarationRepo.lookupAcceptanceEnrichment _ expects submissionId
@@ -51,7 +53,7 @@ trait MockEntryDeclarationRepo extends MockFactory {
       mockEntryDeclarationRepo.lookupAmendmentRejectionEnrichment _ expects submissionId
 
     def lookupMetadata(submissionId: String): CallHandler[Future[Either[MetadataLookupError, ReplayMetadata]]] =
-      mockEntryDeclarationRepo.lookupMetadata _ expects submissionId
+      (mockEntryDeclarationRepo.lookupMetadata(_: String)(_: LoggingContext)) expects (submissionId, *)
 
     def enableHousekeeping(value: Boolean): CallHandler[Future[Boolean]] =
       mockEntryDeclarationRepo.enableHousekeeping _ expects value

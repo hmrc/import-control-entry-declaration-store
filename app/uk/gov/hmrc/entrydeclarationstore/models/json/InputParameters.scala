@@ -18,4 +18,10 @@ package uk.gov.hmrc.entrydeclarationstore.models.json
 
 import java.time.Instant
 
-case class InputParameters(isAmendment: Boolean, submissionId: String, correlationId: String, receivedDateTime: Instant)
+case class InputParameters(
+  mrn: Option[String],
+  submissionId: String,
+  correlationId: String,
+  receivedDateTime: Instant) {
+  def isAmendment: Boolean = mrn.isDefined
+}

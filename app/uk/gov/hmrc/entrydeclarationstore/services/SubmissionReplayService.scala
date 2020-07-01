@@ -22,6 +22,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.http.Status.BAD_REQUEST
 import reactivemongo.core.errors.ReactiveMongoException
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, EisConnector}
+import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationstore.models.{ReplayError, ReplayMetadata, ReplayResult}
 import uk.gov.hmrc.entrydeclarationstore.reporting.{ReportSender, SubmissionSentToEIS}
 import uk.gov.hmrc.entrydeclarationstore.repositories.{EntryDeclarationRepo, MetadataLookupError}
@@ -39,7 +40,7 @@ class SubmissionReplayService @Inject()(
   case class Abort(error: ReplayError)
   case class Counts(successCount: Int, failureCount: Int)
 
-  def replaySubmission(submissionIds: Seq[String])(
+  def replaySubmissions(submissionIds: Seq[String])(
     implicit hc: HeaderCarrier): Future[Either[ReplayError, ReplayResult]] =
     submissionIds
       .foldLeft(Future.successful(Counts(0, 0).asRight[Abort]): Future[Either[Abort, Counts]]) { (acc, submissionId) =>
@@ -60,7 +61,7 @@ class SubmissionReplayService @Inject()(
     implicit hc: HeaderCarrier): Future[Either[Abort, Counts]] = {
     val result = for {
       replayMetadata <- EitherT(doMetadataLookup(submissionId))
-      sendSuccess    <- EitherT(doEisSubmit(replayMetadata))
+      sendSuccess    <- EitherT(doEisSubmit(replayMetadata, submissionId))
     } yield {
       if (sendSuccess) {
         Counts(state.successCount + 1, state.failureCount)
@@ -71,7 +72,11 @@ class SubmissionReplayService @Inject()(
     result.value
   }
 
-  private def doMetadataLookup(submissionId: String): Future[Either[Abort, Option[ReplayMetadata]]] =
+  private def doMetadataLookup(submissionId: String): Future[Either[Abort, Option[ReplayMetadata]]] = {
+    implicit val lc: LoggingContext = LoggingContext(submissionId = Some(submissionId))
+
+    ContextLogger.info("Replaying submission")
+
     entryDeclarationRepo
       .lookupMetadata(submissionId)
       .map {
@@ -82,11 +87,17 @@ class SubmissionReplayService @Inject()(
       .recover {
         case _: ReactiveMongoException => Left(Abort(ReplayError.MetadataRetrievalError))
       }
+  }
 
-  private def doEisSubmit(optionReplayMetadata: Option[ReplayMetadata])(
+  private def doEisSubmit(optionReplayMetadata: Option[ReplayMetadata], submissionId: String)(
     implicit hc: HeaderCarrier): Future[Either[Abort, Boolean]] =
     optionReplayMetadata match {
       case Some(replayMetadata) =>
+        implicit val lc: LoggingContext = LoggingContext(
+          eori          = replayMetadata.eori,
+          correlationId = replayMetadata.correlationId,
+          submissionId  = submissionId)
+
         for {
           replayError <- eisConnector.submitMetadata(replayMetadata.metadata)
           eventSent   <- sendEvent(replayMetadata, replayError)
@@ -104,8 +115,9 @@ class SubmissionReplayService @Inject()(
       case None => Future.successful(Right(false))
     }
 
-  private def sendEvent(replayMetadata: ReplayMetadata, eISSendFailure: Option[EISSendFailure])(
-    implicit hc: HeaderCarrier): Future[Boolean] =
+  private def sendEvent(replayMetadata: ReplayMetadata, eisSendFailure: Option[EISSendFailure])(
+    implicit hc: HeaderCarrier,
+    lc: LoggingContext): Future[Boolean] =
     reportSender
       .sendReport(
         SubmissionSentToEIS(
@@ -113,7 +125,7 @@ class SubmissionReplayService @Inject()(
           replayMetadata.correlationId,
           replayMetadata.metadata.submissionId,
           replayMetadata.metadata.messageType,
-          eISSendFailure))
+          eisSendFailure))
       .map(_ => true)
       .recover { case NonFatal(_) => false }
 }

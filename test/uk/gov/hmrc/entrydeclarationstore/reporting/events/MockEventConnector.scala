@@ -18,6 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.reporting.events
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
+import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -27,6 +28,6 @@ trait MockEventConnector extends MockFactory {
 
   object MockEventConnector {
     def sendEvent(event: Event): CallHandler[Future[Unit]] =
-      (mockEventConnector.sendEvent(_: Event)(_: HeaderCarrier)) expects (event, *)
+      (mockEventConnector.sendEvent(_: Event)(_: HeaderCarrier, _: LoggingContext)) expects (event, *, *)
   }
 }

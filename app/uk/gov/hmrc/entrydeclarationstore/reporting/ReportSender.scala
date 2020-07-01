@@ -19,6 +19,7 @@ import java.time.{Clock, Instant}
 
 import com.google.inject.Inject
 import com.kenshoo.play.metrics.Metrics
+import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.reporting.audit.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.entrydeclarationstore.reporting.events.{Event, EventConnector}
 import uk.gov.hmrc.entrydeclarationstore.utils.{EventLogger, Timer}
@@ -33,7 +34,9 @@ class ReportSender @Inject()(
   override val metrics: Metrics)(implicit ec: ExecutionContext)
     extends Timer
     with EventLogger {
-  def sendReport[R: EventSources](timestamp: Instant, report: R)(implicit hc: HeaderCarrier): Future[Unit] = {
+  def sendReport[R: EventSources](timestamp: Instant, report: R)(
+    implicit hc: HeaderCarrier,
+    lc: LoggingContext): Future[Unit] = {
     val eventSources: EventSources[R] = implicitly
 
     // Note: auditing is performed asynchronously
@@ -47,15 +50,15 @@ class ReportSender @Inject()(
     }
   }
 
-  def sendReport[R: EventSources](report: R)(implicit hc: HeaderCarrier): Future[Unit] =
+  def sendReport[R: EventSources](report: R)(implicit hc: HeaderCarrier, lc: LoggingContext): Future[Unit] =
     sendReport(Instant.now(clock), report)
 
-  private def audit[R: EventSources](event: AuditEvent)(implicit hc: HeaderCarrier) =
+  private def audit[R: EventSources](event: AuditEvent)(implicit hc: HeaderCarrier, lc: LoggingContext) =
     timeFuture("ReportSender audit", "reporting.audit") {
       auditHandler.audit(event)
     }
 
-  private def sendEvent[R: EventSources](event: Event)(implicit hc: HeaderCarrier) =
+  private def sendEvent[R: EventSources](event: Event)(implicit hc: HeaderCarrier, lc: LoggingContext) =
     timeFuture("ReportSender send event", "reporting.sendEvent") {
       eventConnector.sendEvent(event)
     }

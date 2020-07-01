@@ -59,7 +59,6 @@ class EoriUtilsSpec extends UnitSpec {
       val result  = "ABCD1234"
 
       EoriUtils.eoriFromXmlString(payload.toString) shouldBe result
-      EoriUtils.eoriFromXml(payload)                shouldBe result
     }
 
     "return the eori even if no branch" in {
@@ -67,7 +66,6 @@ class EoriUtilsSpec extends UnitSpec {
       val result  = "ABCD1234"
 
       EoriUtils.eoriFromXmlString(payload.toString) shouldBe result
-      EoriUtils.eoriFromXml(payload)                shouldBe result
     }
 
     "trim the eori" in {
@@ -75,7 +73,6 @@ class EoriUtilsSpec extends UnitSpec {
       val result  = "ABCD1234"
 
       EoriUtils.eoriFromXmlString(payload.toString) shouldBe result
-      EoriUtils.eoriFromXml(payload)                shouldBe result
     }
 
     "return an empty string when eori MesSenMES3 tag empty" in {
@@ -83,7 +80,6 @@ class EoriUtilsSpec extends UnitSpec {
       val result  = ""
 
       EoriUtils.eoriFromXmlString(payload.toString) shouldBe result
-      EoriUtils.eoriFromXml(payload)                shouldBe result
     }
 
     "return an empty string when no eori MesSenMES3 tag found" in {
@@ -91,7 +87,6 @@ class EoriUtilsSpec extends UnitSpec {
       val result  = ""
 
       EoriUtils.eoriFromXmlString(payload.toString) shouldBe result
-      EoriUtils.eoriFromXml(payload)                shouldBe result
     }
 
     // So that validation is not preempted

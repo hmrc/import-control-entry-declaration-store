@@ -18,6 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.validation
 
 import com.kenshoo.play.metrics.Metrics
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
+import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.ErrorWrapper
 import uk.gov.hmrc.entrydeclarationstore.services.MRNMismatchError
 import uk.gov.hmrc.entrydeclarationstore.utils.{MockMetrics, XmlFormatConfig}
@@ -29,7 +30,8 @@ import scala.xml.NodeSeq
 
 class ValidationHandlerSpec extends UnitSpec with MockSchemaValidator with MockRuleValidator with MockAppConfig {
 
-  val mockedMetrics: Metrics = new MockMetrics
+  val mockedMetrics: Metrics      = new MockMetrics
+  implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
 
   implicit val xmlFormatConfig: XmlFormatConfig = XmlFormatConfig(responseMaxErrors = 100)
   MockAppConfig.xmlFormatConfig returns xmlFormatConfig

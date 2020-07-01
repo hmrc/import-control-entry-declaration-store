@@ -19,28 +19,27 @@ package uk.gov.hmrc.entrydeclarationstore.utils
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.github.fge.jsonschema.core.report.ProcessingReport
 import com.github.fge.jsonschema.main.{JsonSchemaFactory, JsonValidator}
-import play.Logger
 import play.api.libs.json.JsValue
+import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
 
 object JsonSchemaValidator {
 
   private val factory = JsonSchemaFactory.byDefault()
 
-  def validateJSONAgainstSchema(
-    inputDoc: JsValue,
-    schemaDoc: String = "jsonschemas/EntrySummaryDeclaration.json"): Boolean =
+  def validateJSONAgainstSchema(inputDoc: JsValue, schemaDoc: String = "jsonschemas/EntrySummaryDeclaration.json")(
+    implicit lc: LoggingContext): Boolean =
     try {
       val mapper: ObjectMapper     = new ObjectMapper()
       val inputJson: JsonNode      = mapper.readTree(inputDoc.toString())
       val jsonSchema: JsonNode     = mapper.readTree(ResourceUtils.url(schemaDoc))
       val validator: JsonValidator = factory.getValidator
       val report: ProcessingReport = validator.validate(jsonSchema, inputJson)
-      if (!report.isSuccess) Logger.error(s"Failed to validate $inputDoc and $report")
+      if (!report.isSuccess) ContextLogger.error(s"Failed to validate $inputDoc and $report")
 
       report.isSuccess
     } catch {
       case e: Exception =>
-        Logger.error(s"Failed to validate $inputDoc", e)
+        ContextLogger.error(s"Failed to validate $inputDoc", e)
         false
     }
 }
