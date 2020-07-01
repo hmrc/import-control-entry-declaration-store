@@ -27,13 +27,4 @@ object EoriUtils {
       case eoriRegex(eori) => eori.split("/").head.trim
       case _               => ""
     }
-
-  def eoriFromXml(xml: NodeSeq): String = {
-    val eori = for {
-      element <- (xml \\ "MesSenMES3").headOption
-      eori    <- element.text.split("/").headOption
-    } yield eori.trim
-
-    eori.getOrElse("")
-  }
 }

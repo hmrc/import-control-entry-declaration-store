@@ -29,12 +29,13 @@ trait MockEntryDeclarationStore extends MockFactory {
 
   object MockEntryDeclarationStore {
     def handleSubmission(
+      eori: String,
       payload: String,
       mrn: Option[String],
       clientType: ClientType): CallHandler[Future[Either[ErrorWrapper[_], SuccessResponse]]] =
       (mockEntryDeclarationStore
-        .handleSubmission(_: String, _: Option[String], _: ClientType)(_: HeaderCarrier))
-        .expects(payload, mrn, clientType, *)
+        .handleSubmission(_: String, _: String, _: Option[String], _: ClientType)(_: HeaderCarrier))
+        .expects(eori, payload, mrn, clientType, *)
   }
 
 }

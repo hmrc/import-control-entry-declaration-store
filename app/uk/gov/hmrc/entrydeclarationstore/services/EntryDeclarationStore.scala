@@ -40,7 +40,7 @@ import scala.util.{Failure, Success}
 import scala.xml.NodeSeq
 
 trait EntryDeclarationStore {
-  def handleSubmission(payload: String, mrn: Option[String], clientType: ClientType)(
+  def handleSubmission(eori: String, payload: String, mrn: Option[String], clientType: ClientType)(
     implicit hc: HeaderCarrier): Future[Either[ErrorWrapper[_], SuccessResponse]]
 }
 
@@ -60,69 +60,51 @@ class EntryDeclarationStoreImpl @Inject()(
     with Timer
     with EventLogger {
 
-  def handleSubmission(payload: String, mrn: Option[String], clientType: ClientType)(
+  def handleSubmission(eori: String, payload: String, mrn: Option[String], clientType: ClientType)(
     implicit hc: HeaderCarrier): Future[Either[ErrorWrapper[_], SuccessResponse]] =
     timeFuture("Service handleSubmission", "handleSubmission.total") {
 
-      val correlationId    = idGenerator.generateCorrelationId
-      val submissionId     = idGenerator.generateSubmissionId
-      val receivedDateTime = Instant.now(clock)
-
-      ContextLogger.info("Handling submission")(
-        LoggingContext(correlationId = Some(correlationId), submissionId = Some(submissionId)))
-
+      val correlationId          = idGenerator.generateCorrelationId
+      val submissionId           = idGenerator.generateSubmissionId
+      val receivedDateTime       = Instant.now(clock)
       val input: InputParameters = InputParameters(mrn, submissionId, correlationId, receivedDateTime)
+
+      implicit val lc: LoggingContext =
+        LoggingContext(eori = eori, correlationId = correlationId, submissionId = submissionId)
+
+      ContextLogger.info("Handling submission")
 
       val result = for {
         xmlPayload             <- EitherT.fromEither[Future](validationHandler.handleValidation(payload, mrn))
         entryDeclarationAsJson <- EitherT.fromEither[Future](convertToJson(xmlPayload, input))
         _ = validateJson(entryDeclarationAsJson)
-        result <- saveAndSubmitToEIS(input, clientType, payload, xmlPayload, entryDeclarationAsJson)
-      } yield result
+        entryDeclaration = EntryDeclarationModel(
+          correlationId    = correlationId,
+          submissionId     = submissionId,
+          eori             = eori,
+          payload          = entryDeclarationAsJson,
+          mrn              = mrn,
+          receivedDateTime = receivedDateTime
+        )
+        _ <- EitherT(saveToDatabase(entryDeclaration))
+        transportMode = (xmlPayload \\ "TraModAtBorHEA76").head.text
+        _ <- EitherT(
+              sendSubmissionReceivedReport(input, eori, entryDeclarationAsJson, payload, transportMode, clientType))
+      } yield {
+        submitToEIS(input, eori, transportMode, receivedDateTime)
+        SuccessResponse(entryDeclaration.correlationId)
+      }
 
       result.value
     }
 
-  private def saveAndSubmitToEIS(
-    input: InputParameters,
-    clientType: ClientType,
-    payload: String,
-    xmlPayload: NodeSeq,
-    entryDeclarationAsJson: JsValue)(implicit hc: HeaderCarrier) = {
-    import input._
-
-    val eori: String  = EoriUtils.eoriFromXml(xmlPayload)
-    val transportMode = (xmlPayload \\ "TraModAtBorHEA76").head.text
-
-    implicit val lc: LoggingContext =
-      LoggingContext(eori = eori, correlationId = correlationId, submissionId = submissionId)
-
-    val entryDeclaration = EntryDeclarationModel(
-      correlationId    = correlationId,
-      submissionId     = submissionId,
-      eori             = eori,
-      payload          = entryDeclarationAsJson,
-      mrn              = mrn,
-      receivedDateTime = receivedDateTime
-    )
-
-    for {
-      _ <- EitherT(saveToDatabase(entryDeclaration))
-      _ <- EitherT(
-            sendSubmissionReceivedReport(input, eori, entryDeclarationAsJson, payload, transportMode, clientType))
-    } yield {
-      submitToEIS(input, eori, transportMode, receivedDateTime)
-      SuccessResponse(correlationId)
-    }
-  }
-
   private def submitToEIS(input: InputParameters, eori: String, transportMode: String, time: Instant)(
     implicit hc: HeaderCarrier,
     lc: LoggingContext): Unit = {
+
     import input._
 
     timeFuture("Submission to EIS", "handleSubmission.submitToEis") {
-
       val messageType = MessageType(amendment = mrn.isDefined)
       val metadata    = EntryDeclarationMetadata(submissionId, messageType, transportMode, time, mrn)
 
