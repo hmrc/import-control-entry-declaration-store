@@ -18,6 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.validation
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
+import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.ErrorWrapper
 
 import scala.xml.NodeSeq
@@ -27,7 +28,8 @@ trait MockValidationHandler extends MockFactory {
 
   object MockValidationHandler {
     def handleValidation(payload: String, mrn: Option[String]): CallHandler[Either[ErrorWrapper[_], NodeSeq]] =
-      (mockValidationHandler.handleValidation _) expects (payload, mrn)
+      (mockValidationHandler
+        .handleValidation(_: String, _: Option[String])(_: LoggingContext)) expects (payload, mrn, *)
   }
 
 }
