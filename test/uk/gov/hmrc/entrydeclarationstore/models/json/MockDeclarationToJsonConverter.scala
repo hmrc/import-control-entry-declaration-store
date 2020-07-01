@@ -19,6 +19,7 @@ package uk.gov.hmrc.entrydeclarationstore.models.json
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
 import play.api.libs.json.JsValue
+import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.ErrorWrapper
 
 import scala.xml.NodeSeq
@@ -28,6 +29,7 @@ trait MockDeclarationToJsonConverter extends MockFactory {
 
   object MockDeclarationToJsonConverter {
     def convertToJson(xml: NodeSeq): CallHandler[Either[ErrorWrapper[_], JsValue]] =
-      mockDeclarationToJsonConverter.convertToJson _ expects (xml, *)
+      (mockDeclarationToJsonConverter
+        .convertToJson(_: NodeSeq, _: InputParameters)(_: LoggingContext)) expects (xml, *, *)
   }
 }

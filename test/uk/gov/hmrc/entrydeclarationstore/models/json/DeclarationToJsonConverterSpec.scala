@@ -20,6 +20,7 @@ import java.time.Instant
 
 import org.scalatest.Inside
 import play.api.libs.json.{JsValue, Json}
+import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.ErrorWrapper
 import uk.gov.hmrc.entrydeclarationstore.services.ServerError
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
@@ -29,6 +30,8 @@ import scala.xml.{Elem, XML}
 
 class DeclarationToJsonConverterSpec extends UnitSpec with Inside {
   val declarationToJsonConverter = new DeclarationToJsonConverter
+
+  implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
 
   "EntrySummaryDeclaration toJson " should {
     "for submission" should {

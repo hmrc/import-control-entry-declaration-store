@@ -17,8 +17,8 @@
 package uk.gov.hmrc.entrydeclarationstore.models.json
 
 import com.lucidchart.open.xtract.{ParseFailure, ParseSuccess, PartialParseSuccess, XmlReader}
-import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
+import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationstore.models.ErrorWrapper
 import uk.gov.hmrc.entrydeclarationstore.services.ServerError
 import uk.gov.hmrc.entrydeclarationstore.utils.JsonSchemaValidator
@@ -26,17 +26,18 @@ import uk.gov.hmrc.entrydeclarationstore.utils.JsonSchemaValidator
 import scala.xml.NodeSeq
 
 class DeclarationToJsonConverter {
-  def convertToJson(xml: NodeSeq, inputParameters: InputParameters): Either[ErrorWrapper[_], JsValue] =
+  def convertToJson(xml: NodeSeq, inputParameters: InputParameters)(
+    implicit lc: LoggingContext): Either[ErrorWrapper[_], JsValue] =
     XmlReader.of(EntrySummaryDeclaration.reader(inputParameters)).read(xml) match {
       case ParseSuccess(entrySummaryDeclaration) => Right(Json.toJson(entrySummaryDeclaration))
       case ParseFailure(errors) =>
-        Logger.error("Failed to convert to JSON " + errors)
+        ContextLogger.error("Failed to convert to JSON " + errors)
         Left(ErrorWrapper(ServerError))
       case PartialParseSuccess(_, errors) =>
-        Logger.error("Failed to convert to JSON (PartialParseSuccess) " + errors)
+        ContextLogger.error("Failed to convert to JSON (PartialParseSuccess) " + errors)
         Left(ErrorWrapper(ServerError))
     }
 
-  def validateJson(entrySummaryDeclaration: JsValue): Boolean =
+  def validateJson(entrySummaryDeclaration: JsValue)(implicit lc: LoggingContext): Boolean =
     JsonSchemaValidator.validateJSONAgainstSchema(entrySummaryDeclaration)
 }
