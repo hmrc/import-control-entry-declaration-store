@@ -68,10 +68,8 @@ class EntryDeclarationStoreImpl @Inject()(
       val submissionId     = idGenerator.generateSubmissionId
       val receivedDateTime = Instant.now(clock)
 
-      implicit val lc: LoggingContext =
-        LoggingContext(correlationId = Some(correlationId), submissionId = Some(submissionId))
-
-      ContextLogger.info("Handling submission")
+      ContextLogger.info("Handling submission")(
+        LoggingContext(correlationId = Some(correlationId), submissionId = Some(submissionId)))
 
       val input: InputParameters = InputParameters(mrn, submissionId, correlationId, receivedDateTime)
 
