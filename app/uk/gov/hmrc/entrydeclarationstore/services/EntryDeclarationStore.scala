@@ -72,7 +72,11 @@ class EntryDeclarationStoreImpl @Inject()(
       implicit val lc: LoggingContext =
         LoggingContext(eori = eori, correlationId = correlationId, submissionId = submissionId)
 
-      ContextLogger.info("Handling submission")
+      if (appConfig.logSubmissionPayloads) {
+        ContextLogger.info(s"Handling submission. Payload:\n$payload")
+      } else {
+        ContextLogger.info("Handling submission")
+      }
 
       val result = for {
         xmlPayload             <- EitherT.fromEither[Future](validationHandler.handleValidation(payload, mrn))
