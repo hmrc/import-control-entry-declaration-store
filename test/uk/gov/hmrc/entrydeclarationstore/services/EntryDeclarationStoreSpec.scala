@@ -132,6 +132,8 @@ class EntryDeclarationStoreSpec
     val payload: String = xmlPayload.toString
     MockIdGenerator.generateCorrelationId returns correlationId
     MockIdGenerator.generateSubmissionId returns submissionId
+
+    MockAppConfig.logSubmissionPayloads returns false
   }
 
   def successfulSubmission(xmlPayload: NodeSeq, messageType: MessageType, mrn: Option[String]): Unit =

@@ -69,6 +69,7 @@ trait MockAppConfig extends MockFactory {
 
     def replayBatchSizeLimit: CallHandler[Int] = mockAppConfig.replayBatchSizeLimit _ expects ()
 
+    def logSubmissionPayloads: CallHandler[Boolean] = mockAppConfig.logSubmissionPayloads _ expects ()
   }
 
 }

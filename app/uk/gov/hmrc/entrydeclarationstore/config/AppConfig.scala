@@ -74,6 +74,8 @@ trait AppConfig {
   def defaultTtl: FiniteDuration
 
   def replayBatchSizeLimit: Int
+
+  def logSubmissionPayloads: Boolean
 }
 
 @Singleton
@@ -146,4 +148,6 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
   lazy val defaultTtl: FiniteDuration = getFiniteDuration(config.get[Configuration](s"mongodb"), "defaultTtl")
 
   lazy val replayBatchSizeLimit: Int = config.get[Int]("replay.batchSizeLimit")
+
+  lazy val logSubmissionPayloads: Boolean = config.get[Boolean]("logSubmissionPayloads")
 }
