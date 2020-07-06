@@ -151,5 +151,28 @@ class RetryingSpec extends UnitSpec with ScalaFutures with GuiceOneAppPerSuite w
         stopwatch.elapsed(TimeUnit.MILLISECONDS) shouldBe <(delay.toMillis)
       }
     }
+
+    "getting fibonacci delays" must {
+      "return fibonacci values" in {
+        Retrying
+          .fibonacciDelays(1.second, 7) shouldBe Seq(
+          1.second,
+          1.second,
+          2.seconds,
+          3.seconds,
+          5.seconds,
+          8.seconds,
+          13.seconds)
+      }
+
+      "must allow to be scaled by a factor" in {
+        Retrying.fibonacciDelays(500.milliseconds, 5) shouldBe Seq(
+          500.milliseconds,
+          500.milliseconds,
+          1000.milliseconds,
+          1500.milliseconds,
+          2500.milliseconds)
+      }
+    }
   }
 }
