@@ -88,10 +88,7 @@ class NRSSubmissionSpec extends UnitSpec {
                               |      "Gov-Client-Public-Port": "12345"
                               |    },
                               |    "searchKeys": {
-                              |      "eori": "GB123456789",
-                              |      "correlationId": "qweryuiop",
-                              |      "localReferenceNumber": "localref",
-                              |      "movementReferenceNumber": "mrn"
+                              |      "eori": "GB123456789"
                               |    }
                               |  }
                               |}""".stripMargin)
@@ -145,7 +142,7 @@ class NRSSubmissionSpec extends UnitSpec {
         )
       )
 
-      val searchKeys = SearchKeys("GB123456789", "qweryuiop", Some("localref"), Some("mrn"))
+      val searchKeys = SearchKeys("GB123456789")
 
       val metadata = NRSMetadata(
         Instant.parse("2018-04-07T12:13:25.156Z"),

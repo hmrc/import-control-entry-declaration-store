@@ -18,11 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.nrs
 
 import play.api.libs.json.{Json, Writes}
 
-case class SearchKeys(
-  eori: String,
-  correlationId: String,
-  localReferenceNumber: Option[String]    = None,
-  movementReferenceNumber: Option[String] = None)
+case class SearchKeys(eori: String)
 
 object SearchKeys {
   implicit val writes: Writes[SearchKeys] = Json.writes[SearchKeys]
