@@ -16,10 +16,17 @@
 
 package uk.gov.hmrc.entrydeclarationstore.nrs
 
-import play.api.libs.json.{Json, Reads}
+import play.api.http.Status
 
-case class NrsResponse(nrSubmissionId: String)
+sealed trait NRSSubmisionFailure {
+  def retryable: Boolean
+}
 
-object NrsResponse {
-  implicit val reads: Reads[NrsResponse] = Json.reads[NrsResponse]
+object NRSSubmisionFailure {
+  case class ErrorResponse(status: Int) extends NRSSubmisionFailure {
+    override def retryable: Boolean = Status.isServerError(status)
+  }
+  case object ExceptionThrown extends NRSSubmisionFailure {
+    override def retryable: Boolean = false
+  }
 }

@@ -77,8 +77,6 @@ trait MockAppConfig extends MockFactory {
     def nrsApiKey: CallHandler[String] = mockAppConfig.nrsApiKey _ expects ()
 
     def nrsRetries: CallHandler[List[FiniteDuration]] = mockAppConfig.nrsRetries _ expects ()
-
-    def nrsMaxTimeout: CallHandler[FiniteDuration] = mockAppConfig.nrsMaxTimeout _ expects ()
   }
 
 }
