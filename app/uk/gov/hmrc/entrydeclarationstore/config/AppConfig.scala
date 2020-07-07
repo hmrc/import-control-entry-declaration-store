@@ -18,10 +18,10 @@ package uk.gov.hmrc.entrydeclarationstore.config
 
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
-import uk.gov.hmrc.entrydeclarationstore.utils.XmlFormatConfig
+import uk.gov.hmrc.entrydeclarationstore.utils.{Retrying, XmlFormatConfig}
 import uk.gov.hmrc.play.bootstrap.config.{AppName, ServicesConfig}
 
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.concurrent.duration._
 
 trait AppConfig {
 
@@ -76,6 +76,15 @@ trait AppConfig {
   def replayBatchSizeLimit: Int
 
   def logSubmissionPayloads: Boolean
+
+  //NRS config items
+  def nrsBaseUrl: String
+
+  def nrsApiKey: String
+
+  def nrsRetries: List[FiniteDuration]
+
+  def nrsMaxTimeout: FiniteDuration
 }
 
 @Singleton
@@ -84,13 +93,12 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
   val authBaseUrl: String = servicesConfig.baseUrl("auth")
 
   private val eisConfig =
-    config
-      .get[Configuration](s"microservice.services.import-control-entry-declaration-eis")
+    config.get[Configuration]("microservice.services.import-control-entry-declaration-eis")
+  private val nrsConfig =
+    config.get[Configuration]("microservice.services.non-repudiation")
 
   val xmlFormatConfig: XmlFormatConfig =
-    XmlFormatConfig(
-      config.get[Int]("response.max.errors")
-    )
+    XmlFormatConfig(config.get[Int]("response.max.errors"))
 
   private final def getFiniteDuration(config: Configuration, path: String): FiniteDuration = {
     val string = config.get[String](path)
@@ -150,4 +158,13 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
   lazy val replayBatchSizeLimit: Int = config.get[Int]("replay.batchSizeLimit")
 
   lazy val logSubmissionPayloads: Boolean = config.get[Boolean]("logSubmissionPayloads")
+
+  lazy val nrsBaseUrl: String = servicesConfig.baseUrl("non-repudiation")
+
+  lazy val nrsApiKey: String  = nrsConfig.get[String]("xApiKey")
+
+  lazy val nrsRetries: List[FiniteDuration] =
+    Retrying.fibonacciDelays(getFiniteDuration(nrsConfig, "initialDelay"), nrsConfig.get[Int]("numberOfRetries"))
+
+  lazy val nrsMaxTimeout: FiniteDuration = nrsConfig.get[Int]("maxTimeout").milliseconds
 }
