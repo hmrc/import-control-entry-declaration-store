@@ -17,7 +17,7 @@
 package uk.gov.hmrc.entrydeclarationstore.nrs
 
 import akka.actor.Scheduler
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import play.api.http.Status
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
@@ -29,6 +29,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 import scala.util.{Success, Try}
 
+@Singleton
 class NRSConnector @Inject()(httpClient: HttpClient, appConfig: AppConfig)(
   implicit val scheduler: Scheduler,
   val ec: ExecutionContext)
