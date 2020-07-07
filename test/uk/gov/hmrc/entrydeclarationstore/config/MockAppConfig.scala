@@ -70,6 +70,15 @@ trait MockAppConfig extends MockFactory {
     def replayBatchSizeLimit: CallHandler[Int] = mockAppConfig.replayBatchSizeLimit _ expects ()
 
     def logSubmissionPayloads: CallHandler[Boolean] = mockAppConfig.logSubmissionPayloads _ expects ()
+
+    //NRS config items
+    def nrsBaseUrl: CallHandler[String] = mockAppConfig.nrsBaseUrl _ expects ()
+
+    def nrsApiKey: CallHandler[String] = mockAppConfig.nrsApiKey _ expects ()
+
+    def nrsRetries: CallHandler[List[FiniteDuration]] = mockAppConfig.nrsRetries _ expects ()
+
+    def nrsMaxTimeout: CallHandler[FiniteDuration] = mockAppConfig.nrsMaxTimeout _ expects ()
   }
 
 }
