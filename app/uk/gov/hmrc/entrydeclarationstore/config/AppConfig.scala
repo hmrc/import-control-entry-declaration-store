@@ -92,10 +92,9 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
 
   val authBaseUrl: String = servicesConfig.baseUrl("auth")
 
-  private val eisConfig =
-    config.get[Configuration]("microservice.services.import-control-entry-declaration-eis")
-  private val nrsConfig =
-    config.get[Configuration]("microservice.services.non-repudiation")
+  private val eisConfig = config.get[Configuration]("microservice.services.import-control-entry-declaration-eis")
+
+  private val nrsConfig = config.get[Configuration]("microservice.services.non-repudiation")
 
   val xmlFormatConfig: XmlFormatConfig =
     XmlFormatConfig(config.get[Int]("response.max.errors"))
@@ -161,7 +160,7 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
 
   lazy val nrsBaseUrl: String = servicesConfig.baseUrl("non-repudiation")
 
-  lazy val nrsApiKey: String  = nrsConfig.get[String]("xApiKey")
+  lazy val nrsApiKey: String = nrsConfig.get[String]("xApiKey")
 
   lazy val nrsRetries: List[FiniteDuration] =
     Retrying.fibonacciDelays(getFiniteDuration(nrsConfig, "initialDelay"), nrsConfig.get[Int]("numberOfRetries"))
