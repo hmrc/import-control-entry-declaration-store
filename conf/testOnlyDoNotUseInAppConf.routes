@@ -11,5 +11,7 @@
 
 GET        /import-control/test-only/submission-ids/:eori/:correlationId        uk.gov.hmrc.entrydeclarationstore.controllers.EntryDeclarationRetrievalController.retrieveDataFromMongo(eori, correlationId)
 
+PUT        /import-control/test-only/circuit-breaker/open                       uk.gov.hmrc.entrydeclarationstore.controllers.testOnly.TestCircuitBreakerController.openCircuitBreaker
+
 # Add all the application routes to the prod.routes file
 ->         /                          prod.Routes

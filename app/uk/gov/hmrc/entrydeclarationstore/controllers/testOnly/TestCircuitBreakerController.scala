@@ -14,17 +14,21 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.entrydeclarationstore.services
+package uk.gov.hmrc.entrydeclarationstore.controllers.testOnly
 
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.entrydeclarationstore.models.CircuitBreakerStatus
-import uk.gov.hmrc.entrydeclarationstore.repositories.CircuitBreakerRepo
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.entrydeclarationstore.services.CircuitBreakerService
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
-@Singleton
-class CircuitBreakerService @Inject()(repo: CircuitBreakerRepo)(implicit ec: ExecutionContext) {
-  def openCircuitBreaker: Future[Unit]                      = ???
-  def closeCircuitBreaker: Future[Unit]                     = ???
-  def getCircuitBreakerStatus: Future[CircuitBreakerStatus] = ???
+@Singleton()
+class TestCircuitBreakerController @Inject()(cc: ControllerComponents, service: CircuitBreakerService)(
+  implicit ec: ExecutionContext)
+    extends BackendController(cc) {
+
+  def openCircuitBreaker: Action[AnyContent] = Action.async { implicit request =>
+    service.openCircuitBreaker.map(_ => NoContent)
+  }
 }
