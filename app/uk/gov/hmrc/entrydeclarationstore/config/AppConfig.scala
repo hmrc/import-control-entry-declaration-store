@@ -83,8 +83,6 @@ trait AppConfig {
   def nrsApiKey: String
 
   def nrsRetries: List[FiniteDuration]
-
-  def nrsMaxTimeout: FiniteDuration
 }
 
 @Singleton
@@ -161,10 +159,8 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
 
   lazy val nrsBaseUrl: String = servicesConfig.baseUrl("non-repudiation")
 
-  lazy val nrsApiKey: String  = nrsConfig.get[String]("xApiKey")
+  lazy val nrsApiKey: String = nrsConfig.get[String]("xApiKey")
 
   lazy val nrsRetries: List[FiniteDuration] =
     Retrying.fibonacciDelays(getFiniteDuration(nrsConfig, "initialDelay"), nrsConfig.get[Int]("numberOfRetries"))
-
-  lazy val nrsMaxTimeout: FiniteDuration = nrsConfig.get[Int]("maxTimeout").milliseconds
 }

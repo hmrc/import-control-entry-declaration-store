@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.entrydeclarationstore.connectors
 
-import play.api.http.HeaderNames._
 import java.io.IOException
 
 import akka.actor.{ActorSystem, Scheduler}
@@ -30,6 +29,7 @@ import com.miguno.akka.testing.VirtualTime
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.http.HeaderNames._
 import play.api.http.MimeTypes
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json

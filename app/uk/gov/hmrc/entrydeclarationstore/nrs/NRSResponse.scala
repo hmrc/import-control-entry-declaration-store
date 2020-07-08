@@ -16,21 +16,10 @@
 
 package uk.gov.hmrc.entrydeclarationstore.nrs
 
-import java.time.Instant
+import play.api.libs.json.{Json, Reads}
 
-import org.joda.time.{DateTime, LocalDate}
-import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{AnyContentAsEmpty, Headers}
-import play.api.test.FakeRequest
-import uk.gov.hmrc.auth.core.retrieve._
-import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, User}
-import uk.gov.hmrc.play.test.UnitSpec
+case class NRSResponse(nrSubmissionId: String)
 
-class NRSSubmissionSpec extends UnitSpec with NRSSubmissionTestData {
-
-  "NRSSubmission" must {
-    "format to the correct JSON" in {
-      Json.toJson(submission) shouldBe nrsSubmissionJson
-    }
-  }
+object NRSResponse {
+  implicit val reads: Reads[NRSResponse] = Json.reads[NRSResponse]
 }
