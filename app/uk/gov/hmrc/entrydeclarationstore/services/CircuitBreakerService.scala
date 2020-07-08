@@ -24,6 +24,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CircuitBreakerService @Inject()(repo: CircuitBreakerRepo)(implicit ec: ExecutionContext) {
+  def resetCircuitBreaker: Future[Unit]                     = ???
   def openCircuitBreaker: Future[Unit]                      = ???
   def closeCircuitBreaker: Future[Unit]                     = ???
   def getCircuitBreakerStatus: Future[CircuitBreakerStatus] = ???

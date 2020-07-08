@@ -26,6 +26,9 @@ trait MockCircuitBreakerService extends MockFactory {
   val mockCircuitBreakerService: CircuitBreakerService = mock[CircuitBreakerService]
 
   object MockCircuitBreakerService {
+    def resetCircuitBreaker: CallHandler[Future[Unit]] =
+      mockCircuitBreakerService.resetCircuitBreaker _ expects ()
+
     def openCircuitBreaker: CallHandler[Future[Unit]] =
       mockCircuitBreakerService.openCircuitBreaker _ expects ()
 

@@ -40,4 +40,15 @@ class TestCircuitBreakerControllerSpec extends UnitSpec with MockCircuitBreakerS
       }
     }
   }
+  "resetting the circuit breaker" must {
+    "return 204" when {
+      "successful" in {
+        MockCircuitBreakerService.resetCircuitBreaker returns (): Unit
+
+        val result = controller.resetCircuitBreaker()(FakeRequest())
+
+        status(result) shouldBe NO_CONTENT
+      }
+    }
+  }
 }
