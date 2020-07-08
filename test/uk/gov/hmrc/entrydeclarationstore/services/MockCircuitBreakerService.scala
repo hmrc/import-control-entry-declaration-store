@@ -16,14 +16,21 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
-import javax.inject.{Inject, Singleton}
+import org.scalamock.handlers.CallHandler
+import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.entrydeclarationstore.models.CircuitBreakerStatus
-import uk.gov.hmrc.entrydeclarationstore.repositories.CircuitBreakerRepo
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
-@Singleton
-class CircuitBreakerService @Inject()(repo: CircuitBreakerRepo)(implicit ec: ExecutionContext) {
-  def closeCircuitBreaker: Future[Unit]                    = ???
-  def getCircuitBreakerStatus: Future[CircuitBreakerStatus] = ???
+trait MockCircuitBreakerService extends MockFactory {
+  val mockCircuitBreakerService: CircuitBreakerService = mock[CircuitBreakerService]
+
+  object MockCircuitBreakerService {
+    def closeCircuitBreaker: CallHandler[Future[Unit]] =
+      mockCircuitBreakerService.closeCircuitBreaker _ expects ()
+
+    def getCircuitBreakerStatus: CallHandler[Future[CircuitBreakerStatus]] =
+      mockCircuitBreakerService.getCircuitBreakerStatus _ expects ()
+  }
+
 }

@@ -17,31 +17,23 @@
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import javax.inject.{Inject, Singleton}
-import play.api.Logger
-import play.api.libs.json.{JsError, JsSuccess, JsValue}
+import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.entrydeclarationstore.models.CircuitBreakerUpdate
 import uk.gov.hmrc.entrydeclarationstore.services.CircuitBreakerService
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton()
 class CircuitBreakerController @Inject()(cc: ControllerComponents, service: CircuitBreakerService)(
   implicit ec: ExecutionContext)
     extends BackendController(cc) {
 
-  def setStatus(): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    request.body.validate[CircuitBreakerUpdate] match {
-      case JsSuccess(CircuitBreakerUpdate(value), _) =>
-        ???
-      case err: JsError =>
-        Logger.error(s"Bad request: $err")
-        Future.successful(BadRequest)
-    }
+  def closeCircuitBreaker: Action[AnyContent] = Action.async { implicit request =>
+    service.closeCircuitBreaker.map(_ => NoContent)
   }
 
   def getStatus: Action[AnyContent] = Action.async { implicit request =>
-    ???
+    service.getCircuitBreakerStatus.map(status => Ok(Json.toJson(status)))
   }
 }
