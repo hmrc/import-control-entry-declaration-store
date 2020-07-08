@@ -20,16 +20,16 @@ import javax.inject.{Inject, Singleton}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
-import uk.gov.hmrc.entrydeclarationstore.models.CircuitBreakerStatus
+import uk.gov.hmrc.entrydeclarationstore.models.{CircuitBreakerState, CircuitBreakerStatus}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
 import scala.concurrent.{ExecutionContext, Future}
 
 trait CircuitBreakerRepo {
-  def openCircuitBreaker(value: Boolean): Future[Boolean]
+  def setCircuitBreaker(value: CircuitBreakerState): Future[Unit]
 
-  def getCircuitBreakerState: Future[CircuitBreakerStatus]
+  def getCircuitBreakerStatus: Future[CircuitBreakerStatus]
 }
 
 @Singleton
@@ -43,7 +43,8 @@ class CircuitBreakerRepoImpl @Inject()(appConfig: AppConfig)(
       ReactiveMongoFormats.objectIdFormats
     )
     with CircuitBreakerRepo {
-  override def openCircuitBreaker(value: Boolean): Future[Boolean] = ???
 
-  override def getCircuitBreakerState: Future[CircuitBreakerStatus] = ???
+  override def setCircuitBreaker(value: CircuitBreakerState): Future[Unit] = ???
+
+  override def getCircuitBreakerStatus: Future[CircuitBreakerStatus] = ???
 }
