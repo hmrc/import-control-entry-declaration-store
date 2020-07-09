@@ -24,7 +24,6 @@ import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.{ReadPreference, WriteConcern}
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.ImplicitBSONHandlers._
-import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.models.{CircuitBreakerState, CircuitBreakerStatus}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
@@ -38,7 +37,7 @@ trait CircuitBreakerRepo {
 }
 
 @Singleton
-class CircuitBreakerRepoImpl @Inject()(appConfig: AppConfig)(
+class CircuitBreakerRepoImpl @Inject()(
   implicit mongo: ReactiveMongoComponent,
   ec: ExecutionContext
 ) extends ReactiveRepository[CircuitBreakerStatus, BSONObjectID](
