@@ -34,6 +34,8 @@ trait CircuitBreakerRepo {
   def setCircuitBreaker(value: CircuitBreakerState): Future[Unit]
 
   def getCircuitBreakerStatus: Future[CircuitBreakerStatus]
+
+  def resetToDefault: Future[Unit] = ???
 }
 
 @Singleton
