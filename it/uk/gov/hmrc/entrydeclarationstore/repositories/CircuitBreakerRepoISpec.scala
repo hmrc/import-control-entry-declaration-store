@@ -79,6 +79,15 @@ class CircuitBreakerRepoISpec
           status.lastClosed          shouldBe empty
         }
       }
+
+      "resetToDefault" must {
+        "do nothing" in new Scenario {
+          await(repository.resetToDefault) shouldBe ()
+
+          await(repository.count)                   shouldBe 0
+          await(repository.getCircuitBreakerStatus) shouldBe repository.defaultStatus
+        }
+      }
     }
 
     "datebase state is explicitly open" when {
@@ -113,6 +122,15 @@ class CircuitBreakerRepoISpec
           status.circuitBreakerState shouldBe CircuitBreakerState.Closed
           status.lastClosed          should not be empty
           status.lastOpened          shouldBe initialStatus.lastOpened
+        }
+      }
+
+      "resetToDefault" must {
+        "set state to the default" in new Scenario {
+          await(repository.resetToDefault) shouldBe ()
+
+          await(repository.count)                   shouldBe 0
+          await(repository.getCircuitBreakerStatus) shouldBe repository.defaultStatus
         }
       }
     }
@@ -152,6 +170,15 @@ class CircuitBreakerRepoISpec
           status.lastOpened          shouldBe >(initialStatus.lastOpened)
         }
       }
+
+      "resetToDefault" must {
+        "set state to the default" in new Scenario {
+          await(repository.resetToDefault) shouldBe ()
+
+          await(repository.count)                   shouldBe 0
+          await(repository.getCircuitBreakerStatus) shouldBe repository.defaultStatus
+        }
+      }
     }
 
     // Case where both lastClosed and lastOpened dates are set initially
@@ -181,6 +208,15 @@ class CircuitBreakerRepoISpec
           status.circuitBreakerState shouldBe CircuitBreakerState.Closed
           status.lastClosed          shouldBe >(initialStatus.lastClosed)
           status.lastOpened          shouldBe initialStatus.lastOpened
+        }
+      }
+
+      "resetToDefault" must {
+        "set state to the default" in new Scenario {
+          await(repository.resetToDefault) shouldBe ()
+
+          await(repository.count)                   shouldBe 0
+          await(repository.getCircuitBreakerStatus) shouldBe repository.defaultStatus
         }
       }
     }

@@ -35,7 +35,7 @@ trait CircuitBreakerRepo {
 
   def getCircuitBreakerStatus: Future[CircuitBreakerStatus]
 
-  def resetToDefault: Future[Unit] = ???
+  def resetToDefault: Future[Unit]
 }
 
 @Singleton
@@ -53,7 +53,7 @@ class CircuitBreakerRepoImpl @Inject()(
 
   private val singletonId = "af38807c-c127-11ea-b3de-0242ac130004"
 
-  private val defaultStatus = CircuitBreakerStatus(Closed, None, None)
+  val defaultStatus: CircuitBreakerStatus = CircuitBreakerStatus(Closed, None, None)
 
   override def setCircuitBreaker(value: CircuitBreakerState): Future[Unit] =
     for {
@@ -111,4 +111,6 @@ class CircuitBreakerRepoImpl @Inject()(
       .find(selector = Json.obj("_id" -> singletonId), projection = Option.empty[JsObject])
       .one[CircuitBreakerStatus](ReadPreference.primaryPreferred)
       .map(_.getOrElse(defaultStatus))
+
+  override def resetToDefault: Future[Unit] = removeAll(WriteConcern.Default).map(_ => ())
 }
