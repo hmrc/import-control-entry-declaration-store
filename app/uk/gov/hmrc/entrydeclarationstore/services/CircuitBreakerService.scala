@@ -17,6 +17,7 @@
 package uk.gov.hmrc.entrydeclarationstore.services
 
 import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.entrydeclarationstore.models.CircuitBreakerState.{Closed, Open}
 import uk.gov.hmrc.entrydeclarationstore.models.CircuitBreakerStatus
 import uk.gov.hmrc.entrydeclarationstore.repositories.CircuitBreakerRepo
 
@@ -24,8 +25,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CircuitBreakerService @Inject()(repo: CircuitBreakerRepo)(implicit ec: ExecutionContext) {
-  def resetCircuitBreaker: Future[Unit]                     = ???
-  def openCircuitBreaker: Future[Unit]                      = ???
-  def closeCircuitBreaker: Future[Unit]                     = ???
-  def getCircuitBreakerStatus: Future[CircuitBreakerStatus] = ???
+  def resetCircuitBreaker: Future[Unit]                     = repo.resetToDefault
+  def openCircuitBreaker: Future[Unit]                      = repo.setCircuitBreaker(Open)
+  def closeCircuitBreaker: Future[Unit]                     = repo.setCircuitBreaker(Closed)
+  def getCircuitBreakerStatus: Future[CircuitBreakerStatus] = repo.getCircuitBreakerStatus
 }
