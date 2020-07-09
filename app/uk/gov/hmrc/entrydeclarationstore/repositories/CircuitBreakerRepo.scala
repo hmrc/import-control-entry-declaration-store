@@ -49,62 +49,66 @@ class CircuitBreakerRepoImpl @Inject()(
       ReactiveMongoFormats.objectIdFormats
     )
     with CircuitBreakerRepo {
+  import CircuitBreakerState._
 
-  private val id = "af38807c-c127-11ea-b3de-0242ac130004"
+  private val singletonId = "af38807c-c127-11ea-b3de-0242ac130004"
 
-  private val defaultStatus = CircuitBreakerStatus(CircuitBreakerState.Closed, None, None)
+  private val defaultStatus = CircuitBreakerStatus(Closed, None, None)
 
   override def setCircuitBreaker(value: CircuitBreakerState): Future[Unit] =
     for {
-      status <- getCircuitBreakerStatus
-      _      <- doSetTo(value, status.circuitBreakerState)
+      _ <- insertDefaultIfEmpty()
+      _ <- value match {
+            case Open   => open()
+            case Closed => close()
+          }
     } yield ()
 
-  private def doSetTo(value: CircuitBreakerState, current: CircuitBreakerState) =
-    // FIXME race condition can happen if two threads (or two microservice instances) do this at same time.
-    // how bad it it? (Is there a better way without  4.2 aggregation updates)
-    if (current == value) {
-      Future.successful(())
-    } else {
-      value match {
-        case CircuitBreakerState.Open   => open()
-        case CircuitBreakerState.Closed => close()
-      }
-    }
+  // Note: Pre Mongo 4.2 we cannot update fields conditionally so we have to split open and close methods.
+  // We cannot upsert in these (since match failure would attempt insert and voilate unique _id).
+  // Hence this, which will insert only when the singleton document is missing, allows open/close without
+  // upsert or the need to do racy 'check-then-act' logic:
+  private def insertDefaultIfEmpty() =
+    collection
+      .update(ordered = false, WriteConcern.Default)
+      .one(
+        q = Json.obj("_id" -> singletonId),
+        u = Json.obj(
+          "$setOnInsert" -> defaultStatus
+        ),
+        upsert = true
+      )
 
   private def open() =
     collection
       .update(ordered = false, WriteConcern.Default)
       .one(
-        q = Json.obj("_id" -> id),
+        q = Json.obj("_id" -> singletonId, "circuitBreakerState" -> Closed),
         u = Json.obj(
           "$set" -> Json.obj(
-            "circuitBreakerState" -> "Open",
+            "circuitBreakerState" -> Open,
             "lastOpened"          -> Instant.now()
           )
-        ),
-        upsert = true
+        )
       )
-      .map(_ => ())
 
   private def close() =
     collection
       .update(ordered = false, WriteConcern.Default)
       .one(
-        q = Json.obj("_id" -> id),
+        q = Json.obj("_id" -> singletonId, "circuitBreakerState" -> Open),
         u = Json.obj(
           "$set" -> Json.obj(
-            "circuitBreakerState" -> "Closed",
+            "circuitBreakerState" -> Closed,
             "lastClosed"          -> Instant.now()
           )
-        ),
-        upsert = true
+        )
       )
       .map(_ => ())
 
   override def getCircuitBreakerStatus: Future[CircuitBreakerStatus] =
     collection
-      .find(selector = Json.obj("_id" -> id), projection = Option.empty[JsObject])
+      .find(selector = Json.obj("_id" -> singletonId), projection = Option.empty[JsObject])
       .one[CircuitBreakerStatus](ReadPreference.primaryPreferred)
       .map(_.getOrElse(defaultStatus))
 }
