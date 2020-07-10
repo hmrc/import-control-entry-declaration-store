@@ -21,10 +21,10 @@ import uk.gov.hmrc.entrydeclarationstore.models.CircuitBreakerState.{Closed, Ope
 import uk.gov.hmrc.entrydeclarationstore.models.CircuitBreakerStatus
 import uk.gov.hmrc.entrydeclarationstore.repositories.CircuitBreakerRepo
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 @Singleton
-class CircuitBreakerService @Inject()(repo: CircuitBreakerRepo)(implicit ec: ExecutionContext) {
+class CircuitBreakerService @Inject()(repo: CircuitBreakerRepo) {
   def resetCircuitBreaker: Future[Unit]                     = repo.resetToDefault
   def openCircuitBreaker: Future[Unit]                      = repo.setCircuitBreaker(Open)
   def closeCircuitBreaker: Future[Unit]                     = repo.setCircuitBreaker(Closed)
