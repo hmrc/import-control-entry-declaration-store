@@ -14,3 +14,6 @@ POST        /import-control/replay-batch                            uk.gov.hmrc.
 
 GET         /import-control/housekeeping/status                     uk.gov.hmrc.entrydeclarationstore.controllers.HousekeepingController.getStatus
 PUT         /import-control/housekeeping/status                     uk.gov.hmrc.entrydeclarationstore.controllers.HousekeepingController.setStatus
+
+GET         /import-control/circuit-breaker                         uk.gov.hmrc.entrydeclarationstore.controllers.CircuitBreakerController.getStatus
+PUT         /import-control/circuit-breaker/close                   uk.gov.hmrc.entrydeclarationstore.controllers.CircuitBreakerController.closeCircuitBreaker

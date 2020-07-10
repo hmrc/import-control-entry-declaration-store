@@ -25,17 +25,18 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EisConnector, EisConnectorImpl}
 import uk.gov.hmrc.entrydeclarationstore.reporting.events.{EventConnector, EventConnectorImpl}
-import uk.gov.hmrc.entrydeclarationstore.repositories.{EntryDeclarationRepo, EntryDeclarationRepoImpl}
+import uk.gov.hmrc.entrydeclarationstore.repositories.{CircuitBreakerRepo, CircuitBreakerRepoImpl, EntryDeclarationRepo, EntryDeclarationRepoImpl}
 import uk.gov.hmrc.entrydeclarationstore.services.{EntryDeclarationStore, EntryDeclarationStoreImpl}
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
-import uk.gov.hmrc.entrydeclarationstore.validation.{ValidationHandler, ValidationHandlerImpl}
 import uk.gov.hmrc.entrydeclarationstore.validation.business.{Rule, RuleValidator, RuleValidatorImpl}
+import uk.gov.hmrc.entrydeclarationstore.validation.{ValidationHandler, ValidationHandlerImpl}
 import uk.gov.hmrc.play.bootstrap.auth.DefaultAuthConnector
 
 class DIModule extends AbstractModule {
 
   override def configure(): Unit = {
     bind(classOf[EntryDeclarationRepo]).to(classOf[EntryDeclarationRepoImpl])
+    bind(classOf[CircuitBreakerRepo]).to(classOf[CircuitBreakerRepoImpl])
     bind(classOf[AppConfig]).to(classOf[AppConfigImpl]).asEagerSingleton()
     bind(classOf[EntryDeclarationStore]).to(classOf[EntryDeclarationStoreImpl])
     bind(classOf[ValidationHandler]).to(classOf[ValidationHandlerImpl])

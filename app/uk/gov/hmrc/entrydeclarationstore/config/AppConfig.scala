@@ -90,10 +90,9 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
 
   val authBaseUrl: String = servicesConfig.baseUrl("auth")
 
-  private val eisConfig =
-    config.get[Configuration]("microservice.services.import-control-entry-declaration-eis")
-  private val nrsConfig =
-    config.get[Configuration]("microservice.services.non-repudiation")
+  private val eisConfig = config.get[Configuration]("microservice.services.import-control-entry-declaration-eis")
+
+  private val nrsConfig = config.get[Configuration]("microservice.services.non-repudiation")
 
   val xmlFormatConfig: XmlFormatConfig =
     XmlFormatConfig(config.get[Int]("response.max.errors"))
