@@ -16,10 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
-import java.time.Instant
-
 import play.api.libs.json.{Format, JsValue, Json}
-import uk.gov.hmrc.entrydeclarationstore.models.{EntryDeclaration, EntryDeclarationModel, InstantFormatter}
+import uk.gov.hmrc.entrydeclarationstore.models.{EntryDeclarationModel, InstantFormatter}
 
 import scala.concurrent.duration._
 
@@ -30,9 +28,9 @@ private[repositories] case class EntryDeclarationPersisted(
   housekeepingAt: PersistableDateTime,
   payload: JsValue,
   mrn: Option[String],
-  receivedDateTime: Instant,
-  eisSubmissionDateTime: Option[Instant] = None
-) extends EntryDeclaration {
+  receivedDateTime: PersistableDateTime,
+  eisSubmissionDateTime: Option[PersistableDateTime] = None
+) {
   def toEntryDeclarationModel: EntryDeclarationModel =
     EntryDeclarationModel(
       submissionId          = submissionId,
@@ -40,8 +38,8 @@ private[repositories] case class EntryDeclarationPersisted(
       correlationId         = correlationId,
       payload               = payload,
       mrn                   = mrn,
-      receivedDateTime      = receivedDateTime,
-      eisSubmissionDateTime = eisSubmissionDateTime
+      receivedDateTime      = receivedDateTime.toInstant,
+      eisSubmissionDateTime = eisSubmissionDateTime.map(_.toInstant)
     )
 }
 
@@ -59,8 +57,8 @@ private[repositories] object EntryDeclarationPersisted extends InstantFormatter 
       housekeepingAt        = housekeepingAt,
       payload               = payload,
       mrn                   = mrn,
-      receivedDateTime      = receivedDateTime,
-      eisSubmissionDateTime = eisSubmissionDateTime
+      receivedDateTime      = PersistableDateTime(receivedDateTime),
+      eisSubmissionDateTime = eisSubmissionDateTime.map(PersistableDateTime(_))
     )
   }
 }

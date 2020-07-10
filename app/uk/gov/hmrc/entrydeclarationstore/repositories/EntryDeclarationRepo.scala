@@ -111,9 +111,10 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
       .map {
         _.map { doc =>
           SubmissionIdLookupResult(
-            (doc \ "receivedDateTime").as[String],
+            (doc \ "receivedDateTime").as[PersistableDateTime].toInstant.toString,
             (doc \ "housekeepingAt").as[PersistableDateTime].toInstant.toString,
-            (doc \ "submissionId").as[String])
+            (doc \ "submissionId").as[String]
+          )
         }
       }
 
@@ -128,7 +129,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
       .update(ordered = false, WriteConcern.Default)
       .one(
         Json.obj("submissionId" -> submissionId),
-        Json.obj("$set"         -> Json.obj("eisSubmissionDateTime" -> time))
+        Json.obj("$set"         -> Json.obj("eisSubmissionDateTime" -> PersistableDateTime(time)))
       )
       .map(result => result.nModified > 0)
       .recover {
