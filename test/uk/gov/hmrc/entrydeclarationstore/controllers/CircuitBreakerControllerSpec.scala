@@ -17,6 +17,7 @@
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 import play.api.http.MimeTypes
 import play.api.libs.json.Json
@@ -32,19 +33,20 @@ class CircuitBreakerControllerSpec extends UnitSpec with MockCircuitBreakerServi
 
   val controller = new CircuitBreakerController(Helpers.stubControllerComponents(), mockCircuitBreakerService)
 
-  val time: Instant = Instant.now
+  val timeOpened: Instant = Instant.now
+  val timeClosed: Instant = timeOpened.plus(1, ChronoUnit.MINUTES)
 
   private def circuitBreakerJson(value: CircuitBreakerState) =
     Json.parse(s"""{"circuitBreakerState": "$value",
-                  | "lastOpened": "$time",
-                  | "lastClosed": "$time"}""".stripMargin)
+                  | "lastOpened": "$timeOpened",
+                  | "lastClosed": "$timeClosed"}""".stripMargin)
 
   "CircuitBreakerController" when {
     "getting circuit breaker state" must {
       "return 200 with the value" when {
         "the circuit breaker is Open" in {
           MockCircuitBreakerService.getCircuitBreakerStatus
-            .returns(CircuitBreakerStatus(CircuitBreakerState.Open, Some(time), Some(time)))
+            .returns(CircuitBreakerStatus(CircuitBreakerState.Open, Some(timeOpened), Some(timeClosed)))
 
           val result = controller.getStatus()(FakeRequest())
 
@@ -54,7 +56,7 @@ class CircuitBreakerControllerSpec extends UnitSpec with MockCircuitBreakerServi
         }
         "the circuit breaker is Closed" in {
           MockCircuitBreakerService.getCircuitBreakerStatus
-            .returns(CircuitBreakerStatus(CircuitBreakerState.Closed, Some(time), Some(time)))
+            .returns(CircuitBreakerStatus(CircuitBreakerState.Closed, Some(timeOpened), Some(timeClosed)))
 
           val result = controller.getStatus()(FakeRequest())
 
