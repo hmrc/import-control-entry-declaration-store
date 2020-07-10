@@ -17,7 +17,7 @@
 package uk.gov.hmrc.entrydeclarationstore.services
 
 import org.mockito.Mockito._
-import org.mockito.Matchers
+import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.entrydeclarationstore.repositories.CircuitBreakerRepo
 import uk.gov.hmrc.entrydeclarationstore.models.CircuitBreakerState.{Closed, Open}
@@ -26,36 +26,43 @@ import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.Future
 
-class CircuitBreakerServiceSpec extends UnitSpec with MockitoSugar {
+class CircuitBreakerServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures {
 
-  class Setup(state: CircuitBreakerState) {
-    val mockCircuitBreakerRepo = mock[CircuitBreakerRepo]
-    val circuitBreakerService = new CircuitBreakerService(mockCircuitBreakerRepo)
+  class Setup {
+    val mockCircuitBreakerRepo:CircuitBreakerRepo = mock[CircuitBreakerRepo]
+    val circuitBreakerService:CircuitBreakerService = new CircuitBreakerService(mockCircuitBreakerRepo)
+    val expectedResult:Future[Unit] = Future.successful(())
 
-    val testStatus = Future.successful(CircuitBreakerStatus(state, None, None))
-    val expectedResult = Future.successful()
+    def setUpResetCircuitBreakerMock = {
+      when(mockCircuitBreakerRepo.resetToDefault).thenReturn(expectedResult)
+    }
 
+    def setUpSetCircuitBreakerMock(state: CircuitBreakerState) = {
+      when(mockCircuitBreakerRepo.setCircuitBreaker(state)).thenReturn(expectedResult)
+    }
 
-    when(mockCircuitBreakerRepo.resetToDefault).thenReturn(expectedResult)
-    when(mockCircuitBreakerRepo.setCircuitBreaker(Matchers.any())).thenReturn(expectedResult)
-    when(mockCircuitBreakerRepo.getCircuitBreakerStatus).thenReturn(testStatus)
+    def setCircuitBreakerStatus(state: CircuitBreakerState) = {
+      val testStatus = Future.successful(CircuitBreakerStatus(state, None, None))
+      when(mockCircuitBreakerRepo.getCircuitBreakerStatus).thenReturn(testStatus)
+    }
   }
 
   "CircuitBreakerService" when {
 
     "resetting the Circuit Breaker" should {
-      "call the Circuit Breaker Repo" in new Setup(Closed) {
-        val result = circuitBreakerService.resetCircuitBreaker
+      "call the Circuit Breaker Repo" in new Setup{
+        setUpResetCircuitBreakerMock
+        val result: Future[Unit] = circuitBreakerService.resetCircuitBreaker
 
         verify(mockCircuitBreakerRepo, times(1)).resetToDefault
         result shouldBe expectedResult
-
       }
     }
 
     "opening the Circuit Breaker" should {
-      "call the Circuit Breaker Repo" in new Setup(Closed) {
-        val result = circuitBreakerService.openCircuitBreaker
+      "call the Circuit Breaker Repo" in new Setup{
+        setUpSetCircuitBreakerMock(Open)
+        val result: Future[Unit] = circuitBreakerService.openCircuitBreaker
 
         verify(mockCircuitBreakerRepo, times(1)).setCircuitBreaker(Open)
         result shouldBe expectedResult
@@ -63,8 +70,9 @@ class CircuitBreakerServiceSpec extends UnitSpec with MockitoSugar {
     }
 
     "closing the Circuit Breaker" should {
-      "call the Circuit Breaker Repo" in new Setup(Closed) {
-        val result = circuitBreakerService.closeCircuitBreaker
+      "call the Circuit Breaker Repo" in new Setup {
+        setUpSetCircuitBreakerMock(Closed)
+        val result: Future[Unit] = circuitBreakerService.closeCircuitBreaker
 
         verify(mockCircuitBreakerRepo, times(1)).setCircuitBreaker(Closed)
         result shouldBe expectedResult
@@ -73,15 +81,20 @@ class CircuitBreakerServiceSpec extends UnitSpec with MockitoSugar {
 
     "retrieving the Circuit Breaker Status" when {
       "Open" must {
-        "return Open" in new Setup(Open) {
-          val result = circuitBreakerService.getCircuitBreakerStatus
-          result shouldBe testStatus
+        "return Open" in new Setup {
+          setCircuitBreakerStatus(Open)
+          val result: Future[CircuitBreakerStatus] = circuitBreakerService.getCircuitBreakerStatus
+
+          result.futureValue shouldBe CircuitBreakerStatus(Open, None, None)
         }
       }
+
       "Closed" must {
-        "return Closed" in new Setup(Closed) {
-          val result = circuitBreakerService.getCircuitBreakerStatus
-          result shouldBe testStatus
+        "return Closed" in new Setup {
+          setCircuitBreakerStatus(Closed)
+          val result: Future[CircuitBreakerStatus] = circuitBreakerService.getCircuitBreakerStatus
+
+          result.futureValue shouldBe CircuitBreakerStatus(Closed, None, None)
         }
       }
     }
