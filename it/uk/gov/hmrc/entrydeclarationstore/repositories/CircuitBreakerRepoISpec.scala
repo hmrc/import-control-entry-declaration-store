@@ -42,7 +42,7 @@ class CircuitBreakerRepoISpec
 
   lazy val repository: CircuitBreakerRepoImpl = inject[CircuitBreakerRepoImpl]
 
-  "CircuitBreeakerRepo" when {
+  "CircuitBreakerRepo" when {
     "database is empty" when {
 
       trait Scenario {
@@ -60,7 +60,7 @@ class CircuitBreakerRepoISpec
 
       "set closed" must {
         "do nothing" in new Scenario {
-          await(repository.setCircuitBreaker(CircuitBreakerState.Closed)) shouldBe ()
+          await(repository.setCircuitBreaker(CircuitBreakerState.Closed))
 
           await(repository.getCircuitBreakerStatus) shouldBe CircuitBreakerStatus(
             CircuitBreakerState.Closed,
@@ -71,7 +71,7 @@ class CircuitBreakerRepoISpec
 
       "set open" must {
         "set open and update the last open date" in new Scenario {
-          await(repository.setCircuitBreaker(CircuitBreakerState.Open)) shouldBe ()
+          await(repository.setCircuitBreaker(CircuitBreakerState.Open))
 
           val status: CircuitBreakerStatus = await(repository.getCircuitBreakerStatus)
           status.circuitBreakerState shouldBe CircuitBreakerState.Open
@@ -82,7 +82,7 @@ class CircuitBreakerRepoISpec
 
       "resetToDefault" must {
         "do nothing" in new Scenario {
-          await(repository.resetToDefault) shouldBe ()
+          await(repository.resetToDefault)
 
           await(repository.count)                   shouldBe 0
           await(repository.getCircuitBreakerStatus) shouldBe repository.defaultStatus
@@ -127,7 +127,7 @@ class CircuitBreakerRepoISpec
 
       "resetToDefault" must {
         "set state to the default" in new Scenario {
-          await(repository.resetToDefault) shouldBe ()
+          await(repository.resetToDefault) shouldBe ((): Unit)
 
           await(repository.count)                   shouldBe 0
           await(repository.getCircuitBreakerStatus) shouldBe repository.defaultStatus
@@ -173,7 +173,7 @@ class CircuitBreakerRepoISpec
 
       "resetToDefault" must {
         "set state to the default" in new Scenario {
-          await(repository.resetToDefault) shouldBe ()
+          await(repository.resetToDefault)
 
           await(repository.count)                   shouldBe 0
           await(repository.getCircuitBreakerStatus) shouldBe repository.defaultStatus
@@ -213,7 +213,7 @@ class CircuitBreakerRepoISpec
 
       "resetToDefault" must {
         "set state to the default" in new Scenario {
-          await(repository.resetToDefault) shouldBe ()
+          await(repository.resetToDefault)
 
           await(repository.count)                   shouldBe 0
           await(repository.getCircuitBreakerStatus) shouldBe repository.defaultStatus
