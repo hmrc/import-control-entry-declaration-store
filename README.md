@@ -27,7 +27,11 @@ Run Integration Tests: `sbt it:test`
 |```/import-control/replay-batch```                         |        POST       | Internal | Endpoint to replay messages to C&IT from the database. |
 |```/import-control/housekeeping/status```                  |        GET        | Internal | Endpoint to get housekeeping status. |
 |```/import-control/housekeeping/status```                  |        PUT        | Internal | Endpoint to set housekeeping status. |
-|```/import-control/test-only/submission-ids/:eori/:correlationId``` |        GET        | Test | Endpoint to get submission Id from EORI and Correlation Id |
+|```/import-control/circuit-breaker```                      |        GET        | Internal | Endpoint to get the circuit breaker status. |
+|```/import-control/circuit-breaker/close```                |        PUT        | Internal | Endpoint to close the circuit breaker. |
+|```/import-control/test-only/submission-ids/:eori/:correlationId``` |        GET        | Test | Endpoint to get submission Id from EORI and Correlation Id. |
+|```/import-control/test-only/circuit-breaker/open```       |        PUT        | Test | Endpoint to open the circuit breaker. |
+|```/import-control/test-only/circuit-breaker/reset```      |        PUT        | Test | Endpoint to reset the circuit breaker to initial state. |
 
 ## API Reference / Documentation 
 For more information on external API endpoints see the RAML at [Developer Hub] or using the endpoint below
