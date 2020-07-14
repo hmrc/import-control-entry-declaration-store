@@ -62,7 +62,7 @@ class SubmissionReceivedSpec extends UnitSpec {
     "have the correct associated audit event" in {
       val event = implicitly[EventSources[SubmissionReceived]].auditEventFor(report).get
 
-      event.auditType       shouldBe "submissionReceived"
+      event.auditType       shouldBe "SubmissionReceived"
       event.transactionName shouldBe "ENS submission received"
 
       Json.toJson(event.detail) shouldBe

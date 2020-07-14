@@ -150,7 +150,7 @@ class SubmissionSentToEISSpec extends UnitSpec {
     "have the correct associated audit event" in {
       val event = implicitly[EventSources[SubmissionSentToEIS]].auditEventFor(report(None)).get
 
-      event.auditType       shouldBe "submissionForwarded"
+      event.auditType       shouldBe "SubmissionForwarded"
       event.transactionName shouldBe "ENS submission forwarded to EIS"
 
       Json.toJson(event.detail) shouldBe

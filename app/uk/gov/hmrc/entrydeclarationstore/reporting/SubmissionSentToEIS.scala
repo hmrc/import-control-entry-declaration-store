@@ -58,7 +58,7 @@ object SubmissionSentToEIS {
     override def auditEventFor(report: SubmissionSentToEIS): Option[AuditEvent] = {
       import report._
       val auditEvent = AuditEvent(
-        auditType       = "submissionForwarded",
+        auditType       = "SubmissionForwarded",
         transactionName = "ENS submission forwarded to EIS",
         JsObject(Seq("eori" -> JsString(eori), "correlationId" -> JsString(correlationId)))
       )
