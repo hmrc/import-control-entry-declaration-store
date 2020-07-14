@@ -69,7 +69,7 @@ class CircuitBreakerControllerSpec extends UnitSpec with MockCircuitBreakerServi
     "closing the circuit breaker" must {
       "return 204" when {
         "successful" in {
-          MockCircuitBreakerService.closeCircuitBreaker returns (): Unit
+          MockCircuitBreakerService.closeCircuitBreaker returns ((): Unit)
 
           val result = controller.closeCircuitBreaker()(FakeRequest())
 

@@ -31,7 +31,7 @@ class TestCircuitBreakerControllerSpec extends UnitSpec with MockCircuitBreakerS
     "opening the circuit breaker" must {
       "return 204" when {
         "successful" in {
-          MockCircuitBreakerService.openCircuitBreaker returns (): Unit
+          MockCircuitBreakerService.openCircuitBreaker returns ((): Unit)
 
           val result = controller.openCircuitBreaker()(FakeRequest())
 
@@ -43,7 +43,7 @@ class TestCircuitBreakerControllerSpec extends UnitSpec with MockCircuitBreakerS
   "resetting the circuit breaker" must {
     "return 204" when {
       "successful" in {
-        MockCircuitBreakerService.resetCircuitBreaker returns (): Unit
+        MockCircuitBreakerService.resetCircuitBreaker returns ((): Unit)
 
         val result = controller.resetCircuitBreaker()(FakeRequest())
 

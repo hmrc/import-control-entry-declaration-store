@@ -127,7 +127,7 @@ class EntryDeclarationRepoISpec
       }
       "housekeepingAt must be initialised to 7 days" in {
         await(repository.find("submissionId" -> submissionId313)).headOption.map(entryDeclaration =>
-          entryDeclaration.housekeepingAt.$date - entryDeclaration.receivedDateTime.toEpochMilli) shouldBe
+          entryDeclaration.housekeepingAt.$date - entryDeclaration.receivedDateTime.$date) shouldBe
           Some(defaultTtl.toMillis)
       }
     }

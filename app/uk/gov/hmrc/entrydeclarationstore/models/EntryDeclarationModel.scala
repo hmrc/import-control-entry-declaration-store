@@ -28,7 +28,6 @@ case class EntryDeclarationModel(
   mrn: Option[String],
   receivedDateTime: Instant,
   eisSubmissionDateTime: Option[Instant] = None)
-    extends EntryDeclaration
 
 object EntryDeclarationModel extends InstantFormatter {
   implicit val format: Format[EntryDeclarationModel] = Json.format[EntryDeclarationModel]
