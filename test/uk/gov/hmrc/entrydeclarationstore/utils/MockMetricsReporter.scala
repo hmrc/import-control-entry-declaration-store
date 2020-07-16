@@ -16,17 +16,12 @@
 
 package uk.gov.hmrc.entrydeclarationstore.utils
 
-import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
 
-trait MockIdGenerator extends MockFactory {
-  val mockIdGenerator: IdGenerator = mock[IdGenerator]
+trait MockMetricsReporter extends MockFactory {
+  val mockMetricsReporter: MetricsReporter = mock[MetricsReporter]
 
-  object MockIdGenerator {
-    def generateCorrelationId: CallHandler[String] =
-      mockIdGenerator.generateCorrelationId _ expects ()
+  object MockMetricsReporter {
 
-    def generateSubmissionId: CallHandler[String] =
-      mockIdGenerator.generateSubmissionId _ expects ()
   }
 }

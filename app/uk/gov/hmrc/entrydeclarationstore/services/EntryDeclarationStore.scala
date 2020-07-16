@@ -53,6 +53,7 @@ class EntryDeclarationStoreImpl @Inject()(
   eisConnector: EisConnector,
   reportSender: ReportSender,
   clock: Clock,
+  metricsReporter: MetricsReporter,
   override val metrics: Metrics,
   appConfig: AppConfig
 )(implicit ec: ExecutionContext)
@@ -96,6 +97,8 @@ class EntryDeclarationStoreImpl @Inject()(
               sendSubmissionReceivedReport(input, eori, entryDeclarationAsJson, payload, transportMode, clientType))
       } yield {
         submitToEIS(input, eori, transportMode, receivedDateTime)
+        metricsReporter
+          .reportMetrics(MessageType(amendment = mrn.isDefined), clientType, transportMode, xmlPayload.length)
         SuccessResponse(entryDeclaration.correlationId)
       }
 
