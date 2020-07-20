@@ -39,8 +39,8 @@ class MetricsReporter @Inject()(metrics: Metrics)(implicit ec: ExecutionContext)
     incrementCounter(reportedMetric)
   }
 
-  private def reportNoOfMessagesPerTransportType(transportMode: String): Unit = {
-    val reportedMetric = s"transportType.$transportMode.counter"
+  private def reportNoOfMessagesPerTransportMode(transportMode: String): Unit = {
+    val reportedMetric = s"transportMode.$transportMode.counter"
     incrementCounter(reportedMetric)
   }
 
@@ -52,7 +52,7 @@ class MetricsReporter @Inject()(metrics: Metrics)(implicit ec: ExecutionContext)
   def reportMetrics(messageType: MessageType, clientType: ClientType, transportMode: String, size: Long): Unit = {
     reportNoOfMessagesPerMessageType(messageType)
     reportNoOfMessagesPerAuthType(clientType)
-    reportNoOfMessagesPerTransportType(transportMode)
+    reportNoOfMessagesPerTransportMode(transportMode)
     reportSizeOfMessage(size)
   }
 }
