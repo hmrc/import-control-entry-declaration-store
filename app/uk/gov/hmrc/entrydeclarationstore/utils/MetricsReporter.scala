@@ -16,12 +16,10 @@
 
 package uk.gov.hmrc.entrydeclarationstore.utils
 
-import com.google.inject.Singleton
 import com.kenshoo.play.metrics.Metrics
 import uk.gov.hmrc.entrydeclarationstore.models.MessageType
 import uk.gov.hmrc.entrydeclarationstore.reporting.ClientType
 
-@Singleton
 trait MetricsReporter {
   val metrics: Metrics
 
@@ -44,7 +42,7 @@ trait MetricsReporter {
   }
 
   private def reportSizeOfMessage(size: Long): Unit = {
-    val reportedMetric = s"message.size"
+    val reportedMetric = "message.size"
     metrics.defaultRegistry.histogram(reportedMetric).update(size)
   }
 
