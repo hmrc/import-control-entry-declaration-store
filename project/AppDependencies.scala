@@ -13,7 +13,8 @@ object AppDependencies {
     "com.lucidchart"         %% "xtract"               % "2.2.1",
     "org.codehaus.groovy"    % "groovy-all"            % "2.5.8",
     "uk.gov.hmrc"            %% "auth-client"          % "3.0.0-play-26",
-    "com.chuusai"            %% "shapeless"            % "2.3.3"
+    "com.chuusai"            %% "shapeless"            % "2.3.3",
+    "com.github.cb372"       %% "scalacache-caffeine"  % "0.28.0"
   )
 
   val test: Seq[ModuleID] = Seq(

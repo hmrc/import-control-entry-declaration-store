@@ -49,12 +49,18 @@ class CircuitBreakerRepoISpec
         await(repository.removeAll())
       }
 
-      "get" must {
+      "getCircuitBreakerStatus" must {
         "return state as closed" in new Scenario {
           await(repository.getCircuitBreakerStatus) shouldBe CircuitBreakerStatus(
             CircuitBreakerState.Closed,
             None,
             None)
+        }
+      }
+
+      "getCircuitBreakerState" must {
+        "return state as closed" in new Scenario {
+          await(repository.getCircuitBreakerState) shouldBe CircuitBreakerState.Closed
         }
       }
 
@@ -98,11 +104,17 @@ class CircuitBreakerRepoISpec
         val initialStatus: CircuitBreakerStatus = await(repository.getCircuitBreakerStatus)
       }
 
-      "get" must {
+      "getCircuitBreakerStatus" must {
         "return state as open" in new Scenario {
           initialStatus.circuitBreakerState shouldBe CircuitBreakerState.Open
           initialStatus.lastClosed          shouldBe empty
           initialStatus.lastOpened          should not be empty
+        }
+      }
+
+      "getCircuitBreakerState" must {
+        "return state as open" in new Scenario {
+          await(repository.getCircuitBreakerState) shouldBe CircuitBreakerState.Open
         }
       }
 
@@ -144,11 +156,17 @@ class CircuitBreakerRepoISpec
         val initialStatus: CircuitBreakerStatus = await(repository.getCircuitBreakerStatus)
       }
 
-      "get" must {
+      "getCircuitBreakerStatus" must {
         "return state as closed" in new Scenario {
           initialStatus.circuitBreakerState shouldBe CircuitBreakerState.Closed
           initialStatus.lastClosed          should not be empty
           initialStatus.lastOpened          should not be empty
+        }
+      }
+
+      "getCircuitBreakerState" must {
+        "return state as closed" in new Scenario {
+          await(repository.getCircuitBreakerState) shouldBe CircuitBreakerState.Closed
         }
       }
 
