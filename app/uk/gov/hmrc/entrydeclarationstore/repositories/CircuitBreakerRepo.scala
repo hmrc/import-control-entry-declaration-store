@@ -31,7 +31,9 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import scala.concurrent.{ExecutionContext, Future}
 
 trait CircuitBreakerRepo {
-  def setCircuitBreaker(value: CircuitBreakerState): Future[Unit]
+  def setCircuitBreakerState(value: CircuitBreakerState): Future[Unit]
+
+  def getCircuitBreakerState: Future[CircuitBreakerState]
 
   def getCircuitBreakerStatus: Future[CircuitBreakerStatus]
 
@@ -55,7 +57,7 @@ class CircuitBreakerRepoImpl @Inject()(
 
   val defaultStatus: CircuitBreakerStatus = CircuitBreakerStatus(Closed, None, None)
 
-  override def setCircuitBreaker(value: CircuitBreakerState): Future[Unit] =
+  override def setCircuitBreakerState(value: CircuitBreakerState): Future[Unit] =
     for {
       _ <- insertDefaultIfEmpty()
       _ <- value match {
@@ -111,6 +113,9 @@ class CircuitBreakerRepoImpl @Inject()(
       .find(selector = Json.obj("_id" -> singletonId), projection = Option.empty[JsObject])
       .one[CircuitBreakerStatus](ReadPreference.primaryPreferred)
       .map(_.getOrElse(defaultStatus))
+
+  override def getCircuitBreakerState: Future[CircuitBreakerState] =
+    getCircuitBreakerStatus.map(_.circuitBreakerState)
 
   override def resetToDefault: Future[Unit] = removeAll(WriteConcern.Default).map(_ => ())
 }

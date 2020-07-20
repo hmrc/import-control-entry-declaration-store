@@ -17,10 +17,11 @@
 package uk.gov.hmrc.entrydeclarationstore.connectors
 
 import akka.actor.Scheduler
-import akka.pattern.{CircuitBreaker, CircuitBreakerOpenException}
+import akka.pattern.CircuitBreakerOpenException
 import javax.inject.{Inject, Singleton}
 import play.api.http.Status
 import play.api.http.Status._
+import uk.gov.hmrc.entrydeclarationstore.circuitbreaker.CircuitBreaker
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.helpers.HeaderGenerator
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
@@ -41,18 +42,13 @@ trait EisConnector {
 @Singleton
 class EisConnectorImpl @Inject()(
   client: HttpClient,
+  circuitBreaker: CircuitBreaker,
   appConfig: AppConfig,
   pagerDutyLogger: PagerDutyLogger,
-  headerGenerator: HeaderGenerator)(implicit scheduler: Scheduler, executionContext: ExecutionContext)
+  headerGenerator: HeaderGenerator)(implicit executionContext: ExecutionContext)
     extends EisConnector {
   val newUrl: String   = s"${appConfig.eisHost}${appConfig.eisNewEnsUrlPath}"
   val amendUrl: String = s"${appConfig.eisHost}${appConfig.eisAmendEnsUrlPath}"
-
-  val circuitBreaker: CircuitBreaker = CircuitBreaker(
-    scheduler,
-    appConfig.eisCircuitBreakerMaxFailures,
-    appConfig.eisCircuitBreakerCallTimeout,
-    appConfig.eisCircuitBreakerResetTimeout)
 
   // This replaces the default HttpReads[HttpResponse] so that we can fully control error handling
   implicit object ResultReads extends HttpReads[HttpResponse] {

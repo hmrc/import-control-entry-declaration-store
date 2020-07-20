@@ -49,7 +49,7 @@ class CircuitBreakerRepoISpec
         await(repository.removeAll())
       }
 
-      "get" must {
+      "getCircuitBreakerStatus" must {
         "return state as closed" in new Scenario {
           await(repository.getCircuitBreakerStatus) shouldBe CircuitBreakerStatus(
             CircuitBreakerState.Closed,
@@ -58,9 +58,15 @@ class CircuitBreakerRepoISpec
         }
       }
 
+      "getCircuitBreakerState" must {
+        "return state as closed" in new Scenario {
+          await(repository.getCircuitBreakerState) shouldBe CircuitBreakerState.Closed
+        }
+      }
+
       "set closed" must {
         "do nothing" in new Scenario {
-          await(repository.setCircuitBreaker(CircuitBreakerState.Closed))
+          await(repository.setCircuitBreakerState(CircuitBreakerState.Closed))
 
           await(repository.getCircuitBreakerStatus) shouldBe CircuitBreakerStatus(
             CircuitBreakerState.Closed,
@@ -71,7 +77,7 @@ class CircuitBreakerRepoISpec
 
       "set open" must {
         "set open and update the last open date" in new Scenario {
-          await(repository.setCircuitBreaker(CircuitBreakerState.Open))
+          await(repository.setCircuitBreakerState(CircuitBreakerState.Open))
 
           val status: CircuitBreakerStatus = await(repository.getCircuitBreakerStatus)
           status.circuitBreakerState shouldBe CircuitBreakerState.Open
@@ -93,12 +99,12 @@ class CircuitBreakerRepoISpec
     "datebase state is explicitly open" when {
       trait Scenario {
         await(repository.removeAll())
-        await(repository.setCircuitBreaker(CircuitBreakerState.Open))
+        await(repository.setCircuitBreakerState(CircuitBreakerState.Open))
 
         val initialStatus: CircuitBreakerStatus = await(repository.getCircuitBreakerStatus)
       }
 
-      "get" must {
+      "getCircuitBreakerStatus" must {
         "return state as open" in new Scenario {
           initialStatus.circuitBreakerState shouldBe CircuitBreakerState.Open
           initialStatus.lastClosed          shouldBe empty
@@ -106,9 +112,15 @@ class CircuitBreakerRepoISpec
         }
       }
 
+      "getCircuitBreakerState" must {
+        "return state as open" in new Scenario {
+          await(repository.getCircuitBreakerState) shouldBe CircuitBreakerState.Open
+        }
+      }
+
       "set open" must {
         "do nothing" in new Scenario {
-          await(repository.setCircuitBreaker(CircuitBreakerState.Open))
+          await(repository.setCircuitBreakerState(CircuitBreakerState.Open))
 
           await(repository.getCircuitBreakerStatus) shouldBe initialStatus
         }
@@ -116,7 +128,7 @@ class CircuitBreakerRepoISpec
 
       "set closed" must {
         "set closed and update the last closed date" in new Scenario {
-          await(repository.setCircuitBreaker(CircuitBreakerState.Closed))
+          await(repository.setCircuitBreakerState(CircuitBreakerState.Closed))
 
           val status: CircuitBreakerStatus = await(repository.getCircuitBreakerStatus)
           status.circuitBreakerState shouldBe CircuitBreakerState.Closed
@@ -138,13 +150,13 @@ class CircuitBreakerRepoISpec
     "datebase state is closed" when {
       trait Scenario {
         await(repository.removeAll())
-        await(repository.setCircuitBreaker(CircuitBreakerState.Open))
-        await(repository.setCircuitBreaker(CircuitBreakerState.Closed))
+        await(repository.setCircuitBreakerState(CircuitBreakerState.Open))
+        await(repository.setCircuitBreakerState(CircuitBreakerState.Closed))
 
         val initialStatus: CircuitBreakerStatus = await(repository.getCircuitBreakerStatus)
       }
 
-      "get" must {
+      "getCircuitBreakerStatus" must {
         "return state as closed" in new Scenario {
           initialStatus.circuitBreakerState shouldBe CircuitBreakerState.Closed
           initialStatus.lastClosed          should not be empty
@@ -152,9 +164,15 @@ class CircuitBreakerRepoISpec
         }
       }
 
+      "getCircuitBreakerState" must {
+        "return state as closed" in new Scenario {
+          await(repository.getCircuitBreakerState) shouldBe CircuitBreakerState.Closed
+        }
+      }
+
       "set closed" must {
         "do nothing" in new Scenario {
-          await(repository.setCircuitBreaker(CircuitBreakerState.Closed))
+          await(repository.setCircuitBreakerState(CircuitBreakerState.Closed))
 
           await(repository.getCircuitBreakerStatus) shouldBe initialStatus
         }
@@ -162,7 +180,7 @@ class CircuitBreakerRepoISpec
 
       "set open" must {
         "set open and update the last open date" in new Scenario {
-          await(repository.setCircuitBreaker(CircuitBreakerState.Open))
+          await(repository.setCircuitBreakerState(CircuitBreakerState.Open))
 
           val status: CircuitBreakerStatus = await(repository.getCircuitBreakerStatus)
           status.circuitBreakerState shouldBe CircuitBreakerState.Open
@@ -185,16 +203,16 @@ class CircuitBreakerRepoISpec
     "circuit breaker is opened after previous close" must {
       trait Scenario {
         await(repository.removeAll())
-        await(repository.setCircuitBreaker(CircuitBreakerState.Open))
-        await(repository.setCircuitBreaker(CircuitBreakerState.Closed))
-        await(repository.setCircuitBreaker(CircuitBreakerState.Open))
+        await(repository.setCircuitBreakerState(CircuitBreakerState.Open))
+        await(repository.setCircuitBreakerState(CircuitBreakerState.Closed))
+        await(repository.setCircuitBreakerState(CircuitBreakerState.Open))
 
         val initialStatus: CircuitBreakerStatus = await(repository.getCircuitBreakerStatus)
       }
 
       "set open" must {
         "do nothing" in new Scenario {
-          await(repository.setCircuitBreaker(CircuitBreakerState.Open))
+          await(repository.setCircuitBreakerState(CircuitBreakerState.Open))
 
           await(repository.getCircuitBreakerStatus) shouldBe initialStatus
         }
@@ -202,7 +220,7 @@ class CircuitBreakerRepoISpec
 
       "set closed" must {
         "set closed and update the last closed date" in new Scenario {
-          await(repository.setCircuitBreaker(CircuitBreakerState.Closed))
+          await(repository.setCircuitBreakerState(CircuitBreakerState.Closed))
 
           val status: CircuitBreakerStatus = await(repository.getCircuitBreakerStatus)
           status.circuitBreakerState shouldBe CircuitBreakerState.Closed

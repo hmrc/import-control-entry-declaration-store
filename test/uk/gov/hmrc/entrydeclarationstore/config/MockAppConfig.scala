@@ -51,14 +51,6 @@ trait MockAppConfig extends MockFactory {
     def validateXMLtoJsonTransformation: CallHandler[Boolean] =
       mockAppConfig.validateXMLtoJsonTransformation _ expects ()
 
-    def eisCircuitBreakerMaxFailures: CallHandler[Int] = mockAppConfig.eisCircuitBreakerMaxFailures _ expects ()
-
-    def eisCircuitBreakerCallTimeout: CallHandler[FiniteDuration] =
-      mockAppConfig.eisCircuitBreakerCallTimeout _ expects ()
-
-    def eisCircuitBreakerResetTimeout: CallHandler[FiniteDuration] =
-      mockAppConfig.eisCircuitBreakerResetTimeout _ expects ()
-
     def defaultTtl: CallHandler[FiniteDuration] = mockAppConfig.defaultTtl _ expects ()
 
     def businessRules313: CallHandler[Seq[String]] = mockAppConfig.businessRules313 _ expects ()

@@ -23,6 +23,7 @@ import com.google.inject.{AbstractModule, Provides}
 import javax.inject.Named
 import play.api.libs.json.Json
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.entrydeclarationstore.circuitbreaker.{CircuitBreakerActor, CircuitBreakerConfig}
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EisConnector, EisConnectorImpl}
 import uk.gov.hmrc.entrydeclarationstore.reporting.events.{EventConnector, EventConnectorImpl}
 import uk.gov.hmrc.entrydeclarationstore.repositories.{CircuitBreakerRepo, CircuitBreakerRepoImpl, EntryDeclarationRepo, EntryDeclarationRepoImpl}
@@ -44,11 +45,16 @@ class DIModule extends AbstractModule {
     bind(classOf[AuthConnector]).to(classOf[DefaultAuthConnector])
     bind(classOf[EventConnector]).to(classOf[EventConnectorImpl])
     bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
+    bind(classOf[CircuitBreakerActor.Factory]).to(classOf[CircuitBreakerActor.FactoryImpl])
   }
 
   @Provides
   def akkaScheduler(actorSystem: ActorSystem): Scheduler =
     actorSystem.scheduler
+
+  @Provides
+  def eisCircuitBreakerConfig(appConfig: AppConfig): CircuitBreakerConfig =
+    appConfig.eisCircuitBreakerConfig
 
   @Named("ruleValidator315")
   @Provides
