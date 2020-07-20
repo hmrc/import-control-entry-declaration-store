@@ -16,12 +16,22 @@
 
 package uk.gov.hmrc.entrydeclarationstore.utils
 
+import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
+import uk.gov.hmrc.entrydeclarationstore.models.MessageType
+import uk.gov.hmrc.entrydeclarationstore.reporting.ClientType
 
 trait MockMetricsReporter extends MockFactory {
   val mockMetricsReporter: MetricsReporter = mock[MetricsReporter]
 
   object MockMetricsReporter {
-
+    def reportMetrics(
+      messageType: MessageType,
+      clientType: ClientType,
+      transportMode: String,
+      size: Long): CallHandler[Unit] =
+      (mockMetricsReporter
+        .reportMetrics(_: MessageType, _: ClientType, _: String, _: Long))
+        .expects(messageType, clientType, transportMode, size)
   }
 }

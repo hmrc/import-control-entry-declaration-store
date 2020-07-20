@@ -98,7 +98,7 @@ class EntryDeclarationStoreImpl @Inject()(
       } yield {
         submitToEIS(input, eori, transportMode, receivedDateTime)
         metricsReporter
-          .reportMetrics(MessageType(amendment = mrn.isDefined), clientType, transportMode, xmlPayload.length)
+          .reportMetrics(MessageType(amendment = mrn.isDefined), clientType, transportMode, payload.length)
         SuccessResponse(entryDeclaration.correlationId)
       }
 
