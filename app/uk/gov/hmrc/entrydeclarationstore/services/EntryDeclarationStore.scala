@@ -53,13 +53,13 @@ class EntryDeclarationStoreImpl @Inject()(
   eisConnector: EisConnector,
   reportSender: ReportSender,
   clock: Clock,
-  metricsReporter: MetricsReporter,
   override val metrics: Metrics,
   appConfig: AppConfig
 )(implicit ec: ExecutionContext)
     extends EntryDeclarationStore
     with Timer
-    with EventLogger {
+    with EventLogger
+    with MetricsReporter {
 
   def handleSubmission(eori: String, payload: String, mrn: Option[String], clientType: ClientType)(
     implicit hc: HeaderCarrier): Future[Either[ErrorWrapper[_], SuccessResponse]] =
@@ -97,8 +97,7 @@ class EntryDeclarationStoreImpl @Inject()(
               sendSubmissionReceivedReport(input, eori, entryDeclarationAsJson, payload, transportMode, clientType))
       } yield {
         submitToEIS(input, eori, transportMode, receivedDateTime)
-        metricsReporter
-          .reportMetrics(MessageType(amendment = mrn.isDefined), clientType, transportMode, payload.length)
+        reportMetrics(MessageType(amendment = mrn.isDefined), clientType, transportMode, payload.length)
         SuccessResponse(entryDeclaration.correlationId)
       }
 

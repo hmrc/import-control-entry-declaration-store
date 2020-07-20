@@ -30,7 +30,7 @@ import uk.gov.hmrc.entrydeclarationstore.models._
 import uk.gov.hmrc.entrydeclarationstore.models.json.MockDeclarationToJsonConverter
 import uk.gov.hmrc.entrydeclarationstore.reporting.{ClientType, MockReportSender, SubmissionReceived, SubmissionSentToEIS}
 import uk.gov.hmrc.entrydeclarationstore.repositories.{EntryDeclarationRepo, MockEntryDeclarationRepo}
-import uk.gov.hmrc.entrydeclarationstore.utils.{MockIdGenerator, MockMetrics, MockMetricsReporter, XmlFormatConfig}
+import uk.gov.hmrc.entrydeclarationstore.utils.{MockIdGenerator, MockMetrics, XmlFormatConfig}
 import uk.gov.hmrc.entrydeclarationstore.validation._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
@@ -51,7 +51,6 @@ class EntryDeclarationStoreSpec
     with MockDeclarationToJsonConverter
     with MockAppConfig
     with MockEisConnector
-    with MockMetricsReporter
     with IntegrationPatience
     with MockReportSender {
 
@@ -71,7 +70,6 @@ class EntryDeclarationStoreSpec
     mockEisConnector,
     mockReportSender,
     clock,
-    mockMetricsReporter,
     mockedMetrics,
     mockAppConfig
   )
@@ -152,8 +150,6 @@ class EntryDeclarationStoreSpec
         .sendReport(now, submissionReceivedReport(xmlPayload, messageType))
         .returns(Future.successful(()))
       MockReportSender.sendReport(submissionSentToEISReport(messageType, None))
-
-      MockMetricsReporter.reportMetrics(messageType, clientType, transportMode, xmlPayload.toString.length).returns(())
 
       MockEisConnector
         .submitMetadata(metadataWith(messageType, mrn))
@@ -239,7 +235,6 @@ class EntryDeclarationStoreSpec
           mockEisConnector,
           mockReportSender,
           clock,
-          mockMetricsReporter,
           mockedMetrics,
           mockAppConfig
         )
@@ -259,8 +254,6 @@ class EntryDeclarationStoreSpec
           .sendReport(now, submissionReceivedReport(xmlPayload, messageType))
           .returns(Future.successful(()))
         MockReportSender.sendReport(submissionSentToEISReport(messageType, Some(eisSendFailure)))
-
-        MockMetricsReporter.reportMetrics(messageType, clientType, transportMode, payload.length).returns(())
 
         MockEisConnector
           .submitMetadata(metadataWith(messageType, mrn))
@@ -300,8 +293,6 @@ class EntryDeclarationStoreSpec
           .sendReport(now, submissionReceivedReport(xmlPayload, messageType))
           .returns(Future.successful(()))
 
-        MockMetricsReporter.reportMetrics(messageType, clientType, transportMode, payload.length).returns(())
-
         MockEisConnector
           .submitMetadata(metadataWith(messageType, mrn))
           .returns(Promise[Option[EISSendFailure]].future)
@@ -325,8 +316,6 @@ class EntryDeclarationStoreSpec
           .sendReport(now, submissionReceivedReport(xmlPayload, messageType))
           .returns(Future.successful(()))
         MockReportSender.sendReport(submissionSentToEISReport(messageType, Some(EISSendFailure.ExceptionThrown)))
-
-        MockMetricsReporter.reportMetrics(messageType, clientType, transportMode, payload.length).returns(())
 
         MockEisConnector
           .submitMetadata(metadataWith(messageType, mrn))

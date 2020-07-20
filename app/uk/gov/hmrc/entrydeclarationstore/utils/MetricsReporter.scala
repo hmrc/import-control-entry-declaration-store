@@ -18,14 +18,13 @@ package uk.gov.hmrc.entrydeclarationstore.utils
 
 import com.google.inject.Singleton
 import com.kenshoo.play.metrics.Metrics
-import javax.inject.Inject
 import uk.gov.hmrc.entrydeclarationstore.models.MessageType
 import uk.gov.hmrc.entrydeclarationstore.reporting.ClientType
 
-import scala.concurrent.ExecutionContext
-
 @Singleton
-class MetricsReporter @Inject()(metrics: Metrics)(implicit ec: ExecutionContext) {
+trait MetricsReporter {
+  val metrics: Metrics
+
   private def incrementCounter(reportedMetric: String): Unit =
     metrics.defaultRegistry.counter(reportedMetric).inc()
 
