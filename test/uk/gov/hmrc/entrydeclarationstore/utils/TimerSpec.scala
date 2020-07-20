@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.entrydeclarationstore.utils
 
-import com.codahale.metrics.MetricRegistry
 import com.kenshoo.play.metrics.Metrics
 import uk.gov.hmrc.play.test.UnitSpec
 

@@ -20,13 +20,13 @@ import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
 
 trait MockIdGenerator extends MockFactory {
-  val mockIdGenerator = mock[IdGenerator]
+  val mockIdGenerator: IdGenerator = mock[IdGenerator]
 
   object MockIdGenerator {
     def generateCorrelationId: CallHandler[String] =
-      (mockIdGenerator.generateCorrelationId _) expects ()
+      mockIdGenerator.generateCorrelationId _ expects ()
 
     def generateSubmissionId: CallHandler[String] =
-      (mockIdGenerator.generateSubmissionId _) expects ()
+      mockIdGenerator.generateSubmissionId _ expects ()
   }
 }

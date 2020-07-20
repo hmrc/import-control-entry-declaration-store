@@ -26,22 +26,18 @@ trait Timer {
   type Metric = String
 
   val metrics: Metrics
-  val localMetrics = new LocalMetrics
-
-  class LocalMetrics {
-    def startTimer(metric: Metric): Timer.Context = metrics.defaultRegistry.timer(s"$metric-timer").time()
-  }
-
   def timeFuture[A](name: String, metric: Metric)(block: => Future[A])(implicit ec: ExecutionContext): Future[A] = {
-    val timer = localMetrics.startTimer(metric)
+    val timer = startTimer(metric)
     block andThen { case _ => stopAndLog(name, timer) }
   }
 
   def time[A](name: String, metric: Metric)(block: => A): A = {
-    val timer = localMetrics.startTimer(metric)
+    val timer = startTimer(metric)
     try block
     finally stopAndLog(name, timer)
   }
+
+  protected def startTimer(metric: Metric): Timer.Context = metrics.defaultRegistry.timer(s"$metric-timer").time()
 
   protected def stopAndLog[A](name: String, timer: Timer.Context): Unit = {
     val timeMillis = timer.stop() / 1000000
