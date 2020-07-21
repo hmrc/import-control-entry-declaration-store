@@ -59,6 +59,9 @@ trait MockAppConfig extends MockFactory {
     def eisCircuitBreakerResetTimeout: CallHandler[FiniteDuration] =
       mockAppConfig.eisCircuitBreakerResetTimeout _ expects ()
 
+    def eisCircuitBreakerStateCacheTtl: CallHandler[FiniteDuration] =
+      mockAppConfig.eisCircuitBreakerStateCacheTtl _ expects ()
+
     def defaultTtl: CallHandler[FiniteDuration] = mockAppConfig.defaultTtl _ expects ()
 
     def businessRules313: CallHandler[Seq[String]] = mockAppConfig.businessRules313 _ expects ()
