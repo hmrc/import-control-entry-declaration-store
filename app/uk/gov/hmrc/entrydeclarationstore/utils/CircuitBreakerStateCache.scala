@@ -35,4 +35,5 @@ class CircuitBreakerStateCache @Inject()(circuitBreakerRepo: CircuitBreakerRepo,
   def getCircuitBreakerState: Future[CircuitBreakerState] =
     memoizeF(Some(ttl))(circuitBreakerRepo.getCircuitBreakerState)
 
+  def setCircuitBreaker(value: CircuitBreakerState): Future[Unit] = ???
 }

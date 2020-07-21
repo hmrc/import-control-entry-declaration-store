@@ -99,5 +99,11 @@ class CircuitBreakerStateCacheSpec extends UnitSpec with MockCircuitBreakerRepo 
         cache.getCircuitBreakerState.futureValue shouldBe CircuitBreakerState.Closed
       }
     }
+
+    "cache is updated locally" must {
+      "be persisted in the database" in {
+        fail
+      }
+    }
   }
 }
