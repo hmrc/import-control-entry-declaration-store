@@ -35,6 +35,9 @@ The following values are supported:
 If the header is omitted or has any other value then no 
 risking simulation will be performed and no outcome
 will be made available for an ENS submission.
+<br/>
+If the customs office of first entry `<RefNumCUSOFFFENT731>` is in Northern Ireland a 
+rejection will be issued regardless of the value of the header.
 <br/><br/>
 
 ### _riskingResponseError_
@@ -68,6 +71,9 @@ The following values are supported:
 <br/>
 If the _simulateRiskingResponse_ header is set to _reject_
 but no _riskingResponseError_ header is provided, a default of _badTransportMode_ is assumed.
+<br/>
+If the customs office of first entry `<RefNumCUSOFFFENT731>` is in Northern Ireland a 
+rejection will be issued regardless of the value of the header.
 <br/><br/>
 
 ### _simulateRiskingResponseLatencyMillis_
