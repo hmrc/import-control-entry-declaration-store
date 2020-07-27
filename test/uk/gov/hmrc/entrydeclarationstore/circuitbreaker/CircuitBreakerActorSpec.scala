@@ -45,9 +45,11 @@ class CircuitBreakerActorSpec
   private val alwaysFail: Try[_] => Boolean         = _ => true
   private val neverFail: Try[_] => Boolean          = _ => false
 
-  val e: Exception = new Exception with NoStackTrace
-
   class Test {
+    val e: Exception                            = new Exception with NoStackTrace
+    def sayHi: Unit => Future[String]           = _ => Future.successful("hi")
+    def throwException: Unit => Future[Nothing] = _ => Future.failed(e)
+
     val stateProbe: TestProbe = TestProbe()
 
     val circuitBreakerActor: ActorRef =
@@ -57,13 +59,13 @@ class CircuitBreakerActorSpec
 
     def tripCircuitBreaker(): Unit = {
       for (_ <- 1 to config.maxFailures)
-        circuitBreakerActor ! CircuitBreakerActor.MakeCall(_ => Future.failed(e), exceptionAsFailure)
+        circuitBreakerActor ! CircuitBreakerActor.MakeCall(throwException, exceptionAsFailure)
 
       for (_ <- 1 to config.maxFailures)
         expectMsg(Status.Failure(e))
 
       // Should now trip...
-      circuitBreakerActor ! CircuitBreakerActor.MakeCall(_ => Future.failed(e), exceptionAsFailure)
+      circuitBreakerActor ! CircuitBreakerActor.MakeCall(throwException, exceptionAsFailure)
       inside(expectMsgType[Status.Failure]) {
         case Status.Failure(e) => e shouldBe a[CircuitBreakerOpenException]
       }
@@ -78,14 +80,14 @@ class CircuitBreakerActorSpec
       "allow calls through" in new Test {
         circuitBreakerActor ! CircuitBreakerActor.SetState(CircuitBreakerState.Closed)
 
-        circuitBreakerActor ! CircuitBreakerActor.MakeCall(_ => Future.successful("hi"), exceptionAsFailure)
+        circuitBreakerActor ! CircuitBreakerActor.MakeCall(sayHi, exceptionAsFailure)
         expectMsg(CircuitBreakerActor.CallResult("hi"))
       }
 
       "increment failure count on exception" in new Test {
         circuitBreakerActor ! CircuitBreakerActor.SetState(CircuitBreakerState.Closed)
 
-        circuitBreakerActor ! CircuitBreakerActor.MakeCall(_ => Future.failed(e), exceptionAsFailure)
+        circuitBreakerActor ! CircuitBreakerActor.MakeCall(throwException, exceptionAsFailure)
         expectMsg(Status.Failure(e))
 
         circuitBreakerActor ! CircuitBreakerActor.GetInternalState
@@ -95,7 +97,7 @@ class CircuitBreakerActorSpec
       "increment failure count on failure result" in new Test {
         circuitBreakerActor ! CircuitBreakerActor.SetState(CircuitBreakerState.Closed)
 
-        circuitBreakerActor ! CircuitBreakerActor.MakeCall(_ => Future.successful("hi"), alwaysFail)
+        circuitBreakerActor ! CircuitBreakerActor.MakeCall(sayHi, alwaysFail)
         expectMsg(CircuitBreakerActor.CallResult("hi"))
 
         circuitBreakerActor ! CircuitBreakerActor.GetInternalState
@@ -115,7 +117,7 @@ class CircuitBreakerActorSpec
       "not increment failure count on non-failure exception" in new Test {
         circuitBreakerActor ! CircuitBreakerActor.SetState(CircuitBreakerState.Closed)
 
-        circuitBreakerActor ! CircuitBreakerActor.MakeCall(_ => Future.failed(e), neverFail)
+        circuitBreakerActor ! CircuitBreakerActor.MakeCall(throwException, neverFail)
         expectMsg(Status.Failure(e))
 
         circuitBreakerActor ! CircuitBreakerActor.GetInternalState
@@ -125,13 +127,13 @@ class CircuitBreakerActorSpec
       "reset failure count on success" in new Test {
         circuitBreakerActor ! CircuitBreakerActor.SetState(CircuitBreakerState.Closed)
 
-        circuitBreakerActor ! CircuitBreakerActor.MakeCall(_ => Future.failed(e), exceptionAsFailure)
+        circuitBreakerActor ! CircuitBreakerActor.MakeCall(throwException, exceptionAsFailure)
         expectMsg(Status.Failure(e))
 
         circuitBreakerActor ! CircuitBreakerActor.GetInternalState
         expectMsg(CircuitBreakerActor.InternalClosed(1))
 
-        circuitBreakerActor ! CircuitBreakerActor.MakeCall(_ => Future.successful("hi"), exceptionAsFailure)
+        circuitBreakerActor ! CircuitBreakerActor.MakeCall(sayHi, exceptionAsFailure)
         expectMsg(CircuitBreakerActor.CallResult("hi"))
 
         circuitBreakerActor ! CircuitBreakerActor.GetInternalState
@@ -141,13 +143,13 @@ class CircuitBreakerActorSpec
       "reset failure count after non-failure exception" in new Test {
         circuitBreakerActor ! CircuitBreakerActor.SetState(CircuitBreakerState.Closed)
 
-        circuitBreakerActor ! CircuitBreakerActor.MakeCall(_ => Future.failed(e), exceptionAsFailure)
+        circuitBreakerActor ! CircuitBreakerActor.MakeCall(throwException, exceptionAsFailure)
         expectMsg(Status.Failure(e))
 
         circuitBreakerActor ! CircuitBreakerActor.GetInternalState
         expectMsg(CircuitBreakerActor.InternalClosed(1))
 
-        circuitBreakerActor ! CircuitBreakerActor.MakeCall(_ => Future.failed(e), neverFail)
+        circuitBreakerActor ! CircuitBreakerActor.MakeCall(throwException, neverFail)
         expectMsg(Status.Failure(e))
 
         circuitBreakerActor ! CircuitBreakerActor.GetInternalState
@@ -200,7 +202,7 @@ class CircuitBreakerActorSpec
       "become open when told by the state actor" in new Test {
         circuitBreakerActor ! CircuitBreakerActor.SetState(CircuitBreakerState.Closed)
 
-        circuitBreakerActor ! CircuitBreakerActor.MakeCall(_ => Future.successful("hi"), exceptionAsFailure)
+        circuitBreakerActor ! CircuitBreakerActor.MakeCall(sayHi, exceptionAsFailure)
         expectMsg(CircuitBreakerActor.CallResult("hi"))
 
         circuitBreakerActor ! CircuitBreakerActor.SetState(CircuitBreakerState.Open)
@@ -212,7 +214,7 @@ class CircuitBreakerActorSpec
       "ignore (not reset failure count) when told closed when told by the state actor" in new Test {
         circuitBreakerActor ! CircuitBreakerActor.SetState(CircuitBreakerState.Closed)
 
-        circuitBreakerActor ! CircuitBreakerActor.MakeCall(_ => Future.failed(e), exceptionAsFailure)
+        circuitBreakerActor ! CircuitBreakerActor.MakeCall(throwException, exceptionAsFailure)
         expectMsg(Status.Failure(e))
 
         circuitBreakerActor ! CircuitBreakerActor.SetState(CircuitBreakerState.Closed)
@@ -226,7 +228,7 @@ class CircuitBreakerActorSpec
       "not allow call and reply with CircuitBreakerOpenException failure" in new Test {
         circuitBreakerActor ! CircuitBreakerActor.SetState(CircuitBreakerState.Open)
 
-        circuitBreakerActor ! CircuitBreakerActor.MakeCall(_ => Future.successful("hi"), exceptionAsFailure)
+        circuitBreakerActor ! CircuitBreakerActor.MakeCall(sayHi, exceptionAsFailure)
 
         inside(expectMsgType[Status.Failure]) {
           case Status.Failure(e) => e shouldBe a[CircuitBreakerOpenException]
@@ -239,7 +241,7 @@ class CircuitBreakerActorSpec
       "become closed with zero failure count when told by the state actor" in new Test {
         circuitBreakerActor ! CircuitBreakerActor.SetState(CircuitBreakerState.Open)
 
-        circuitBreakerActor ! CircuitBreakerActor.MakeCall(_ => Future.successful("hi"), exceptionAsFailure)
+        circuitBreakerActor ! CircuitBreakerActor.MakeCall(sayHi, exceptionAsFailure)
 
         inside(expectMsgType[Status.Failure]) {
           case Status.Failure(e) => e shouldBe a[CircuitBreakerOpenException]
@@ -294,7 +296,7 @@ class CircuitBreakerActorSpec
 
     "new" must {
       "stash call messages until it is initialized" in new Test {
-        circuitBreakerActor ! CircuitBreakerActor.MakeCall(_ => Future.successful("hi"), exceptionAsFailure)
+        circuitBreakerActor ! CircuitBreakerActor.MakeCall(sayHi, exceptionAsFailure)
         circuitBreakerActor ! CircuitBreakerActor.SetState(CircuitBreakerState.Closed)
 
         expectMsg(CircuitBreakerActor.CallResult("hi"))
