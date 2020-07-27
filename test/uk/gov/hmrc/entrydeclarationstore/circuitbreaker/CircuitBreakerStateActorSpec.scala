@@ -167,7 +167,9 @@ class CircuitBreakerStateActorSpec
           MockCircuitBreakerRepo.getCircuitBreakerState returns Future.successful(CircuitBreakerState.Open) anyNumberOfTimes ()
 
           val stateActor = parentProbe.childActorOf(
-            CircuitBreakerStateActor.props(mockCircuitBreakerRepo, config.copy(openStateRefreshPeriod = shortTime)))
+            CircuitBreakerStateActor.props(
+              mockCircuitBreakerRepo,
+              config.copy(openStateRefreshPeriod = shortTime, closedStateRefreshPeriod = shortTime)))
 
           stateActor ! CircuitBreakerStateActor.UpdateDatabaseToOpen
 
@@ -183,7 +185,12 @@ class CircuitBreakerStateActorSpec
 
           updatePromise.success(())
 
-          parentProbe.expectMsg(CircuitBreakerActor.SetState(CircuitBreakerState.Open))
+          // Because of the way that the mocks work, we get the initial Closed
+          // here if we didn't get the state at all before the UpdateDatabaseToOpen was received
+          parentProbe.expectMsgAnyOf(
+            CircuitBreakerActor.SetState(CircuitBreakerState.Open),
+            CircuitBreakerActor.SetState(CircuitBreakerState.Closed))
+
           parentProbe.expectMsg(CircuitBreakerActor.SetState(CircuitBreakerState.Open))
 
           stop(stateActor)

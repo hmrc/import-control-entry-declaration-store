@@ -25,6 +25,7 @@ import uk.gov.hmrc.entrydeclarationstore.models.CircuitBreakerState
 import uk.gov.hmrc.entrydeclarationstore.repositories.CircuitBreakerRepo
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Success, Try}
 
 object CircuitBreakerStateActor {
@@ -85,35 +86,35 @@ class CircuitBreakerStateActor(circuitBreakerRepo: CircuitBreakerRepo, circuitBr
       // otherwise try again
       lastNotifiedState match {
         case None        => notifyState(CircuitBreakerState.Closed)
-        case Some(state) => refreshStateAfterDelay(state)
+        case Some(state) => refreshAndNotifyStateAfter(refreshPeriodFor(state))
       }
   }
 
   private def updatingDatabaseToOpen: Receive = LoggingReceive.withLabel("updatingDatabaseToOpen") {
     case DatabaseUpdatedToOpen =>
-      refreshStateAfterDelay(CircuitBreakerState.Open)
+      refreshAndNotifyStateAfter(refreshPeriodFor(CircuitBreakerState.Open))
       context.become(running)
 
     case Status.Failure(e) =>
       Logger.warn("Unable to update mongo circuit breaker state to open", e)
-      refreshStateAfterDelay(CircuitBreakerState.Open)
+      refreshAndNotifyStateAfter(refreshPeriodFor(CircuitBreakerState.Open))
       context.become(running)
   }
 
   private def notifyState(state: CircuitBreakerState): Unit = {
     context.parent ! CircuitBreakerActor.SetState(state)
-    refreshStateAfterDelay(state)
+    refreshAndNotifyStateAfter(refreshPeriodFor(state))
     lastNotifiedState = Some(state)
   }
 
-  private def refreshStateAfterDelay(state: CircuitBreakerState): Unit = {
-    val period = state match {
+  private def refreshAndNotifyStateAfter(period: FiniteDuration): Unit =
+    timers.startSingleTimer(GetStateTimerKey, CircuitBreakerStateActor.GetStateFromDatabase, period)
+
+  private def refreshPeriodFor(state: CircuitBreakerState) =
+    state match {
       case CircuitBreakerState.Open   => circuitBreakerConfig.openStateRefreshPeriod
       case CircuitBreakerState.Closed => circuitBreakerConfig.closedStateRefreshPeriod
     }
 
-    timers.startSingleTimer(GetStateTimerKey, CircuitBreakerStateActor.GetStateFromDatabase, period)
-  }
-
-  def cancelStateRefresh(): Unit = timers.cancel(GetStateTimerKey)
+  private def cancelStateRefresh(): Unit = timers.cancel(GetStateTimerKey)
 }
