@@ -28,10 +28,12 @@ trait MockEisConnector extends MockFactory {
   val mockEisConnector: EisConnector = mock[EisConnector]
 
   object MockEisConnector {
-    def submitMetadata(metadata: EntryDeclarationMetadata): CallHandler[Future[Option[EISSendFailure]]] =
+    def submitMetadata(
+      metadata: EntryDeclarationMetadata,
+      bypassCircuitBreaker: Boolean): CallHandler[Future[Option[EISSendFailure]]] =
       (mockEisConnector
-        .submitMetadata(_: EntryDeclarationMetadata)(_: HeaderCarrier, _: LoggingContext))
-        .expects(metadata, *, *)
+        .submitMetadata(_: EntryDeclarationMetadata, _: Boolean)(_: HeaderCarrier, _: LoggingContext))
+        .expects(metadata, bypassCircuitBreaker, *, *)
   }
 
 }

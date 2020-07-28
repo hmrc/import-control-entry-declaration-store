@@ -72,7 +72,7 @@ class SubmissionReplayServiceSpec
           val report = submissionSentToEISReport(submissionIds.head, None)
           MockEntryDeclarationRepo.lookupMetadata(submissionIds.head) returns Future.successful(
             Right(replayMetadata(subId1)))
-          MockEisConnector.submitMetadata(metadata(subId1)) returns Future.successful(None)
+          MockEisConnector.submitMetadata(metadata(subId1), bypassCircuitBreaker = true) returns Future.successful(None)
           MockReportSender.sendReport(report) returns Future.successful((): Unit)
 
           service.replaySubmissions(submissionIds).futureValue shouldBe Right(ReplayResult(1, 0))
@@ -84,7 +84,8 @@ class SubmissionReplayServiceSpec
             MockEntryDeclarationRepo
               .lookupMetadata(submissionId)
               .returns(Future.successful(Right(replayMetadata(submissionId))))
-            MockEisConnector.submitMetadata(metadata(submissionId)) returns Future.successful(None)
+            MockEisConnector.submitMetadata(metadata(submissionId), bypassCircuitBreaker = true) returns Future
+              .successful(None)
             MockReportSender.sendReport(report) returns Future.successful((): Unit)
           }
 
@@ -139,7 +140,7 @@ class SubmissionReplayServiceSpec
             val errorResponse = Some(EISSendFailure.ErrorResponse(BAD_REQUEST))
             val errorReport   = submissionSentToEISReport(submissionIds.head, errorResponse)
             MockEisConnector
-              .submitMetadata(metadata(subId1))
+              .submitMetadata(metadata(subId1), bypassCircuitBreaker = true)
               .returns(Future.successful(errorResponse))
             MockReportSender.sendReport(errorReport) returns Future.successful((): Unit)
 
@@ -147,7 +148,8 @@ class SubmissionReplayServiceSpec
             MockEntryDeclarationRepo
               .lookupMetadata(subId2)
               .returns(Future.successful(Right(replayMetadata(subId2))))
-            MockEisConnector.submitMetadata(metadata(subId2)) returns Future.successful(None)
+            MockEisConnector.submitMetadata(metadata(subId2), bypassCircuitBreaker = true) returns Future.successful(
+              None)
             MockReportSender.sendReport(successReport) returns Future.successful((): Unit)
 
             service.replaySubmissions(submissionIds).futureValue shouldBe Right(ReplayResult(1, 1))
@@ -161,7 +163,7 @@ class SubmissionReplayServiceSpec
               .lookupMetadata(subId1)
               .returns(Future.successful(Right(replayMetadata(subId1))))
             MockEisConnector
-              .submitMetadata(metadata(subId1))
+              .submitMetadata(metadata(subId1), bypassCircuitBreaker = true)
               .returns(Future.successful(Some(eisSendFailure)))
             MockReportSender
               .sendReport(submissionSentToEISReport(subId1, Some(eisSendFailure)))
@@ -188,7 +190,7 @@ class SubmissionReplayServiceSpec
 
           val report = submissionSentToEISReport(subId1, None)
           MockEntryDeclarationRepo.lookupMetadata(subId1) returns Future.successful(Right(replayMetadata(subId1)))
-          MockEisConnector.submitMetadata(metadata(subId1)) returns Future.successful(None)
+          MockEisConnector.submitMetadata(metadata(subId1), bypassCircuitBreaker = true) returns Future.successful(None)
           MockReportSender.sendReport(report) returns Future.failed(new IOException)
 
           service.replaySubmissions(submissionIds).futureValue shouldBe Left(ReplayError.EISEventError)

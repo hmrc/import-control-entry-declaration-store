@@ -170,11 +170,12 @@ class EisConnectorSpec
       MockCircuitBreakerRepo.setCircuitBreakerState(CircuitBreakerState.Open) returns Future.successful(())
 
       (0 until maxCallFailures) foreach { _ =>
-        await(connector.submitMetadata(declarationMetadata)) shouldBe Some(expectedError)
+        await(connector.submitMetadata(declarationMetadata, bypassCircuitBreaker = false)) shouldBe Some(expectedError)
       }
 
       (0 until extraCalls) foreach { _ =>
-        await(connector.submitMetadata(declarationMetadata)) shouldBe Some(EISSendFailure.CircuitBreakerOpen)
+        await(connector.submitMetadata(declarationMetadata, bypassCircuitBreaker = false)) shouldBe Some(
+          EISSendFailure.CircuitBreakerOpen)
       }
 
       verifyRequestCount(maxCallFailures)
@@ -182,13 +183,15 @@ class EisConnectorSpec
       maxCallFailures + extraCalls
     }
 
-    def checkCircuitBreakerDoesNotOpen(expectedError: Option[EISSendFailure]): Int = {
+    def checkCircuitBreakerDoesNotOpen(
+      expectedError: Option[EISSendFailure],
+      bypassCircuitBreaker: Boolean = false): Int = {
       wireMockServer.resetRequests()
 
       val totalCalls = maxCallFailures + 10
 
       (0 until totalCalls) foreach { _ =>
-        await(connector.submitMetadata(declarationMetadata)) shouldBe expectedError
+        await(connector.submitMetadata(declarationMetadata, bypassCircuitBreaker)) shouldBe expectedError
       }
 
       verifyRequestCount(totalCalls)
@@ -201,62 +204,76 @@ class EisConnectorSpec
   }
 
   "Calling .submitMetadata" when {
-    "eis responds 202 (Accepted)" must {
-      "return None" when {
-        "executing a post for a declaration" in new Test {
-          wireMockServer.stubFor(
-            post(urlPathEqualTo(newUrl))
-              .withHeader(expectedHeader, equalTo(expectedHeaderValue))
-              .withRequestBody(equalToJson(Json.toJson(declarationMetadata).toString))
-              .willReturn(aResponse()
-                .withHeader(CONTENT_TYPE, MimeTypes.JSON)
-                .withStatus(ACCEPTED)))
 
-          await(connector.submitMetadata(declarationMetadata)) shouldBe None
+    def connectorSuccessBehaviour(bypassCircuitBreaker: Boolean): Unit =
+      s"bypassing circuitbreaker is $bypassCircuitBreaker" when {
+        "eis responds 202 (Accepted)" must {
+          "return None" when {
+            "executing a post for a declaration" in new Test {
+              wireMockServer.stubFor(
+                post(urlPathEqualTo(newUrl))
+                  .withHeader(expectedHeader, equalTo(expectedHeaderValue))
+                  .withRequestBody(equalToJson(Json.toJson(declarationMetadata).toString))
+                  .willReturn(aResponse()
+                    .withHeader(CONTENT_TYPE, MimeTypes.JSON)
+                    .withStatus(ACCEPTED)))
 
-          verify(
-            postRequestedFor(urlPathEqualTo(newUrl))
-              .withoutHeader(extraHeader)
-              .withoutHeader(otherHeader))
+              await(connector.submitMetadata(declarationMetadata, bypassCircuitBreaker)) shouldBe None
+
+              verify(
+                postRequestedFor(urlPathEqualTo(newUrl))
+                  .withoutHeader(extraHeader)
+                  .withoutHeader(otherHeader))
+            }
+
+            "executing a put for an amendment" in new Test {
+              wireMockServer.stubFor(
+                put(urlPathEqualTo(amendUrl))
+                  .withHeader(expectedHeader, equalTo(expectedHeaderValue))
+                  .withRequestBody(equalToJson(Json.toJson(amendmentMetadata).toString))
+                  .willReturn(aResponse()
+                    .withHeader(CONTENT_TYPE, MimeTypes.JSON)
+                    .withStatus(ACCEPTED)))
+
+              await(connector.submitMetadata(amendmentMetadata, bypassCircuitBreaker)) shouldBe None
+
+              verify(
+                putRequestedFor(urlPathEqualTo(amendUrl))
+                  .withoutHeader(extraHeader)
+                  .withoutHeader(otherHeader))
+            }
+          }
+        }
+      }
+
+    def connectorErrorBehaviour(bypassCircuitBreaker: Boolean): Unit =
+      s"bypassing circuitbreaker is $bypassCircuitBreaker" when {
+        "eis responds with 400" must {
+          "return the ErrorResponse failure" in new Test {
+            stubResponse(BAD_REQUEST)
+
+            await(connector.submitMetadata(declarationMetadata, bypassCircuitBreaker)) shouldBe Some(
+              EISSendFailure.ErrorResponse(BAD_REQUEST))
+          }
         }
 
-        "executing a put for an amendment" in new Test {
-          wireMockServer.stubFor(
-            put(urlPathEqualTo(amendUrl))
-              .withHeader(expectedHeader, equalTo(expectedHeaderValue))
-              .withRequestBody(equalToJson(Json.toJson(amendmentMetadata).toString))
-              .willReturn(aResponse()
-                .withHeader(CONTENT_TYPE, MimeTypes.JSON)
-                .withStatus(ACCEPTED)))
+        "eis responds with 500" must {
+          "return the ErrorResponse failure" in new Test {
+            stubResponse(INTERNAL_SERVER_ERROR)
 
-          await(connector.submitMetadata(amendmentMetadata)) shouldBe None
-
-          verify(
-            putRequestedFor(urlPathEqualTo(amendUrl))
-              .withoutHeader(extraHeader)
-              .withoutHeader(otherHeader))
+            await(connector.submitMetadata(declarationMetadata, bypassCircuitBreaker)) shouldBe Some(
+              EISSendFailure.ErrorResponse(INTERNAL_SERVER_ERROR))
+          }
         }
       }
-    }
 
-    "eis responds with 400" must {
-      "return the ErrorResponse failure" in new Test {
-        stubResponse(BAD_REQUEST)
+    behave like connectorSuccessBehaviour(bypassCircuitBreaker = false)
+    behave like connectorSuccessBehaviour(bypassCircuitBreaker = true)
 
-        await(connector.submitMetadata(declarationMetadata)) shouldBe Some(EISSendFailure.ErrorResponse(BAD_REQUEST))
-      }
-    }
+    behave like connectorErrorBehaviour(bypassCircuitBreaker = false)
+    behave like connectorErrorBehaviour(bypassCircuitBreaker = true)
 
-    "eis responds with 500" must {
-      "return the ErrorResponse failure" in new Test {
-        stubResponse(INTERNAL_SERVER_ERROR)
-
-        await(connector.submitMetadata(declarationMetadata)) shouldBe Some(
-          EISSendFailure.ErrorResponse(INTERNAL_SERVER_ERROR))
-      }
-    }
-
-    "circuit breaker" must {
+    "circuit breaker is not bypasses" must {
       "open after multiple 5xx responses" in new Test {
         stubResponse(SERVICE_UNAVAILABLE)
 
@@ -305,13 +322,13 @@ class EisConnectorSpec
       "open after multiple failed futures" in new Test {
         val extraCalls = 10
 
-        // Wire mock doesn't give much control over exceptions thrown so test via withCircuitBreaker...
+        // Wire mock doesn't give much control over exceptions thrown so test private method...
         (0 until maxCallFailures) foreach { _ =>
-          await(connector.withCircuitBreaker(Future.failed(new IOException()))) shouldBe Some(
+          await(connector.submit(bypassCircuitBreaker = false)(Future.failed(new IOException()))) shouldBe Some(
             EISSendFailure.ExceptionThrown)
         }
         (0 until extraCalls) foreach { _ =>
-          await(connector.withCircuitBreaker(Future.failed(new IOException()))) shouldBe Some(
+          await(connector.submit(bypassCircuitBreaker = false)(Future.failed(new IOException()))) shouldBe Some(
             EISSendFailure.CircuitBreakerOpen)
         }
 
@@ -327,6 +344,28 @@ class EisConnectorSpec
 
         MockPagerDutyLogger.logEISTimeout repeated maxCallFailures
         MockPagerDutyLogger.logEISCircuitBreakerOpen repeated (totalCalls - maxCallFailures)
+      }
+    }
+
+    "circuit breaker is bypassed" must {
+      "not open the circuit breaker on failure" in new Test {
+        stubResponse(SERVICE_UNAVAILABLE)
+
+        val totalCalls: Int =
+          checkCircuitBreakerDoesNotOpen(
+            Some(EISSendFailure.ErrorResponse(SERVICE_UNAVAILABLE)),
+            bypassCircuitBreaker = true)
+
+        MockPagerDutyLogger.logEISFailure repeated totalCalls
+        MockPagerDutyLogger.logEISCircuitBreakerOpen never ()
+      }
+
+      "allow calls through even when the circuit breaker is open" in new Test {
+        stubResponse(SERVICE_UNAVAILABLE)
+        checkCircuitBreakerOpens(EISSendFailure.ErrorResponse(SERVICE_UNAVAILABLE))
+
+        stubResponse(OK)
+        checkCircuitBreakerDoesNotOpen(Some(EISSendFailure.ErrorResponse(OK)), bypassCircuitBreaker = true)
       }
     }
   }

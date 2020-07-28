@@ -99,7 +99,7 @@ class SubmissionReplayService @Inject()(
           submissionId  = submissionId)
 
         for {
-          replayError <- eisConnector.submitMetadata(replayMetadata.metadata)
+          replayError <- eisConnector.submitMetadata(replayMetadata.metadata, bypassCircuitBreaker = true)
           eventSent   <- sendEvent(replayMetadata, replayError)
         } yield {
           if (eventSent) {
