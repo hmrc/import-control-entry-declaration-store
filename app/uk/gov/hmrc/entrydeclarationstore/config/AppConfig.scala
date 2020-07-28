@@ -18,6 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.config
 
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
+import uk.gov.hmrc.entrydeclarationstore.circuitbreaker.CircuitBreakerConfig
 import uk.gov.hmrc.entrydeclarationstore.utils.{Retrying, XmlFormatConfig}
 import uk.gov.hmrc.play.bootstrap.config.{AppName, ServicesConfig}
 
@@ -65,11 +66,7 @@ trait AppConfig {
 
   def headerWhitelist: Seq[String]
 
-  def eisCircuitBreakerMaxFailures: Int
-
-  def eisCircuitBreakerCallTimeout: FiniteDuration
-
-  def eisCircuitBreakerResetTimeout: FiniteDuration
+  def eisCircuitBreakerConfig: CircuitBreakerConfig
 
   def defaultTtl: FiniteDuration
 
@@ -144,11 +141,14 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
 
   lazy val headerWhitelist: Seq[String] = config.get[Seq[String]]("httpHeadersWhitelist")
 
-  lazy val eisCircuitBreakerMaxFailures: Int = eisConfig.get[Int]("circuitBreaker.maxFailures")
-
-  lazy val eisCircuitBreakerCallTimeout: FiniteDuration = getFiniteDuration(eisConfig, "circuitBreaker.callTimeout")
-
-  lazy val eisCircuitBreakerResetTimeout: FiniteDuration = getFiniteDuration(eisConfig, "circuitBreaker.resetTimeout")
+  lazy val eisCircuitBreakerConfig: CircuitBreakerConfig = {
+    CircuitBreakerConfig(
+      maxFailures              = eisConfig.get[Int]("circuitBreaker.maxFailures"),
+      callTimeout              = getFiniteDuration(eisConfig, "circuitBreaker.callTimeout"),
+      closedStateRefreshPeriod = getFiniteDuration(eisConfig, "circuitBreaker.closedStateRefreshPeriod"),
+      openStateRefreshPeriod   = getFiniteDuration(eisConfig, "circuitBreaker.openStateRefreshPeriod")
+    )
+  }
 
   lazy val defaultTtl: FiniteDuration = getFiniteDuration(config.get[Configuration](s"mongodb"), "defaultTtl")
 

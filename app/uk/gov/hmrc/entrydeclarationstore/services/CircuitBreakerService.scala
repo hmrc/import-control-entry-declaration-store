@@ -26,7 +26,7 @@ import scala.concurrent.Future
 @Singleton
 class CircuitBreakerService @Inject()(repo: CircuitBreakerRepo) {
   def resetCircuitBreaker: Future[Unit]                     = repo.resetToDefault
-  def openCircuitBreaker: Future[Unit]                      = repo.setCircuitBreaker(Open)
-  def closeCircuitBreaker: Future[Unit]                     = repo.setCircuitBreaker(Closed)
+  def openCircuitBreaker: Future[Unit]                      = repo.setCircuitBreakerState(Open)
+  def closeCircuitBreaker: Future[Unit]                     = repo.setCircuitBreakerState(Closed)
   def getCircuitBreakerStatus: Future[CircuitBreakerStatus] = repo.getCircuitBreakerStatus
 }

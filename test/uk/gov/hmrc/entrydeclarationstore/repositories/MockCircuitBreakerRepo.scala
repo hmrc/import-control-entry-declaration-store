@@ -14,26 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.entrydeclarationstore.connectors
+package uk.gov.hmrc.entrydeclarationstore.repositories
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
-import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
-import uk.gov.hmrc.entrydeclarationstore.models.EntryDeclarationMetadata
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.entrydeclarationstore.models.CircuitBreakerState
 
 import scala.concurrent.Future
 
-trait MockEisConnector extends MockFactory {
-  val mockEisConnector: EisConnector = mock[EisConnector]
+trait MockCircuitBreakerRepo extends MockFactory {
+  val mockCircuitBreakerRepo: CircuitBreakerRepo = mock[CircuitBreakerRepo]
 
-  object MockEisConnector {
-    def submitMetadata(
-      metadata: EntryDeclarationMetadata,
-      bypassCircuitBreaker: Boolean): CallHandler[Future[Option[EISSendFailure]]] =
-      (mockEisConnector
-        .submitMetadata(_: EntryDeclarationMetadata, _: Boolean)(_: HeaderCarrier, _: LoggingContext))
-        .expects(metadata, bypassCircuitBreaker, *, *)
+  object MockCircuitBreakerRepo {
+    def getCircuitBreakerState: CallHandler[Future[CircuitBreakerState]] =
+      (mockCircuitBreakerRepo.getCircuitBreakerState _).expects()
+
+    def setCircuitBreakerState(circuitBreakerState: CircuitBreakerState): CallHandler[Future[Unit]] =
+      (mockCircuitBreakerRepo.setCircuitBreakerState _).expects(circuitBreakerState)
   }
-
 }

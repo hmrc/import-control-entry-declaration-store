@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.entrydeclarationstore.connectors
 
-import akka.actor.Scheduler
-import akka.pattern.{CircuitBreaker, CircuitBreakerOpenException}
+import akka.pattern.CircuitBreakerOpenException
 import javax.inject.{Inject, Singleton}
 import play.api.http.Status
 import play.api.http.Status._
+import uk.gov.hmrc.entrydeclarationstore.circuitbreaker.CircuitBreaker
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.helpers.HeaderGenerator
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
@@ -34,25 +34,21 @@ import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
 trait EisConnector {
-  def submitMetadata(
-    metadata: EntryDeclarationMetadata)(implicit hc: HeaderCarrier, lc: LoggingContext): Future[Option[EISSendFailure]]
+  def submitMetadata(metadata: EntryDeclarationMetadata, bypassCircuitBreaker: Boolean)(
+    implicit hc: HeaderCarrier,
+    lc: LoggingContext): Future[Option[EISSendFailure]]
 }
 
 @Singleton
 class EisConnectorImpl @Inject()(
   client: HttpClient,
+  circuitBreaker: CircuitBreaker,
   appConfig: AppConfig,
   pagerDutyLogger: PagerDutyLogger,
-  headerGenerator: HeaderGenerator)(implicit scheduler: Scheduler, executionContext: ExecutionContext)
+  headerGenerator: HeaderGenerator)(implicit executionContext: ExecutionContext)
     extends EisConnector {
   val newUrl: String   = s"${appConfig.eisHost}${appConfig.eisNewEnsUrlPath}"
   val amendUrl: String = s"${appConfig.eisHost}${appConfig.eisAmendEnsUrlPath}"
-
-  val circuitBreaker: CircuitBreaker = CircuitBreaker(
-    scheduler,
-    appConfig.eisCircuitBreakerMaxFailures,
-    appConfig.eisCircuitBreakerCallTimeout,
-    appConfig.eisCircuitBreakerResetTimeout)
 
   // This replaces the default HttpReads[HttpResponse] so that we can fully control error handling
   implicit object ResultReads extends HttpReads[HttpResponse] {
@@ -61,10 +57,10 @@ class EisConnectorImpl @Inject()(
 
   implicit val emptyHeaderCarrier: HeaderCarrier = HeaderCarrier()
 
-  def submitMetadata(metadata: EntryDeclarationMetadata)(
+  def submitMetadata(metadata: EntryDeclarationMetadata, bypassCircuitBreaker: Boolean)(
     implicit hc: HeaderCarrier,
     lc: LoggingContext): Future[Option[EISSendFailure]] =
-    withCircuitBreaker {
+    submit(bypassCircuitBreaker) {
       val isAmendment = metadata.movementReferenceNumber.isDefined
       val headers     = headerGenerator.headersForEIS(metadata.submissionId)(hc)
       ContextLogger.info(s"sending to EIS")
@@ -85,10 +81,9 @@ class EisConnectorImpl @Inject()(
       .POST(newUrl, metadata, headers)
   }
 
-  private[connectors] def withCircuitBreaker(code: => Future[HttpResponse])(
+  private[connectors] def submit(bypassCircuitBreaker: Boolean)(code: => Future[HttpResponse])(
     implicit lc: LoggingContext): Future[Option[EISSendFailure]] =
-    circuitBreaker
-      .withCircuitBreaker(code, failureFunction)
+    withCircuitBreakerIfRequired(bypassCircuitBreaker)(code)
       .map { response =>
         val status = response.status
         ContextLogger.info(s"Send to EIS returned status code: $status")
@@ -113,6 +108,9 @@ class EisConnectorImpl @Inject()(
           pagerDutyLogger.logEISError(e)
           Some(EISSendFailure.ExceptionThrown)
       }
+
+  private def withCircuitBreakerIfRequired(bypass: Boolean)(code: => Future[HttpResponse]) =
+    if (bypass) code else circuitBreaker.withCircuitBreaker(code, failureFunction)
 
   private val failureFunction: Try[HttpResponse] => Boolean = {
     case Success(response) =>

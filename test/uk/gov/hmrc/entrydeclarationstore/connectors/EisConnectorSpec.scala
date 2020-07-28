@@ -18,14 +18,13 @@ package uk.gov.hmrc.entrydeclarationstore.connectors
 
 import java.io.IOException
 
-import akka.actor.{ActorSystem, Scheduler}
+import akka.actor.ActorSystem
 import akka.stream.actor.ActorPublisherMessage.Request
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.client.{CountMatchingStrategy, WireMock}
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
-import com.miguno.akka.testing.VirtualTime
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -36,14 +35,17 @@ import play.api.libs.json.Json
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits, Injecting}
 import play.api.{Application, Environment, Mode}
 import play.mvc.Http.Status._
+import uk.gov.hmrc.entrydeclarationstore.circuitbreaker.{CircuitBreaker, CircuitBreakerActor, CircuitBreakerConfig}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.helpers.MockHeaderGenerator
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
-import uk.gov.hmrc.entrydeclarationstore.models.{EntryDeclarationMetadata, MessageType}
+import uk.gov.hmrc.entrydeclarationstore.models.{CircuitBreakerState, EntryDeclarationMetadata, MessageType}
+import uk.gov.hmrc.entrydeclarationstore.repositories.MockCircuitBreakerRepo
 import uk.gov.hmrc.entrydeclarationstore.utils.MockPagerDutyLogger
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -55,6 +57,7 @@ class EisConnectorSpec
     with BeforeAndAfterAll
     with GuiceOneAppPerSuite
     with Injecting
+    with MockCircuitBreakerRepo
     with MockAppConfig
     with MockPagerDutyLogger
     with MockHeaderGenerator
@@ -62,11 +65,15 @@ class EisConnectorSpec
 
   override lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
-    .configure("metrics.enabled" -> "false")
+    .configure(
+      "metrics.enabled"                                                                                    -> "false",
+      "microservice.services.import-control-entry-declaration-eis.circuitBreaker.openStateRefreshPeriod"   -> "1 minute",
+      "microservice.services.import-control-entry-declaration-eis.circuitBreaker.closedStateRefreshPeriod" -> "1 minute"
+    )
     .build()
 
-  val httpClient: HttpClient   = inject[HttpClient]
-  val actorSystem: ActorSystem = inject[ActorSystem]
+  val httpClient: HttpClient            = inject[HttpClient]
+  implicit val actorSystem: ActorSystem = inject[ActorSystem]
 
   // So that we can check that only those headers from the HeaderGenerator are included
   private val extraHeader = "extraHeader"
@@ -80,7 +87,6 @@ class EisConnectorSpec
   private val wireMockServer = new WireMockServer(WireMockConfiguration.wireMockConfig().dynamicPort())
 
   val maxCallFailures                    = 5
-  val resetTimeout: FiniteDuration       = 2.seconds
   val defaultCallTimeout: FiniteDuration = 1.second
 
   var port: Int = _
@@ -94,10 +100,7 @@ class EisConnectorSpec
   override def afterAll(): Unit =
     wireMockServer.stop()
 
-  val virtualTime              = new VirtualTime
-  val mockScheduler: Scheduler = virtualTime.scheduler
-
-  class Test(scheduler: Scheduler = mockScheduler, callTimeout: FiniteDuration = defaultCallTimeout) {
+  class Test(callTimeout: FiniteDuration = defaultCallTimeout) {
     val newUrl   = "/safetyandsecurity/newenssubmission/v1"
     val amendUrl = "/safetyandsecurity/amendsubmission/v1"
 
@@ -105,12 +108,18 @@ class EisConnectorSpec
     MockAppConfig.eisNewEnsUrlPath returns newUrl anyNumberOfTimes ()
     MockAppConfig.eisAmendEnsUrlPath returns amendUrl anyNumberOfTimes ()
 
-    MockAppConfig.eisCircuitBreakerMaxFailures returns maxCallFailures anyNumberOfTimes ()
-    MockAppConfig.eisCircuitBreakerCallTimeout returns callTimeout anyNumberOfTimes ()
-    MockAppConfig.eisCircuitBreakerResetTimeout returns resetTimeout anyNumberOfTimes ()
+    private val circuitBreakerConfig: CircuitBreakerConfig =
+      CircuitBreakerConfig(maxCallFailures, callTimeout, 1.minute, 1.minute)
+
+    MockCircuitBreakerRepo.getCircuitBreakerState returns Future.successful(CircuitBreakerState.Closed) anyNumberOfTimes ()
+
+    val circuitBreaker: CircuitBreaker =
+      new CircuitBreaker(
+        new CircuitBreakerActor.FactoryImpl(mockCircuitBreakerRepo, circuitBreakerConfig),
+        circuitBreakerConfig)
 
     val connector =
-      new EisConnectorImpl(httpClient, mockAppConfig, mockPagerDutyLogger, mockHeaderGenerator)(scheduler, implicitly)
+      new EisConnectorImpl(httpClient, circuitBreaker, mockAppConfig, mockPagerDutyLogger, mockHeaderGenerator)
     val submissionId        = "743aa85b-5077-438f-8f30-01ab2a39d945"
     val mrn: Option[String] = Some("123456789012345678")
 
@@ -158,15 +167,15 @@ class EisConnectorSpec
 
       val extraCalls = 10
 
+      MockCircuitBreakerRepo.setCircuitBreakerState(CircuitBreakerState.Open) returns Future.successful(())
+
       (0 until maxCallFailures) foreach { _ =>
-        await(connector.submitMetadata(declarationMetadata)) shouldBe Some(expectedError)
+        await(connector.submitMetadata(declarationMetadata, bypassCircuitBreaker = false)) shouldBe Some(expectedError)
       }
 
-      // Open state gets set asynchronously - wait before we make futher calls...
-      eventually(connector.circuitBreaker.isOpen shouldBe true)
-
       (0 until extraCalls) foreach { _ =>
-        await(connector.submitMetadata(declarationMetadata)) shouldBe Some(EISSendFailure.CircuitBreakerOpen)
+        await(connector.submitMetadata(declarationMetadata, bypassCircuitBreaker = false)) shouldBe Some(
+          EISSendFailure.CircuitBreakerOpen)
       }
 
       verifyRequestCount(maxCallFailures)
@@ -174,13 +183,15 @@ class EisConnectorSpec
       maxCallFailures + extraCalls
     }
 
-    def checkCircuitBreakerDoesNotOpen(expectedError: Option[EISSendFailure]): Int = {
+    def checkCircuitBreakerDoesNotOpen(
+      expectedError: Option[EISSendFailure],
+      bypassCircuitBreaker: Boolean = false): Int = {
       wireMockServer.resetRequests()
 
       val totalCalls = maxCallFailures + 10
 
       (0 until totalCalls) foreach { _ =>
-        await(connector.submitMetadata(declarationMetadata)) shouldBe expectedError
+        await(connector.submitMetadata(declarationMetadata, bypassCircuitBreaker)) shouldBe expectedError
       }
 
       verifyRequestCount(totalCalls)
@@ -188,70 +199,81 @@ class EisConnectorSpec
       totalCalls
     }
 
-    def advanceTimeToResetCircuitBreaker(): Unit =
-      virtualTime.advance(resetTimeout)
-
     def verifyRequestCount(expected: Int): Unit =
       verify(new CountMatchingStrategy(CountMatchingStrategy.EQUAL_TO, expected), postRequestedFor(urlEqualTo(newUrl)))
   }
 
   "Calling .submitMetadata" when {
-    "eis responds 202 (Accepted)" must {
-      "return None" when {
-        "executing a post for a declaration" in new Test {
-          wireMockServer.stubFor(
-            post(urlPathEqualTo(newUrl))
-              .withHeader(expectedHeader, equalTo(expectedHeaderValue))
-              .withRequestBody(equalToJson(Json.toJson(declarationMetadata).toString))
-              .willReturn(aResponse()
-                .withHeader(CONTENT_TYPE, MimeTypes.JSON)
-                .withStatus(ACCEPTED)))
 
-          await(connector.submitMetadata(declarationMetadata)) shouldBe None
+    def connectorSuccessBehaviour(bypassCircuitBreaker: Boolean): Unit =
+      s"bypassing circuitbreaker is $bypassCircuitBreaker" when {
+        "eis responds 202 (Accepted)" must {
+          "return None" when {
+            "executing a post for a declaration" in new Test {
+              wireMockServer.stubFor(
+                post(urlPathEqualTo(newUrl))
+                  .withHeader(expectedHeader, equalTo(expectedHeaderValue))
+                  .withRequestBody(equalToJson(Json.toJson(declarationMetadata).toString))
+                  .willReturn(aResponse()
+                    .withHeader(CONTENT_TYPE, MimeTypes.JSON)
+                    .withStatus(ACCEPTED)))
 
-          verify(
-            postRequestedFor(urlPathEqualTo(newUrl))
-              .withoutHeader(extraHeader)
-              .withoutHeader(otherHeader))
+              await(connector.submitMetadata(declarationMetadata, bypassCircuitBreaker)) shouldBe None
+
+              verify(
+                postRequestedFor(urlPathEqualTo(newUrl))
+                  .withoutHeader(extraHeader)
+                  .withoutHeader(otherHeader))
+            }
+
+            "executing a put for an amendment" in new Test {
+              wireMockServer.stubFor(
+                put(urlPathEqualTo(amendUrl))
+                  .withHeader(expectedHeader, equalTo(expectedHeaderValue))
+                  .withRequestBody(equalToJson(Json.toJson(amendmentMetadata).toString))
+                  .willReturn(aResponse()
+                    .withHeader(CONTENT_TYPE, MimeTypes.JSON)
+                    .withStatus(ACCEPTED)))
+
+              await(connector.submitMetadata(amendmentMetadata, bypassCircuitBreaker)) shouldBe None
+
+              verify(
+                putRequestedFor(urlPathEqualTo(amendUrl))
+                  .withoutHeader(extraHeader)
+                  .withoutHeader(otherHeader))
+            }
+          }
+        }
+      }
+
+    def connectorErrorBehaviour(bypassCircuitBreaker: Boolean): Unit =
+      s"bypassing circuitbreaker is $bypassCircuitBreaker" when {
+        "eis responds with 400" must {
+          "return the ErrorResponse failure" in new Test {
+            stubResponse(BAD_REQUEST)
+
+            await(connector.submitMetadata(declarationMetadata, bypassCircuitBreaker)) shouldBe Some(
+              EISSendFailure.ErrorResponse(BAD_REQUEST))
+          }
         }
 
-        "executing a put for an amendment" in new Test {
-          wireMockServer.stubFor(
-            put(urlPathEqualTo(amendUrl))
-              .withHeader(expectedHeader, equalTo(expectedHeaderValue))
-              .withRequestBody(equalToJson(Json.toJson(amendmentMetadata).toString))
-              .willReturn(aResponse()
-                .withHeader(CONTENT_TYPE, MimeTypes.JSON)
-                .withStatus(ACCEPTED)))
+        "eis responds with 500" must {
+          "return the ErrorResponse failure" in new Test {
+            stubResponse(INTERNAL_SERVER_ERROR)
 
-          await(connector.submitMetadata(amendmentMetadata)) shouldBe None
-
-          verify(
-            putRequestedFor(urlPathEqualTo(amendUrl))
-              .withoutHeader(extraHeader)
-              .withoutHeader(otherHeader))
+            await(connector.submitMetadata(declarationMetadata, bypassCircuitBreaker)) shouldBe Some(
+              EISSendFailure.ErrorResponse(INTERNAL_SERVER_ERROR))
+          }
         }
       }
-    }
 
-    "eis responds with 400" must {
-      "return the ErrorResponse failure" in new Test {
-        stubResponse(BAD_REQUEST)
+    behave like connectorSuccessBehaviour(bypassCircuitBreaker = false)
+    behave like connectorSuccessBehaviour(bypassCircuitBreaker = true)
 
-        await(connector.submitMetadata(declarationMetadata)) shouldBe Some(EISSendFailure.ErrorResponse(BAD_REQUEST))
-      }
-    }
+    behave like connectorErrorBehaviour(bypassCircuitBreaker = false)
+    behave like connectorErrorBehaviour(bypassCircuitBreaker = true)
 
-    "eis responds with 500" must {
-      "return the ErrorResponse failure" in new Test {
-        stubResponse(INTERNAL_SERVER_ERROR)
-
-        await(connector.submitMetadata(declarationMetadata)) shouldBe Some(
-          EISSendFailure.ErrorResponse(INTERNAL_SERVER_ERROR))
-      }
-    }
-
-    "circuit breaker" must {
+    "circuit breaker is not bypasses" must {
       "open after multiple 5xx responses" in new Test {
         stubResponse(SERVICE_UNAVAILABLE)
 
@@ -300,13 +322,13 @@ class EisConnectorSpec
       "open after multiple failed futures" in new Test {
         val extraCalls = 10
 
-        // Wire mock doesn't give much control over exceptions thrown so test via withCircuitBreaker...
+        // Wire mock doesn't give much control over exceptions thrown so test private method...
         (0 until maxCallFailures) foreach { _ =>
-          await(connector.withCircuitBreaker(Future.failed(new IOException()))) shouldBe Some(
+          await(connector.submit(bypassCircuitBreaker = false)(Future.failed(new IOException()))) shouldBe Some(
             EISSendFailure.ExceptionThrown)
         }
         (0 until extraCalls) foreach { _ =>
-          await(connector.withCircuitBreaker(Future.failed(new IOException()))) shouldBe Some(
+          await(connector.submit(bypassCircuitBreaker = false)(Future.failed(new IOException()))) shouldBe Some(
             EISSendFailure.CircuitBreakerOpen)
         }
 
@@ -314,22 +336,7 @@ class EisConnectorSpec
         MockPagerDutyLogger.logEISCircuitBreakerOpen repeated extraCalls
       }
 
-      "throws exception case" in new Test {
-        val extraCalls = 10
-
-        // Wire mock doesn't give much control over exceptions thrown so test via withCircuitBreaker...
-        (0 until maxCallFailures) foreach { _ =>
-          await(connector.withCircuitBreaker(throw new IOException())) shouldBe Some(EISSendFailure.ExceptionThrown)
-        }
-        (0 until extraCalls) foreach { _ =>
-          await(connector.withCircuitBreaker(throw new IOException())) shouldBe Some(EISSendFailure.CircuitBreakerOpen)
-        }
-
-        MockPagerDutyLogger.logEISError repeated maxCallFailures
-        MockPagerDutyLogger.logEISCircuitBreakerOpen repeated extraCalls
-      }
-
-      "open after multiple timeouts" in new Test(scheduler = actorSystem.scheduler, callTimeout = 1.millis) {
+      "open after multiple timeouts" in new Test(callTimeout = 1.millis) {
         // Use success response code to prove that it's the timeout that triggers the circuit breaker...
         stubDelayedResponse(1.second, ACCEPTED)
 
@@ -340,47 +347,25 @@ class EisConnectorSpec
       }
     }
 
-    "circuit breaker" when {
-      "open" must {
-        "be kept open after a further failed call" in new Test {
-          stubResponse(SERVICE_UNAVAILABLE)
+    "circuit breaker is bypassed" must {
+      "not open the circuit breaker on failure" in new Test {
+        stubResponse(SERVICE_UNAVAILABLE)
 
-          checkCircuitBreakerOpens(EISSendFailure.ErrorResponse(SERVICE_UNAVAILABLE))
+        val totalCalls: Int =
+          checkCircuitBreakerDoesNotOpen(
+            Some(EISSendFailure.ErrorResponse(SERVICE_UNAVAILABLE)),
+            bypassCircuitBreaker = true)
 
-          advanceTimeToResetCircuitBreaker()
+        MockPagerDutyLogger.logEISFailure repeated totalCalls
+        MockPagerDutyLogger.logEISCircuitBreakerOpen never ()
+      }
 
-          // Call once - fail
-          wireMockServer.resetRequests()
-          await(connector.submitMetadata(declarationMetadata)) shouldBe Some(
-            EISSendFailure.ErrorResponse(SERVICE_UNAVAILABLE))
+      "allow calls through even when the circuit breaker is open" in new Test {
+        stubResponse(SERVICE_UNAVAILABLE)
+        checkCircuitBreakerOpens(EISSendFailure.ErrorResponse(SERVICE_UNAVAILABLE))
 
-          verifyRequestCount(1)
-
-          // Call again
-          wireMockServer.resetRequests()
-          await(connector.submitMetadata(declarationMetadata)) shouldBe Some(EISSendFailure.CircuitBreakerOpen)
-
-          // Still open
-          verifyRequestCount(0)
-        }
-
-        "be closed when open after successful call" in new Test {
-          stubResponse(SERVICE_UNAVAILABLE)
-
-          checkCircuitBreakerOpens(EISSendFailure.ErrorResponse(SERVICE_UNAVAILABLE))
-
-          advanceTimeToResetCircuitBreaker()
-
-          // Call once - success
-          wireMockServer.resetRequests()
-          stubResponse(ACCEPTED)
-          await(connector.submitMetadata(declarationMetadata)) shouldBe None
-
-          // Should be closed now
-          await(connector.submitMetadata(declarationMetadata)) shouldBe None
-
-          verifyRequestCount(2)
-        }
+        stubResponse(OK)
+        checkCircuitBreakerDoesNotOpen(Some(EISSendFailure.ErrorResponse(OK)), bypassCircuitBreaker = true)
       }
     }
   }

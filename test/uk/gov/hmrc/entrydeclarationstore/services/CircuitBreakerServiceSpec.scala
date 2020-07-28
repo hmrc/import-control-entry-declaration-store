@@ -29,17 +29,15 @@ import scala.concurrent.Future
 class CircuitBreakerServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures {
 
   class Setup {
-    val mockCircuitBreakerRepo:CircuitBreakerRepo = mock[CircuitBreakerRepo]
-    val circuitBreakerService:CircuitBreakerService = new CircuitBreakerService(mockCircuitBreakerRepo)
-    val expectedResult:Future[Unit] = Future.successful(())
+    val mockCircuitBreakerRepo: CircuitBreakerRepo   = mock[CircuitBreakerRepo]
+    val circuitBreakerService: CircuitBreakerService = new CircuitBreakerService(mockCircuitBreakerRepo)
+    val expectedResult: Future[Unit]                 = Future.successful(())
 
-    def setUpResetCircuitBreakerMock = {
+    def setUpResetCircuitBreakerMock =
       when(mockCircuitBreakerRepo.resetToDefault).thenReturn(expectedResult)
-    }
 
-    def setUpSetCircuitBreakerMock(state: CircuitBreakerState) = {
-      when(mockCircuitBreakerRepo.setCircuitBreaker(state)).thenReturn(expectedResult)
-    }
+    def setUpSetCircuitBreakerMock(state: CircuitBreakerState) =
+      when(mockCircuitBreakerRepo.setCircuitBreakerState(state)).thenReturn(expectedResult)
 
     def setCircuitBreakerStatus(state: CircuitBreakerState) = {
       val testStatus = Future.successful(CircuitBreakerStatus(state, None, None))
@@ -50,7 +48,7 @@ class CircuitBreakerServiceSpec extends UnitSpec with MockitoSugar with ScalaFut
   "CircuitBreakerService" when {
 
     "resetting the Circuit Breaker" should {
-      "call the Circuit Breaker Repo" in new Setup{
+      "call the Circuit Breaker Repo" in new Setup {
         setUpResetCircuitBreakerMock
         val result: Future[Unit] = circuitBreakerService.resetCircuitBreaker
 
@@ -60,11 +58,11 @@ class CircuitBreakerServiceSpec extends UnitSpec with MockitoSugar with ScalaFut
     }
 
     "opening the Circuit Breaker" should {
-      "call the Circuit Breaker Repo" in new Setup{
+      "call the Circuit Breaker Repo" in new Setup {
         setUpSetCircuitBreakerMock(Open)
         val result: Future[Unit] = circuitBreakerService.openCircuitBreaker
 
-        verify(mockCircuitBreakerRepo, times(1)).setCircuitBreaker(Open)
+        verify(mockCircuitBreakerRepo, times(1)).setCircuitBreakerState(Open)
         result shouldBe expectedResult
       }
     }
@@ -74,7 +72,7 @@ class CircuitBreakerServiceSpec extends UnitSpec with MockitoSugar with ScalaFut
         setUpSetCircuitBreakerMock(Closed)
         val result: Future[Unit] = circuitBreakerService.closeCircuitBreaker
 
-        verify(mockCircuitBreakerRepo, times(1)).setCircuitBreaker(Closed)
+        verify(mockCircuitBreakerRepo, times(1)).setCircuitBreakerState(Closed)
         result shouldBe expectedResult
       }
     }

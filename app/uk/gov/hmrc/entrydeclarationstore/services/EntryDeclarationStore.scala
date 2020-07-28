@@ -114,7 +114,7 @@ class EntryDeclarationStoreImpl @Inject()(
       val messageType = MessageType(amendment = mrn.isDefined)
       val metadata    = EntryDeclarationMetadata(submissionId, messageType, transportMode, time, mrn)
 
-      eisConnector.submitMetadata(metadata)
+      eisConnector.submitMetadata(metadata, bypassCircuitBreaker = false)
     }.andThen {
         case Success(result) => sendSubmissionSendToEISReport(input, eori, result)
         case Failure(_) =>
