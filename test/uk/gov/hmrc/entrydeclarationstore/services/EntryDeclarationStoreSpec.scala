@@ -28,6 +28,7 @@ import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, MockEisConn
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models._
 import uk.gov.hmrc.entrydeclarationstore.models.json.MockDeclarationToJsonConverter
+import uk.gov.hmrc.entrydeclarationstore.nrs.{MockNRSConnector, NRSMetadata, NRSSubmission}
 import uk.gov.hmrc.entrydeclarationstore.reporting.{ClientType, MockReportSender, SubmissionReceived, SubmissionSentToEIS}
 import uk.gov.hmrc.entrydeclarationstore.repositories.{EntryDeclarationRepo, MockEntryDeclarationRepo}
 import uk.gov.hmrc.entrydeclarationstore.utils.{MockIdGenerator, MockMetrics, XmlFormatConfig}
@@ -52,7 +53,8 @@ class EntryDeclarationStoreSpec
     with MockAppConfig
     with MockEisConnector
     with IntegrationPatience
-    with MockReportSender {
+    with MockReportSender
+    with MockNRSConnector {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
   val mockedMetrics: Metrics     = new MockMetrics
@@ -133,6 +135,9 @@ class EntryDeclarationStoreSpec
     MockIdGenerator.generateCorrelationId returns correlationId
     MockIdGenerator.generateSubmissionId returns submissionId
 
+    val nrsSubmission: NRSSubmission =
+      NRSSubmission(payload, NRSMetadata(now, ???))
+
     MockAppConfig.logSubmissionPayloads returns false
   }
 
@@ -150,6 +155,8 @@ class EntryDeclarationStoreSpec
         .sendReport(now, submissionReceivedReport(xmlPayload, messageType))
         .returns(Future.successful(()))
       MockReportSender.sendReport(submissionSentToEISReport(messageType, None))
+
+      MockNRSConnector.submit(nrsSubmission)
 
       MockEisConnector
         .submitMetadata(metadataWith(messageType, mrn), bypassCircuitBreaker = false)

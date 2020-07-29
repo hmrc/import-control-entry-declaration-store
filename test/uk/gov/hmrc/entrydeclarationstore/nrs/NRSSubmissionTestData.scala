@@ -24,6 +24,7 @@ import play.api.mvc.{AnyContentAsEmpty, Headers}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.auth.core.retrieve._
 import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, User}
+import uk.gov.hmrc.entrydeclarationstore.circuitbreaker.AuthRequest
 
 trait NRSSubmissionTestData {
 
@@ -31,8 +32,8 @@ trait NRSSubmissionTestData {
                                                 |{
                                                 |  "payload": "payloadBase64==",
                                                 |  "metadata": {
-                                                |    "businessId": "ics",
-                                                |    "notableEvent": "icsSubmission",
+                                                |    "businessId": "safety-and-security",
+                                                |    "notableEvent": "entry-declaration",
                                                 |    "payloadContentType": "application/xml",
                                                 |    "userSubmissionTimestamp": "2018-04-07T12:13:25.156Z",
                                                 |    "identityData": {
@@ -90,12 +91,6 @@ trait NRSSubmissionTestData {
                                                 |  }
                                                 |}""".stripMargin)
 
-  val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest().withHeaders(
-    Headers(
-      "Gov-Client-Public-IP"   -> "198.51.100.0",
-      "Gov-Client-Public-Port" -> "12345"
-    ))
-
   val identityData: IdentityData = IdentityData(
     internalId      = Some("int-id"),
     externalId      = Some("ext-id"),
@@ -139,10 +134,17 @@ trait NRSSubmissionTestData {
     )
   )
 
-  val searchKeys: SearchKeys = SearchKeys("GB123456789")
+  val request: AuthRequest[AnyContentAsEmpty.type] = AuthRequest(
+    FakeRequest().withHeaders(
+      Headers(
+        "Gov-Client-Public-IP"   -> "198.51.100.0",
+        "Gov-Client-Public-Port" -> "12345"
+      )),
+    identityData,
+    "AbCdEf123456")
 
   val metadata: NRSMetadata =
-    NRSMetadata(Instant.parse("2018-04-07T12:13:25.156Z"), identityData, "AbCdEf123456", request.headers, searchKeys)
+    NRSMetadata(Instant.parse("2018-04-07T12:13:25.156Z"), "GB123456789", request)
 
   val submission: NRSSubmission = NRSSubmission("payloadBase64==", metadata)
 }
