@@ -69,14 +69,16 @@ class EntryDeclarationSubmissionController @Inject()(
   private def handleSubmission(mrn: Option[String])(implicit request: UserRequest[String]) = {
     val receivedDateTime = Instant.now(clock)
 
-    service.handleSubmission(request.eori, request.payload, mrn, receivedDateTime, request.clientType).map {
-      case Left(failure @ ErrorWrapper(err)) =>
-        err match {
-          case _: ValidationErrors => BadRequest(failure.toXml)
-          case MRNMismatchError    => BadRequest(failure.toXml)
-          case _                   => InternalServerError(failure.toXml)
-        }
-      case Right(success) => Ok(xmlSuccessResponse(success.correlationId))
-    }
+    service
+      .handleSubmission(request.userDetails.eori, request.body, mrn, receivedDateTime, request.userDetails.clientType)
+      .map {
+        case Left(failure @ ErrorWrapper(err)) =>
+          err match {
+            case _: ValidationErrors => BadRequest(failure.toXml)
+            case MRNMismatchError    => BadRequest(failure.toXml)
+            case _                   => InternalServerError(failure.toXml)
+          }
+        case Right(success) => Ok(xmlSuccessResponse(success.correlationId))
+      }
   }
 }

@@ -34,14 +34,14 @@ case class IdentityData(
   dateOfBirth: Option[LocalDate] = None,
   email: Option[String]          = None,
   agentInformation: AgentInformation,
-  groupIdentifier: Option[String] = None,
-  credentialRole: Option[CredentialRole],
+  groupIdentifier: Option[String]          = None,
+  credentialRole: Option[CredentialRole]   = None,
   mdtpInformation: Option[MdtpInformation] = None,
-  itmpName: ItmpName,
-  itmpDateOfBirth: Option[LocalDate] = None,
-  itmpAddress: ItmpAddress,
-  affinityGroup: Option[AffinityGroup],
-  credentialStrength: Option[String] = None,
+  itmpName: Option[ItmpName]               = None,
+  itmpDateOfBirth: Option[LocalDate]       = None,
+  itmpAddress: Option[ItmpAddress]         = None,
+  affinityGroup: Option[AffinityGroup]     = None,
+  credentialStrength: Option[String]       = None,
   loginTimes: LoginTimes)
 
 object IdentityData {

@@ -110,22 +110,24 @@ trait NRSSubmissionTestData {
     groupIdentifier = Some("GroupId"),
     credentialRole  = Some(User),
     mdtpInformation = Some(MdtpInformation("DeviceId", "SessionId")),
-    itmpName = ItmpName(
-      Some("michael"),
-      Some("h"),
-      Some("mouse")
-    ),
+    itmpName = Some(
+      ItmpName(
+        Some("michael"),
+        Some("h"),
+        Some("mouse")
+      )),
     itmpDateOfBirth = Some(LocalDate.parse("1985-01-01")),
-    itmpAddress = ItmpAddress(
-      line1       = Some("Line 1"),
-      line2       = None,
-      line3       = None,
-      line4       = None,
-      line5       = None,
-      postCode    = Some("NW94HD"),
-      countryName = Some("United Kingdom"),
-      countryCode = Some("UK")
-    ),
+    itmpAddress = Some(
+      ItmpAddress(
+        line1       = Some("Line 1"),
+        line2       = None,
+        line3       = None,
+        line4       = None,
+        line5       = None,
+        postCode    = Some("NW94HD"),
+        countryName = Some("United Kingdom"),
+        countryCode = Some("UK")
+      )),
     affinityGroup      = Some(AffinityGroup.Individual),
     credentialStrength = Some("strong"),
     loginTimes = LoginTimes(

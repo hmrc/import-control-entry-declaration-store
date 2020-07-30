@@ -18,7 +18,6 @@ package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import play.api.mvc._
 import uk.gov.hmrc.entrydeclarationstore.models.StandardError
-import uk.gov.hmrc.entrydeclarationstore.reporting.ClientType
 import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, UserDetails}
 import uk.gov.hmrc.entrydeclarationstore.utils.Timer
 import uk.gov.hmrc.entrydeclarationstore.utils.XmlFormats._
@@ -33,8 +32,7 @@ abstract class AuthorisedController(cc: ControllerComponents) extends BackendCon
   val authService: AuthService
   def eoriCorrectForRequest[A](request: Request[A], eori: String): Boolean
 
-  case class UserRequest[A](eori: String, payload: A, clientType: ClientType, request: Request[A])
-      extends WrappedRequest[A](request)
+  case class UserRequest[A](request: Request[A], userDetails: UserDetails) extends WrappedRequest[A](request)
 
   def authorisedAction(): ActionBuilder[UserRequest, AnyContent] =
     new ActionBuilder[UserRequest, AnyContent] {
@@ -51,9 +49,9 @@ abstract class AuthorisedController(cc: ControllerComponents) extends BackendCon
           implicit val headerCarrier: HeaderCarrier = hc(request)
 
           authService.authenticate().flatMap {
-            case Some(UserDetails(eori, clientType)) =>
-              if (eoriCorrectForRequest(request, eori)) {
-                block(UserRequest(eori, request.body, clientType, request))
+            case Some(userDetails) =>
+              if (eoriCorrectForRequest(request, userDetails.eori)) {
+                block(UserRequest(request, userDetails))
               } else {
                 error(StandardError.forbidden)
               }
