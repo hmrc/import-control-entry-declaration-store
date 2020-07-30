@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.entrydeclarationstore.utils
 
-import scala.xml.NodeSeq
-
 object EoriUtils {
 
   private val eoriRegex = raw"(?s)<MesSenMES3>(.*)</MesSenMES3>".r.unanchored
