@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
+import java.time.{Clock, Instant}
+
 import com.kenshoo.play.metrics.Metrics
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, ControllerComponents, Request}
@@ -34,6 +36,7 @@ class EntryDeclarationSubmissionController @Inject()(
   cc: ControllerComponents,
   service: EntryDeclarationStore,
   authService: AuthService,
+  clock: Clock,
   override val metrics: Metrics
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
@@ -62,7 +65,8 @@ class EntryDeclarationSubmissionController @Inject()(
   private def handleSubmission(mrn: Option[String])(implicit request: Request[String]) =
     authenticate.flatMap {
       case Right((eori, clientType)) =>
-        service.handleSubmission(eori, request.body, mrn, clientType).map {
+        val receivedDateTime = Instant.now(clock)
+        service.handleSubmission(eori, request.body, mrn, receivedDateTime, clientType).map {
           case Left(failure @ ErrorWrapper(err)) =>
             err match {
               case _: ValidationErrors => BadRequest(failure.toXml)

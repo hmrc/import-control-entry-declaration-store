@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
+import java.time.{Clock, Instant, ZoneOffset}
+
 import com.kenshoo.play.metrics.Metrics
 import play.api.http.MimeTypes
 import play.api.mvc.{Request, Result}
@@ -59,10 +61,14 @@ class EntryDeclarationSubmissionControllerSpec extends UnitSpec with MockEntryDe
 
   val mockedMetrics: Metrics = new MockMetrics
 
+  val now: Instant = Instant.now
+  val clock: Clock = Clock.fixed(now, ZoneOffset.UTC)
+
   private val controller = new EntryDeclarationSubmissionController(
     Helpers.stubControllerComponents(),
     mockEntryDeclarationStore,
     mockAuthService,
+    clock,
     mockedMetrics)
 
   val validationErrors: ValidationErrors = ValidationErrors(
@@ -160,7 +166,7 @@ class EntryDeclarationSubmissionControllerSpec extends UnitSpec with MockEntryDe
       "The submission fails with ValidationErrors" in {
         MockAuthService.authenticate() returns Some((eori, clientType))
         MockEntryDeclarationStore
-          .handleSubmission(eori, payload.toString(), mrn, clientType)
+          .handleSubmission(eori, payload.toString(), mrn, now, clientType)
           .returns(Future.successful(Left(ErrorWrapper(validationErrors))))
 
         val result: Future[Result] = handler(fakeRequest)
@@ -178,7 +184,7 @@ class EntryDeclarationSubmissionControllerSpec extends UnitSpec with MockEntryDe
       "The submission fails with a ServerError (e.g. database problem)" in {
         MockAuthService.authenticate() returns Some((eori, clientType))
         MockEntryDeclarationStore
-          .handleSubmission(eori, payload.toString(), mrn, clientType)
+          .handleSubmission(eori, payload.toString(), mrn, now, clientType)
           .returns(Future.successful(Left(ErrorWrapper(ServerError))))
         val result: Future[Result] = handler(fakeRequest)
 
@@ -198,7 +204,7 @@ class EntryDeclarationSubmissionControllerSpec extends UnitSpec with MockEntryDe
       "The submission is handled successfully" in {
         MockAuthService.authenticate() returns Some((eori, clientType))
         MockEntryDeclarationStore
-          .handleSubmission(eori, payload.toString(), None, clientType)
+          .handleSubmission(eori, payload.toString(), None, now, clientType)
           .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
 
         val result: Future[Result] = controller.postSubmission(fakeRequest)
@@ -220,7 +226,7 @@ class EntryDeclarationSubmissionControllerSpec extends UnitSpec with MockEntryDe
       "The submission is handled successfully" in {
         MockAuthService.authenticate() returns Some((eori, clientType))
         MockEntryDeclarationStore
-          .handleSubmission(eori, payload.toString(), Some(mrn), clientType)
+          .handleSubmission(eori, payload.toString(), Some(mrn), now, clientType)
           .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
         val result = controller.putAmendment(mrn)(fakeRequest)
 
@@ -236,7 +242,7 @@ class EntryDeclarationSubmissionControllerSpec extends UnitSpec with MockEntryDe
       "The MRN in the body doesnt match the MRN in URL" in {
         MockAuthService.authenticate() returns Some((eori, clientType))
         MockEntryDeclarationStore
-          .handleSubmission(eori, payload.toString(), Some(mrn), clientType)
+          .handleSubmission(eori, payload.toString(), Some(mrn), now, clientType)
           .returns(Future.successful(Left(ErrorWrapper(MRNMismatchError))))
 
         val result = controller.putAmendment(mrn)(fakeRequest)

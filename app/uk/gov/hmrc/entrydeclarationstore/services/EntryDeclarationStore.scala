@@ -40,8 +40,12 @@ import scala.util.{Failure, Success}
 import scala.xml.NodeSeq
 
 trait EntryDeclarationStore {
-  def handleSubmission(eori: String, payload: String, mrn: Option[String], clientType: ClientType)(
-    implicit hc: HeaderCarrier): Future[Either[ErrorWrapper[_], SuccessResponse]]
+  def handleSubmission(
+    eori: String,
+    payload: String,
+    mrn: Option[String],
+    receivedDateTime: Instant,
+    clientType: ClientType)(implicit hc: HeaderCarrier): Future[Either[ErrorWrapper[_], SuccessResponse]]
 }
 
 @Singleton
@@ -61,13 +65,16 @@ class EntryDeclarationStoreImpl @Inject()(
     with EventLogger
     with MetricsReporter {
 
-  def handleSubmission(eori: String, payload: String, mrn: Option[String], clientType: ClientType)(
-    implicit hc: HeaderCarrier): Future[Either[ErrorWrapper[_], SuccessResponse]] =
+  def handleSubmission(
+    eori: String,
+    payload: String,
+    mrn: Option[String],
+    receivedDateTime: Instant,
+    clientType: ClientType)(implicit hc: HeaderCarrier): Future[Either[ErrorWrapper[_], SuccessResponse]] =
     timeFuture("Service handleSubmission", "handleSubmission.total") {
 
       val correlationId          = idGenerator.generateCorrelationId
       val submissionId           = idGenerator.generateSubmissionId
-      val receivedDateTime       = Instant.now(clock)
       val input: InputParameters = InputParameters(mrn, submissionId, correlationId, receivedDateTime)
 
       implicit val lc: LoggingContext =
