@@ -25,7 +25,7 @@ import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, SuccessResponse}
 import uk.gov.hmrc.entrydeclarationstore.reporting.ClientType
-import uk.gov.hmrc.entrydeclarationstore.services.{MRNMismatchError, MockAuthService, MockEntryDeclarationStore, ServerError}
+import uk.gov.hmrc.entrydeclarationstore.services._
 import uk.gov.hmrc.entrydeclarationstore.utils.{MockMetrics, XmlFormatConfig}
 import uk.gov.hmrc.entrydeclarationstore.validation.{ValidationError, ValidationErrors}
 import uk.gov.hmrc.play.test.UnitSpec
@@ -137,17 +137,17 @@ class EntryDeclarationSubmissionControllerSpec extends UnitSpec with MockEntryDe
 
     "return 403" when {
       "eori does not match that from auth service" in {
-        MockAuthService.authenticate() returns Some(("OTHEREORI", clientType))
+        MockAuthService.authenticate() returns Some(UserDetails("OTHEREORI", clientType))
         check(fakeRequest, FORBIDDEN, "FORBIDDEN")
       }
 
       "empty eori element (MesSenMES3) in xml (so that level 2 validation for this is not preempted)" in {
-        MockAuthService.authenticate() returns Some((eori, clientType))
+        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType))
         check(FakeRequest().withBody(payloadNoEori.toString), FORBIDDEN, "FORBIDDEN")
       }
 
       "no eori element (MesSenMES3) in xml (so that level 2 validation for this is not preempted)" in {
-        MockAuthService.authenticate() returns Some((eori, clientType))
+        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType))
         check(FakeRequest().withBody(payloadBlankEori.toString), FORBIDDEN, "FORBIDDEN")
       }
     }
@@ -164,7 +164,7 @@ class EntryDeclarationSubmissionControllerSpec extends UnitSpec with MockEntryDe
   def validatingEndpoint(mrn: Option[String], handler: Request[String] => Future[Result]): Unit = {
     "Return BAD_REQUEST" when {
       "The submission fails with ValidationErrors" in {
-        MockAuthService.authenticate() returns Some((eori, clientType))
+        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType))
         MockEntryDeclarationStore
           .handleSubmission(eori, payload.toString(), mrn, now, clientType)
           .returns(Future.successful(Left(ErrorWrapper(validationErrors))))
@@ -182,7 +182,7 @@ class EntryDeclarationSubmissionControllerSpec extends UnitSpec with MockEntryDe
 
     "Return INTERNAL_SERVER_ERROR" when {
       "The submission fails with a ServerError (e.g. database problem)" in {
-        MockAuthService.authenticate() returns Some((eori, clientType))
+        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType))
         MockEntryDeclarationStore
           .handleSubmission(eori, payload.toString(), mrn, now, clientType)
           .returns(Future.successful(Left(ErrorWrapper(ServerError))))
@@ -202,7 +202,7 @@ class EntryDeclarationSubmissionControllerSpec extends UnitSpec with MockEntryDe
 
     "Return OK" when {
       "The submission is handled successfully" in {
-        MockAuthService.authenticate() returns Some((eori, clientType))
+        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType))
         MockEntryDeclarationStore
           .handleSubmission(eori, payload.toString(), None, now, clientType)
           .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
@@ -224,7 +224,7 @@ class EntryDeclarationSubmissionControllerSpec extends UnitSpec with MockEntryDe
   "EntryDeclarationSubmissionController putAmendment" should {
     "Return OK" when {
       "The submission is handled successfully" in {
-        MockAuthService.authenticate() returns Some((eori, clientType))
+        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType))
         MockEntryDeclarationStore
           .handleSubmission(eori, payload.toString(), Some(mrn), now, clientType)
           .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
@@ -240,7 +240,7 @@ class EntryDeclarationSubmissionControllerSpec extends UnitSpec with MockEntryDe
 
     "Return MRNMismatch Bad Request error" when {
       "The MRN in the body doesnt match the MRN in URL" in {
-        MockAuthService.authenticate() returns Some((eori, clientType))
+        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType))
         MockEntryDeclarationStore
           .handleSubmission(eori, payload.toString(), Some(mrn), now, clientType)
           .returns(Future.successful(Left(ErrorWrapper(MRNMismatchError))))

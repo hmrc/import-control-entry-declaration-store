@@ -29,6 +29,8 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
+case class UserDetails(eori: String, clientType: ClientType)
+
 @Singleton
 class AuthService @Inject()(
   val authConnector: AuthConnector,
@@ -37,14 +39,12 @@ class AuthService @Inject()(
 
   private val X_CLIENT_ID = "X-Client-Id"
 
-  type EoriAndClientType = (String, ClientType)
-
   sealed trait AuthError
   case object NoClientId extends AuthError
   case object NoEori extends AuthError
   case object AuthFail extends AuthError
 
-  def authenticate()(implicit hc: HeaderCarrier): Future[Option[EoriAndClientType]] =
+  def authenticate()(implicit hc: HeaderCarrier): Future[Option[UserDetails]] =
     authCSP
       .recoverWith {
         case AuthFail | NoClientId => authNonCSP
@@ -52,7 +52,7 @@ class AuthService @Inject()(
       .toOption
       .value
 
-  private def authCSP(implicit hc: HeaderCarrier): EitherT[Future, AuthError, EoriAndClientType] = {
+  private def authCSP(implicit hc: HeaderCarrier): EitherT[Future, AuthError, UserDetails] = {
     def auth: Future[Option[Unit]] =
       authorised(AuthProviders(AuthProvider.PrivilegedApplication))
         .retrieve(EmptyRetrieval) { _ =>
@@ -69,10 +69,10 @@ class AuthService @Inject()(
       clientId <- EitherT.fromOption[Future](hc.headers.find(_._1 == X_CLIENT_ID).map(_._2), NoClientId)
       _        <- EitherT.fromOptionF(auth, AuthFail)
       eori     <- EitherT.fromOptionF(apiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId), NoEori: AuthError)
-    } yield (eori, ClientType.CSP)
+    } yield UserDetails(eori, ClientType.CSP)
   }
 
-  private def authNonCSP(implicit hc: HeaderCarrier): EitherT[Future, AuthError, EoriAndClientType] =
+  private def authNonCSP(implicit hc: HeaderCarrier): EitherT[Future, AuthError, UserDetails] =
     EitherT(authorised(AuthProviders(AuthProvider.GovernmentGateway))
       .retrieve(allEnrolments) { usersEnrolments =>
         val icsEnrolments =
@@ -86,7 +86,7 @@ class AuthService @Inject()(
         val eori = eoris.headOption
 
         val result = eori match {
-          case Some(eori) => (eori, ClientType.GGW).asRight
+          case Some(eori) => UserDetails(eori, ClientType.GGW).asRight
           case None       => NoEori.asLeft
         }
 

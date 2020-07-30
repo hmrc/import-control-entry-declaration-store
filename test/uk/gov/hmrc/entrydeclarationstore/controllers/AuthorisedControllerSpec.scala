@@ -26,7 +26,7 @@ import play.api.test.Helpers._
 import play.api.test.{FakeRequest, ResultExtractors}
 import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.entrydeclarationstore.reporting.ClientType
-import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, MockAuthService}
+import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, MockAuthService, UserDetails}
 import uk.gov.hmrc.entrydeclarationstore.utils.{EventLogger, MockMetrics, Timer}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.logging.Authorization
@@ -94,7 +94,7 @@ class AuthorisedControllerSpec
 
     "the user is authorised" should {
       "return a 200" in new Test {
-        MockAuthService.authenticate() returns Future.successful(Some((eori, clientType)))
+        MockAuthService.authenticate() returns Future.successful(Some(UserDetails(eori, clientType)))
 
         private val result: Future[Result] = controller.action()(request(bodyContainingEori))
         status(await(result)) shouldBe OK
@@ -114,7 +114,7 @@ class AuthorisedControllerSpec
 
     "auth eori does not match that in the request payload" should {
       "return a 403" in new Test {
-        MockAuthService.authenticate() returns Future.successful(Some((eori, clientType)))
+        MockAuthService.authenticate() returns Future.successful(Some(UserDetails(eori, clientType)))
 
         private val result: Future[Result] = controller.action()(request(bodyContainingOtherEori))
         status(await(result))                                     shouldBe FORBIDDEN
@@ -127,7 +127,7 @@ class AuthorisedControllerSpec
   "AuthController" should {
     "use the authorization header to send to auth service" in new Test {
       val hcCapture: CaptureOne[HeaderCarrier] = CaptureOne[HeaderCarrier]()
-      MockAuthService.authenticateCapture()(hcCapture) returns Future.successful(Some((eori, clientType)))
+      MockAuthService.authenticateCapture()(hcCapture) returns Future.successful(Some(UserDetails(eori, clientType)))
       controller.action()(request(bodyContainingEori))
 
       hcCapture.value.authorization shouldBe Some(Authorization(bearerToken))

@@ -74,7 +74,7 @@ class AuthServiceSpec
             stubCSPAuth returns Future.successful(())
 
             MockApiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId) returns Some(eori)
-            service.authenticate().futureValue shouldBe Some((eori, ClientType.CSP))
+            service.authenticate().futureValue shouldBe Some(UserDetails(eori, ClientType.CSP))
           }
         }
 
@@ -106,7 +106,7 @@ class AuthServiceSpec
         "ICS enrolment with an eori" in {
           stubbings()
           stubAuth returns Enrolments(Set(validICSEnrolment(eori)))
-          service.authenticate().futureValue shouldBe Some((eori, ClientType.GGW))
+          service.authenticate().futureValue shouldBe Some(UserDetails(eori, ClientType.GGW))
         }
       }
 

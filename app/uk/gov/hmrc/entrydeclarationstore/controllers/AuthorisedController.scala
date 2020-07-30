@@ -19,7 +19,7 @@ package uk.gov.hmrc.entrydeclarationstore.controllers
 import play.api.mvc._
 import uk.gov.hmrc.entrydeclarationstore.models.StandardError
 import uk.gov.hmrc.entrydeclarationstore.reporting.ClientType
-import uk.gov.hmrc.entrydeclarationstore.services.AuthService
+import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, UserDetails}
 import uk.gov.hmrc.entrydeclarationstore.utils.Timer
 import uk.gov.hmrc.entrydeclarationstore.utils.XmlFormats._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -51,7 +51,7 @@ abstract class AuthorisedController(cc: ControllerComponents) extends BackendCon
           implicit val headerCarrier: HeaderCarrier = hc(request)
 
           authService.authenticate().flatMap {
-            case Some((eori, clientType)) =>
+            case Some(UserDetails(eori, clientType)) =>
               if (eoriCorrectForRequest(request, eori)) {
                 block(UserRequest(eori, request.body, clientType, request))
               } else {
