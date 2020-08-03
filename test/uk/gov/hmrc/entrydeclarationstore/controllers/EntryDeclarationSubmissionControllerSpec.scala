@@ -24,7 +24,7 @@ import play.api.mvc.{Request, Result}
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, SuccessResponse}
-import uk.gov.hmrc.entrydeclarationstore.nrs.NRSSubmissionTestData
+import uk.gov.hmrc.entrydeclarationstore.nrs.{MockNRSService, NRSMetadata, NRSMetadataTestData, NRSResponse, NRSSubmisionFailure, NRSSubmission}
 import uk.gov.hmrc.entrydeclarationstore.reporting.ClientType
 import uk.gov.hmrc.entrydeclarationstore.services._
 import uk.gov.hmrc.entrydeclarationstore.utils.{MockMetrics, XmlFormatConfig}
@@ -32,14 +32,15 @@ import uk.gov.hmrc.entrydeclarationstore.validation.{ValidationError, Validation
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{Future, Promise}
 import scala.xml.{XML => _, _}
 
 class EntryDeclarationSubmissionControllerSpec
     extends UnitSpec
     with MockEntryDeclarationStore
     with MockAuthService
-    with NRSSubmissionTestData {
+    with MockNRSService
+    with NRSMetadataTestData {
 
   val eori                   = "GB1234567890"
   val mrn                    = "mrn"
@@ -52,6 +53,8 @@ class EntryDeclarationSubmissionControllerSpec
     <AnyXml>><MesSenMES3>{eori}</MesSenMES3></AnyXml>
   // @formatter:on
 
+  private val payloadString: String = payload.toString
+
   val payloadNoEori: NodeSeq =
     // @formatter:off
     <AnyXml><MesSenMES3/></AnyXml>
@@ -62,17 +65,19 @@ class EntryDeclarationSubmissionControllerSpec
     <AnyXml></AnyXml>
   // @formatter:on
 
-  private val fakeRequest = FakeRequest().withBody(payload.toString)
+  private val fakeRequest = FakeRequest().withBody(payloadString)
 
   val mockedMetrics: Metrics = new MockMetrics
 
-  val now: Instant = Instant.now
-  val clock: Clock = Clock.fixed(now, ZoneOffset.UTC)
+  val now: Instant                 = Instant.now
+  val clock: Clock                 = Clock.fixed(now, ZoneOffset.UTC)
+  val nrsSubmission: NRSSubmission = NRSSubmission(payloadString, NRSMetadata(now, eori, identityData, fakeRequest))
 
   private val controller = new EntryDeclarationSubmissionController(
     Helpers.stubControllerComponents(),
     mockEntryDeclarationStore,
     mockAuthService,
+    mockNRSService,
     clock,
     mockedMetrics)
 
@@ -171,7 +176,7 @@ class EntryDeclarationSubmissionControllerSpec
       "The submission fails with ValidationErrors" in {
         MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, identityData))
         MockEntryDeclarationStore
-          .handleSubmission(eori, payload.toString(), mrn, now, clientType)
+          .handleSubmission(eori, payloadString, mrn, now, clientType)
           .returns(Future.successful(Left(ErrorWrapper(validationErrors))))
 
         val result: Future[Result] = handler(fakeRequest)
@@ -189,7 +194,7 @@ class EntryDeclarationSubmissionControllerSpec
       "The submission fails with a ServerError (e.g. database problem)" in {
         MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, identityData))
         MockEntryDeclarationStore
-          .handleSubmission(eori, payload.toString(), mrn, now, clientType)
+          .handleSubmission(eori, payloadString, mrn, now, clientType)
           .returns(Future.successful(Left(ErrorWrapper(ServerError))))
         val result: Future[Result] = handler(fakeRequest)
 
@@ -203,14 +208,32 @@ class EntryDeclarationSubmissionControllerSpec
     }
   }
 
-  "EntryDeclarationSubmissionController postSubmission" should {
+  def nrsSubmittingEndpoint(mrn: Option[String], handler: Request[String] => Future[Result]): Unit =
+    "submission is successful" should {
+      "not wait until NRS submission completes" in {
+        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, identityData))
+        MockEntryDeclarationStore
+          .handleSubmission(eori, payloadString, mrn, now, clientType)
+          .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
 
+        val nrsPromise = Promise[Either[NRSSubmisionFailure, NRSResponse]]
+        MockNRSConnector.submit(nrsSubmission) returns nrsPromise.future
+
+        val result: Future[Result] = handler(fakeRequest)
+
+        status(result) shouldBe OK
+      }
+    }
+
+  "EntryDeclarationSubmissionController postSubmission" should {
     "Return OK" when {
       "The submission is handled successfully" in {
         MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, identityData))
         MockEntryDeclarationStore
-          .handleSubmission(eori, payload.toString(), None, now, clientType)
+          .handleSubmission(eori, payloadString, None, now, clientType)
           .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
+
+        MockNRSConnector.submit(nrsSubmission)
 
         val result: Future[Result] = controller.postSubmission(fakeRequest)
 
@@ -224,6 +247,8 @@ class EntryDeclarationSubmissionControllerSpec
     behave like validatingEndpoint(mrn = None, controller.postSubmission(_))
 
     behave like authenticatingEndpoint(controller.postSubmission(_))
+
+    behave like nrsSubmittingEndpoint(mrn = None, controller.postSubmission(_))
   }
 
   "EntryDeclarationSubmissionController putAmendment" should {
@@ -231,8 +256,11 @@ class EntryDeclarationSubmissionControllerSpec
       "The submission is handled successfully" in {
         MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, identityData))
         MockEntryDeclarationStore
-          .handleSubmission(eori, payload.toString(), Some(mrn), now, clientType)
+          .handleSubmission(eori, payloadString, Some(mrn), now, clientType)
           .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
+
+        MockNRSConnector.submit(nrsSubmission)
+
         val result = controller.putAmendment(mrn)(fakeRequest)
 
         status(result) shouldBe OK
@@ -247,7 +275,7 @@ class EntryDeclarationSubmissionControllerSpec
       "The MRN in the body doesnt match the MRN in URL" in {
         MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, identityData))
         MockEntryDeclarationStore
-          .handleSubmission(eori, payload.toString(), Some(mrn), now, clientType)
+          .handleSubmission(eori, payloadString, Some(mrn), now, clientType)
           .returns(Future.successful(Left(ErrorWrapper(MRNMismatchError))))
 
         val result = controller.putAmendment(mrn)(fakeRequest)
@@ -264,5 +292,7 @@ class EntryDeclarationSubmissionControllerSpec
     behave like validatingEndpoint(mrn = Some(mrn), controller.putAmendment(mrn)(_))
 
     behave like authenticatingEndpoint(controller.putAmendment(mrn)(_))
+
+    behave like nrsSubmittingEndpoint(mrn = Some(mrn), controller.putAmendment(mrn)(_))
   }
 }

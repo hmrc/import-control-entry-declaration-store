@@ -25,7 +25,7 @@ import play.api.mvc._
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, ResultExtractors}
 import play.mvc.Http.MimeTypes
-import uk.gov.hmrc.entrydeclarationstore.nrs.NRSSubmissionTestData
+import uk.gov.hmrc.entrydeclarationstore.nrs.NRSMetadataTestData
 import uk.gov.hmrc.entrydeclarationstore.reporting.ClientType
 import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, MockAuthService, UserDetails}
 import uk.gov.hmrc.entrydeclarationstore.utils.{EventLogger, MockMetrics, Timer}
@@ -43,7 +43,7 @@ class AuthorisedControllerSpec
     with ResultExtractors
     with ScalaFutures
     with MockAuthService
-    with NRSSubmissionTestData {
+    with NRSMetadataTestData {
 
   lazy val cc: ControllerComponents = stubControllerComponents()
   lazy val bearerToken              = "Bearer Token"

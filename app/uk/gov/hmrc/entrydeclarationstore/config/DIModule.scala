@@ -25,6 +25,7 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.entrydeclarationstore.circuitbreaker.{CircuitBreakerActor, CircuitBreakerConfig}
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EisConnector, EisConnectorImpl}
+import uk.gov.hmrc.entrydeclarationstore.nrs.{NRSConnector, NRSConnectorImpl}
 import uk.gov.hmrc.entrydeclarationstore.reporting.events.{EventConnector, EventConnectorImpl}
 import uk.gov.hmrc.entrydeclarationstore.repositories.{CircuitBreakerRepo, CircuitBreakerRepoImpl, EntryDeclarationRepo, EntryDeclarationRepoImpl}
 import uk.gov.hmrc.entrydeclarationstore.services.{EntryDeclarationStore, EntryDeclarationStoreImpl}
@@ -44,6 +45,7 @@ class DIModule extends AbstractModule {
     bind(classOf[EisConnector]).to(classOf[EisConnectorImpl])
     bind(classOf[AuthConnector]).to(classOf[DefaultAuthConnector])
     bind(classOf[EventConnector]).to(classOf[EventConnectorImpl])
+    bind(classOf[NRSConnector]).to(classOf[NRSConnectorImpl])
     bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
     bind(classOf[CircuitBreakerActor.Factory]).to(classOf[CircuitBreakerActor.FactoryImpl])
   }

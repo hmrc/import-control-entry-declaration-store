@@ -23,7 +23,7 @@ import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve._
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
 import uk.gov.hmrc.entrydeclarationstore.connectors.{MockApiSubscriptionFieldsConnector, MockAuthConnector}
-import uk.gov.hmrc.entrydeclarationstore.nrs.NRSSubmissionTestData
+import uk.gov.hmrc.entrydeclarationstore.nrs.NRSMetadataTestData
 import uk.gov.hmrc.entrydeclarationstore.reporting.ClientType
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
@@ -37,7 +37,7 @@ class AuthServiceSpec
     with MockApiSubscriptionFieldsConnector
     with ScalaFutures
     with Inside
-    with NRSSubmissionTestData {
+    with NRSMetadataTestData {
 
   implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = Span(500, Millis))
 

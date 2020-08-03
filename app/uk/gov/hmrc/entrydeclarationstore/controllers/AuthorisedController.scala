@@ -29,10 +29,11 @@ import scala.concurrent.{ExecutionContext, Future}
 abstract class AuthorisedController(cc: ControllerComponents) extends BackendController(cc) {
   self: Timer =>
 
-  val authService: AuthService
-  def eoriCorrectForRequest[A](request: Request[A], eori: String): Boolean
-
   case class UserRequest[A](request: Request[A], userDetails: UserDetails) extends WrappedRequest[A](request)
+
+  val authService: AuthService
+
+  def eoriCorrectForRequest[A](request: Request[A], eori: String): Boolean
 
   def authorisedAction(): ActionBuilder[UserRequest, AnyContent] =
     new ActionBuilder[UserRequest, AnyContent] {

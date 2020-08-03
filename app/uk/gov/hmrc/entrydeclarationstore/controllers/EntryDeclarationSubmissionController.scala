@@ -21,10 +21,13 @@ import java.time.{Clock, Instant}
 import com.kenshoo.play.metrics.Metrics
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, ControllerComponents, Request}
+import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.ErrorWrapper
+import uk.gov.hmrc.entrydeclarationstore.nrs.{NRSMetadata, NRSService, NRSSubmission}
 import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, EntryDeclarationStore, MRNMismatchError}
 import uk.gov.hmrc.entrydeclarationstore.utils.{EoriUtils, EventLogger, Timer}
 import uk.gov.hmrc.entrydeclarationstore.validation.ValidationErrors
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext
 import scala.xml.Elem
@@ -34,6 +37,7 @@ class EntryDeclarationSubmissionController @Inject()(
   cc: ControllerComponents,
   service: EntryDeclarationStore,
   val authService: AuthService,
+  nrsService: NRSService,
   clock: Clock,
   override val metrics: Metrics
 )(implicit ec: ExecutionContext)
@@ -78,7 +82,19 @@ class EntryDeclarationSubmissionController @Inject()(
             case MRNMismatchError    => BadRequest(failure.toXml)
             case _                   => InternalServerError(failure.toXml)
           }
-        case Right(success) => Ok(xmlSuccessResponse(success.correlationId))
+        case Right(success) =>
+          submitToNRS(request, receivedDateTime)
+          Ok(xmlSuccessResponse(success.correlationId))
       }
+  }
+
+  private def submitToNRS(request: UserRequest[String], receivedDateTime: Instant)(implicit hc: HeaderCarrier) = {
+    implicit val lc: LoggingContext = LoggingContext(eori = Some(request.userDetails.eori))
+
+    val submission = NRSSubmission(
+      request.body,
+      NRSMetadata(receivedDateTime, request.userDetails.eori, request.userDetails.identityData, request))
+
+    nrsService.submit(submission)
   }
 }

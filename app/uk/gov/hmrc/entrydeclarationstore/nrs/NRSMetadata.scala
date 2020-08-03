@@ -20,7 +20,7 @@ import java.time.Instant
 
 import play.api.http.MimeTypes
 import play.api.libs.json.{JsValue, Json, Writes}
-import uk.gov.hmrc.entrydeclarationstore.circuitbreaker.AuthRequest
+import play.api.mvc.RequestHeader
 
 case class NRSMetadata(
   businessId: String,
@@ -38,15 +38,16 @@ object NRSMetadata {
   def apply(
     userSubmissionTimestamp: Instant,
     eori: String,
-    request: AuthRequest[_]
+    identityData: IdentityData,
+    request: RequestHeader
   ): NRSMetadata =
     NRSMetadata(
       businessId              = "safety-and-security",
       notableEvent            = "entry-declaration",
       payloadContentType      = MimeTypes.XML,
       userSubmissionTimestamp = userSubmissionTimestamp,
-      identityData            = request.identityData,
-      userAuthToken           = request.token,
+      identityData            = identityData,
+      userAuthToken           = request.headers.get("Authorization").getOrElse(""),
       headerData              = Json.toJson(request.headers.toMap.map(h => h._1 -> h._2.head)),
       searchKeys              = SearchKeys(eori)
     )

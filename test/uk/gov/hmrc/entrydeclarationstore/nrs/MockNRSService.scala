@@ -16,22 +16,18 @@
 
 package uk.gov.hmrc.entrydeclarationstore.nrs
 
-import java.nio.charset.StandardCharsets
-import java.util.Base64
+import org.scalamock.handlers.CallHandler
+import org.scalamock.scalatest.MockFactory
+import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
+import uk.gov.hmrc.http.HeaderCarrier
 
-import play.api.libs.functional.syntax._
-import play.api.libs.json.{JsPath, OWrites}
+import scala.concurrent.Future
 
-case class NRSSubmission(payload: String, metadata: NRSMetadata)
+trait MockNRSService extends MockFactory {
+  val mockNRSService: NRSService = mock[NRSService]
 
-object NRSSubmission {
-
-  private val encoder = Base64.getEncoder
-
-  private def encodeBase64(payload: String) = encoder.encodeToString(payload.getBytes(StandardCharsets.UTF_8))
-
-  implicit val writes: OWrites[NRSSubmission] = (
-    (JsPath \ "payload").write[String].contramap(encodeBase64) and
-      (JsPath \ "metadata").write[NRSMetadata]
-  )(unlift(NRSSubmission.unapply))
+  object MockNRSConnector {
+    def submit(nrsSubmission: NRSSubmission): CallHandler[Future[Either[NRSSubmisionFailure, NRSResponse]]] =
+      (mockNRSService.submit(_: NRSSubmission)(_: HeaderCarrier, _: LoggingContext)) expects (nrsSubmission, *, *)
+  }
 }

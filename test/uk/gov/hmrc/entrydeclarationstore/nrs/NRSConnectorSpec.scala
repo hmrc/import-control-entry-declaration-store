@@ -47,7 +47,7 @@ class NRSConnectorSpec
     with GuiceOneAppPerSuite
     with Injecting
     with MockAppConfig
-    with NRSSubmissionTestData {
+    with NRSMetadataTestData {
 
   override lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
@@ -73,6 +73,8 @@ class NRSConnectorSpec
                  |   "nrSubmissionId": "submissionId"
                  |}""".stripMargin)
 
+  val nrsSubmission: NRSSubmission = NRSSubmission("payload", nrsMetadata)
+
   override def beforeAll(): Unit = {
     wireMockServer.start()
     port = wireMockServer.port()
@@ -89,6 +91,12 @@ class NRSConnectorSpec
     MockAppConfig.nrsRetries returns retryDelays
     MockAppConfig.nrsApiKey returns apiKeyValue
 
+    val nrsSubmissionJsonString: String =
+      s"""{
+         | "payload": "cGF5bG9hZA==",
+         | "metadata": ${nrsMetadataJson.toString()}
+         |}""".stripMargin
+
     val connector = new NRSConnectorImpl(httpClient, mockAppConfig)
   }
 
@@ -99,6 +107,7 @@ class NRSConnectorSpec
           post(urlPathEqualTo(url))
             .withHeader("Content-Type", equalTo(MimeTypes.JSON))
             .withHeader("X-API-Key", equalTo(apiKeyValue))
+            .withRequestBody(equalToJson(nrsSubmissionJsonString, true, false))
             .willReturn(aResponse()
               .withBody(successResponseJson.toString)
               .withStatus(ACCEPTED)))
