@@ -120,14 +120,14 @@ class HousekeepingControllerSpec extends UnitSpec with MockHousekeepingService {
         "return 204" in {
           MockHousekeepingService.setShortTtl(submissionId) returns true
 
-          status(controller.setShortTtl(submissionId = submissionId)(FakeRequest())) shouldBe NO_CONTENT
+          status(controller.setShortTtlBySubmissionId(submissionId = submissionId)(FakeRequest())) shouldBe NO_CONTENT
         }
       }
       "setting fails" must {
         "return 404" in {
           MockHousekeepingService.setShortTtl(submissionId) returns false
 
-          status(controller.setShortTtl(submissionId = submissionId)(FakeRequest())) shouldBe NOT_FOUND
+          status(controller.setShortTtlBySubmissionId(submissionId = submissionId)(FakeRequest())) shouldBe NOT_FOUND
         }
       }
     }
@@ -139,14 +139,14 @@ class HousekeepingControllerSpec extends UnitSpec with MockHousekeepingService {
         "return 204" in {
           MockHousekeepingService.setShortTtl(eori, correlationId) returns true
 
-          status(controller.setShortTtl(eori = eori, correlationId = correlationId)(FakeRequest())) shouldBe NO_CONTENT
+          status(controller.setShortTtlByEoriAndCorrelationId(eori = eori, correlationId = correlationId)(FakeRequest())) shouldBe NO_CONTENT
         }
       }
       "setting fails" must {
         "return 404" in {
           MockHousekeepingService.setShortTtl(eori, correlationId) returns false
 
-          status(controller.setShortTtl(eori = eori, correlationId = correlationId)(FakeRequest())) shouldBe NOT_FOUND
+          status(controller.setShortTtlByEoriAndCorrelationId(eori = eori, correlationId = correlationId)(FakeRequest())) shouldBe NOT_FOUND
         }
       }
     }

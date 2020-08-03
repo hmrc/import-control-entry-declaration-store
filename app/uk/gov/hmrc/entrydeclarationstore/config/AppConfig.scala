@@ -70,7 +70,7 @@ trait AppConfig {
 
   def defaultTtl: FiniteDuration
 
-  def markForDeletionTtl: FiniteDuration
+  def shortTtl: FiniteDuration
 
   def replayBatchSizeLimit: Int
 
@@ -154,7 +154,7 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
 
   lazy val defaultTtl: FiniteDuration = getFiniteDuration(config.get[Configuration](s"mongodb"), "defaultTtl")
 
-  lazy val markForDeletionTtl: FiniteDuration = getFiniteDuration(config.get[Configuration](s"mongodb"), "markForDeletionTtl")
+  lazy val shortTtl: FiniteDuration = getFiniteDuration(config.get[Configuration](s"mongodb"), "shortTtl")
 
   lazy val replayBatchSizeLimit: Int = config.get[Int]("replay.batchSizeLimit")
 

@@ -53,7 +53,7 @@ trait MockAppConfig extends MockFactory {
 
     def defaultTtl: CallHandler[FiniteDuration] = mockAppConfig.defaultTtl _ expects ()
 
-    def markForDeletionTtl: CallHandler[FiniteDuration] = mockAppConfig.markForDeletionTtl _ expects ()
+    def shortTtl: CallHandler[FiniteDuration] = mockAppConfig.shortTtl _ expects ()
 
     def businessRules313: CallHandler[Seq[String]] = mockAppConfig.businessRules313 _ expects ()
 

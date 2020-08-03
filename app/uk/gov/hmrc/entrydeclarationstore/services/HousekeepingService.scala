@@ -31,8 +31,8 @@ class HousekeepingService @Inject()(repo: EntryDeclarationRepo, clock: Clock, ap
   def getHousekeepingStatus: Future[HousekeepingStatus] = repo.getHousekeepingStatus
 
   def setShortTtl(submissionId: String): Future[Boolean] =
-    repo.setHousekeepingAt(submissionId, clock.instant().plusMillis(appConfig.markForDeletionTtl.toMillis))
+    repo.setHousekeepingAt(submissionId, clock.instant().plusMillis(appConfig.shortTtl.toMillis))
 
   def setShortTtl(eori: String, correlationId: String): Future[Boolean] =
-    repo.setHousekeepingAt(eori, correlationId, clock.instant().plusMillis(appConfig.markForDeletionTtl.toMillis))
+    repo.setHousekeepingAt(eori, correlationId, clock.instant().plusMillis(appConfig.shortTtl.toMillis))
 }

@@ -52,15 +52,11 @@ class HousekeepingController @Inject()(cc: ControllerComponents, service: Housek
     }
   }
 
-  def setShortTtl(submissionId: String = "", eori: String = "", correlationId: String = ""): Action[AnyContent] =
-    Action.async { implicit request =>
-      (submissionId, eori, correlationId) match {
-        case _ if ! submissionId.isEmpty =>
-          service.setShortTtl(submissionId).map(ok => if (ok) NoContent else NotFound)
-        case _ if ! eori.isEmpty && ! correlationId.isEmpty =>
-          service.setShortTtl(eori, correlationId).map(ok => if (ok) NoContent else NotFound)
-        case _ => Future.successful(InternalServerError)
-      }
-
-    }
+  def setShortTtlBySubmissionId(submissionId: String): Action[AnyContent] = Action.async { implicit request =>
+    service.setShortTtl(submissionId).map(ok => if (ok) NoContent else NotFound)
+  }
+  def setShortTtlByEoriAndCorrelationId(eori: String, correlationId: String): Action[AnyContent] = Action.async {
+    implicit request =>
+      service.setShortTtl(eori, correlationId).map(ok => if (ok) NoContent else NotFound)
+  }
 }

@@ -63,7 +63,7 @@ class HousekeepingServiceSpec extends UnitSpec with MockAppConfig with MockEntry
         "searching by submission" in {
           val submissionId = "submissionId"
 
-          MockAppConfig.markForDeletionTtl returns newTtl
+          MockAppConfig.shortTtl returns newTtl
           MockEntryDeclarationRepo.setHousekeepingAt(submissionId, time.plusMillis(newTtl.toMillis)).returns(success)
 
           service.setShortTtl(submissionId).futureValue shouldBe success
@@ -72,7 +72,7 @@ class HousekeepingServiceSpec extends UnitSpec with MockAppConfig with MockEntry
           val eori          = "eori"
           val correlationId = "correlationId"
 
-          MockAppConfig.markForDeletionTtl returns newTtl
+          MockAppConfig.shortTtl returns newTtl
           MockEntryDeclarationRepo
             .setHousekeepingAt(eori, correlationId, time.plusMillis(newTtl.toMillis))
             .returns(success)
