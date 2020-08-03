@@ -29,7 +29,7 @@ import scala.concurrent.duration._
 
 class HousekeepingServiceSpec extends UnitSpec with MockAppConfig with MockEntryDeclarationRepo with ScalaFutures {
 
-  val time         = Instant.now
+  val time: Instant = Instant.now
   val clock: Clock = Clock.fixed(time, ZoneOffset.UTC)
 
   val service = new HousekeepingService(mockEntryDeclarationRepo, clock, mockAppConfig)
@@ -66,7 +66,7 @@ class HousekeepingServiceSpec extends UnitSpec with MockAppConfig with MockEntry
           MockAppConfig.markForDeletionTtl returns newTtl
           MockEntryDeclarationRepo.setHousekeepingAt(submissionId, time.plusMillis(newTtl.toMillis)).returns(success)
 
-          service.markRecordForDeletion(submissionId).futureValue shouldBe success
+          service.setShortTtl(submissionId).futureValue shouldBe success
         }
         "searching by eori and correlation Id" in {
           val eori          = "eori"
@@ -77,7 +77,7 @@ class HousekeepingServiceSpec extends UnitSpec with MockAppConfig with MockEntry
             .setHousekeepingAt(eori, correlationId, time.plusMillis(newTtl.toMillis))
             .returns(success)
 
-          service.markRecordForDeletion(eori, correlationId).futureValue shouldBe success
+          service.setShortTtl(eori, correlationId).futureValue shouldBe success
         }
       }
     }

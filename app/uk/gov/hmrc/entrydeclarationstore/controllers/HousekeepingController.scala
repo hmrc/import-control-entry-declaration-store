@@ -52,11 +52,15 @@ class HousekeepingController @Inject()(cc: ControllerComponents, service: Housek
     }
   }
 
-  def markRecordForDeletion(submissionId: String): Action[AnyContent] = Action.async { implicit request =>
-    service.markRecordForDeletion(submissionId).map(ok => if(ok) NoContent else NotFound)
-  }
+  def setShortTtl(submissionId: String = "", eori: String = "", correlationId: String = ""): Action[AnyContent] =
+    Action.async { implicit request =>
+      (submissionId, eori, correlationId) match {
+        case _ if ! submissionId.isEmpty =>
+          service.setShortTtl(submissionId).map(ok => if (ok) NoContent else NotFound)
+        case _ if ! eori.isEmpty && ! correlationId.isEmpty =>
+          service.setShortTtl(eori, correlationId).map(ok => if (ok) NoContent else NotFound)
+        case _ => Future.successful(InternalServerError)
+      }
 
-  def markRecordForDeletion(eori: String, correlationId: String): Action[AnyContent] = Action.async { implicit request =>
-    service.markRecordForDeletion(eori, correlationId).map(ok => if(ok) NoContent else NotFound)
-  }
+    }
 }
