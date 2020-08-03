@@ -37,12 +37,13 @@ class NRSMetadataSpec extends UnitSpec with NRSMetadataTestData {
       val token = "someToken"
 
       val request =
-        FakeRequest().withHeaders(Headers("Header1" -> "value1", "Header2" -> "value2"))
+        FakeRequest().withHeaders(
+          Headers("Header" -> "value", "MultiValueHeader" -> "value1", "MultiValueHeader" -> "value2"))
 
       NRSMetadata(Instant.now, "eori", identityData, request).headerData shouldBe
         Json.parse("""{
-                     |  "Header1": "value1",
-                     |  "Header2": "value2"
+                     |  "Header": "value",
+                     |  "MultiValueHeader":"value1,value2"
                      |}
                      |""".stripMargin)
     }

@@ -19,7 +19,7 @@ package uk.gov.hmrc.entrydeclarationstore.nrs
 import java.time.Instant
 
 import play.api.http.MimeTypes
-import play.api.libs.json.{JsValue, Json, Writes}
+import play.api.libs.json.{JsObject, JsString, JsValue, Json, Writes}
 import play.api.mvc.RequestHeader
 
 case class NRSMetadata(
@@ -48,7 +48,7 @@ object NRSMetadata {
       userSubmissionTimestamp = userSubmissionTimestamp,
       identityData            = identityData,
       userAuthToken           = request.headers.get("Authorization").getOrElse(""),
-      headerData              = Json.toJson(request.headers.toMap.map(h => h._1 -> h._2.head)),
+      headerData              = JsObject(request.headers.toMap.map(x => x._1 -> JsString(x._2 mkString ","))),
       searchKeys              = SearchKeys(eori)
     )
 }
