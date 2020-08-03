@@ -30,7 +30,7 @@ class NRSSubmissionSpec extends UnitSpec with NRSSubmissionTestData {
 
   "NRSSubmission" must {
     "format to the correct JSON" in {
-      Json.toJson(submission) shouldBe nrsSubmissionJson
+      Json.toJson(nrsSubmission) shouldBe nrsSubmissionJson
     }
   }
 }

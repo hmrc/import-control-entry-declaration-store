@@ -89,7 +89,7 @@ class NRSConnectorSpec
     MockAppConfig.nrsRetries returns retryDelays
     MockAppConfig.nrsApiKey returns apiKeyValue
 
-    val connector = new NRSConnector(httpClient, mockAppConfig)
+    val connector = new NRSConnectorImpl(httpClient, mockAppConfig)
   }
 
   "NRSConnector" when {
@@ -103,7 +103,7 @@ class NRSConnectorSpec
               .withBody(successResponseJson.toString)
               .withStatus(ACCEPTED)))
 
-        await(connector.submit(submission)) shouldBe Right(NRSResponse("submissionId"))
+        await(connector.submit(nrsSubmission)) shouldBe Right(NRSResponse("submissionId"))
       }
     }
 
@@ -129,7 +129,7 @@ class NRSConnectorSpec
               .withBody(successResponseJson.toString)
               .withStatus(ACCEPTED)))
 
-        await(connector.submit(submission)) shouldBe Right(NRSResponse("submissionId"))
+        await(connector.submit(nrsSubmission)) shouldBe Right(NRSResponse("submissionId"))
       }
 
       "give up after all retries" in new Test {
@@ -140,7 +140,7 @@ class NRSConnectorSpec
             .willReturn(aResponse()
               .withStatus(INTERNAL_SERVER_ERROR)))
 
-        await(connector.submit(submission)) shouldBe Left(NRSSubmisionFailure.ErrorResponse(INTERNAL_SERVER_ERROR))
+        await(connector.submit(nrsSubmission)) shouldBe Left(NRSSubmisionFailure.ErrorResponse(INTERNAL_SERVER_ERROR))
       }
     }
 
@@ -153,7 +153,7 @@ class NRSConnectorSpec
             .willReturn(aResponse()
               .withStatus(BAD_REQUEST)))
 
-        await(connector.submit(submission)) shouldBe Left(NRSSubmisionFailure.ErrorResponse(BAD_REQUEST))
+        await(connector.submit(nrsSubmission)) shouldBe Left(NRSSubmisionFailure.ErrorResponse(BAD_REQUEST))
       }
     }
 
@@ -166,7 +166,7 @@ class NRSConnectorSpec
             .withHeader("X-API-Key", equalTo(apiKeyValue))
             .willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)))
 
-        await(connector.submit(submission)) shouldBe Left(NRSSubmisionFailure.ExceptionThrown)
+        await(connector.submit(nrsSubmission)) shouldBe Left(NRSSubmisionFailure.ExceptionThrown)
       }
     }
 
@@ -182,7 +182,7 @@ class NRSConnectorSpec
                           |}""".stripMargin)
               .withStatus(ACCEPTED)))
 
-        await(connector.submit(submission)) shouldBe Left(NRSSubmisionFailure.ExceptionThrown)
+        await(connector.submit(nrsSubmission)) shouldBe Left(NRSSubmisionFailure.ExceptionThrown)
       }
     }
   }

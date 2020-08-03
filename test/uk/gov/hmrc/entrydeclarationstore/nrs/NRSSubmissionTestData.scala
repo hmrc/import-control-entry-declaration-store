@@ -148,5 +148,5 @@ trait NRSSubmissionTestData {
   val metadata: NRSMetadata =
     NRSMetadata(Instant.parse("2018-04-07T12:13:25.156Z"), "GB123456789", request)
 
-  val submission: NRSSubmission = NRSSubmission("payloadBase64==", metadata)
+  val nrsSubmission: NRSSubmission = NRSSubmission("payloadBase64==", metadata)
 }
