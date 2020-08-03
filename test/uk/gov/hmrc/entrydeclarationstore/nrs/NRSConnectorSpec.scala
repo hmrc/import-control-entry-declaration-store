@@ -125,7 +125,7 @@ class NRSConnectorSpec
             .inScenario("Retry")
             .whenScenarioStateIs(STARTED)
             .willReturn(aResponse()
-              .withStatus(INTERNAL_SERVER_ERROR))
+              .withStatus(GATEWAY_TIMEOUT))
             .willSetStateTo("SUCCESS"))
 
         wireMockServer.stubFor(
@@ -147,9 +147,9 @@ class NRSConnectorSpec
             .withHeader("Content-Type", equalTo(MimeTypes.JSON))
             .withHeader("X-API-Key", equalTo(apiKeyValue))
             .willReturn(aResponse()
-              .withStatus(INTERNAL_SERVER_ERROR)))
+              .withStatus(GATEWAY_TIMEOUT)))
 
-        await(connector.submit(nrsSubmission)) shouldBe Left(NRSSubmisionFailure.ErrorResponse(INTERNAL_SERVER_ERROR))
+        await(connector.submit(nrsSubmission)) shouldBe Left(NRSSubmisionFailure.ErrorResponse(GATEWAY_TIMEOUT))
       }
     }
 
