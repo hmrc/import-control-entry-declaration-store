@@ -60,6 +60,12 @@ trait MockEntryDeclarationRepo extends MockFactory {
 
     def getHousekeepingStatus: CallHandler[Future[HousekeepingStatus]] =
       mockEntryDeclarationRepo.getHousekeepingStatus _ expects ()
+
+    def setHousekeepingAt(eori: String, correlationId: String, time: Instant): CallHandler[Future[Boolean]] =
+      (mockEntryDeclarationRepo.setHousekeepingAt(_: String, _: String, _: Instant)) expects (eori, correlationId, time)
+
+    def setHousekeepingAt(submissionId: String, time: Instant): CallHandler[Future[Boolean]] =
+      (mockEntryDeclarationRepo.setHousekeepingAt(_: String, _: Instant)) expects (submissionId, time)
   }
 
 }

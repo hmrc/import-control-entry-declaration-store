@@ -287,30 +287,58 @@ class EntryDeclarationRepoISpec
       }
     }
 
-    "housekeepingAt" must {
-      val time = Instant.now.plusSeconds(60)
+    "housekeepingAt" when {
+      "searching by submissionId" must {
+        val time = Instant.now.plusSeconds(60)
 
-      "be settable" in {
-        await(repository.removeAll())
-        await(repository.save(entryDeclaration313))                shouldBe true
-        await(repository.setHousekeepingAt(submissionId313, time)) shouldBe true
+        "be settable" in {
+          await(repository.removeAll())
+          await(repository.save(entryDeclaration313)) shouldBe true
+          await(repository.setHousekeepingAt(submissionId313, time)) shouldBe true
 
-        await(
-          repository.collection
-            .find(Json.obj("submissionId" -> submissionId313), Option.empty[JsObject])
-            .one[EntryDeclarationPersisted]
-            .map(_.map(_.housekeepingAt.toInstant))).get shouldBe time
+          await(
+            repository.collection
+              .find(Json.obj("submissionId" -> submissionId313), Option.empty[JsObject])
+              .one[EntryDeclarationPersisted]
+              .map(_.map(_.housekeepingAt.toInstant))).get shouldBe time
+        }
+
+        "return true if no change is made" in {
+          await(repository.removeAll())
+          await(repository.save(entryDeclaration313)) shouldBe true
+          await(repository.setHousekeepingAt(submissionId313, time)) shouldBe true
+          await(repository.setHousekeepingAt(submissionId313, time)) shouldBe true
+        }
+
+        "return false if no submission exists" in {
+          await(repository.setHousekeepingAt("unknownSubmissionId", time)) shouldBe false
+        }
       }
+      "searching by eori and correlationId"  must {
+        val time = Instant.now.plusSeconds(60)
 
-      "return true if no change is made" in {
-        await(repository.removeAll())
-        await(repository.save(entryDeclaration313))                shouldBe true
-        await(repository.setHousekeepingAt(submissionId313, time)) shouldBe true
-        await(repository.setHousekeepingAt(submissionId313, time)) shouldBe true
-      }
+        "be settable" in {
+          await(repository.removeAll())
+          await(repository.save(entryDeclaration313)) shouldBe true
+          await(repository.setHousekeepingAt(eori, correlationId313, time)) shouldBe true
 
-      "return false if no submission exists" in {
-        await(repository.setHousekeepingAt("unknownSubmissionId", time)) shouldBe false
+          await(
+            repository.collection
+              .find(Json.obj("eori" -> eori, "correlationId" -> correlationId313), Option.empty[JsObject])
+              .one[EntryDeclarationPersisted]
+              .map(_.map(_.housekeepingAt.toInstant))).get shouldBe time
+        }
+
+        "return true if no change is made" in {
+          await(repository.removeAll())
+          await(repository.save(entryDeclaration313)) shouldBe true
+          await(repository.setHousekeepingAt(eori, correlationId313, time)) shouldBe true
+          await(repository.setHousekeepingAt(eori, correlationId313, time)) shouldBe true
+        }
+
+        "return false if no submission exists" in {
+          await(repository.setHousekeepingAt(eori, "unknownCorrelationId", time)) shouldBe false
+        }
       }
     }
 

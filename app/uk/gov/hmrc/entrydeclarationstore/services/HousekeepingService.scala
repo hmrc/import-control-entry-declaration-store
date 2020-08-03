@@ -16,14 +16,22 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
+import java.time.Clock
+
 import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.models.HousekeepingStatus
 import uk.gov.hmrc.entrydeclarationstore.repositories.EntryDeclarationRepo
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class HousekeepingService @Inject()(repo: EntryDeclarationRepo)(implicit ec: ExecutionContext) {
+class HousekeepingService @Inject()(repo: EntryDeclarationRepo, clock: Clock, appConfig: AppConfig)(implicit ec: ExecutionContext) {
   def enableHousekeeping(value: Boolean): Future[Boolean] = repo.enableHousekeeping(value)
   def getHousekeepingStatus: Future[HousekeepingStatus] = repo.getHousekeepingStatus
+
+  def setHousekeepingAt(submissionId: String): Future[Boolean] =
+    repo.setHousekeepingAt(submissionId, clock.instant().plusMillis(appConfig.markForDeletionTtl.toMillis))
+  def setHousekeepingAt(eori: String, correlationId: String): Future[Boolean] =
+    repo.setHousekeepingAt(eori, correlationId, clock.instant().plusMillis(appConfig.markForDeletionTtl.toMillis))
 }
