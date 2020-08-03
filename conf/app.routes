@@ -15,7 +15,7 @@ POST        /import-control/replay-batch                            uk.gov.hmrc.
 GET         /import-control/housekeeping/status                     uk.gov.hmrc.entrydeclarationstore.controllers.HousekeepingController.getStatus
 PUT         /import-control/housekeeping/status                     uk.gov.hmrc.entrydeclarationstore.controllers.HousekeepingController.setStatus
 
-PUT         /import-control/housekeeping/submissionId/:submissionid                 uk.gov.hmrc.entrydeclarationstore.controllers.HousekeepingController.setShortTtlBySubmissionId(submissionId)
+PUT         /import-control/housekeeping/submissionid/:submissionId                 uk.gov.hmrc.entrydeclarationstore.controllers.HousekeepingController.setShortTtlBySubmissionId(submissionId)
 PUT         /import-control/housekeeping/eoriandcorrelationid/:eori/:correlationId  uk.gov.hmrc.entrydeclarationstore.controllers.HousekeepingController.setShortTtlByEoriAndCorrelationId(eori, correlationId)
 
 GET         /import-control/circuit-breaker                         uk.gov.hmrc.entrydeclarationstore.controllers.CircuitBreakerController.getStatus
