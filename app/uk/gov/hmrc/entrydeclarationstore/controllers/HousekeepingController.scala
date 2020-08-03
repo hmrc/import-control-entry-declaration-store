@@ -51,4 +51,12 @@ class HousekeepingController @Inject()(cc: ControllerComponents, service: Housek
       case HousekeepingStatus.Unknown => InternalServerError
     }
   }
+
+  def markRecordForDeletion(submissionId: String): Action[AnyContent] = Action.async { implicit request =>
+    service.markRecordForDeletion(submissionId).map(ok => if(ok) NoContent else NotFound)
+  }
+
+  def markRecordForDeletion(eori: String, correlationId: String): Action[AnyContent] = Action.async { implicit request =>
+    service.markRecordForDeletion(eori, correlationId).map(ok => if(ok) NoContent else NotFound)
+  }
 }

@@ -56,7 +56,7 @@ class HousekeepingServiceSpec extends UnitSpec with MockAppConfig with MockEntry
       }
     }
 
-    "setting housekeepingAt" must {
+    "marking a record for deletion" must {
       "set using the repo" when {
         val success = true
         val newTtl  = 1.day
@@ -66,7 +66,7 @@ class HousekeepingServiceSpec extends UnitSpec with MockAppConfig with MockEntry
           MockAppConfig.markForDeletionTtl returns newTtl
           MockEntryDeclarationRepo.setHousekeepingAt(submissionId, time.plusMillis(newTtl.toMillis)).returns(success)
 
-          service.setHousekeepingAt(submissionId).futureValue shouldBe success
+          service.markRecordForDeletion(submissionId).futureValue shouldBe success
         }
         "searching by eori and correlation Id" in {
           val eori          = "eori"
@@ -77,7 +77,7 @@ class HousekeepingServiceSpec extends UnitSpec with MockAppConfig with MockEntry
             .setHousekeepingAt(eori, correlationId, time.plusMillis(newTtl.toMillis))
             .returns(success)
 
-          service.setHousekeepingAt(eori, correlationId).futureValue shouldBe success
+          service.markRecordForDeletion(eori, correlationId).futureValue shouldBe success
         }
       }
     }

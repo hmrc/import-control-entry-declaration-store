@@ -113,6 +113,43 @@ class HousekeepingControllerSpec extends UnitSpec with MockHousekeepingService {
         }
       }
     }
+
+    "marking a record for deletion by submissionId" when {
+      val submissionId = "submissionId"
+      "setting is successful" must {
+        "return 204" in {
+          MockHousekeepingService.markRecordForDeletion(submissionId) returns true
+
+          status(controller.markRecordForDeletion(submissionId)(FakeRequest())) shouldBe NO_CONTENT
+        }
+      }
+      "setting fails" must {
+        "return 404" in {
+          MockHousekeepingService.markRecordForDeletion(submissionId) returns false
+
+          status(controller.markRecordForDeletion(submissionId)(FakeRequest())) shouldBe NOT_FOUND
+        }
+      }
+    }
+
+    "marking a record for deletion by eori and correlationId" when {
+      val eori          = "eori"
+      val correlationId = "correlationId"
+      "setting is successful" must {
+        "return 204" in {
+          MockHousekeepingService.markRecordForDeletion(eori, correlationId) returns true
+
+          status(controller.markRecordForDeletion(eori, correlationId)(FakeRequest())) shouldBe NO_CONTENT
+        }
+      }
+      "setting fails" must {
+        "return 404" in {
+          MockHousekeepingService.markRecordForDeletion(eori, correlationId) returns false
+
+          status(controller.markRecordForDeletion(eori, correlationId)(FakeRequest())) shouldBe NOT_FOUND
+        }
+      }
+    }
   }
 
 }
