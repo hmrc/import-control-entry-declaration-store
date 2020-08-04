@@ -27,6 +27,8 @@ Run Integration Tests: `sbt it:test`
 |```/import-control/replay-batch```                         |        POST       | Internal | Endpoint to replay messages to C&IT from the database. |
 |```/import-control/housekeeping/status```                  |        GET        | Internal | Endpoint to get housekeeping status. |
 |```/import-control/housekeeping/status```                  |        PUT        | Internal | Endpoint to set housekeeping status. |
+|```/import-control/housekeeping/submissionid/:submissionId```|        PUT        | Internal | Endpoint to set a short ttl on a specified record. |
+|```/import-control/housekeeping/eoriandcorrelationid/:eori/:correlationId```|        PUT        | Internal | Endpoint to set a short ttl on a specified record. |
 |```/import-control/circuit-breaker```                      |        GET        | Internal | Endpoint to get the circuit breaker status. |
 |```/import-control/circuit-breaker/close```                |        PUT        | Internal | Endpoint to close the circuit breaker. |
 |```/import-control/test-only/submission-ids/:eori/:correlationId``` |        GET        | Test | Endpoint to get submission Id from EORI and Correlation Id. |
