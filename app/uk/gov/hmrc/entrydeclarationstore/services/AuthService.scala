@@ -19,15 +19,19 @@ package uk.gov.hmrc.entrydeclarationstore.services
 import cats.data.EitherT
 import cats.implicits._
 import javax.inject.{Inject, Singleton}
+import org.joda.time.LocalDate
 import play.api.Logger
 import uk.gov.hmrc.auth.core._
-import uk.gov.hmrc.auth.core.retrieve.EmptyRetrieval
-import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.allEnrolments
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{allEnrolments, _}
+import uk.gov.hmrc.auth.core.retrieve._
 import uk.gov.hmrc.entrydeclarationstore.connectors.ApiSubscriptionFieldsConnector
+import uk.gov.hmrc.entrydeclarationstore.nrs.IdentityData
 import uk.gov.hmrc.entrydeclarationstore.reporting.ClientType
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
+
+case class UserDetails(eori: String, clientType: ClientType, identityData: IdentityData)
 
 @Singleton
 class AuthService @Inject()(
@@ -37,14 +41,15 @@ class AuthService @Inject()(
 
   private val X_CLIENT_ID = "X-Client-Id"
 
-  type EoriAndClientType = (String, ClientType)
-
   sealed trait AuthError
+
   case object NoClientId extends AuthError
+
   case object NoEori extends AuthError
+
   case object AuthFail extends AuthError
 
-  def authenticate()(implicit hc: HeaderCarrier): Future[Option[EoriAndClientType]] =
+  def authenticate()(implicit hc: HeaderCarrier): Future[Option[UserDetails]] =
     authCSP
       .recoverWith {
         case AuthFail | NoClientId => authNonCSP
@@ -52,12 +57,12 @@ class AuthService @Inject()(
       .toOption
       .value
 
-  private def authCSP(implicit hc: HeaderCarrier): EitherT[Future, AuthError, EoriAndClientType] = {
-    def auth: Future[Option[Unit]] =
+  private def authCSP(implicit hc: HeaderCarrier): EitherT[Future, AuthError, UserDetails] = {
+    def auth: Future[Option[IdentityData]] =
       authorised(AuthProviders(AuthProvider.PrivilegedApplication))
-        .retrieve(EmptyRetrieval) { _ =>
+        .retrieve(identityDataRetrievals) { identityParts =>
           Logger.debug(s"Successfully authorised CSP PrivilegedApplication")
-          Future.successful(Some(()))
+          Future.successful(Some(identityDataFrom(identityParts)))
         }
         .recover {
           case ae: AuthorisationException =>
@@ -66,37 +71,64 @@ class AuthService @Inject()(
         }
 
     for {
-      clientId <- EitherT.fromOption[Future](hc.headers.find(_._1 == X_CLIENT_ID).map(_._2), NoClientId)
-      _        <- EitherT.fromOptionF(auth, AuthFail)
-      eori     <- EitherT.fromOptionF(apiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId), NoEori: AuthError)
-    } yield (eori, ClientType.CSP)
+      clientId     <- EitherT.fromOption[Future](hc.headers.find(_._1 == X_CLIENT_ID).map(_._2), NoClientId)
+      identityData <- EitherT.fromOptionF(auth, AuthFail)
+      eori         <- EitherT.fromOptionF(apiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId), NoEori: AuthError)
+    } yield UserDetails(eori, ClientType.CSP, identityData)
   }
 
-  private def authNonCSP(implicit hc: HeaderCarrier): EitherT[Future, AuthError, EoriAndClientType] =
+  private def authNonCSP(implicit hc: HeaderCarrier): EitherT[Future, AuthError, UserDetails] =
     EitherT(authorised(AuthProviders(AuthProvider.GovernmentGateway))
-      .retrieve(allEnrolments) { usersEnrolments =>
-        val icsEnrolments =
-          usersEnrolments.enrolments.filter(enrolment => enrolment.isActivated && enrolment.key == "HMRC-ICS-ORG")
+      .retrieve(identityDataRetrievals and allEnrolments) {
+        case identityParts ~ usersEnrolments =>
+          val icsEnrolments =
+            usersEnrolments.enrolments.filter(enrolment => enrolment.isActivated && enrolment.key == "HMRC-ICS-ORG")
 
-        val eoris = for {
-          enrolment <- icsEnrolments
-          eoriId    <- enrolment.getIdentifier("EoriTin")
-        } yield eoriId.value
+          val eoris = for {
+            enrolment <- icsEnrolments
+            eoriId    <- enrolment.getIdentifier("EoriTin")
+          } yield eoriId.value
 
-        val eori = eoris.headOption
+          val eori = eoris.headOption
 
-        val result = eori match {
-          case Some(eori) => (eori, ClientType.GGW).asRight
-          case None       => NoEori.asLeft
-        }
+          val result = eori match {
+            case Some(eori) => UserDetails(eori, ClientType.GGW, identityDataFrom(identityParts)).asRight
+            case None       => NoEori.asLeft
+          }
 
-        Logger.debug(
-          s"Successfully authorised non-CSP GovernmentGateway with enrolments ${usersEnrolments.enrolments} and eori $eori")
-        Future.successful(result)
+          Logger.debug(
+            s"Successfully authorised non-CSP GovernmentGateway with enrolments ${usersEnrolments.enrolments} and eori $eori")
+          Future.successful(result)
       }
       .recover {
         case ae: AuthorisationException =>
           Logger.debug(s"No authorisation for non-CSP GovernmentGateway", ae)
           AuthFail.asLeft
       })
+
+  private lazy val identityDataRetrievals =
+    (affinityGroup and
+      internalId and externalId and agentCode and credentials and confidenceLevel and nino and saUtr and name and dateOfBirth
+      and email and agentInformation and groupIdentifier and credentialRole
+      and mdtpInformation and itmpName and itmpDateOfBirth and itmpAddress and credentialStrength and loginTimes)
+
+  private def identityDataFrom(
+    identityParts: Option[AffinityGroup] ~ Option[String] ~ Option[String] ~ Option[String] ~
+      Option[Credentials] ~ ConfidenceLevel ~ Option[String] ~ Option[String] ~ Option[Name] ~ Option[LocalDate] ~
+      Option[String] ~ AgentInformation ~ Option[String] ~ Option[CredentialRole] ~ Option[MdtpInformation] ~
+      Option[ItmpName] ~ Option[LocalDate] ~ Option[ItmpAddress] ~ Option[String] ~ LoginTimes): IdentityData =
+    identityParts match {
+
+      case affGroup ~ inId ~ exId ~ agCode ~ creds
+            ~ confLevel ~ ni ~ saRef ~ nme ~ dob
+            ~ eml ~ agInfo ~ groupId ~ credRole
+            ~ mdtpInfo ~ itmpName ~ itmpDob ~ itmpAddress ~ credStrength ~ logins =>
+        // @formatter:off
+      IdentityData(
+          inId, exId, agCode, creds, confLevel, ni, saRef, nme, dob,
+          eml, agInfo, groupId, credRole, mdtpInfo, itmpName, itmpDob,
+          itmpAddress, affGroup, credStrength, logins
+        )
+      // @formatter:on
+    }
 }

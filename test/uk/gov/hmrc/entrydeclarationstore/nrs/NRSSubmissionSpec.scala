@@ -16,21 +16,22 @@
 
 package uk.gov.hmrc.entrydeclarationstore.nrs
 
-import java.time.Instant
-
-import org.joda.time.{DateTime, LocalDate}
-import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{AnyContentAsEmpty, Headers}
-import play.api.test.FakeRequest
-import uk.gov.hmrc.auth.core.retrieve._
-import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, User}
+import play.api.libs.json.Json
 import uk.gov.hmrc.play.test.UnitSpec
 
-class NRSSubmissionSpec extends UnitSpec with NRSSubmissionTestData {
+class NRSSubmissionSpec extends UnitSpec with NRSMetadataTestData {
 
   "NRSSubmission" must {
-    "format to the correct JSON" in {
-      Json.toJson(submission) shouldBe nrsSubmissionJson
+    "format to the correct JSON with base64 encoded payload" in {
+      val nrsSubmission = NRSSubmission("somePayload", nrsMetadata)
+
+      val nrsSubmissionJson =
+        Json.parse(s"""{
+                      | "payload": "c29tZVBheWxvYWQ=",
+                      | "metadata": ${nrsMetadataJson.toString()}
+                      |}""".stripMargin)
+
+      Json.toJson(nrsSubmission) shouldBe nrsSubmissionJson
     }
   }
 }

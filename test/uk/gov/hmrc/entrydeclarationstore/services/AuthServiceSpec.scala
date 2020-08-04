@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
-import org.scalamock.handlers.CallHandler
 import org.scalatest.Inside
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Span}
 import uk.gov.hmrc.auth.core._
-import uk.gov.hmrc.auth.core.retrieve.EmptyRetrieval
-import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
+import uk.gov.hmrc.auth.core.retrieve._
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
 import uk.gov.hmrc.entrydeclarationstore.connectors.{MockApiSubscriptionFieldsConnector, MockAuthConnector}
+import uk.gov.hmrc.entrydeclarationstore.nrs.NRSMetadataTestData
 import uk.gov.hmrc.entrydeclarationstore.reporting.ClientType
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
@@ -36,7 +36,8 @@ class AuthServiceSpec
     with MockAuthConnector
     with MockApiSubscriptionFieldsConnector
     with ScalaFutures
-    with Inside {
+    with Inside
+    with NRSMetadataTestData {
 
   implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = Span(500, Millis))
 
@@ -56,12 +57,81 @@ class AuthServiceSpec
       state             = "Activated",
       delegatedAuthRule = None)
 
-  def stubAuth(implicit hc: HeaderCarrier): CallHandler[Future[Enrolments]] =
+  private def stubAuth(implicit hc: HeaderCarrier) =
     MockAuthConnector
-      .authorise(AuthProviders(AuthProvider.GovernmentGateway), Retrievals.allEnrolments, hc)
+      .authorise(
+        AuthProviders(AuthProvider.GovernmentGateway),
+        affinityGroup and
+          internalId and externalId and agentCode and credentials
+          and confidenceLevel and nino and saUtr and name and dateOfBirth
+          and email and agentInformation and groupIdentifier and credentialRole
+          and mdtpInformation and itmpName and itmpDateOfBirth and itmpAddress and credentialStrength and loginTimes and allEnrolments,
+        hc
+      )
 
-  def stubCSPAuth(implicit hc: HeaderCarrier): CallHandler[Future[Unit]] =
-    MockAuthConnector.authorise(AuthProviders(AuthProvider.PrivilegedApplication), EmptyRetrieval, hc)
+  private def stubCSPAuth(implicit hc: HeaderCarrier) =
+    MockAuthConnector.authorise(
+      AuthProviders(AuthProvider.PrivilegedApplication),
+      affinityGroup and
+        internalId and externalId and agentCode and credentials
+        and confidenceLevel and nino and saUtr and name and dateOfBirth
+        and email and agentInformation and groupIdentifier and credentialRole
+        and mdtpInformation and itmpName and itmpDateOfBirth and itmpAddress and credentialStrength and loginTimes,
+      hc
+    )
+
+  private val identityDataRetrieval =
+    // @formatter:off
+   new ~(new ~(new ~(  new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(
+     identityData.affinityGroup,
+     identityData.internalId),
+     identityData.externalId),
+     identityData.agentCode),
+     identityData.credentials),
+     identityData.confidenceLevel),
+     identityData.nino),
+     identityData.saUtr),
+     identityData.name),
+     identityData.dateOfBirth),
+     identityData.email),
+     identityData.agentInformation),
+     identityData.groupIdentifier),
+     identityData.credentialRole),
+     identityData.mdtpInformation),
+     identityData.itmpName),
+     identityData.itmpDateOfBirth),
+     identityData.itmpAddress),
+     identityData.credentialStrength),
+     identityData.loginTimes
+   )
+  // @formatter:on
+
+  private def enrolmentsAndIdentityDataRetrieval(enrolments: Enrolments) =
+    // @formatter:off
+    new ~(new ~(new ~(new ~(  new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(
+      identityData.affinityGroup,
+      identityData.internalId),
+      identityData.externalId),
+      identityData.agentCode),
+      identityData.credentials),
+      identityData.confidenceLevel),
+      identityData.nino),
+      identityData.saUtr),
+      identityData.name),
+      identityData.dateOfBirth),
+      identityData.email),
+      identityData.agentInformation),
+      identityData.groupIdentifier),
+      identityData.credentialRole),
+      identityData.mdtpInformation),
+      identityData.itmpName),
+      identityData.itmpDateOfBirth),
+      identityData.itmpAddress),
+      identityData.credentialStrength),
+      identityData.loginTimes),
+      enrolments
+    )
+  // @formatter:on
 
   "AuthService.authenticate" when {
     "X-Client-Id header present" when {
@@ -71,16 +141,16 @@ class AuthServiceSpec
         "authenticated EORI present in subscription fields" should {
           "return that EORI" in {
 
-            stubCSPAuth returns Future.successful(())
+            stubCSPAuth returns Future.successful(identityDataRetrieval)
 
             MockApiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId) returns Some(eori)
-            service.authenticate().futureValue shouldBe Some((eori, ClientType.CSP))
+            service.authenticate().futureValue shouldBe Some(UserDetails(eori, ClientType.CSP, identityData))
           }
         }
 
         "no authenticated EORI present in subscription fields" should {
           "return None (without non-CSP auth)" in {
-            stubCSPAuth returns Future.successful(())
+            stubCSPAuth returns Future.successful(identityDataRetrieval)
             MockApiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId) returns None
 
             service.authenticate().futureValue shouldBe None
@@ -105,38 +175,41 @@ class AuthServiceSpec
       "return Some(eori)" when {
         "ICS enrolment with an eori" in {
           stubbings()
-          stubAuth returns Enrolments(Set(validICSEnrolment(eori)))
-          service.authenticate().futureValue shouldBe Some((eori, ClientType.GGW))
+          stubAuth returns enrolmentsAndIdentityDataRetrieval(Enrolments(Set(validICSEnrolment(eori))))
+          service.authenticate().futureValue shouldBe Some(UserDetails(eori, ClientType.GGW, identityData))
         }
       }
 
       "return None" when {
         "ICS enrolment with no identifiers" in {
           stubbings()
-          stubAuth returns Enrolments(Set(validICSEnrolment(eori).copy(identifiers = Nil)))
+          stubAuth returns enrolmentsAndIdentityDataRetrieval(
+            Enrolments(Set(validICSEnrolment(eori).copy(identifiers = Nil))))
           service.authenticate().futureValue shouldBe None
         }
 
         "no ICS enrolment in authorization header" in {
           stubbings()
-          stubAuth returns Enrolments(
-            Set(
-              Enrolment(
-                key               = "OTHER",
-                identifiers       = Seq(EnrolmentIdentifier("EoriTin", eori)),
-                state             = "Activated",
-                delegatedAuthRule = None)))
+          stubAuth returns enrolmentsAndIdentityDataRetrieval(
+            Enrolments(
+              Set(
+                Enrolment(
+                  key               = "OTHER",
+                  identifiers       = Seq(EnrolmentIdentifier("EoriTin", eori)),
+                  state             = "Activated",
+                  delegatedAuthRule = None))))
           service.authenticate().futureValue shouldBe None
         }
         "no enrolments at all in authorization header" in {
           stubbings()
-          stubAuth returns Enrolments(Set.empty)
+          stubAuth returns enrolmentsAndIdentityDataRetrieval(Enrolments(Set.empty))
           service.authenticate().futureValue shouldBe None
         }
 
         "ICS enrolment not activated" in {
           stubbings()
-          stubAuth returns Enrolments(Set(validICSEnrolment(eori).copy(state = "inactive")))
+          stubAuth returns enrolmentsAndIdentityDataRetrieval(
+            Enrolments(Set(validICSEnrolment(eori).copy(state = "inactive"))))
           service.authenticate().futureValue shouldBe None
         }
 

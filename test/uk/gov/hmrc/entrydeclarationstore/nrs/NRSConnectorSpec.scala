@@ -47,7 +47,7 @@ class NRSConnectorSpec
     with GuiceOneAppPerSuite
     with Injecting
     with MockAppConfig
-    with NRSSubmissionTestData {
+    with NRSMetadataTestData {
 
   override lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
@@ -73,6 +73,8 @@ class NRSConnectorSpec
                  |   "nrSubmissionId": "submissionId"
                  |}""".stripMargin)
 
+  val nrsSubmission: NRSSubmission = NRSSubmission("payload", nrsMetadata)
+
   override def beforeAll(): Unit = {
     wireMockServer.start()
     port = wireMockServer.port()
@@ -89,7 +91,13 @@ class NRSConnectorSpec
     MockAppConfig.nrsRetries returns retryDelays
     MockAppConfig.nrsApiKey returns apiKeyValue
 
-    val connector = new NRSConnector(httpClient, mockAppConfig)
+    val nrsSubmissionJsonString: String =
+      s"""{
+         | "payload": "cGF5bG9hZA==",
+         | "metadata": ${nrsMetadataJson.toString()}
+         |}""".stripMargin
+
+    val connector = new NRSConnectorImpl(httpClient, mockAppConfig)
   }
 
   "NRSConnector" when {
@@ -99,11 +107,12 @@ class NRSConnectorSpec
           post(urlPathEqualTo(url))
             .withHeader("Content-Type", equalTo(MimeTypes.JSON))
             .withHeader("X-API-Key", equalTo(apiKeyValue))
+            .withRequestBody(equalToJson(nrsSubmissionJsonString, true, false))
             .willReturn(aResponse()
               .withBody(successResponseJson.toString)
               .withStatus(ACCEPTED)))
 
-        await(connector.submit(submission)) shouldBe Right(NRSResponse("submissionId"))
+        await(connector.submit(nrsSubmission)) shouldBe Right(NRSResponse("submissionId"))
       }
     }
 
@@ -116,7 +125,7 @@ class NRSConnectorSpec
             .inScenario("Retry")
             .whenScenarioStateIs(STARTED)
             .willReturn(aResponse()
-              .withStatus(INTERNAL_SERVER_ERROR))
+              .withStatus(GATEWAY_TIMEOUT))
             .willSetStateTo("SUCCESS"))
 
         wireMockServer.stubFor(
@@ -129,7 +138,7 @@ class NRSConnectorSpec
               .withBody(successResponseJson.toString)
               .withStatus(ACCEPTED)))
 
-        await(connector.submit(submission)) shouldBe Right(NRSResponse("submissionId"))
+        await(connector.submit(nrsSubmission)) shouldBe Right(NRSResponse("submissionId"))
       }
 
       "give up after all retries" in new Test {
@@ -138,9 +147,9 @@ class NRSConnectorSpec
             .withHeader("Content-Type", equalTo(MimeTypes.JSON))
             .withHeader("X-API-Key", equalTo(apiKeyValue))
             .willReturn(aResponse()
-              .withStatus(INTERNAL_SERVER_ERROR)))
+              .withStatus(GATEWAY_TIMEOUT)))
 
-        await(connector.submit(submission)) shouldBe Left(NRSSubmisionFailure.ErrorResponse(INTERNAL_SERVER_ERROR))
+        await(connector.submit(nrsSubmission)) shouldBe Left(NRSSubmisionFailure.ErrorResponse(GATEWAY_TIMEOUT))
       }
     }
 
@@ -153,7 +162,7 @@ class NRSConnectorSpec
             .willReturn(aResponse()
               .withStatus(BAD_REQUEST)))
 
-        await(connector.submit(submission)) shouldBe Left(NRSSubmisionFailure.ErrorResponse(BAD_REQUEST))
+        await(connector.submit(nrsSubmission)) shouldBe Left(NRSSubmisionFailure.ErrorResponse(BAD_REQUEST))
       }
     }
 
@@ -166,7 +175,7 @@ class NRSConnectorSpec
             .withHeader("X-API-Key", equalTo(apiKeyValue))
             .willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)))
 
-        await(connector.submit(submission)) shouldBe Left(NRSSubmisionFailure.ExceptionThrown)
+        await(connector.submit(nrsSubmission)) shouldBe Left(NRSSubmisionFailure.ExceptionThrown)
       }
     }
 
@@ -182,7 +191,7 @@ class NRSConnectorSpec
                           |}""".stripMargin)
               .withStatus(ACCEPTED)))
 
-        await(connector.submit(submission)) shouldBe Left(NRSSubmisionFailure.ExceptionThrown)
+        await(connector.submit(nrsSubmission)) shouldBe Left(NRSSubmisionFailure.ExceptionThrown)
       }
     }
   }

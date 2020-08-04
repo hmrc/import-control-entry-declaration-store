@@ -14,15 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.entrydeclarationstore.utils
+package uk.gov.hmrc.entrydeclarationstore.nrs
 
-object EoriUtils {
+import org.scalamock.handlers.CallHandler
+import org.scalamock.scalatest.MockFactory
+import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
+import uk.gov.hmrc.http.HeaderCarrier
 
-  private val eoriRegex = raw"(?s)<MesSenMES3>(.*)</MesSenMES3>".r.unanchored
+import scala.concurrent.Future
 
-  def eoriFromXmlString(xml: String): String =
-    xml match {
-      case eoriRegex(eori) => eori.split("/").head.trim
-      case _               => ""
-    }
+trait MockNRSService extends MockFactory {
+  val mockNRSService: NRSService = mock[NRSService]
+
+  object MockNRSService {
+    def submit(nrsSubmission: NRSSubmission): CallHandler[Future[Option[NRSResponse]]] =
+      (mockNRSService.submit(_: NRSSubmission)(_: HeaderCarrier, _: LoggingContext)) expects (nrsSubmission, *, *)
+  }
 }

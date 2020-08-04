@@ -28,11 +28,10 @@ trait MockAuthService extends MockFactory {
   val mockAuthService: AuthService = mock[AuthService]
 
   object MockAuthService {
-    def authenticate(): CallHandler[Future[Option[(String, ClientType)]]] =
+    def authenticate(): CallHandler[Future[Option[UserDetails]]] =
       (mockAuthService.authenticate()(_: HeaderCarrier)) expects *
 
-    def authenticateCapture()(
-      headerCarrier: CaptureOne[HeaderCarrier]): CallHandler[Future[Option[(String, ClientType)]]] =
+    def authenticateCapture()(headerCarrier: CaptureOne[HeaderCarrier]): CallHandler[Future[Option[UserDetails]]] =
       (mockAuthService.authenticate()(_: HeaderCarrier)) expects capture(headerCarrier)
   }
 

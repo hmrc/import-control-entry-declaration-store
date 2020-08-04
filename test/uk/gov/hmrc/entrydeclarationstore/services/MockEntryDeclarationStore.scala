@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
+import java.time.Instant
+
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, SuccessResponse}
@@ -32,10 +34,11 @@ trait MockEntryDeclarationStore extends MockFactory {
       eori: String,
       payload: String,
       mrn: Option[String],
+      receivedDateTime: Instant,
       clientType: ClientType): CallHandler[Future[Either[ErrorWrapper[_], SuccessResponse]]] =
       (mockEntryDeclarationStore
-        .handleSubmission(_: String, _: String, _: Option[String], _: ClientType)(_: HeaderCarrier))
-        .expects(eori, payload, mrn, clientType, *)
+        .handleSubmission(_: String, _: String, _: Option[String], _: Instant, _: ClientType)(_: HeaderCarrier))
+        .expects(eori, payload, mrn, receivedDateTime, clientType, *)
   }
 
 }

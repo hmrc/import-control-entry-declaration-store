@@ -29,11 +29,18 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 import scala.util.{Success, Try}
 
+trait NRSConnector {
+  def submit(nrsSubmission: NRSSubmission)(
+    implicit hc: HeaderCarrier,
+    lc: LoggingContext): Future[Either[NRSSubmisionFailure, NRSResponse]]
+}
+
 @Singleton
-class NRSConnector @Inject()(httpClient: HttpClient, appConfig: AppConfig)(
+class NRSConnectorImpl @Inject()(httpClient: HttpClient, appConfig: AppConfig)(
   implicit val scheduler: Scheduler,
   val ec: ExecutionContext)
-    extends Retrying
+    extends NRSConnector
+    with Retrying
     with Delayer {
 
   private val url: String    = s"${appConfig.nrsBaseUrl}/submission"

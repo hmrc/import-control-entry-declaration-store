@@ -19,8 +19,8 @@ package uk.gov.hmrc.entrydeclarationstore.nrs
 import java.time.Instant
 
 import play.api.http.MimeTypes
-import play.api.libs.json.{JsValue, Json, Writes}
-import play.api.mvc.Headers
+import play.api.libs.json.{JsObject, JsString, JsValue, Json, Writes}
+import play.api.mvc.RequestHeader
 
 case class NRSMetadata(
   businessId: String,
@@ -37,21 +37,18 @@ object NRSMetadata {
 
   def apply(
     userSubmissionTimestamp: Instant,
+    eori: String,
     identityData: IdentityData,
-    userAuthToken: String,
-    headers: Headers,
-    searchKeys: SearchKeys
+    request: RequestHeader
   ): NRSMetadata =
     NRSMetadata(
-      businessId              = "ics",
-      notableEvent            = "icsSubmission",
+      businessId              = "safety-and-security",
+      notableEvent            = "entry-declaration",
       payloadContentType      = MimeTypes.XML,
       userSubmissionTimestamp = userSubmissionTimestamp,
       identityData            = identityData,
-      userAuthToken           = userAuthToken,
-      headerData = Json.toJson(headers.toMap.map { h =>
-        h._1 -> h._2.head
-      }),
-      searchKeys = searchKeys
+      userAuthToken           = request.headers.get("Authorization").getOrElse(""),
+      headerData              = JsObject(request.headers.toMap.map(x => x._1 -> JsString(x._2 mkString ","))),
+      searchKeys              = SearchKeys(eori)
     )
 }
