@@ -16,8 +16,8 @@ Run Integration Tests: `sbt it:test`
 
 ## API
 
-|Internal endpoint paths prefixed by `/import-control-entry-declaration-store` | Supported Methods | Type | Description |
-| ----------------------------------------------------------| ----------------- | -----|----------- |
+| Path | Supported Methods | Type | Description |
+| ----------------------------------------------------------| ----------------- | -----| ------------|
 |```/```                                                    |        POST       | External | Endpoint for users to save IE315 xml to the database. |
 |```/:mrn```                                                |        PUT        | External | Endpoint for users to save IE313 xml to the database. |
 |```/import-control/entry-summary-declaration/:id```        |        GET        | Internal | Endpoint for C&IT to get an entry declaration from the database. |
@@ -29,12 +29,12 @@ Run Integration Tests: `sbt it:test`
 |```/import-control/housekeeping/status```                  |        PUT        | Internal | Endpoint to set housekeeping status. |
 |```/import-control/circuit-breaker```                      |        GET        | Internal | Endpoint to get the circuit breaker status. |
 |```/import-control/circuit-breaker/close```                |        PUT        | Internal | Endpoint to close the circuit breaker. |
-|```/import-control/test-only/submission-ids/:eori/:correlationId``` |        GET        | Test | Endpoint to get submission Id from EORI and Correlation Id. |
+|```/import-control/test-only/submission-ids/:eori/:correlationId``` | GET      | Test | Endpoint to get submission Id from EORI and Correlation Id. |
 |```/import-control/test-only/circuit-breaker/open```       |        PUT        | Test | Endpoint to open the circuit breaker. |
 |```/import-control/test-only/circuit-breaker/reset```      |        PUT        | Test | Endpoint to reset the circuit breaker to initial state. |
 
 ## API Reference / Documentation 
-For more information on external API endpoints see the RAML at [Developer Hub] or using the endpoint below
+For more information on external API endpoints see the RAML at [Developer Hub]("https://developer.service.hmrc.gov.uk/api-documentation/docs/api/service/import-control-entry-declaration-store/1.0") or using the endpoint below
 
 |Path                          | Supported Methods | Description |
 | -----------------------------| ----------------- | ----------- |
