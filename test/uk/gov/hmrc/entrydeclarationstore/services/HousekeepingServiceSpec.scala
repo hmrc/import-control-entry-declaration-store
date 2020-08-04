@@ -56,7 +56,7 @@ class HousekeepingServiceSpec extends UnitSpec with MockAppConfig with MockEntry
       }
     }
 
-    "marking a record for deletion" must {
+    "setting a short ttl" must {
       "set using the repo" when {
         val success = true
         val newTtl  = 1.day

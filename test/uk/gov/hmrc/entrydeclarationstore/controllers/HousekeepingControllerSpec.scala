@@ -114,7 +114,7 @@ class HousekeepingControllerSpec extends UnitSpec with MockHousekeepingService {
       }
     }
 
-    "marking a record for deletion by submissionId" when {
+    "setting a short ttl by submissionId" when {
       val submissionId = "submissionId"
       "setting is successful" must {
         "return 204" in {
@@ -132,7 +132,7 @@ class HousekeepingControllerSpec extends UnitSpec with MockHousekeepingService {
       }
     }
 
-    "marking a record for deletion by eori and correlationId" when {
+    "setting a short ttl by eori and correlationId" when {
       val eori          = "eori"
       val correlationId = "correlationId"
       "setting is successful" must {
