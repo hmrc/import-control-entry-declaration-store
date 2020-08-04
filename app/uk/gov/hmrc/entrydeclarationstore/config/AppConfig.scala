@@ -80,6 +80,8 @@ trait AppConfig {
   def nrsApiKey: String
 
   def nrsRetries: List[FiniteDuration]
+
+  def nrsEnabled: Boolean
 }
 
 @Singleton
@@ -162,4 +164,6 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
 
   lazy val nrsRetries: List[FiniteDuration] =
     Retrying.fibonacciDelays(getFiniteDuration(nrsConfig, "initialDelay"), nrsConfig.get[Int]("numberOfRetries"))
+
+  lazy val nrsEnabled: Boolean = nrsConfig.getOptional[Boolean]("enabled").getOrElse(true)
 }

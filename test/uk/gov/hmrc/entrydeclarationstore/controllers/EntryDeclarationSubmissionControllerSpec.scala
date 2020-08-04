@@ -24,7 +24,7 @@ import play.api.mvc.{Request, Result}
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, SuccessResponse}
-import uk.gov.hmrc.entrydeclarationstore.nrs.{MockNRSService, NRSMetadata, NRSMetadataTestData, NRSResponse, NRSSubmisionFailure, NRSSubmission}
+import uk.gov.hmrc.entrydeclarationstore.nrs._
 import uk.gov.hmrc.entrydeclarationstore.reporting.ClientType
 import uk.gov.hmrc.entrydeclarationstore.services._
 import uk.gov.hmrc.entrydeclarationstore.utils.{MockMetrics, XmlFormatConfig}
@@ -216,8 +216,8 @@ class EntryDeclarationSubmissionControllerSpec
           .handleSubmission(eori, payloadString, mrn, now, clientType)
           .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
 
-        val nrsPromise = Promise[Either[NRSSubmisionFailure, NRSResponse]]
-        MockNRSConnector.submit(nrsSubmission) returns nrsPromise.future
+        val nrsPromise = Promise[Option[NRSResponse]]
+        MockNRSService.submit(nrsSubmission) returns nrsPromise.future
 
         val result: Future[Result] = handler(fakeRequest)
 
@@ -233,7 +233,7 @@ class EntryDeclarationSubmissionControllerSpec
           .handleSubmission(eori, payloadString, None, now, clientType)
           .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
 
-        MockNRSConnector.submit(nrsSubmission)
+        MockNRSService.submit(nrsSubmission)
 
         val result: Future[Result] = controller.postSubmission(fakeRequest)
 
@@ -259,7 +259,7 @@ class EntryDeclarationSubmissionControllerSpec
           .handleSubmission(eori, payloadString, Some(mrn), now, clientType)
           .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
 
-        MockNRSConnector.submit(nrsSubmission)
+        MockNRSService.submit(nrsSubmission)
 
         val result = controller.putAmendment(mrn)(fakeRequest)
 

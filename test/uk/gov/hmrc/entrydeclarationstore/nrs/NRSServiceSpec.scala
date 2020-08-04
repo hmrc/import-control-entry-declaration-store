@@ -18,6 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.nrs
 
 import com.kenshoo.play.metrics.Metrics
 import org.scalatest.concurrent.ScalaFutures
+import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.utils.MockMetrics
 import uk.gov.hmrc.http.HeaderCarrier
@@ -25,11 +26,16 @@ import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class NRSServiceSpec extends UnitSpec with MockNRSConnector with NRSMetadataTestData with ScalaFutures {
+class NRSServiceSpec
+    extends UnitSpec
+    with MockNRSConnector
+    with MockAppConfig
+    with NRSMetadataTestData
+    with ScalaFutures {
 
   val metrics: Metrics = new MockMetrics
 
-  val service = new NRSService(mockNRSConnector, metrics)
+  val service = new NRSService(mockNRSConnector, mockAppConfig, metrics)
 
   val nrsSubmission: NRSSubmission = NRSSubmission("payload", nrsMetadata)
 
@@ -38,21 +44,30 @@ class NRSServiceSpec extends UnitSpec with MockNRSConnector with NRSMetadataTest
 
   "NRSService" when {
     "NRS submission is successful" must {
-      "return the successful response" in {
+      "return the response" in {
         val response = NRSResponse("someId")
+        MockAppConfig.nrsEnabled returns true
         MockNRSConnector.submit(nrsSubmission) returns Right(response)
 
-        service.submit(nrsSubmission).futureValue shouldBe Right(response)
+        service.submit(nrsSubmission).futureValue shouldBe Some(response)
       }
 
       "NRS submission fails" must {
-        "return the failed response" in {
+        "return None" in {
           // WLOG
           val failure = NRSSubmisionFailure.ExceptionThrown
 
+          MockAppConfig.nrsEnabled returns true
           MockNRSConnector.submit(nrsSubmission) returns Left(failure)
 
-          service.submit(nrsSubmission).futureValue shouldBe Left(failure)
+          service.submit(nrsSubmission).futureValue shouldBe None
+        }
+      }
+
+      "NRS submission is disabled" must {
+        "return None" in {
+          MockAppConfig.nrsEnabled returns false
+          service.submit(nrsSubmission).futureValue shouldBe None
         }
       }
     }
