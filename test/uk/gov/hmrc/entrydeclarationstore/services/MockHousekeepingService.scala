@@ -31,6 +31,13 @@ trait MockHousekeepingService extends MockFactory {
 
     def getHousekeepingStatus: CallHandler[Future[HousekeepingStatus]] =
       mockHousekeepingService.getHousekeepingStatus _ expects ()
+
+    def setShortTtl(submissionId: String): CallHandler[Future[Boolean]] =
+      (mockHousekeepingService.setShortTtl(_: String)) expects submissionId
+
+    def setShortTtl(eori: String, correlationId: String): CallHandler[Future[Boolean]] =
+      (mockHousekeepingService.setShortTtl(_: String, _: String)) expects (eori, correlationId)
+
   }
 
 }

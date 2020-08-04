@@ -16,16 +16,23 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
+import java.time.{Clock, Instant, ZoneOffset}
+
 import org.scalatest.concurrent.ScalaFutures
+import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.models.HousekeepingStatus
 import uk.gov.hmrc.entrydeclarationstore.repositories.MockEntryDeclarationRepo
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
-class HousekeepingServiceSpec extends UnitSpec with MockEntryDeclarationRepo with ScalaFutures {
+class HousekeepingServiceSpec extends UnitSpec with MockAppConfig with MockEntryDeclarationRepo with ScalaFutures {
 
-  val service = new HousekeepingService(mockEntryDeclarationRepo)
+  val time: Instant = Instant.now
+  val clock: Clock = Clock.fixed(time, ZoneOffset.UTC)
+
+  val service = new HousekeepingService(mockEntryDeclarationRepo, clock, mockAppConfig)
 
   "HousekeepingService" when {
     "getting housekeeping status" must {
@@ -46,6 +53,32 @@ class HousekeepingServiceSpec extends UnitSpec with MockEntryDeclarationRepo wit
 
         MockEntryDeclarationRepo.enableHousekeeping(value) returns success
         service.enableHousekeeping(value).futureValue shouldBe success
+      }
+    }
+
+    "setting a short ttl" must {
+      "set using the repo" when {
+        val success = true
+        val newTtl  = 1.day
+        "searching by submission" in {
+          val submissionId = "submissionId"
+
+          MockAppConfig.shortTtl returns newTtl
+          MockEntryDeclarationRepo.setHousekeepingAt(submissionId, time.plusMillis(newTtl.toMillis)).returns(success)
+
+          service.setShortTtl(submissionId).futureValue shouldBe success
+        }
+        "searching by eori and correlation Id" in {
+          val eori          = "eori"
+          val correlationId = "correlationId"
+
+          MockAppConfig.shortTtl returns newTtl
+          MockEntryDeclarationRepo
+            .setHousekeepingAt(eori, correlationId, time.plusMillis(newTtl.toMillis))
+            .returns(success)
+
+          service.setShortTtl(eori, correlationId).futureValue shouldBe success
+        }
       }
     }
   }

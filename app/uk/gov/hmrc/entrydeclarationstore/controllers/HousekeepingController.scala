@@ -51,4 +51,12 @@ class HousekeepingController @Inject()(cc: ControllerComponents, service: Housek
       case HousekeepingStatus.Unknown => InternalServerError
     }
   }
+
+  def setShortTtlBySubmissionId(submissionId: String): Action[AnyContent] = Action.async { implicit request =>
+    service.setShortTtl(submissionId).map(ok => if (ok) NoContent else NotFound)
+  }
+  def setShortTtlByEoriAndCorrelationId(eori: String, correlationId: String): Action[AnyContent] = Action.async {
+    implicit request =>
+      service.setShortTtl(eori, correlationId).map(ok => if (ok) NoContent else NotFound)
+  }
 }

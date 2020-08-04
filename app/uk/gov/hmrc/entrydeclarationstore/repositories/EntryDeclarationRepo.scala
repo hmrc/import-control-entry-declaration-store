@@ -56,6 +56,8 @@ trait EntryDeclarationRepo {
 
   def setHousekeepingAt(submissionId: String, time: Instant): Future[Boolean]
 
+  def setHousekeepingAt(eori: String, correlationId: String, time: Instant): Future[Boolean]
+
   def enableHousekeeping(value: Boolean): Future[Boolean]
 
   def getHousekeepingStatus: Future[HousekeepingStatus]
@@ -73,8 +75,8 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
     )
     with EntryDeclarationRepo {
 
-  private val housekeepingOnTTLSecs: Long  = 0
-  private val housekeepingOffTTLSecs: Long = Long.MaxValue
+  private val expireAfterSecondsOn: Long  = 0
+  private val expireAfterSecondsOff: Long = Long.MaxValue
 
   override def indexes: Seq[Index] = Seq(
     Index(Seq(("submissionId", Ascending)), name = Some("submissionIdIndex"), unique = true),
@@ -189,16 +191,19 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
       }
 
   override def setHousekeepingAt(submissionId: String, time: Instant): Future[Boolean] =
+    setHousekeepingAt(time, Json.obj("submissionId" -> submissionId))
+
+  override def setHousekeepingAt(eori: String, correlationId: String, time: Instant): Future[Boolean] =
+    setHousekeepingAt(time, Json.obj("eori" -> eori, "correlationId" -> correlationId))
+
+  private def setHousekeepingAt(time: Instant, query: JsObject): Future[Boolean] =
     collection
       .update(ordered = false, WriteConcern.Default)
-      .one(
-        Json.obj("submissionId" -> submissionId),
-        Json.obj("$set"         -> Json.obj("housekeepingAt" -> PersistableDateTime(time)))
-      )
+      .one(query, Json.obj("$set" -> Json.obj("housekeepingAt" -> PersistableDateTime(time))))
       .map(result => result.n == 1)
 
   override def enableHousekeeping(value: Boolean): Future[Boolean] = {
-    val ttlSecs = if (value) housekeepingOnTTLSecs else housekeepingOffTTLSecs
+    val ttlSecs = if (value) expireAfterSecondsOn else expireAfterSecondsOff
 
     val commandDoc = Json.obj(
       "collMod" -> "entryDeclarationStore",
@@ -233,11 +238,11 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
       } yield value
 
       optTtlSecs match {
-        case Some(`housekeepingOnTTLSecs`)  => HousekeepingStatus.On
-        case Some(`housekeepingOffTTLSecs`) => HousekeepingStatus.Off
+        case Some(`expireAfterSecondsOn`)  => HousekeepingStatus.On
+        case Some(`expireAfterSecondsOff`) => HousekeepingStatus.Off
         case Some(other) =>
           Logger.warn(
-            s"Cannot get housekeeping status: expireAfterSeconds is $other (neither on: $housekeepingOnTTLSecs nor off: $housekeepingOffTTLSecs)")
+            s"Cannot get housekeeping status: expireAfterSeconds is $other (neither on: $expireAfterSecondsOn nor off: $expireAfterSecondsOff)")
           HousekeepingStatus.Unknown
         case None =>
           Logger.warn(s"Cannot get housekeeping status: expireAfterSeconds could not be determined")
