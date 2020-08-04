@@ -26,7 +26,7 @@ import scala.concurrent.Future
 trait MockNRSService extends MockFactory {
   val mockNRSService: NRSService = mock[NRSService]
 
-  object MockNRSConnector {
+  object MockNRSService {
     def submit(nrsSubmission: NRSSubmission): CallHandler[Future[Either[NRSSubmisionFailure, NRSResponse]]] =
       (mockNRSService.submit(_: NRSSubmission)(_: HeaderCarrier, _: LoggingContext)) expects (nrsSubmission, *, *)
   }

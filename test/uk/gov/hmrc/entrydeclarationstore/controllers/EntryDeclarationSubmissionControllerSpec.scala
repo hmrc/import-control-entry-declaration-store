@@ -217,7 +217,7 @@ class EntryDeclarationSubmissionControllerSpec
           .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
 
         val nrsPromise = Promise[Either[NRSSubmisionFailure, NRSResponse]]
-        MockNRSConnector.submit(nrsSubmission) returns nrsPromise.future
+        MockNRSService.submit(nrsSubmission) returns nrsPromise.future
 
         val result: Future[Result] = handler(fakeRequest)
 
@@ -233,7 +233,7 @@ class EntryDeclarationSubmissionControllerSpec
           .handleSubmission(eori, payloadString, None, now, clientType)
           .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
 
-        MockNRSConnector.submit(nrsSubmission)
+        MockNRSService.submit(nrsSubmission)
 
         val result: Future[Result] = controller.postSubmission(fakeRequest)
 
@@ -259,7 +259,7 @@ class EntryDeclarationSubmissionControllerSpec
           .handleSubmission(eori, payloadString, Some(mrn), now, clientType)
           .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
 
-        MockNRSConnector.submit(nrsSubmission)
+        MockNRSService.submit(nrsSubmission)
 
         val result = controller.putAmendment(mrn)(fakeRequest)
 
