@@ -32,7 +32,7 @@ trait NRSMetadataTestData {
                                               |    "businessId": "safety-and-security",
                                               |    "notableEvent": "entry-declaration",
                                               |    "payloadContentType": "application/xml",
-                                              |    "userSubmissionTimestamp": "2018-04-07T12:13:25.156Z",
+                                              |    "userSubmissionTimestamp": "2018-04-07T12:13:25.000Z",
                                               |    "identityData": {
                                               |      "internalId": "int-id",
                                               |      "externalId": "ext-id",
@@ -142,7 +142,7 @@ trait NRSMetadataTestData {
           "Authorization"          -> "Bearer AbCdEf123456"
         ))
 
-    NRSMetadata(Instant.parse("2018-04-07T12:13:25.156Z"), "GB123456789", identityData, request)
+    NRSMetadata(Instant.parse("2018-04-07T12:13:25.000Z"), "GB123456789", identityData, request)
   }
 
 }
