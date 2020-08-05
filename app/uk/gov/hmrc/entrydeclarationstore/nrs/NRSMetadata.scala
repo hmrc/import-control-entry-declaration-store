@@ -21,6 +21,7 @@ import java.time.Instant
 import play.api.http.MimeTypes
 import play.api.libs.json.{JsObject, JsString, JsValue, Json, Writes}
 import play.api.mvc.RequestHeader
+import uk.gov.hmrc.entrydeclarationstore.models.InstantFormatter
 
 case class NRSMetadata(
   businessId: String,
@@ -32,7 +33,7 @@ case class NRSMetadata(
   headerData: JsValue,
   searchKeys: SearchKeys)
 
-object NRSMetadata {
+object NRSMetadata extends InstantFormatter {
   implicit val writes: Writes[NRSMetadata] = Json.writes[NRSMetadata]
 
   def apply(
