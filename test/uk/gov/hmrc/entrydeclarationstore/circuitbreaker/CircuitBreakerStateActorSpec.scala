@@ -210,7 +210,10 @@ class CircuitBreakerStateActorSpec
               config.copy(closedStateRefreshPeriod = shortTime, openStateRefreshPeriod = shortTime)))
 
           stateActor ! CircuitBreakerStateActor.UpdateDatabaseToOpen
-          parentProbe.expectMsg(CircuitBreakerActor.AcknowledgeOpen)
+
+          parentProbe.fishForSpecificMessage() {
+            case CircuitBreakerActor.AcknowledgeOpen => true
+          }
 
           parentProbe.expectMsg(CircuitBreakerActor.SetState(CircuitBreakerState.Closed))
           parentProbe.expectMsg(CircuitBreakerActor.SetState(CircuitBreakerState.Closed))
