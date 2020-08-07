@@ -35,7 +35,7 @@ abstract class AuthorisedController(cc: ControllerComponents) extends BackendCon
 
   def eoriCorrectForRequest[A](request: Request[A], eori: String): Boolean
 
-  def authorisedAction(): ActionBuilder[UserRequest, AnyContent] =
+  def authorisedAction: ActionBuilder[UserRequest, AnyContent] =
     new ActionBuilder[UserRequest, AnyContent] {
 
       override def parser: BodyParser[AnyContent] = cc.parsers.defaultBodyParser
@@ -49,7 +49,7 @@ abstract class AuthorisedController(cc: ControllerComponents) extends BackendCon
         timeFuture("Handle authentication", "handleSubmissionController.authentication") {
           implicit val headerCarrier: HeaderCarrier = hc(request)
 
-          authService.authenticate().flatMap {
+          authService.authenticate.flatMap {
             case Some(userDetails) =>
               if (eoriCorrectForRequest(request, userDetails.eori)) {
                 block(UserRequest(request, userDetails))

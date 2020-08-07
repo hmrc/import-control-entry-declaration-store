@@ -62,11 +62,11 @@ class EntryDeclarationSubmissionController @Inject()(
     </ns:SuccessResponse>
   // @formatter:on
 
-  val postSubmission: Action[String] = authorisedAction().async(parse.tolerantText) { implicit request =>
+  val postSubmission: Action[String] = authorisedAction.async(parse.tolerantText) { implicit request =>
     handleSubmission(None)
   }
 
-  def putAmendment(mrn: String): Action[String] = authorisedAction().async(parse.tolerantText) { implicit request =>
+  def putAmendment(mrn: String): Action[String] = authorisedAction.async(parse.tolerantText) { implicit request =>
     handleSubmission(Some(mrn))
   }
 
@@ -83,18 +83,19 @@ class EntryDeclarationSubmissionController @Inject()(
             case _                   => InternalServerError(failure.toXml)
           }
         case Right(success) =>
-          submitToNRS(request, receivedDateTime)
+          submitToNRSIfReqd(request, receivedDateTime)
           Ok(xmlSuccessResponse(success.correlationId))
       }
   }
 
-  private def submitToNRS(request: UserRequest[String], receivedDateTime: Instant)(implicit hc: HeaderCarrier) = {
-    implicit val lc: LoggingContext = LoggingContext(eori = Some(request.userDetails.eori))
+  private def submitToNRSIfReqd(request: UserRequest[String], receivedDateTime: Instant)(
+    implicit hc: HeaderCarrier): Unit =
+    request.userDetails.identityData.foreach { identityData =>
+      implicit val lc: LoggingContext = LoggingContext(eori = Some(request.userDetails.eori))
 
-    val submission = NRSSubmission(
-      request.body,
-      NRSMetadata(receivedDateTime, request.userDetails.eori, request.userDetails.identityData, request))
+      val submission =
+        NRSSubmission(request.body, NRSMetadata(receivedDateTime, request.userDetails.eori, identityData, request))
 
-    nrsService.submit(submission)
-  }
+      nrsService.submit(submission)
+    }
 }

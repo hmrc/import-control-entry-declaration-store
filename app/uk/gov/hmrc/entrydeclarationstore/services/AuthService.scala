@@ -24,6 +24,7 @@ import play.api.Logger
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{allEnrolments, _}
 import uk.gov.hmrc.auth.core.retrieve._
+import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.ApiSubscriptionFieldsConnector
 import uk.gov.hmrc.entrydeclarationstore.nrs.IdentityData
 import uk.gov.hmrc.entrydeclarationstore.reporting.ClientType
@@ -31,12 +32,14 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class UserDetails(eori: String, clientType: ClientType, identityData: IdentityData)
+case class UserDetails(eori: String, clientType: ClientType, identityData: Option[IdentityData])
 
 @Singleton
 class AuthService @Inject()(
   val authConnector: AuthConnector,
-  apiSubscriptionFieldsConnector: ApiSubscriptionFieldsConnector)(implicit ec: ExecutionContext)
+  apiSubscriptionFieldsConnector: ApiSubscriptionFieldsConnector,
+  appConfig: AppConfig
+)(implicit ec: ExecutionContext)
     extends AuthorisedFunctions {
 
   private val X_CLIENT_ID = "X-Client-Id"
@@ -49,20 +52,29 @@ class AuthService @Inject()(
 
   case object AuthFail extends AuthError
 
-  def authenticate()(implicit hc: HeaderCarrier): Future[Option[UserDetails]] =
-    authCSP
+  def authenticate(implicit hc: HeaderCarrier): Future[Option[UserDetails]] =
+    if (appConfig.nrsEnabled) {
+      doAuthenticate(nrsRetrievals, identityDataBuilder)
+    } else {
+      doAuthenticate(EmptyRetrieval, (_: Unit) => None)
+    }
+
+  private def doAuthenticate[A](retrieval: Retrieval[A], identityBuilder: A => Option[IdentityData])(
+    implicit hc: HeaderCarrier): Future[Option[UserDetails]] =
+    authCSP(retrieval, identityBuilder)
       .recoverWith {
-        case AuthFail | NoClientId => authNonCSP
+        case AuthFail | NoClientId => authNonCSP(retrieval, identityBuilder)
       }
       .toOption
       .value
 
-  private def authCSP(implicit hc: HeaderCarrier): EitherT[Future, AuthError, UserDetails] = {
-    def auth: Future[Option[IdentityData]] =
+  private def authCSP[A](retrieval: Retrieval[A], identityBuilder: A => Option[IdentityData])(
+    implicit hc: HeaderCarrier): EitherT[Future, AuthError, UserDetails] = {
+    def auth: Future[Option[Option[IdentityData]]] =
       authorised(AuthProviders(AuthProvider.PrivilegedApplication))
-        .retrieve(identityDataRetrievals) { identityParts =>
+        .retrieve(retrieval) { identityParts =>
           Logger.debug(s"Successfully authorised CSP PrivilegedApplication")
-          Future.successful(Some(identityDataFrom(identityParts)))
+          Future.successful(Some(identityBuilder(identityParts)))
         }
         .recover {
           case ae: AuthorisationException =>
@@ -77,9 +89,10 @@ class AuthService @Inject()(
     } yield UserDetails(eori, ClientType.CSP, identityData)
   }
 
-  private def authNonCSP(implicit hc: HeaderCarrier): EitherT[Future, AuthError, UserDetails] =
+  private def authNonCSP[A](retrieval: Retrieval[A], identityBuilder: A => Option[IdentityData])(
+    implicit hc: HeaderCarrier): EitherT[Future, AuthError, UserDetails] =
     EitherT(authorised(AuthProviders(AuthProvider.GovernmentGateway))
-      .retrieve(identityDataRetrievals and allEnrolments) {
+      .retrieve(retrieval and allEnrolments) {
         case identityParts ~ usersEnrolments =>
           val icsEnrolments =
             usersEnrolments.enrolments.filter(enrolment => enrolment.isActivated && enrolment.key == "HMRC-ICS-ORG")
@@ -92,7 +105,7 @@ class AuthService @Inject()(
           val eori = eoris.headOption
 
           val result = eori match {
-            case Some(eori) => UserDetails(eori, ClientType.GGW, identityDataFrom(identityParts)).asRight
+            case Some(eori) => UserDetails(eori, ClientType.GGW, identityBuilder(identityParts)).asRight
             case None       => NoEori.asLeft
           }
 
@@ -106,17 +119,17 @@ class AuthService @Inject()(
           AuthFail.asLeft
       })
 
-  private lazy val identityDataRetrievals =
+  private lazy val nrsRetrievals =
     (affinityGroup and
       internalId and externalId and agentCode and credentials and confidenceLevel and nino and saUtr and name and dateOfBirth
       and email and agentInformation and groupIdentifier and credentialRole
       and mdtpInformation and itmpName and itmpDateOfBirth and itmpAddress and credentialStrength and loginTimes)
 
-  private def identityDataFrom(
+  private def identityDataBuilder(
     identityParts: Option[AffinityGroup] ~ Option[String] ~ Option[String] ~ Option[String] ~
       Option[Credentials] ~ ConfidenceLevel ~ Option[String] ~ Option[String] ~ Option[Name] ~ Option[LocalDate] ~
       Option[String] ~ AgentInformation ~ Option[String] ~ Option[CredentialRole] ~ Option[MdtpInformation] ~
-      Option[ItmpName] ~ Option[LocalDate] ~ Option[ItmpAddress] ~ Option[String] ~ LoginTimes): IdentityData =
+      Option[ItmpName] ~ Option[LocalDate] ~ Option[ItmpAddress] ~ Option[String] ~ LoginTimes): Option[IdentityData] =
     identityParts match {
 
       case affGroup ~ inId ~ exId ~ agCode ~ creds
@@ -124,11 +137,11 @@ class AuthService @Inject()(
             ~ eml ~ agInfo ~ groupId ~ credRole
             ~ mdtpInfo ~ itmpName ~ itmpDob ~ itmpAddress ~ credStrength ~ logins =>
         // @formatter:off
-      IdentityData(
+        Some(IdentityData(
           inId, exId, agCode, creds, confLevel, ni, saRef, nme, dob,
           eml, agInfo, groupId, credRole, mdtpInfo, itmpName, itmpDob,
           itmpAddress, affGroup, credStrength, logins
-        )
+        ))
       // @formatter:on
     }
 }
