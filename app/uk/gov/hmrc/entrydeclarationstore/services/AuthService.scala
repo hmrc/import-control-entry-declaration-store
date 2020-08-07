@@ -31,7 +31,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class UserDetails(eori: String, clientType: ClientType, identityData: IdentityData)
+case class UserDetails(eori: String, clientType: ClientType, identityData: Option[IdentityData])
 
 @Singleton
 class AuthService @Inject()(
@@ -74,7 +74,7 @@ class AuthService @Inject()(
       clientId     <- EitherT.fromOption[Future](hc.headers.find(_._1 == X_CLIENT_ID).map(_._2), NoClientId)
       identityData <- EitherT.fromOptionF(auth, AuthFail)
       eori         <- EitherT.fromOptionF(apiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId), NoEori: AuthError)
-    } yield UserDetails(eori, ClientType.CSP, identityData)
+    } yield UserDetails(eori, ClientType.CSP, Some(identityData))
   }
 
   private def authNonCSP(implicit hc: HeaderCarrier): EitherT[Future, AuthError, UserDetails] =
@@ -92,7 +92,7 @@ class AuthService @Inject()(
           val eori = eoris.headOption
 
           val result = eori match {
-            case Some(eori) => UserDetails(eori, ClientType.GGW, identityDataFrom(identityParts)).asRight
+            case Some(eori) => UserDetails(eori, ClientType.GGW, Some(identityDataFrom(identityParts))).asRight
             case None       => NoEori.asLeft
           }
 

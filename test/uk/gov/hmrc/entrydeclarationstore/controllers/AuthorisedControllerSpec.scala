@@ -60,6 +60,9 @@ class AuthorisedControllerSpec
   val bodyContainingEori      = s"<someXml>$eori</someXml>"
   val bodyContainingOtherEori = s"<someXml>otherEori</someXml>"
 
+  // WLOG
+  val userDetails: UserDetails = UserDetails(eori, clientType, None)
+
   trait Test {
     val hc: HeaderCarrier = HeaderCarrier()
 
@@ -72,7 +75,8 @@ class AuthorisedControllerSpec
           case _         => false
         }
 
-      def action(): Action[String] = authorisedAction().async(parse.tolerantText) { _ =>
+      def action(): Action[String] = authorisedAction().async(parse.tolerantText) { userRequest =>
+        userRequest.userDetails shouldBe userDetails
         Future.successful(Ok(Json.obj()))
       }
 
@@ -96,7 +100,7 @@ class AuthorisedControllerSpec
 
     "the user is authorised" should {
       "return a 200" in new Test {
-        MockAuthService.authenticate() returns Future.successful(Some(UserDetails(eori, clientType, identityData)))
+        MockAuthService.authenticate() returns Future.successful(Some(userDetails))
 
         private val result: Future[Result] = controller.action()(request(bodyContainingEori))
         status(await(result)) shouldBe OK
@@ -116,7 +120,7 @@ class AuthorisedControllerSpec
 
     "auth eori does not match that in the request payload" should {
       "return a 403" in new Test {
-        MockAuthService.authenticate() returns Future.successful(Some(UserDetails(eori, clientType, identityData)))
+        MockAuthService.authenticate() returns Future.successful(Some(userDetails))
 
         private val result: Future[Result] = controller.action()(request(bodyContainingOtherEori))
         status(await(result))                                     shouldBe FORBIDDEN
@@ -129,8 +133,7 @@ class AuthorisedControllerSpec
   "AuthController" should {
     "use the authorization header to send to auth service" in new Test {
       val hcCapture: CaptureOne[HeaderCarrier] = CaptureOne[HeaderCarrier]()
-      MockAuthService.authenticateCapture()(hcCapture) returns Future.successful(
-        Some(UserDetails(eori, clientType, identityData)))
+      MockAuthService.authenticateCapture()(hcCapture) returns Future.successful(Some(userDetails))
       controller.action()(request(bodyContainingEori))
 
       hcCapture.value.authorization shouldBe Some(Authorization(bearerToken))

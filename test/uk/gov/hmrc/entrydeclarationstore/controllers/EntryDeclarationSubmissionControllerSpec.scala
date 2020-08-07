@@ -27,7 +27,7 @@ import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, SuccessResponse}
 import uk.gov.hmrc.entrydeclarationstore.nrs._
 import uk.gov.hmrc.entrydeclarationstore.reporting.ClientType
 import uk.gov.hmrc.entrydeclarationstore.services._
-import uk.gov.hmrc.entrydeclarationstore.utils.{MockMetrics, XmlFormatConfig}
+import uk.gov.hmrc.entrydeclarationstore.utils.{MockMetrics, XmlFormatConfig, XmlFormats}
 import uk.gov.hmrc.entrydeclarationstore.validation.{ValidationError, ValidationErrors}
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -147,17 +147,17 @@ class EntryDeclarationSubmissionControllerSpec
 
     "return 403" when {
       "eori does not match that from auth service" in {
-        MockAuthService.authenticate() returns Some(UserDetails("OTHEREORI", clientType, identityData))
+        MockAuthService.authenticate() returns Some(UserDetails("OTHEREORI", clientType, None))
         check(fakeRequest, FORBIDDEN, "FORBIDDEN")
       }
 
       "empty eori element (MesSenMES3) in xml (so that level 2 validation for this is not preempted)" in {
-        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, identityData))
+        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, None))
         check(FakeRequest().withBody(payloadNoEori.toString), FORBIDDEN, "FORBIDDEN")
       }
 
       "no eori element (MesSenMES3) in xml (so that level 2 validation for this is not preempted)" in {
-        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, identityData))
+        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, None))
         check(FakeRequest().withBody(payloadBlankEori.toString), FORBIDDEN, "FORBIDDEN")
       }
     }
@@ -172,68 +172,96 @@ class EntryDeclarationSubmissionControllerSpec
 
   // Validating behaviour that both put & post should have...
   def validatingEndpoint(mrn: Option[String], handler: Request[String] => Future[Result]): Unit = {
-    "Return BAD_REQUEST" when {
-      "The submission fails with ValidationErrors" in {
-        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, identityData))
-        MockEntryDeclarationStore
-          .handleSubmission(eori, payloadString, mrn, now, clientType)
-          .returns(Future.successful(Left(ErrorWrapper(validationErrors))))
+
+    def mockFailWithError[E: XmlFormats](e: E, optIdentityData: Option[IdentityData]) = {
+      MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, optIdentityData))
+      MockEntryDeclarationStore
+        .handleSubmission(eori, payloadString, mrn, now, clientType)
+        .returns(Future.successful(Left(ErrorWrapper(e))))
+    }
+
+    "The submission fails with ValidationErrors" should {
+      "Return BAD_REQUEST" in {
+        mockFailWithError(validationErrors, None)
 
         val result: Future[Result] = handler(fakeRequest)
-
         status(result) shouldBe BAD_REQUEST
         val xmlBody: Elem = xml.XML.loadString(contentAsString(result))
 
-        xmlBody shouldBe validationErrorsXml
-
+        xmlBody             shouldBe validationErrorsXml
         contentType(result) shouldBe Some("application/xml")
+      }
+
+      "Not submit to nrs even if enabled" in {
+        mockFailWithError(validationErrors, Some(identityData))
+        MockNRSService.submit(nrsSubmission).never()
+
+        await(handler(fakeRequest))
       }
     }
 
-    "Return INTERNAL_SERVER_ERROR" when {
-      "The submission fails with a ServerError (e.g. database problem)" in {
-        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, identityData))
-        MockEntryDeclarationStore
-          .handleSubmission(eori, payloadString, mrn, now, clientType)
-          .returns(Future.successful(Left(ErrorWrapper(ServerError))))
-        val result: Future[Result] = handler(fakeRequest)
+    "The submission fails with a ServerError (e.g. database problem)" should {
+      "Return INTERNAL_SERVER_ERROR" in {
+        mockFailWithError(ServerError, None)
 
+        val result: Future[Result] = handler(fakeRequest)
         status(result) shouldBe INTERNAL_SERVER_ERROR
 
         val xmlBody: Elem = xml.XML.loadString(contentAsString(result))
-        xmlBody shouldBe serverErrorsXml
-
+        xmlBody             shouldBe serverErrorsXml
         contentType(result) shouldBe Some("application/xml")
+      }
+
+      "Not submit to nrs even if enabled" in {
+        mockFailWithError(ServerError, Some(identityData))
+        MockNRSService.submit(nrsSubmission).never()
+
+        await(handler(fakeRequest))
       }
     }
   }
 
   def nrsSubmittingEndpoint(mrn: Option[String], handler: Request[String] => Future[Result]): Unit =
-    "submission is successful" should {
-      "not wait until NRS submission completes" in {
-        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, identityData))
-        MockEntryDeclarationStore
-          .handleSubmission(eori, payloadString, mrn, now, clientType)
-          .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
+    "submission is successful" when {
+      "nrs is enabled" must {
+        "submit to NRS and not wait until NRS submission completes" in {
+          MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, Some(identityData)))
+          MockEntryDeclarationStore
+            .handleSubmission(eori, payloadString, mrn, now, clientType)
+            .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
 
-        val nrsPromise = Promise[Option[NRSResponse]]
-        MockNRSService.submit(nrsSubmission) returns nrsPromise.future
+          val nrsPromise = Promise[Option[NRSResponse]]
+          MockNRSService.submit(nrsSubmission) returns nrsPromise.future
 
-        val result: Future[Result] = handler(fakeRequest)
+          val result: Future[Result] = handler(fakeRequest)
 
-        status(result) shouldBe OK
+          status(result) shouldBe OK
+        }
+      }
+
+      "nrs is not enabled" must {
+        "not submit to NRS" in {
+          MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, None))
+          MockEntryDeclarationStore
+            .handleSubmission(eori, payloadString, mrn, now, clientType)
+            .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
+
+          MockNRSService.submit(nrsSubmission).never()
+
+          val result: Future[Result] = handler(fakeRequest)
+
+          status(result) shouldBe OK
+        }
       }
     }
 
   "EntryDeclarationSubmissionController postSubmission" should {
     "Return OK" when {
       "The submission is handled successfully" in {
-        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, identityData))
+        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, None))
         MockEntryDeclarationStore
           .handleSubmission(eori, payloadString, None, now, clientType)
           .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
-
-        MockNRSService.submit(nrsSubmission)
 
         val result: Future[Result] = controller.postSubmission(fakeRequest)
 
@@ -251,15 +279,13 @@ class EntryDeclarationSubmissionControllerSpec
     behave like nrsSubmittingEndpoint(mrn = None, controller.postSubmission(_))
   }
 
-  "EntryDeclarationSubmissionController putAmendment" should {
-    "Return OK" when {
-      "The submission is handled successfully" in {
-        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, identityData))
+  "EntryDeclarationSubmissionController putAmendment" when {
+    "The submission is handled successfully" should {
+      "Return OK" in {
+        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, None))
         MockEntryDeclarationStore
           .handleSubmission(eori, payloadString, Some(mrn), now, clientType)
           .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
-
-        MockNRSService.submit(nrsSubmission)
 
         val result = controller.putAmendment(mrn)(fakeRequest)
 
@@ -271,9 +297,9 @@ class EntryDeclarationSubmissionControllerSpec
       }
     }
 
-    "Return MRNMismatch Bad Request error" when {
-      "The MRN in the body doesnt match the MRN in URL" in {
-        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, identityData))
+    "The MRN in the body doesnt match the MRN in URL" should {
+      "Return MRNMismatch Bad Request error" in {
+        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, None))
         MockEntryDeclarationStore
           .handleSubmission(eori, payloadString, Some(mrn), now, clientType)
           .returns(Future.successful(Left(ErrorWrapper(MRNMismatchError))))
@@ -286,6 +312,17 @@ class EntryDeclarationSubmissionControllerSpec
         xmlBody shouldBe mrnMismatchErrorXml
 
         contentType(result) shouldBe Some("application/xml")
+      }
+
+      "Not submit to nrs even if enabled" in {
+        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, Some(identityData)))
+        MockEntryDeclarationStore
+          .handleSubmission(eori, payloadString, Some(mrn), now, clientType)
+          .returns(Future.successful(Left(ErrorWrapper(MRNMismatchError))))
+
+        MockNRSService.submit(nrsSubmission).never()
+
+        await(controller.putAmendment(mrn)(fakeRequest))
       }
     }
 
