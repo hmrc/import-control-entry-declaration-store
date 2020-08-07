@@ -62,11 +62,11 @@ class EntryDeclarationSubmissionController @Inject()(
     </ns:SuccessResponse>
   // @formatter:on
 
-  val postSubmission: Action[String] = authorisedAction().async(parse.tolerantText) { implicit request =>
+  val postSubmission: Action[String] = authorisedAction.async(parse.tolerantText) { implicit request =>
     handleSubmission(None)
   }
 
-  def putAmendment(mrn: String): Action[String] = authorisedAction().async(parse.tolerantText) { implicit request =>
+  def putAmendment(mrn: String): Action[String] = authorisedAction.async(parse.tolerantText) { implicit request =>
     handleSubmission(Some(mrn))
   }
 

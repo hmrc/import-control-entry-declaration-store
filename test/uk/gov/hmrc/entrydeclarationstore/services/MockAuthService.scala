@@ -19,7 +19,6 @@ package uk.gov.hmrc.entrydeclarationstore.services
 import org.scalamock.handlers.CallHandler
 import org.scalamock.matchers.ArgCapture.CaptureOne
 import org.scalamock.scalatest.MockFactory
-import uk.gov.hmrc.entrydeclarationstore.reporting.ClientType
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -28,11 +27,11 @@ trait MockAuthService extends MockFactory {
   val mockAuthService: AuthService = mock[AuthService]
 
   object MockAuthService {
-    def authenticate(): CallHandler[Future[Option[UserDetails]]] =
-      (mockAuthService.authenticate()(_: HeaderCarrier)) expects *
+    def authenticate: CallHandler[Future[Option[UserDetails]]] =
+      (mockAuthService.authenticate(_: HeaderCarrier)).expects(*)
 
-    def authenticateCapture()(headerCarrier: CaptureOne[HeaderCarrier]): CallHandler[Future[Option[UserDetails]]] =
-      (mockAuthService.authenticate()(_: HeaderCarrier)) expects capture(headerCarrier)
+    def authenticateCapture(headerCarrier: CaptureOne[HeaderCarrier]): CallHandler[Future[Option[UserDetails]]] =
+      (mockAuthService.authenticate(_: HeaderCarrier)).expects(capture(headerCarrier))
   }
 
 }

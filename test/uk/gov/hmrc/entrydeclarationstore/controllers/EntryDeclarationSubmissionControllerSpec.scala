@@ -23,6 +23,7 @@ import play.api.http.MimeTypes
 import play.api.mvc.{Request, Result}
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
+import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, SuccessResponse}
 import uk.gov.hmrc.entrydeclarationstore.nrs._
 import uk.gov.hmrc.entrydeclarationstore.reporting.ClientType
@@ -40,7 +41,8 @@ class EntryDeclarationSubmissionControllerSpec
     with MockEntryDeclarationStore
     with MockAuthService
     with MockNRSService
-    with NRSMetadataTestData {
+    with NRSMetadataTestData
+    with MockAppConfig {
 
   val eori                   = "GB1234567890"
   val mrn                    = "mrn"
@@ -147,24 +149,24 @@ class EntryDeclarationSubmissionControllerSpec
 
     "return 403" when {
       "eori does not match that from auth service" in {
-        MockAuthService.authenticate() returns Some(UserDetails("OTHEREORI", clientType, None))
+        MockAuthService.authenticate returns Some(UserDetails("OTHEREORI", clientType, None))
         check(fakeRequest, FORBIDDEN, "FORBIDDEN")
       }
 
       "empty eori element (MesSenMES3) in xml (so that level 2 validation for this is not preempted)" in {
-        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, None))
+        MockAuthService.authenticate returns Some(UserDetails(eori, clientType, None))
         check(FakeRequest().withBody(payloadNoEori.toString), FORBIDDEN, "FORBIDDEN")
       }
 
       "no eori element (MesSenMES3) in xml (so that level 2 validation for this is not preempted)" in {
-        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, None))
+        MockAuthService.authenticate returns Some(UserDetails(eori, clientType, None))
         check(FakeRequest().withBody(payloadBlankEori.toString), FORBIDDEN, "FORBIDDEN")
       }
     }
 
     "return 401" when {
       "no eori is available from auth service" in {
-        MockAuthService.authenticate() returns None
+        MockAuthService.authenticate returns None
         check(fakeRequest, UNAUTHORIZED, "UNAUTHORIZED")
       }
     }
@@ -174,7 +176,7 @@ class EntryDeclarationSubmissionControllerSpec
   def validatingEndpoint(mrn: Option[String], handler: Request[String] => Future[Result]): Unit = {
 
     def mockFailWithError[E: XmlFormats](e: E, optIdentityData: Option[IdentityData]) = {
-      MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, optIdentityData))
+      MockAuthService.authenticate returns Some(UserDetails(eori, clientType, optIdentityData))
       MockEntryDeclarationStore
         .handleSubmission(eori, payloadString, mrn, now, clientType)
         .returns(Future.successful(Left(ErrorWrapper(e))))
@@ -225,7 +227,7 @@ class EntryDeclarationSubmissionControllerSpec
     "submission is successful" when {
       "nrs is enabled" must {
         "submit to NRS and not wait until NRS submission completes" in {
-          MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, Some(identityData)))
+          MockAuthService.authenticate returns Some(UserDetails(eori, clientType, Some(identityData)))
           MockEntryDeclarationStore
             .handleSubmission(eori, payloadString, mrn, now, clientType)
             .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
@@ -241,7 +243,7 @@ class EntryDeclarationSubmissionControllerSpec
 
       "nrs is not enabled" must {
         "not submit to NRS" in {
-          MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, None))
+          MockAuthService.authenticate returns Some(UserDetails(eori, clientType, None))
           MockEntryDeclarationStore
             .handleSubmission(eori, payloadString, mrn, now, clientType)
             .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
@@ -258,7 +260,7 @@ class EntryDeclarationSubmissionControllerSpec
   "EntryDeclarationSubmissionController postSubmission" should {
     "Return OK" when {
       "The submission is handled successfully" in {
-        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, None))
+        MockAuthService.authenticate returns Some(UserDetails(eori, clientType, None))
         MockEntryDeclarationStore
           .handleSubmission(eori, payloadString, None, now, clientType)
           .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
@@ -282,7 +284,7 @@ class EntryDeclarationSubmissionControllerSpec
   "EntryDeclarationSubmissionController putAmendment" when {
     "The submission is handled successfully" should {
       "Return OK" in {
-        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, None))
+        MockAuthService.authenticate returns Some(UserDetails(eori, clientType, None))
         MockEntryDeclarationStore
           .handleSubmission(eori, payloadString, Some(mrn), now, clientType)
           .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
@@ -299,7 +301,7 @@ class EntryDeclarationSubmissionControllerSpec
 
     "The MRN in the body doesnt match the MRN in URL" should {
       "Return MRNMismatch Bad Request error" in {
-        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, None))
+        MockAuthService.authenticate returns Some(UserDetails(eori, clientType, None))
         MockEntryDeclarationStore
           .handleSubmission(eori, payloadString, Some(mrn), now, clientType)
           .returns(Future.successful(Left(ErrorWrapper(MRNMismatchError))))
@@ -315,7 +317,7 @@ class EntryDeclarationSubmissionControllerSpec
       }
 
       "Not submit to nrs even if enabled" in {
-        MockAuthService.authenticate() returns Some(UserDetails(eori, clientType, Some(identityData)))
+        MockAuthService.authenticate returns Some(UserDetails(eori, clientType, Some(identityData)))
         MockEntryDeclarationStore
           .handleSubmission(eori, payloadString, Some(mrn), now, clientType)
           .returns(Future.successful(Left(ErrorWrapper(MRNMismatchError))))
