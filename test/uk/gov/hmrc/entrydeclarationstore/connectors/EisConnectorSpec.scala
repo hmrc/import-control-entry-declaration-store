@@ -45,8 +45,8 @@ import uk.gov.hmrc.entrydeclarationstore.utils.MockPagerDutyLogger
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
 
 class EisConnectorSpec
     extends WordSpec
@@ -79,9 +79,9 @@ class EisConnectorSpec
   private val otherHeader = "otherHeader"
   implicit val hc: HeaderCarrier =
     HeaderCarrier(extraHeaders = Seq(extraHeader -> "someValue"), otherHeaders = Seq(otherHeader -> "someOtherValue"))
-  implicit val ec: ExecutionContext = ExecutionContext.global
-  implicit val request: Request     = Request(0L)
-  implicit val lc: LoggingContext   = LoggingContext("eori", "corrId", "subId")
+
+  implicit val request: Request   = Request(0L)
+  implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
 
   private val wireMockServer = new WireMockServer(WireMockConfiguration.wireMockConfig().dynamicPort())
 

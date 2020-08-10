@@ -29,11 +29,11 @@ class CircuitBreakerController @Inject()(cc: ControllerComponents, service: Circ
   implicit ec: ExecutionContext)
     extends BackendController(cc) {
 
-  def closeCircuitBreaker: Action[AnyContent] = Action.async { implicit request =>
+  def closeCircuitBreaker: Action[AnyContent] = Action.async { _ =>
     service.closeCircuitBreaker.map(_ => NoContent)
   }
 
-  def getStatus: Action[AnyContent] = Action.async { implicit request =>
+  def getStatus: Action[AnyContent] = Action.async { _ =>
     service.getCircuitBreakerStatus.map(status => Ok(Json.toJson(status)))
   }
 }

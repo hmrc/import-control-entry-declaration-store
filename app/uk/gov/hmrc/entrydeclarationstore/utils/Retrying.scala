@@ -57,13 +57,11 @@ trait Retrying {
             }
         }
 
-      //TODO replace with transformWith for Scala 2.12...
       task(attemptNumber)
-        .recoverWith {
-          case NonFatal(e) => retryIfPossible(Failure(e))
-        }
-        .flatMap { e =>
-          retryIfPossible(Success(e))
+        .transformWith {
+          case e: Success[A]            => retryIfPossible(e)
+          case e @ Failure(NonFatal(_)) => retryIfPossible(e)
+          case Failure(e)               => Future.failed(e)
         }
     }
 
