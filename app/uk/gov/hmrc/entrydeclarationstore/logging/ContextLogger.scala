@@ -33,5 +33,5 @@ object ContextLogger {
     Logger.error(formatMessage(message), e)
 
   private def formatMessage(message: => String)(implicit lc: LoggingContext): String =
-    s"$message (${lc.context})"
+    s"$message ${lc.context}"
 }

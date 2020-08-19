@@ -78,7 +78,7 @@ class EntryDeclarationStoreImpl @Inject()(
       val input: InputParameters = InputParameters(mrn, submissionId, correlationId, receivedDateTime)
 
       implicit val lc: LoggingContext =
-        LoggingContext(eori = eori, correlationId = correlationId, submissionId = submissionId)
+        LoggingContext(eori = eori, correlationId = correlationId, submissionId = submissionId, mrn = mrn)
 
       if (appConfig.logSubmissionPayloads) {
         ContextLogger.info(s"Handling submission. Payload:\n$payload")
