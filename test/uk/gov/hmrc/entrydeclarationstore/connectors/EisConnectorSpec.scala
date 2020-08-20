@@ -42,8 +42,7 @@ import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.{CircuitBreakerState, EntryDeclarationMetadata, MessageType}
 import uk.gov.hmrc.entrydeclarationstore.repositories.MockCircuitBreakerRepo
 import uk.gov.hmrc.entrydeclarationstore.utils.MockPagerDutyLogger
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._

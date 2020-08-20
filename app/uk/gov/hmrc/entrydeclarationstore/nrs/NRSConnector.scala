@@ -22,8 +22,8 @@ import play.api.http.Status
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationstore.utils.{Delayer, Retrying}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
@@ -46,24 +46,6 @@ class NRSConnectorImpl @Inject()(httpClient: HttpClient, appConfig: AppConfig)(
   private val url: String    = s"${appConfig.nrsBaseUrl}/submission"
   private val apiKey: String = appConfig.nrsApiKey
 
-  implicit def httpReads(implicit lc: LoggingContext): HttpReads[Either[NRSSubmisionFailure, NRSResponse]] =
-    new HttpReads[Either[NRSSubmisionFailure, NRSResponse]] {
-      override def read(
-        method: String,
-        url: String,
-        response: HttpResponse): Either[NRSSubmisionFailure, NRSResponse] = {
-        val status = response.status
-
-        if (Status.isSuccessful(status)) {
-          ContextLogger.info("NRS submission successful")
-          Right(response.json.as[NRSResponse])
-        } else {
-          ContextLogger.warn(s"NRS submission failed with status $status")
-          Left(NRSSubmisionFailure.ErrorResponse(status))
-        }
-      }
-    }
-
   def submit(nrsSubmission: NRSSubmission)(
     implicit hc: HeaderCarrier,
     lc: LoggingContext): Future[Either[NRSSubmisionFailure, NRSResponse]] = {
@@ -77,7 +59,18 @@ class NRSConnectorImpl @Inject()(httpClient: HttpClient, appConfig: AppConfig)(
       ContextLogger.info(s"Attempt $attemptNumber NRS submission: sending POST request to $url")
 
       httpClient
-        .POST(url, nrsSubmission, Seq("X-API-Key" -> apiKey))
+        .POST[NRSSubmission, HttpResponse](url, nrsSubmission, Seq("X-API-Key" -> apiKey))
+        .map { response =>
+          val status = response.status
+
+          if (Status.isSuccessful(status)) {
+            ContextLogger.info("NRS submission successful")
+            Right(response.json.as[NRSResponse])
+          } else {
+            ContextLogger.warn(s"NRS submission failed with status $status")
+            Left(NRSSubmisionFailure.ErrorResponse(status))
+          }
+        }
         .recover {
           case NonFatal(e) =>
             ContextLogger.error(s"NRS submission failed with exception", e)

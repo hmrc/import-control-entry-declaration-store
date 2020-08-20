@@ -21,10 +21,10 @@ import javax.inject.{Inject, Singleton}
 import play.api.http.HttpErrorHandler
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.api.controllers.{DocumentationController => HmrcDocumentationController}
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
 import uk.gov.hmrc.entrydeclarationstore.validation.business.{Assert, Rule}
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 @Singleton
 class DocumentationController @Inject()(
@@ -32,9 +32,12 @@ class DocumentationController @Inject()(
   assets: Assets,
   appConfig: AppConfig,
   errorHandler: HttpErrorHandler)
-    extends HmrcDocumentationController(cc, assets, errorHandler) {
+    extends BackendController(cc) {
 
-  override def definition(): Action[AnyContent] = Action {
+  def documentation(version: String, endpointName: String): Action[AnyContent] =
+    assets.at(s"/public/api/documentation/$version", s"${endpointName.replaceAll(" ", "-")}.xml")
+
+  def definition(): Action[AnyContent] = Action {
     Ok(Json.parse(s"""{
                      |  "scopes": [
                      |    {
@@ -69,7 +72,7 @@ class DocumentationController @Inject()(
                      |}""".stripMargin))
   }
 
-  override def conf(version: String, file: String): Action[AnyContent] =
+  def conf(version: String, file: String): Action[AnyContent] =
     assets.at(s"/public/api/conf/$version", file)
 
   def rules315(version: String): Action[AnyContent] = Action {
