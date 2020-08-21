@@ -19,7 +19,7 @@ package uk.gov.hmrc.entrydeclarationstore.http
 import javax.inject.Inject
 import play.api.http.HttpErrorHandler
 import play.api.mvc.{RequestHeader, Result}
-import uk.gov.hmrc.play.bootstrap.http.JsonErrorHandler
+import uk.gov.hmrc.play.bootstrap.backend.http.JsonErrorHandler
 
 import scala.concurrent.Future
 

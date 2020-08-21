@@ -26,8 +26,8 @@ import uk.gov.hmrc.entrydeclarationstore.connectors.helpers.HeaderGenerator
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationstore.models.EntryDeclarationMetadata
 import uk.gov.hmrc.entrydeclarationstore.utils.PagerDutyLogger
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 
 import scala.concurrent.{ExecutionContext, Future, TimeoutException}
 import scala.util.control.NonFatal
@@ -50,11 +50,6 @@ class EisConnectorImpl @Inject()(
   val newUrl: String   = s"${appConfig.eisHost}${appConfig.eisNewEnsUrlPath}"
   val amendUrl: String = s"${appConfig.eisHost}${appConfig.eisAmendEnsUrlPath}"
 
-  // This replaces the default HttpReads[HttpResponse] so that we can fully control error handling
-  implicit object ResultReads extends HttpReads[HttpResponse] {
-    override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
-  }
-
   implicit val emptyHeaderCarrier: HeaderCarrier = HeaderCarrier()
 
   def submitMetadata(metadata: EntryDeclarationMetadata, bypassCircuitBreaker: Boolean)(
@@ -71,14 +66,14 @@ class EisConnectorImpl @Inject()(
     implicit lc: LoggingContext): Future[HttpResponse] = {
     ContextLogger.info(s"sending PUT request to $amendUrl")
     client
-      .PUT(amendUrl, metadata, headers)
+      .PUT[EntryDeclarationMetadata, HttpResponse](amendUrl, metadata, headers)
   }
 
   private def postNew(metadata: EntryDeclarationMetadata, headers: Seq[(String, String)])(
     implicit lc: LoggingContext): Future[HttpResponse] = {
     ContextLogger.info(s"sending POST request to $newUrl")
     client
-      .POST(newUrl, metadata, headers)
+      .POST[EntryDeclarationMetadata, HttpResponse](newUrl, metadata, headers)
   }
 
   private[connectors] def submit(bypassCircuitBreaker: Boolean)(code: => Future[HttpResponse])(

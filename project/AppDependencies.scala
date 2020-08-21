@@ -4,31 +4,29 @@ import sbt._
 object AppDependencies {
 
   val compile: Seq[ModuleID] = Seq(
-    "com.github.fge"         % "json-schema-validator" % "2.2.6",
-    "uk.gov.hmrc"            %% "simple-reactivemongo" % "7.26.0-play-26",
-    "uk.gov.hmrc"            %% "bootstrap-play-26"    % "1.7.0",
-    "uk.gov.hmrc"            %% "play-hmrc-api"        % "4.1.0-play-26",
-    "org.typelevel"          %% "cats-core"            % "2.0.0",
-    "org.scala-lang.modules" %% "scala-xml"            % "1.2.0",
-    "com.lucidchart"         %% "xtract"               % "2.2.1",
-    "org.codehaus.groovy"    % "groovy-all"            % "2.5.8",
-    "uk.gov.hmrc"            %% "auth-client"          % "3.0.0-play-26",
-    "com.chuusai"            %% "shapeless"            % "2.3.3"
+    "com.github.fge"         % "json-schema-validator"      % "2.2.6",
+    "uk.gov.hmrc"            %% "simple-reactivemongo"      % "7.26.0-play-26",
+    "uk.gov.hmrc"            %% "bootstrap-backend-play-26" % "2.24.0",
+    "org.typelevel"          %% "cats-core"                 % "2.0.0",
+    "org.scala-lang.modules" %% "scala-xml"                 % "1.2.0",
+    "com.lucidchart"         %% "xtract"                    % "2.2.1",
+    "org.codehaus.groovy"    % "groovy-all"                 % "2.5.8",
+    "com.chuusai"            %% "shapeless"                 % "2.3.3"
   )
 
   val test: Seq[ModuleID] = Seq(
-    "uk.gov.hmrc"            %% "bootstrap-play-26"   % "1.7.0"         % Test classifier "tests",
-    "org.scalatest"          %% "scalatest"           % "3.0.8"         % "test, it",
-    "com.typesafe.play"      %% "play-test"           % current         % "test, it",
-    "org.pegdown"            % "pegdown"              % "1.6.0"         % "test, it",
-    "org.scalatestplus.play" %% "scalatestplus-play"  % "3.1.3"         % "test, it",
-    "org.scalamock"          %% "scalamock"           % "4.4.0"         % "test, it",
-    "org.scalacheck"         %% "scalacheck"          % "1.14.3"        % "test, it",
-    "uk.gov.hmrc"            %% "hmrctest"            % "3.9.0-play-26" % "test, it",
-    "com.github.tomakehurst" % "wiremock"             % "2.26.3"        % "test, it",
-    "org.mockito"            % "mockito-all"          % "1.10.19"       % "test",
-    "com.miguno.akka"        %% "akka-mock-scheduler" % "0.5.5"         % "test",
-    "com.typesafe.akka"      %% "akka-testkit"        % "2.5.23"        % "test"
+    "uk.gov.hmrc"            %% "bootstrap-backend-play-26" % "2.24.0"        % "test, it",
+    "org.scalatest"          %% "scalatest"                 % "3.0.8"         % "test, it",
+    "com.typesafe.play"      %% "play-test"                 % current         % "test, it",
+    "org.pegdown"            % "pegdown"                    % "1.6.0"         % "test, it",
+    "org.scalatestplus.play" %% "scalatestplus-play"        % "3.1.3"         % "test, it",
+    "org.scalamock"          %% "scalamock"                 % "4.4.0"         % "test, it",
+    "org.scalacheck"         %% "scalacheck"                % "1.14.3"        % "test, it",
+    "uk.gov.hmrc"            %% "hmrctest"                  % "3.9.0-play-26" % "test, it",
+    "com.github.tomakehurst" % "wiremock"                   % "2.26.3"        % "test, it",
+    "org.mockito"            % "mockito-all"                % "1.10.19"       % "test",
+    "com.miguno.akka"        %% "akka-mock-scheduler"       % "0.5.5"         % "test",
+    "com.typesafe.akka"      %% "akka-testkit"              % "2.5.23"        % "test"
   )
 
 // Fixes a transitive dependency clash between wiremock and scalatestplus-play

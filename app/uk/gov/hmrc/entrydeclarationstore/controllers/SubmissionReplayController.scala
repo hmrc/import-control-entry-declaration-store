@@ -22,7 +22,7 @@ import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.models.ReplaySubmissionIds
 import uk.gov.hmrc.entrydeclarationstore.services.SubmissionReplayService
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.{ExecutionContext, Future}
 

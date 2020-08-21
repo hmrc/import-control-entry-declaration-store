@@ -22,8 +22,8 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json.JsObject
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import scala.concurrent.{ExecutionContext, Future}
 

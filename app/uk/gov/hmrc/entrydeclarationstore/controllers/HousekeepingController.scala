@@ -22,7 +22,7 @@ import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.entrydeclarationstore.models.{HousekeepingEnabled, HousekeepingStatus}
 import uk.gov.hmrc.entrydeclarationstore.services.HousekeepingService
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.{ExecutionContext, Future}
 
