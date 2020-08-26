@@ -51,6 +51,8 @@ trait EntryDeclarationRepo {
 
   def lookupAmendmentRejectionEnrichment(submissionId: String): Future[Option[AmendmentRejectionEnrichment]]
 
+  def lookupDeclarationRejectionEnrichment(submissionId: String): Future[Option[DeclarationRejectionEnrichment]]
+
   def lookupMetadata(submissionId: String)(
     implicit lc: LoggingContext): Future[Either[MetadataLookupError, ReplayMetadata]]
 
@@ -142,8 +144,14 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
 
   override def lookupAcceptanceEnrichment(submissionId: String): Future[Option[AcceptanceEnrichment]] =
     collection
-      .find(Json.obj("submissionId" -> submissionId), Some(Json.obj("payload" -> 1)))
-      .one[AcceptanceEnrichment](ReadPreference.primaryPreferred)
+      .find(Json.obj("submissionId" -> submissionId), Some(Json.obj("eisSubmissionDateTime" -> 1, "payload" -> 1)))
+      .one[JsObject](ReadPreference.primaryPreferred)
+      .map(_.map { doc =>
+        AcceptanceEnrichment(
+          (doc \ "eisSubmissionDateTime").asOpt[PersistableDateTime].map(_.toInstant),
+          (doc \ "payload").as[JsValue]
+        )
+      })
 
   override def lookupAmendmentRejectionEnrichment(submissionId: String): Future[Option[AmendmentRejectionEnrichment]] =
     collection
@@ -151,6 +159,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
         Json.obj("submissionId" -> submissionId),
         Some(
           Json.obj(
+            "eisSubmissionDateTime"                          -> 1,
             "payload.parties.declarant"                      -> 1,
             "payload.parties.representative"                 -> 1,
             "payload.itinerary.officeOfFirstEntry.reference" -> 1,
@@ -158,7 +167,22 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
             "payload.amendment.dateTime"                     -> 1
           ))
       )
-      .one[AmendmentRejectionEnrichment](ReadPreference.primaryPreferred)
+      .one[JsObject](ReadPreference.primaryPreferred)
+      .map(_.map { doc =>
+        AmendmentRejectionEnrichment(
+          (doc \ "eisSubmissionDateTime").asOpt[PersistableDateTime].map(_.toInstant),
+          (doc \ "payload").as[JsValue]
+        )
+      })
+
+  override def lookupDeclarationRejectionEnrichment(
+    submissionId: String): Future[Option[DeclarationRejectionEnrichment]] =
+    collection
+      .find(Json.obj("submissionId" -> submissionId), Some(Json.obj("eisSubmissionDateTime" -> 1)))
+      .one[JsObject](ReadPreference.primaryPreferred)
+      .map(_.map { doc =>
+        DeclarationRejectionEnrichment((doc \ "eisSubmissionDateTime").asOpt[PersistableDateTime].map(_.toInstant))
+      })
 
   override def lookupMetadata(submissionId: String)(
     implicit lc: LoggingContext): Future[Either[MetadataLookupError, ReplayMetadata]] =

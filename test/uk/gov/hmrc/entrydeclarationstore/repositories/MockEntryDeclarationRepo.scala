@@ -52,6 +52,10 @@ trait MockEntryDeclarationRepo extends MockFactory {
       submissionId: String): CallHandler[Future[Option[AmendmentRejectionEnrichment]]] =
       mockEntryDeclarationRepo.lookupAmendmentRejectionEnrichment _ expects submissionId
 
+    def lookupDeclarationRejectionEnrichment(
+      submissionId: String): CallHandler[Future[Option[DeclarationRejectionEnrichment]]] =
+      mockEntryDeclarationRepo.lookupDeclarationRejectionEnrichment _ expects submissionId
+
     def lookupMetadata(submissionId: String): CallHandler[Future[Either[MetadataLookupError, ReplayMetadata]]] =
       (mockEntryDeclarationRepo.lookupMetadata(_: String)(_: LoggingContext)) expects (submissionId, *)
 
