@@ -82,6 +82,7 @@ class SchemaValidator {
 
     factory.setNamespaceAware(true)
     factory.setSchema(schemaType.schema)
+    factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
 
     val saxParser = factory.newSAXParser()
 
