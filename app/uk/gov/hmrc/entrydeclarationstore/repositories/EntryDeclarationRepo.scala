@@ -109,18 +109,17 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
     collection
       .find(
         Json.obj("eori" -> eori, "correlationId" -> correlationId),
-        Some(Json.obj("submissionId" -> 1, "receivedDateTime" -> 1, "housekeepingAt" -> 1))
+        Some(Json.obj("submissionId" -> 1, "receivedDateTime" -> 1, "housekeepingAt" -> 1, "eisSubmissionDateTime" -> 1))
       )
       .one[JsObject](ReadPreference.primaryPreferred)
-      .map {
-        _.map { doc =>
+      .map ( _.map { doc =>
           SubmissionIdLookupResult(
             (doc \ "receivedDateTime").as[PersistableDateTime].toInstant.toString,
             (doc \ "housekeepingAt").as[PersistableDateTime].toInstant.toString,
-            (doc \ "submissionId").as[String]
+            (doc \ "submissionId").as[String],
+            (doc \ "eisSubmissionDateTime").asOpt[PersistableDateTime].map(_.toInstant.toString)
           )
-        }
-      }
+        })
 
   override def lookupEntryDeclaration(submissionId: String): Future[Option[JsValue]] =
     collection

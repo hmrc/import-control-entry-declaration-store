@@ -26,16 +26,14 @@ import scala.concurrent.Future
 
 class EntryDeclarationRetrievalServiceSpec extends UnitSpec with MockEntryDeclarationRepo with ScalaFutures {
 
-  val entryDeclarationRetrievalService = new EntryDeclarationRetrievalService(
-    mockEntryDeclarationRepo
-  )
+  val entryDeclarationRetrievalService = new EntryDeclarationRetrievalService(mockEntryDeclarationRepo)
 
   val eori              = "eori"
   val submissionId      = "submissionId"
   val correlationId     = "correlationId"
   val payload: JsString = JsString("payload")
   val submissionIdAndReceivedDateTime: SubmissionIdLookupResult =
-    SubmissionIdLookupResult("dateTime", "housekeepingAt", "ConvID")
+    SubmissionIdLookupResult("dateTime", "housekeepingAt", "SubId", Some("eisSentTime"))
 
   "EntryDeclarationRetrievalService" when {
 

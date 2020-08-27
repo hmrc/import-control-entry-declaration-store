@@ -136,7 +136,7 @@ class EntryDeclarationRepoISpec
       "a document with the eori & correlationId exists in the database" must {
         "return its submissionId" in {
           await(repository.lookupSubmissionId(eori, correlationId313)) shouldBe
-            Some(SubmissionIdLookupResult(receivedDateTime.toString, housekeepingAt.toString, submissionId313))
+            Some(SubmissionIdLookupResult(receivedDateTime.toString, housekeepingAt.toString, submissionId313, None))
         }
       }
 
