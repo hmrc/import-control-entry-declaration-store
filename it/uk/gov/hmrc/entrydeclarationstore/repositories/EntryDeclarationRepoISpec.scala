@@ -132,34 +132,6 @@ class EntryDeclarationRepoISpec
       }
     }
 
-    "looking up a submissionId from an eori & correlationId" when {
-      "a document with the eori & correlationId exists in the database" must {
-        "return its submissionId" in {
-          await(repository.lookupSubmissionId(eori, correlationId313)) shouldBe
-            Some(SubmissionIdLookupResult(receivedDateTime.toString, housekeepingAt.toString, submissionId313, None))
-        }
-      }
-
-      "no document with the eori & correlationId exists in the database" must {
-        "return None" in {
-          await(repository.lookupSubmissionId("unknownEori", "unknownCorrelationId313")) shouldBe None
-        }
-      }
-
-      // Check find uses both fields...
-      "document with the same eori but different correlationId exists in the database" must {
-        "return None" in {
-          await(repository.lookupSubmissionId(eori, "unknownCorrelationId313")) shouldBe None
-        }
-      }
-
-      "document with the different eori but same correlationId exists in the database" must {
-        "return None" in {
-          await(repository.lookupSubmissionId("unknown", correlationId313)) shouldBe None
-        }
-      }
-    }
-
     "looking up an entry-declaration from a submissionId" when {
       "a document with the submissionId exists in the database" must {
         "return its xml submission" in {
@@ -190,6 +162,42 @@ class EntryDeclarationRepoISpec
       "EntryDeclaration does not exist" must {
         "return false" in {
           await(repository.setSubmissionTime("unknownsubmissionId", eisSubmissionDateTime)) shouldBe false
+        }
+      }
+    }
+
+    "looking up a submissionId from an eori & correlationId" when {
+      "a document with the eori & correlationId exists in the database" must {
+        "return its submissionId" in {
+          await(repository.lookupSubmissionId(eori, correlationId315)) shouldBe
+            Some(SubmissionIdLookupResult(receivedDateTime.toString, housekeepingAt.toString, submissionId315, None))
+        }
+        "return the eisSubmissionDateTime if it exists" in {
+          await(repository.lookupSubmissionId(eori, correlationId313)) shouldBe Some(
+            SubmissionIdLookupResult(
+              receivedDateTime.toString,
+              housekeepingAt.toString,
+              submissionId313,
+              Some(eisSubmissionDateTime.toString)))
+        }
+      }
+
+      "no document with the eori & correlationId exists in the database" must {
+        "return None" in {
+          await(repository.lookupSubmissionId("unknownEori", "unknownCorrelationId313")) shouldBe None
+        }
+      }
+
+      // Check find uses both fields...
+      "document with the same eori but different correlationId exists in the database" must {
+        "return None" in {
+          await(repository.lookupSubmissionId(eori, "unknownCorrelationId313")) shouldBe None
+        }
+      }
+
+      "document with the different eori but same correlationId exists in the database" must {
+        "return None" in {
+          await(repository.lookupSubmissionId("unknown", correlationId313)) shouldBe None
         }
       }
     }
