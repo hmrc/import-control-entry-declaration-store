@@ -42,4 +42,11 @@ class EnrichmentController @Inject()(cc: ControllerComponents, service: Enrichme
       case None             => NotFound
     }
   }
+
+  def getDeclarationRejectionEnrichment(id: String): Action[AnyContent] = Action.async { implicit request =>
+    service.retrieveDeclarationRejectionEnrichment(id).map {
+      case Some(enrichment) => Ok(Json.toJson(enrichment))
+      case None             => NotFound
+    }
+  }
 }

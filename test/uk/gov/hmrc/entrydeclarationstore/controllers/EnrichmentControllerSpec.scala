@@ -21,7 +21,7 @@ import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import play.mvc.Http.MimeTypes
-import uk.gov.hmrc.entrydeclarationstore.models.{AcceptanceEnrichment, AmendmentRejectionEnrichment}
+import uk.gov.hmrc.entrydeclarationstore.models.{AcceptanceEnrichment, AmendmentRejectionEnrichment, DeclarationRejectionEnrichment}
 import uk.gov.hmrc.entrydeclarationstore.services.MockEnrichmentService
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -33,9 +33,10 @@ class EnrichmentControllerSpec extends UnitSpec with MockEnrichmentService {
   private val controller = new EnrichmentController(Helpers.stubControllerComponents(), mockEnrichmentService)
 
   val submissionId                               = "submissionId"
-  val acceptanceEnrichment: AcceptanceEnrichment = AcceptanceEnrichment(Json.parse("""{"hello" : "world"}"""))
-  val amendmentRejectionEnrichment: AmendmentRejectionEnrichment = AmendmentRejectionEnrichment(
-    Json.parse("""{"hello" : "world"}"""))
+  val acceptanceEnrichment: AcceptanceEnrichment = AcceptanceEnrichment(None, Json.parse("""{"hello" : "world"}"""))
+  val amendmentRejectionEnrichment: AmendmentRejectionEnrichment =
+    AmendmentRejectionEnrichment(None, Json.parse("""{"hello" : "world"}"""))
+  val declarationRejectionEnrichment: DeclarationRejectionEnrichment = DeclarationRejectionEnrichment(None)
 
   "EnrichmentController" when {
     "getting AcceptanceEnrichment from submissionId" when {
@@ -83,6 +84,31 @@ class EnrichmentControllerSpec extends UnitSpec with MockEnrichmentService {
           MockEnrichmentService.retrieveAmendmentRejectionEnrichment(submissionId).returns(Future.successful(None))
 
           val result: Future[Result] = controller.getAmendmentRejectionEnrichment(submissionId)(FakeRequest())
+
+          status(result) shouldBe NOT_FOUND
+        }
+      }
+    }
+    "getting DeclarationRejectionEnrichment from submissionId" when {
+      "id exists" must {
+        "return OK with the DeclarationRejectionEnrichment in a JSON object" in {
+          MockEnrichmentService
+            .retrieveDeclarationRejectionEnrichment(submissionId)
+            .returns(Future.successful(Some(declarationRejectionEnrichment)))
+
+          val result: Future[Result] = controller.getDeclarationRejectionEnrichment(submissionId)(FakeRequest())
+
+          status(result)        shouldBe OK
+          contentAsJson(result) shouldBe Json.toJson(declarationRejectionEnrichment)
+          contentType(result)   shouldBe Some(MimeTypes.JSON)
+        }
+      }
+
+      "id does not exist" must {
+        "return NOT_FOUND" in {
+          MockEnrichmentService.retrieveDeclarationRejectionEnrichment(submissionId).returns(Future.successful(None))
+
+          val result: Future[Result] = controller.getDeclarationRejectionEnrichment(submissionId)(FakeRequest())
 
           status(result) shouldBe NOT_FOUND
         }

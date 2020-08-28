@@ -46,7 +46,7 @@ class EntryDeclarationRetrievalControllerSpec
   val correlationId    = "correlationId"
   val receivedDateTime = "receivedDateTime"
   val receivedDateTimeAndSubmissionID: SubmissionIdLookupResult =
-    SubmissionIdLookupResult("dateTime", "housekeepingAt", "ConvID")
+    SubmissionIdLookupResult("dateTime", "housekeepingAt", "SubID", Some("eisSentTime"))
 
   val bearerToken: String = "bearerToken"
 

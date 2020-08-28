@@ -18,7 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.models
 
 import play.api.libs.json.{Format, Json}
 
-case class SubmissionIdLookupResult(receivedDateTime: String, housekeepingAt: String, submissionId: String)
+case class SubmissionIdLookupResult(receivedDateTime: String, housekeepingAt: String, submissionId: String, eisSubmissionDateTime: Option[String])
 
 object SubmissionIdLookupResult {
   implicit val formats: Format[SubmissionIdLookupResult] = Json.format[SubmissionIdLookupResult]

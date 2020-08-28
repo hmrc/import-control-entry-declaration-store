@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
+import java.time.{Clock, Instant}
+
 import cats.data.EitherT
 import cats.implicits._
 import javax.inject.{Inject, Singleton}
@@ -35,7 +37,8 @@ import scala.util.control.NonFatal
 class SubmissionReplayService @Inject()(
   entryDeclarationRepo: EntryDeclarationRepo,
   eisConnector: EisConnector,
-  reportSender: ReportSender)(implicit ec: ExecutionContext) {
+  reportSender: ReportSender,
+  clock: Clock)(implicit ec: ExecutionContext) {
 
   case class Abort(error: ReplayError)
   case class Counts(successCount: Int, failureCount: Int)
@@ -101,6 +104,7 @@ class SubmissionReplayService @Inject()(
         for {
           replayError <- eisConnector.submitMetadata(replayMetadata.metadata, bypassCircuitBreaker = true)
           eventSent   <- sendEvent(replayMetadata, replayError)
+          _           <- setSubmissionTime(submissionId, replayError)
         } yield {
           if (eventSent) {
             replayError match {
@@ -115,6 +119,12 @@ class SubmissionReplayService @Inject()(
       case None => Future.successful(Right(false))
     }
 
+  private def setSubmissionTime(submissionId: String, eisSendFailure: Option[EISSendFailure])(
+    implicit lc: LoggingContext): Future[Boolean] =
+    eisSendFailure match {
+      case None    => entryDeclarationRepo.setSubmissionTime(submissionId, Instant.now(clock))
+      case Some(_) => Future.successful(false)
+    }
   private def sendEvent(replayMetadata: ReplayMetadata, eisSendFailure: Option[EISSendFailure])(
     implicit hc: HeaderCarrier,
     lc: LoggingContext): Future[Boolean] =

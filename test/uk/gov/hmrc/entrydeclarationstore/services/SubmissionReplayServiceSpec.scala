@@ -17,13 +17,13 @@
 package uk.gov.hmrc.entrydeclarationstore.services
 
 import java.io.IOException
-import java.time.Instant
+import java.time.{Clock, Instant, ZoneOffset}
 
 import org.scalatest.concurrent.ScalaFutures
 import play.api.http.Status._
 import reactivemongo.core.errors.GenericDatabaseException
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, MockEisConnector}
-import uk.gov.hmrc.entrydeclarationstore.models.{EntryDeclarationMetadata, MessageType, ReplayError, ReplayMetadata, ReplayResult}
+import uk.gov.hmrc.entrydeclarationstore.models._
 import uk.gov.hmrc.entrydeclarationstore.reporting.{MockReportSender, SubmissionSentToEIS}
 import uk.gov.hmrc.entrydeclarationstore.repositories.{MetadataLookupError, MockEntryDeclarationRepo}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -39,11 +39,13 @@ class SubmissionReplayServiceSpec
     with MockReportSender
     with ScalaFutures {
 
-  val service = new SubmissionReplayService(mockEntryDeclarationRepo, mockEisConnector, mockReportSender)
+  val now: Instant = Instant.now
+  val clock: Clock = Clock.fixed(now, ZoneOffset.UTC)
+
+  val service = new SubmissionReplayService(mockEntryDeclarationRepo, mockEisConnector, mockReportSender, clock)
 
   val eori          = "eori"
   val correlationId = "correlationId"
-  val now: Instant  = Instant.now
   val subId1        = "subId1"
   val subId2        = "subId2"
 
@@ -74,6 +76,7 @@ class SubmissionReplayServiceSpec
             Right(replayMetadata(subId1)))
           MockEisConnector.submitMetadata(metadata(subId1), bypassCircuitBreaker = true) returns Future.successful(None)
           MockReportSender.sendReport(report) returns Future.successful((): Unit)
+          MockEntryDeclarationRepo.setSubmissionTime(subId1, Instant.now(clock)) returns Future.successful(true)
 
           service.replaySubmissions(submissionIds).futureValue shouldBe Right(ReplayResult(1, 0))
         }
@@ -87,9 +90,22 @@ class SubmissionReplayServiceSpec
             MockEisConnector.submitMetadata(metadata(submissionId), bypassCircuitBreaker = true) returns Future
               .successful(None)
             MockReportSender.sendReport(report) returns Future.successful((): Unit)
+            MockEntryDeclarationRepo.setSubmissionTime(submissionId, Instant.now(clock)) returns Future.successful(true)
           }
 
           service.replaySubmissions(submissionIds).futureValue shouldBe Right(ReplayResult(2, 0))
+        }
+        "ignore failures to update the EIS submission time" in {
+          val submissionIds = Seq(subId1)
+
+          val report = submissionSentToEISReport(submissionIds.head, None)
+          MockEntryDeclarationRepo.lookupMetadata(submissionIds.head) returns Future.successful(
+            Right(replayMetadata(subId1)))
+          MockEisConnector.submitMetadata(metadata(subId1), bypassCircuitBreaker = true) returns Future.successful(None)
+          MockReportSender.sendReport(report) returns Future.successful((): Unit)
+          MockEntryDeclarationRepo.setSubmissionTime(subId1, Instant.now(clock)) returns Future.successful(false)
+
+          service.replaySubmissions(submissionIds).futureValue shouldBe Right(ReplayResult(1, 0))
         }
       }
 
@@ -143,7 +159,6 @@ class SubmissionReplayServiceSpec
               .submitMetadata(metadata(subId1), bypassCircuitBreaker = true)
               .returns(Future.successful(errorResponse))
             MockReportSender.sendReport(errorReport) returns Future.successful((): Unit)
-
             val successReport = submissionSentToEISReport(subId2, None)
             MockEntryDeclarationRepo
               .lookupMetadata(subId2)
@@ -151,6 +166,7 @@ class SubmissionReplayServiceSpec
             MockEisConnector.submitMetadata(metadata(subId2), bypassCircuitBreaker = true) returns Future.successful(
               None)
             MockReportSender.sendReport(successReport) returns Future.successful((): Unit)
+            MockEntryDeclarationRepo.setSubmissionTime(subId2, Instant.now(clock)) returns Future.successful(true)
 
             service.replaySubmissions(submissionIds).futureValue shouldBe Right(ReplayResult(1, 1))
           }
@@ -192,6 +208,7 @@ class SubmissionReplayServiceSpec
           MockEntryDeclarationRepo.lookupMetadata(subId1) returns Future.successful(Right(replayMetadata(subId1)))
           MockEisConnector.submitMetadata(metadata(subId1), bypassCircuitBreaker = true) returns Future.successful(None)
           MockReportSender.sendReport(report) returns Future.failed(new IOException)
+          MockEntryDeclarationRepo.setSubmissionTime(subId1, Instant.now(clock)) returns Future.successful(true)
 
           service.replaySubmissions(submissionIds).futureValue shouldBe Left(ReplayError.EISEventError)
         }

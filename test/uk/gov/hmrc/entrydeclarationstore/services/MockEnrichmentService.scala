@@ -18,7 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.services
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
-import uk.gov.hmrc.entrydeclarationstore.models.{AcceptanceEnrichment, AmendmentRejectionEnrichment}
+import uk.gov.hmrc.entrydeclarationstore.models.{AcceptanceEnrichment, AmendmentRejectionEnrichment, DeclarationRejectionEnrichment}
 
 import scala.concurrent.Future
 
@@ -33,6 +33,10 @@ trait MockEnrichmentService extends MockFactory {
     def retrieveAmendmentRejectionEnrichment(
       submissionId: String): CallHandler[Future[Option[AmendmentRejectionEnrichment]]] =
       mockEnrichmentService.retrieveAmendmentRejectionEnrichment _ expects submissionId
+
+    def retrieveDeclarationRejectionEnrichment(
+      submissionId: String): CallHandler[Future[Option[DeclarationRejectionEnrichment]]] =
+      mockEnrichmentService.retrieveDeclarationRejectionEnrichment _ expects submissionId
   }
 
 }

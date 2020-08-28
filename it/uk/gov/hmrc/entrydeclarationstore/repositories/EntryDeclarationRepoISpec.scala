@@ -132,11 +132,53 @@ class EntryDeclarationRepoISpec
       }
     }
 
+    "looking up an entry-declaration from a submissionId" when {
+      "a document with the submissionId exists in the database" must {
+        "return its xml submission" in {
+          await(repository.lookupEntryDeclaration(submissionId313)) shouldBe Some(payload313)
+        }
+      }
+
+      "no document with the submissionId exists in the database" must {
+        "return None" in {
+          await(repository.lookupEntryDeclaration("unknownsubmissionId313")) shouldBe None
+        }
+      }
+
+    }
+
+    val eisSubmissionDateTime = Instant.now
+
+    "setting the submission time" when {
+      "EntryDeclaration exists" must {
+        "update it and return true" in {
+          await(repository.setSubmissionTime(submissionId313, eisSubmissionDateTime)) shouldBe true
+
+          lookupEntryDeclaration(submissionId313) shouldBe
+            Some(entryDeclaration313.copy(eisSubmissionDateTime = Some(eisSubmissionDateTime)))
+        }
+      }
+
+      "EntryDeclaration does not exist" must {
+        "return false" in {
+          await(repository.setSubmissionTime("unknownsubmissionId", eisSubmissionDateTime)) shouldBe false
+        }
+      }
+    }
+
     "looking up a submissionId from an eori & correlationId" when {
       "a document with the eori & correlationId exists in the database" must {
         "return its submissionId" in {
-          await(repository.lookupSubmissionId(eori, correlationId313)) shouldBe
-            Some(SubmissionIdLookupResult(receivedDateTime.toString, housekeepingAt.toString, submissionId313))
+          await(repository.lookupSubmissionId(eori, correlationId315)) shouldBe
+            Some(SubmissionIdLookupResult(receivedDateTime.toString, housekeepingAt.toString, submissionId315, None))
+        }
+        "return the eisSubmissionDateTime if it exists" in {
+          await(repository.lookupSubmissionId(eori, correlationId313)) shouldBe Some(
+            SubmissionIdLookupResult(
+              receivedDateTime.toString,
+              housekeepingAt.toString,
+              submissionId313,
+              Some(eisSubmissionDateTime.toString)))
         }
       }
 
@@ -160,45 +202,15 @@ class EntryDeclarationRepoISpec
       }
     }
 
-    "looking up an entry-declaration from a submissionId" when {
-      "a document with the submissionId exists in the database" must {
-        "return its xml submission" in {
-          await(repository.lookupEntryDeclaration(submissionId313)) shouldBe Some(payload313)
-        }
-      }
-
-      "no document with the submissionId exists in the database" must {
-        "return None" in {
-          await(repository.lookupEntryDeclaration("unknownsubmissionId313")) shouldBe None
-        }
-      }
-
-    }
-
-    "setting the submission time" when {
-      val time = Instant.now
-
-      "EntryDeclaration exists" must {
-        "update it and return true" in {
-          await(repository.setSubmissionTime(submissionId313, time)) shouldBe true
-
-          lookupEntryDeclaration(submissionId313) shouldBe
-            Some(entryDeclaration313.copy(eisSubmissionDateTime = Some(time)))
-        }
-      }
-
-      "EntryDeclaration does not exist" must {
-        "return false" in {
-          await(repository.setSubmissionTime("unknownsubmissionId", time)) shouldBe false
-        }
-      }
-    }
-
     "looking up an acceptance enrichment" when {
       "a document with the submissionId exists in the database" must {
         "return the enrichment" in {
-          await(repository.lookupAcceptanceEnrichment("submissionId313")) shouldBe
-            Some(AcceptanceEnrichment(payload313))
+          await(repository.lookupAcceptanceEnrichment(submissionId313)) shouldBe
+            Some(AcceptanceEnrichment(Some(eisSubmissionDateTime), payload313))
+        }
+        "omit the EISSubmissionDateTime if it doesn't exist" in {
+          await(repository.lookupAcceptanceEnrichment(submissionId315)) shouldBe
+            Some(AcceptanceEnrichment(None, payload315))
         }
       }
 
@@ -210,18 +222,47 @@ class EntryDeclarationRepoISpec
     }
 
     "looking up a rejection enrichment" when {
-      "a document with the submissionId exists in the database" must {
-        "return the enrichment" in {
+      "an amendment" when {
+        "a document with the submissionId exists in the database" must {
           val expected = ResourceUtils.withInputStreamFor("jsons/AmendmentRejectionEnrichmentPayload.json")(Json.parse)
+          "return the enrichment" in {
+            await(repository.removeAll())
+            await(repository.save(entryDeclaration313))
+            await(repository.save(entryDeclaration315))
 
-          await(repository.lookupAmendmentRejectionEnrichment("submissionId313")) shouldBe
-            Some(AmendmentRejectionEnrichment(expected))
+            await(repository.lookupAmendmentRejectionEnrichment(submissionId313)) shouldBe
+              Some(AmendmentRejectionEnrichment(None, expected))
+          }
+          "include the EISSubmissionDateTime if it exists" in {
+            await(repository.setSubmissionTime(submissionId313, eisSubmissionDateTime))
+
+            await(repository.lookupAmendmentRejectionEnrichment(submissionId313)) shouldBe
+              Some(AmendmentRejectionEnrichment(Some(eisSubmissionDateTime), expected))
+          }
+        }
+        "no document with the submissionId exists in the database" must {
+          "return None" in {
+            await(repository.lookupAmendmentRejectionEnrichment("unknownsubmissionId313")) shouldBe None
+          }
         }
       }
+      "an declaration" when {
+        "a document with the submissionId exists in the database" must {
+          "return the enrichment" in {
+            await(repository.lookupDeclarationRejectionEnrichment(submissionId315)) shouldBe
+              Some(DeclarationRejectionEnrichment(None))
+          }
+          "include the EISSubmissionDateTime if it exists" in {
+            await(repository.setSubmissionTime(submissionId315, eisSubmissionDateTime))
 
-      "no document with the submissionId exists in the database" must {
-        "return None" in {
-          await(repository.lookupAmendmentRejectionEnrichment("unknownsubmissionId313")) shouldBe None
+            await(repository.lookupDeclarationRejectionEnrichment(submissionId315)) shouldBe
+              Some(DeclarationRejectionEnrichment(Some(eisSubmissionDateTime)))
+          }
+        }
+        "no document with the submissionId exists in the database" must {
+          "return None" in {
+            await(repository.lookupDeclarationRejectionEnrichment("unknownsubmissionId313")) shouldBe None
+          }
         }
       }
     }
@@ -229,13 +270,13 @@ class EntryDeclarationRepoISpec
     "looking up metadata" when {
       "a IE313 submission with the submissionId exists in the database" must {
         "return the metadata" in {
-          await(repository.lookupMetadata("submissionId313")) shouldBe
+          await(repository.lookupMetadata(submissionId313)) shouldBe
             Right(
               ReplayMetadata(
-                eori          = "eori",
-                correlationId = "correlationId313",
+                eori          = eori,
+                correlationId = correlationId313,
                 metadata = EntryDeclarationMetadata(
-                  submissionId            = "submissionId313",
+                  submissionId            = submissionId313,
                   messageType             = MessageType.IE313,
                   modeOfTransport         = "2",
                   receivedDateTime        = receivedDateTime,
@@ -247,13 +288,13 @@ class EntryDeclarationRepoISpec
 
       "a IE315 submission with the submissionId exists in the database" must {
         "return the metadata" in {
-          await(repository.lookupMetadata("submissionId315")) shouldBe
+          await(repository.lookupMetadata(submissionId315)) shouldBe
             Right(
               ReplayMetadata(
-                eori          = "eori",
-                correlationId = "correlationId315",
+                eori          = eori,
+                correlationId = correlationId315,
                 EntryDeclarationMetadata(
-                  submissionId            = "submissionId315",
+                  submissionId            = submissionId315,
                   messageType             = MessageType.IE315,
                   modeOfTransport         = "2",
                   receivedDateTime        = receivedDateTime,
@@ -293,7 +334,7 @@ class EntryDeclarationRepoISpec
 
         "be settable" in {
           await(repository.removeAll())
-          await(repository.save(entryDeclaration313)) shouldBe true
+          await(repository.save(entryDeclaration313))                shouldBe true
           await(repository.setHousekeepingAt(submissionId313, time)) shouldBe true
 
           await(
@@ -305,7 +346,7 @@ class EntryDeclarationRepoISpec
 
         "return true if no change is made" in {
           await(repository.removeAll())
-          await(repository.save(entryDeclaration313)) shouldBe true
+          await(repository.save(entryDeclaration313))                shouldBe true
           await(repository.setHousekeepingAt(submissionId313, time)) shouldBe true
           await(repository.setHousekeepingAt(submissionId313, time)) shouldBe true
         }
@@ -314,12 +355,12 @@ class EntryDeclarationRepoISpec
           await(repository.setHousekeepingAt("unknownSubmissionId", time)) shouldBe false
         }
       }
-      "searching by eori and correlationId"  must {
+      "searching by eori and correlationId" must {
         val time = Instant.now.plusSeconds(60)
 
         "be settable" in {
           await(repository.removeAll())
-          await(repository.save(entryDeclaration313)) shouldBe true
+          await(repository.save(entryDeclaration313))                       shouldBe true
           await(repository.setHousekeepingAt(eori, correlationId313, time)) shouldBe true
 
           await(
@@ -331,7 +372,7 @@ class EntryDeclarationRepoISpec
 
         "return true if no change is made" in {
           await(repository.removeAll())
-          await(repository.save(entryDeclaration313)) shouldBe true
+          await(repository.save(entryDeclaration313))                       shouldBe true
           await(repository.setHousekeepingAt(eori, correlationId313, time)) shouldBe true
           await(repository.setHousekeepingAt(eori, correlationId313, time)) shouldBe true
         }

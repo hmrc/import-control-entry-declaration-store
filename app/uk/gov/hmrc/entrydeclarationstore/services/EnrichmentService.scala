@@ -18,7 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.services
 
 import com.kenshoo.play.metrics.Metrics
 import javax.inject.Inject
-import uk.gov.hmrc.entrydeclarationstore.models.{AcceptanceEnrichment, AmendmentRejectionEnrichment}
+import uk.gov.hmrc.entrydeclarationstore.models.{AcceptanceEnrichment, AmendmentRejectionEnrichment, DeclarationRejectionEnrichment}
 import uk.gov.hmrc.entrydeclarationstore.repositories.EntryDeclarationRepo
 import uk.gov.hmrc.entrydeclarationstore.utils.{EventLogger, Timer}
 
@@ -35,7 +35,12 @@ class EnrichmentService @Inject()(entryDeclarationRepo: EntryDeclarationRepo, ov
     }
 
   def retrieveAmendmentRejectionEnrichment(submissionId: String): Future[Option[AmendmentRejectionEnrichment]] =
-    timeFuture("Service retrieveRejectionEnrichment", "retrieveRejectionEnrichment.total") {
+    timeFuture("Service retrieveRejectionEnrichment", "retrieveAmendmentRejectionEnrichment.total") {
       entryDeclarationRepo.lookupAmendmentRejectionEnrichment(submissionId)
+    }
+
+  def retrieveDeclarationRejectionEnrichment(submissionId: String): Future[Option[DeclarationRejectionEnrichment]] =
+    timeFuture("Service retrieveRejectionEnrichment", "retrieveDeclarationRejectionEnrichment.total") {
+      entryDeclarationRepo.lookupDeclarationRejectionEnrichment(submissionId)
     }
 }

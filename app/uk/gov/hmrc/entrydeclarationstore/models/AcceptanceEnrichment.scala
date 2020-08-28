@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.entrydeclarationstore.models
 
+import java.time.Instant
+
 import play.api.libs.json.{Format, JsValue, Json}
 
-case class AcceptanceEnrichment(payload: JsValue)
+case class AcceptanceEnrichment(eisSubmissionDateTime: Option[Instant], payload: JsValue)
 
 object AcceptanceEnrichment {
   implicit val jsonFormat: Format[AcceptanceEnrichment] = Json.format[AcceptanceEnrichment]

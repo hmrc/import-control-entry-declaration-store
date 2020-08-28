@@ -19,7 +19,7 @@ package uk.gov.hmrc.entrydeclarationstore.services
 import com.kenshoo.play.metrics.Metrics
 import org.scalatest.concurrent.ScalaFutures
 import play.api.libs.json.Json
-import uk.gov.hmrc.entrydeclarationstore.models.{AcceptanceEnrichment, AmendmentRejectionEnrichment}
+import uk.gov.hmrc.entrydeclarationstore.models.{AcceptanceEnrichment, AmendmentRejectionEnrichment, DeclarationRejectionEnrichment}
 import uk.gov.hmrc.entrydeclarationstore.repositories.MockEntryDeclarationRepo
 import uk.gov.hmrc.entrydeclarationstore.utils.{MockMetrics, ResourceUtils}
 import uk.gov.hmrc.play.test.UnitSpec
@@ -37,7 +37,7 @@ class EnrichmentServiceSpec extends UnitSpec with MockEntryDeclarationRepo with 
 
   "EnrichmentService" when {
     "retrieving an AccepatanceEnrichment" when {
-      val acceptanceEnrichment = AcceptanceEnrichment(Json.parse("""{"hello" : "world"}"""))
+      val acceptanceEnrichment = AcceptanceEnrichment(None, Json.parse("""{"hello" : "world"}"""))
 
       "it is found in the database" must {
         "return it" in {
@@ -58,6 +58,7 @@ class EnrichmentServiceSpec extends UnitSpec with MockEntryDeclarationRepo with 
     }
     "retrieving an AmendmentRejectionEnrichment" when {
       val rejectionEnrichment = AmendmentRejectionEnrichment(
+        None,
         ResourceUtils.withInputStreamFor("jsons/AmendmentRejectionEnrichmentPayload.json")(Json.parse))
 
       "it is found in the database" must {
@@ -74,6 +75,26 @@ class EnrichmentServiceSpec extends UnitSpec with MockEntryDeclarationRepo with 
           MockEntryDeclarationRepo.lookupAmendmentRejectionEnrichment(submissionId) returns Future.successful(None)
 
           service.retrieveAmendmentRejectionEnrichment(submissionId).futureValue shouldBe None
+        }
+      }
+    }
+    "retrieving an DeclarationRejectionEnrichment" when {
+      val rejectionEnrichment = DeclarationRejectionEnrichment(None)
+
+      "it is found in the database" must {
+        "return it" in {
+          MockEntryDeclarationRepo.lookupDeclarationRejectionEnrichment(submissionId) returns Future.successful(
+            Some(rejectionEnrichment))
+
+          service.retrieveDeclarationRejectionEnrichment(submissionId).futureValue shouldBe Some(rejectionEnrichment)
+        }
+      }
+
+      "it is not found in the database" must {
+        "return None" in {
+          MockEntryDeclarationRepo.lookupDeclarationRejectionEnrichment(submissionId) returns Future.successful(None)
+
+          service.retrieveDeclarationRejectionEnrichment(submissionId).futureValue shouldBe None
         }
       }
     }
