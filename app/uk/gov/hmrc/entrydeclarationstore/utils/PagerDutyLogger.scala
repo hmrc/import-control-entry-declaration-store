@@ -29,7 +29,7 @@ class PagerDutyLogger {
     ContextLogger.error(s"Submission timed out")
 
   def logEISCircuitBreakerOpen()(implicit lc: LoggingContext): Unit =
-    ContextLogger.error(s"Circuit breaker open - submission failed")
+    ContextLogger.error(s"CIRCUIT_BREAKER_OPEN - submission failed")
 
   def logEventFailure(statusCode: Int)(implicit lc: LoggingContext): Unit =
     ContextLogger.error(s"Send event failed with status $statusCode")
