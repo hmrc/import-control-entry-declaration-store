@@ -18,14 +18,14 @@ package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import controllers.Assets
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.{Application, Environment, Mode}
 import play.api.http.HttpErrorHandler
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.Result
-import play.api.test.{FakeRequest, Helpers, Injecting}
-import uk.gov.hmrc.entrydeclarationstore.config.{AppConfig, MockAppConfig}
-import uk.gov.hmrc.play.test.UnitSpec
 import play.api.test.Helpers._
+import play.api.test.{FakeRequest, Helpers, Injecting}
+import play.api.{Application, Environment, Mode}
+import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
+import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.Future
 

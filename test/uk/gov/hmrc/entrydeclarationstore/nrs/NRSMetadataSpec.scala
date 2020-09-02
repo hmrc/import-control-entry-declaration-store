@@ -34,8 +34,6 @@ class NRSMetadataSpec extends UnitSpec with NRSMetadataTestData {
     }
 
     "contain the headers from the request" in {
-      val token = "someToken"
-
       val request =
         FakeRequest().withHeaders(
           Headers("Header" -> "value", "MultiValueHeader" -> "value1", "MultiValueHeader" -> "value2"))

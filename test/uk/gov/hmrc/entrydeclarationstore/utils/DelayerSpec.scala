@@ -21,7 +21,6 @@ import com.miguno.akka.testing.VirtualTime
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
 class DelayerSpec extends UnitSpec {

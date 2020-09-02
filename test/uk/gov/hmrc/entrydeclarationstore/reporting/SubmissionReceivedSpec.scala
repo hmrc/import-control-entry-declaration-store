@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.reporting
 
-import java.time.{Clock, Instant, ZoneOffset}
+import java.time.Instant
 
 import play.api.libs.json.{JsObject, JsString, Json}
 import uk.gov.hmrc.entrydeclarationstore.models.MessageType
