@@ -23,12 +23,12 @@ import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.models.HousekeepingStatus
 import uk.gov.hmrc.entrydeclarationstore.repositories.EntryDeclarationRepo
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 @Singleton
-class HousekeepingService @Inject()(repo: EntryDeclarationRepo, clock: Clock, appConfig: AppConfig)(implicit ec: ExecutionContext) {
+class HousekeepingService @Inject()(repo: EntryDeclarationRepo, clock: Clock, appConfig: AppConfig) {
   def enableHousekeeping(value: Boolean): Future[Boolean] = repo.enableHousekeeping(value)
-  def getHousekeepingStatus: Future[HousekeepingStatus] = repo.getHousekeepingStatus
+  def getHousekeepingStatus: Future[HousekeepingStatus]   = repo.getHousekeepingStatus
 
   def setShortTtl(submissionId: String): Future[Boolean] =
     repo.setHousekeepingAt(submissionId, clock.instant().plusMillis(appConfig.shortTtl.toMillis))

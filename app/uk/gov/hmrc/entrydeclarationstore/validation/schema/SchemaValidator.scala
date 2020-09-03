@@ -22,7 +22,6 @@ import javax.xml.parsers.{SAXParser, SAXParserFactory}
 import org.xml.sax._
 import uk.gov.hmrc.entrydeclarationstore.validation.{ValidationError, ValidationErrors}
 
-import scala.collection.mutable
 import scala.xml.factory.XMLLoader
 import scala.xml.parsing.{FactoryAdapter, NoBindingFactoryAdapter}
 import scala.xml.{Node, NodeSeq}
@@ -35,7 +34,7 @@ class SchemaValidator {
 
   trait LocationStoringContentHandler extends ContentHandler with LocationHolder {
     private var lastPoppedQname = Option.empty[(String, Int)]
-    private val locationStack   = new mutable.Stack[(String, Int)]
+    private var locationStack   = List.empty[(String, Int)]
 
     def locationAsString: String =
       locationStack.reverse
@@ -47,17 +46,27 @@ class SchemaValidator {
     abstract override def startElement(uri: String, localName: String, qName: String, atts: Attributes): Unit = {
       super.startElement(uri, localName, qName, atts)
 
-      lastPoppedQname match {
+      locationStack = lastPoppedQname match {
         case Some((lastQName, index)) =>
-          if (qName == lastQName) locationStack.push((qName, index + 1)) else locationStack.push((qName, 1))
-        case None => locationStack.push((qName, 1))
+          if (qName == lastQName) (qName -> (index + 1)) :: locationStack else (qName -> 1) :: locationStack
+        case None => (qName -> 1) :: locationStack
       }
     }
 
     abstract override def endElement(uri: String, localName: String, qName: String): Unit = {
       super.endElement(uri, localName, qName)
 
-      lastPoppedQname = Some(locationStack.pop())
+      lastPoppedQname = popLocation
+    }
+
+    private def popLocation: Option[(String, Int)] = {
+      val (popped, newStack) = locationStack match {
+        case x :: xs => (Some(x), xs)
+        case _       => (None, locationStack)
+      }
+
+      locationStack = newStack
+      popped
     }
   }
 

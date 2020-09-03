@@ -31,16 +31,15 @@ class EntryDeclarationRetrievalController @Inject()(
   appConfig: AppConfig)(implicit ec: ExecutionContext)
     extends EisInboundAuthorisedController(cc, appConfig) {
 
-  def retrieveDataFromMongo(eori: String, correlationId: String): Action[AnyContent] = Action.async {
-    implicit request =>
-      service.retrieveSubmissionIdAndReceivedDateTime(eori, correlationId).map {
-        case Some(receivedSubmissionIdAndReceivedDateTime) =>
-          Ok(Json.toJson(receivedSubmissionIdAndReceivedDateTime))
-        case None => NotFound
-      }
+  def retrieveDataFromMongo(eori: String, correlationId: String): Action[AnyContent] = Action.async { _ =>
+    service.retrieveSubmissionIdAndReceivedDateTime(eori, correlationId).map {
+      case Some(receivedSubmissionIdAndReceivedDateTime) =>
+        Ok(Json.toJson(receivedSubmissionIdAndReceivedDateTime))
+      case None => NotFound
+    }
   }
 
-  def getSubmission(id: String): Action[AnyContent] = authorisedAction.async { implicit request =>
+  def getSubmission(id: String): Action[AnyContent] = authorisedAction.async { _ =>
     service.retrieveSubmission(id).map {
       case Some(payload) => Ok(payload)
       case None          => NotFound

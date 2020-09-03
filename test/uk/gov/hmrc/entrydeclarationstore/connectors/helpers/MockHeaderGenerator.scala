@@ -24,7 +24,7 @@ trait MockHeaderGenerator extends MockFactory {
   val mockHeaderGenerator: HeaderGenerator = mock[HeaderGenerator]
 
   object MockHeaderGenerator {
-    def headersForEIS(submissionId: String)(implicit hc: HeaderCarrier): CallHandler[Seq[(String, String)]] =
+    def headersForEIS(submissionId: String): CallHandler[Seq[(String, String)]] =
       (mockHeaderGenerator.headersForEIS(_: String)(_: HeaderCarrier)) expects (submissionId, *)
   }
 

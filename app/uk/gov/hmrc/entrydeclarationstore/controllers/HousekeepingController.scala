@@ -44,7 +44,7 @@ class HousekeepingController @Inject()(cc: ControllerComponents, service: Housek
     }
   }
 
-  def getStatus: Action[AnyContent] = Action.async { implicit request =>
+  def getStatus: Action[AnyContent] = Action.async { _ =>
     service.getHousekeepingStatus.map {
       case HousekeepingStatus.On      => Ok(Json.toJson(HousekeepingEnabled(true)))
       case HousekeepingStatus.Off     => Ok(Json.toJson(HousekeepingEnabled(false)))
@@ -52,11 +52,10 @@ class HousekeepingController @Inject()(cc: ControllerComponents, service: Housek
     }
   }
 
-  def setShortTtlBySubmissionId(submissionId: String): Action[AnyContent] = Action.async { implicit request =>
+  def setShortTtlBySubmissionId(submissionId: String): Action[AnyContent] = Action.async { _ =>
     service.setShortTtl(submissionId).map(ok => if (ok) NoContent else NotFound)
   }
-  def setShortTtlByEoriAndCorrelationId(eori: String, correlationId: String): Action[AnyContent] = Action.async {
-    implicit request =>
-      service.setShortTtl(eori, correlationId).map(ok => if (ok) NoContent else NotFound)
+  def setShortTtlByEoriAndCorrelationId(eori: String, correlationId: String): Action[AnyContent] = Action.async { _ =>
+    service.setShortTtl(eori, correlationId).map(ok => if (ok) NoContent else NotFound)
   }
 }

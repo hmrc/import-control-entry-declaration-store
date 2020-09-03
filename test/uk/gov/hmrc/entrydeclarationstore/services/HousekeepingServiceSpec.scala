@@ -24,13 +24,12 @@ import uk.gov.hmrc.entrydeclarationstore.models.HousekeepingStatus
 import uk.gov.hmrc.entrydeclarationstore.repositories.MockEntryDeclarationRepo
 import uk.gov.hmrc.play.test.UnitSpec
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
 class HousekeepingServiceSpec extends UnitSpec with MockAppConfig with MockEntryDeclarationRepo with ScalaFutures {
 
   val time: Instant = Instant.now
-  val clock: Clock = Clock.fixed(time, ZoneOffset.UTC)
+  val clock: Clock  = Clock.fixed(time, ZoneOffset.UTC)
 
   val service = new HousekeepingService(mockEntryDeclarationRepo, clock, mockAppConfig)
 

@@ -29,21 +29,21 @@ class EnrichmentController @Inject()(cc: ControllerComponents, service: Enrichme
   implicit ec: ExecutionContext)
     extends BackendController(cc) {
 
-  def getAcceptanceEnrichment(id: String): Action[AnyContent] = Action.async { implicit request =>
+  def getAcceptanceEnrichment(id: String): Action[AnyContent] = Action.async { _ =>
     service.retrieveAcceptanceEnrichment(id).map {
       case Some(enrichment) => Ok(Json.toJson(enrichment))
       case None             => NotFound
     }
   }
 
-  def getAmendmentRejectionEnrichment(id: String): Action[AnyContent] = Action.async { implicit request =>
+  def getAmendmentRejectionEnrichment(id: String): Action[AnyContent] = Action.async { _ =>
     service.retrieveAmendmentRejectionEnrichment(id).map {
       case Some(enrichment) => Ok(Json.toJson(enrichment))
       case None             => NotFound
     }
   }
 
-  def getDeclarationRejectionEnrichment(id: String): Action[AnyContent] = Action.async { implicit request =>
+  def getDeclarationRejectionEnrichment(id: String): Action[AnyContent] = Action.async { _ =>
     service.retrieveDeclarationRejectionEnrichment(id).map {
       case Some(enrichment) => Ok(Json.toJson(enrichment))
       case None             => NotFound

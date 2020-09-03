@@ -28,11 +28,11 @@ class TestCircuitBreakerController @Inject()(cc: ControllerComponents, service: 
   implicit ec: ExecutionContext)
     extends BackendController(cc) {
 
-  def resetCircuitBreaker: Action[AnyContent] = Action.async { implicit request =>
+  def resetCircuitBreaker: Action[AnyContent] = Action.async { _ =>
     service.resetCircuitBreaker.map(_ => NoContent)
   }
 
-  def openCircuitBreaker: Action[AnyContent] = Action.async { implicit request =>
+  def openCircuitBreaker: Action[AnyContent] = Action.async { _ =>
     service.openCircuitBreaker.map(_ => NoContent)
   }
 }

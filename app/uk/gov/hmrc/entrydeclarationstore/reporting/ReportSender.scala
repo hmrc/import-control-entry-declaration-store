@@ -53,7 +53,7 @@ class ReportSender @Inject()(
   def sendReport[R: EventSources](report: R)(implicit hc: HeaderCarrier, lc: LoggingContext): Future[Unit] =
     sendReport(Instant.now(clock), report)
 
-  private def audit[R: EventSources](event: AuditEvent)(implicit hc: HeaderCarrier, lc: LoggingContext) =
+  private def audit[R: EventSources](event: AuditEvent)(implicit hc: HeaderCarrier) =
     timeFuture("ReportSender audit", "reporting.audit") {
       auditHandler.audit(event)
     }

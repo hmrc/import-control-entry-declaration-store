@@ -20,7 +20,7 @@ import java.time.Instant
 
 import org.joda.time.{DateTime, LocalDate}
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{AnyContentAsEmpty, Headers, Request, RequestHeader}
+import play.api.mvc.Headers
 import play.api.test.FakeRequest
 import uk.gov.hmrc.auth.core.retrieve._
 import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, User}

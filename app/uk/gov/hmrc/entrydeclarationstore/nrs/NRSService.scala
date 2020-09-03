@@ -15,11 +15,8 @@
  */
 
 package uk.gov.hmrc.entrydeclarationstore.nrs
-import cats.syntax.either._
-
 import com.kenshoo.play.metrics.Metrics
 import javax.inject.Inject
-import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.utils.{EventLogger, Timer}
 import uk.gov.hmrc.http.HeaderCarrier

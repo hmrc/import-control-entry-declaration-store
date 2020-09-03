@@ -17,11 +17,9 @@
 package uk.gov.hmrc.entrydeclarationstore.utils
 
 import akka.actor.Scheduler
-import javax.inject.Inject
 
-import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.concurrent.duration._
-import scala.util.Try
+import scala.concurrent.{ExecutionContext, Future, Promise}
 
 trait Delayer {
 
