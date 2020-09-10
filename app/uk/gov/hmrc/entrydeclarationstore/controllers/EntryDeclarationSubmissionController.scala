@@ -66,6 +66,8 @@ class EntryDeclarationSubmissionController @Inject()(
     handleSubmission(None)
   }
 
+  val postSubmissionTestOnly: Action[String] = postSubmission
+
   def putAmendment(mrn: String): Action[String] = authorisedAction.async(parse.tolerantText) { implicit request =>
     handleSubmission(Some(mrn))
   }

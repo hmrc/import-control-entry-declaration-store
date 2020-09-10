@@ -14,5 +14,7 @@ GET        /import-control/test-only/submission-ids/:eori/:correlationId        
 PUT        /import-control/test-only/circuit-breaker/open                       uk.gov.hmrc.entrydeclarationstore.controllers.testOnly.TestCircuitBreakerController.openCircuitBreaker
 PUT        /import-control/test-only/circuit-breaker/reset                      uk.gov.hmrc.entrydeclarationstore.controllers.testOnly.TestCircuitBreakerController.resetCircuitBreaker
 
+POST       /test-only                                                           uk.gov.hmrc.entrydeclarationstore.controllers.EntryDeclarationSubmissionController.postSubmissionTestOnly
+
 # Add all the application routes to the prod.routes file
 ->         /                          prod.Routes
