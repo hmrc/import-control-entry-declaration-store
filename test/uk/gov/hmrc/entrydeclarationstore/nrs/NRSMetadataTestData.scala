@@ -24,6 +24,7 @@ import play.api.mvc.Headers
 import play.api.test.FakeRequest
 import uk.gov.hmrc.auth.core.retrieve._
 import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, User}
+import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils.StringWithSha256
 
 trait NRSMetadataTestData {
 
@@ -32,6 +33,7 @@ trait NRSMetadataTestData {
                                               |    "businessId": "safety-and-security",
                                               |    "notableEvent": "entry-declaration",
                                               |    "payloadContentType": "application/xml",
+                                              |    "payloadSha256Checksum":"d6f0c835e8a559832d4a831de9ca84a96cfd42a4c968e7aa09c1fd56c934393a",
                                               |    "userSubmissionTimestamp": "2018-04-07T12:13:25.000Z",
                                               |    "identityData": {
                                               |      "internalId": "int-id",
@@ -142,7 +144,7 @@ trait NRSMetadataTestData {
           "Authorization"          -> "Bearer AbCdEf123456"
         ))
 
-    NRSMetadata(Instant.parse("2018-04-07T12:13:25.000Z"), "GB123456789", identityData, request)
+    NRSMetadata(Instant.parse("2018-04-07T12:13:25.000Z"), "GB123456789", identityData, request, request.body.toString.calculateSha256)
   }
 
 }
