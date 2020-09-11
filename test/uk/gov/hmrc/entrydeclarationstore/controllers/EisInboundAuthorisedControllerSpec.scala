@@ -19,7 +19,7 @@ package uk.gov.hmrc.entrydeclarationstore.controllers
 import org.scalatest.concurrent.ScalaFutures
 import play.api.http.{HeaderNames, Status}
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, AnyContentAsEmpty, ControllerComponents, Result}
+import play.api.mvc._
 import play.api.test.Helpers.stubControllerComponents
 import play.api.test.{FakeRequest, ResultExtractors}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
@@ -65,7 +65,7 @@ class EisInboundAuthorisedControllerSpec
       }
     }
 
-    "return a 401" when {
+    "return a 403" when {
       "user is not authorised" in new Test {
         MockAppConfig.eisInboundBearerToken returns bearerToken
 
@@ -74,12 +74,12 @@ class EisInboundAuthorisedControllerSpec
           FakeRequest().withHeaders(HeaderNames.AUTHORIZATION -> s"Bearer $badBearerToken")
         private val result: Future[Result] = controller.action()(fakeGetRequest)
 
-        status(await(result)) shouldBe UNAUTHORIZED
+        status(await(result)) shouldBe FORBIDDEN
       }
       "no bearer token is supplied" in new Test {
         private val result: Future[Result] = controller.action()(FakeRequest())
 
-        status(await(result)) shouldBe UNAUTHORIZED
+        status(await(result)) shouldBe FORBIDDEN
       }
     }
   }

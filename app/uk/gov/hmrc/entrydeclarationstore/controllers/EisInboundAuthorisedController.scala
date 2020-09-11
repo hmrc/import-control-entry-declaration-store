@@ -35,7 +35,7 @@ abstract class EisInboundAuthorisedController(cc: ControllerComponents, appConfi
         hc(request).authorization match {
           case Some(Authorization(value)) if value == s"Bearer ${appConfig.eisInboundBearerToken}" => block(request)
 
-          case _ => Future.successful(Unauthorized)
+          case _ => Future.successful(Forbidden)
         }
     }
 }
