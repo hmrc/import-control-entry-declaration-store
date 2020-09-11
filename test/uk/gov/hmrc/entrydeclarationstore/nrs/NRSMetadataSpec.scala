@@ -22,6 +22,7 @@ import play.api.libs.json.Json
 import play.api.mvc.Headers
 import play.api.test.FakeRequest
 import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils.StringWithSha256
 
 class NRSMetadataSpec extends UnitSpec with NRSMetadataTestData {
   "NRSMetadata" must {
@@ -30,7 +31,7 @@ class NRSMetadataSpec extends UnitSpec with NRSMetadataTestData {
 
       val request = FakeRequest().withHeaders("Authorization" -> token)
 
-      NRSMetadata(Instant.now, "eori", identityData, request).userAuthToken shouldBe token
+      NRSMetadata(Instant.now, "eori", identityData, request, request.body.toString.calculateSha256).userAuthToken shouldBe token
     }
 
     "contain the headers from the request" in {
@@ -38,7 +39,7 @@ class NRSMetadataSpec extends UnitSpec with NRSMetadataTestData {
         FakeRequest().withHeaders(
           Headers("Header" -> "value", "MultiValueHeader" -> "value1", "MultiValueHeader" -> "value2"))
 
-      NRSMetadata(Instant.now, "eori", identityData, request).headerData shouldBe
+      NRSMetadata(Instant.now, "eori", identityData, request, request.body.toString.calculateSha256).headerData shouldBe
         Json.parse("""{
                      |  "Header": "value",
                      |  "MultiValueHeader":"value1,value2"

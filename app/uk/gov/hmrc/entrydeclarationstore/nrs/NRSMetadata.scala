@@ -27,6 +27,7 @@ case class NRSMetadata(
   businessId: String,
   notableEvent: String,
   payloadContentType: String,
+  payloadSha256Checksum: String,
   userSubmissionTimestamp: Instant,
   identityData: IdentityData,
   userAuthToken: String,
@@ -40,12 +41,14 @@ object NRSMetadata extends InstantFormatter {
     userSubmissionTimestamp: Instant,
     eori: String,
     identityData: IdentityData,
-    request: RequestHeader
+    request: RequestHeader,
+    checkSum: String
   ): NRSMetadata =
     NRSMetadata(
       businessId              = "safety-and-security",
       notableEvent            = "entry-declaration",
       payloadContentType      = MimeTypes.XML,
+      payloadSha256Checksum   = checkSum,
       userSubmissionTimestamp = userSubmissionTimestamp,
       identityData            = identityData,
       userAuthToken           = request.headers.get("Authorization").getOrElse(""),

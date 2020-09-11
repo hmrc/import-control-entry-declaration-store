@@ -25,6 +25,7 @@ import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.ErrorWrapper
 import uk.gov.hmrc.entrydeclarationstore.nrs.{NRSMetadata, NRSService, NRSSubmission}
 import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, EntryDeclarationStore, MRNMismatchError}
+import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils.StringWithSha256
 import uk.gov.hmrc.entrydeclarationstore.utils.{EoriUtils, EventLogger, Timer}
 import uk.gov.hmrc.entrydeclarationstore.validation.ValidationErrors
 import uk.gov.hmrc.http.HeaderCarrier
@@ -96,7 +97,7 @@ class EntryDeclarationSubmissionController @Inject()(
       implicit val lc: LoggingContext = LoggingContext(eori = Some(request.userDetails.eori))
 
       val submission =
-        NRSSubmission(request.body, NRSMetadata(receivedDateTime, request.userDetails.eori, identityData, request))
+        NRSSubmission(request.body, NRSMetadata(receivedDateTime, request.userDetails.eori, identityData, request, request.body.calculateSha256))
 
       nrsService.submit(submission)
     }
