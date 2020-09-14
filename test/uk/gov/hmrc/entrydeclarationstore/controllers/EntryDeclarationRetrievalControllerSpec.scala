@@ -112,13 +112,13 @@ class EntryDeclarationRetrievalControllerSpec
         }
       }
 
-      "return 401" when {
+      "return 403" when {
         "no authentication fails" in {
           MockAppConfig.eisInboundBearerToken returns "differentBearerToken"
 
           val result: Future[Result] = controller.getSubmission(submissionId)(requestWithAuth)
 
-          status(result) shouldBe UNAUTHORIZED
+          status(result) shouldBe FORBIDDEN
         }
       }
     }
