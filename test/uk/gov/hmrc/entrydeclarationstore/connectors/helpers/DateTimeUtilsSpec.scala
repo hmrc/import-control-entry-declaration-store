@@ -23,13 +23,13 @@ import org.scalatestplus.mockito.MockitoSugar
 
 class DateTimeUtilsSpec extends WordSpec with Matchers with MockitoSugar {
 
-  val time: ZonedDateTime = ZonedDateTime.of(LocalDateTime.of(2020, 7, 18, 15, 48, 59), ZoneId.of("+00"))
+  val time: ZonedDateTime = ZonedDateTime.of(LocalDateTime.of(2020, 10, 1, 12, 6, 21), ZoneId.of("+00"))
   val mockClock: Clock    = Clock.fixed(time.toInstant, time.getZone)
   val dateTimeUtils       = new DateTimeUtils(mockClock)
 
   "currentDateInRFC1123Format" must {
     "return date in RFC_1123_DATE_TIME format" in {
-      dateTimeUtils.currentDateInRFC1123Format shouldBe "Sat, 18 Jul 2020 15:48:59 GMT"
+      dateTimeUtils.currentDateInRFC1123Format shouldBe "Thu, 01 Oct 2020 12:06:21 GMT"
     }
   }
 

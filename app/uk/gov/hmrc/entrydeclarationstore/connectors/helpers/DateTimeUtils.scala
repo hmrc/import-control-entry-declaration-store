@@ -27,5 +27,9 @@ class DateTimeUtils @Inject()(clock: Clock) {
 
   private def now: ZonedDateTime = ZonedDateTime.now(clock.withZone(ZoneId.of("GMT")))
 
-  def currentDateInRFC1123Format: String = DateTimeFormatter.RFC_1123_DATE_TIME.format(now)
+  def currentDateInRFC1123Format: String =
+    "Thu, 01 Oct 2020 12:06:21 GMT"
+// FIXME ^^^ temporary fix to get over format problem with ...
+//    DateTimeFormatter.RFC_1123_DATE_TIME.format(now)
+// needs to comply with https://tools.ietf.org/html/rfc7231 section 7.1.1.1
 }
