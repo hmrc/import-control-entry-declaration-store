@@ -16,21 +16,57 @@
 
 package uk.gov.hmrc.entrydeclarationstore.connectors.helpers
 
-import java.time.{Clock, LocalDateTime, ZoneId, ZonedDateTime}
+import java.time.format.DateTimeFormatter
+import java.time._
+import java.util.Locale
 
+import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.{Matchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
-class DateTimeUtilsSpec extends WordSpec with Matchers with MockitoSugar {
+class DateTimeUtilsSpec extends WordSpec with Matchers with ScalaCheckDrivenPropertyChecks {
 
-  val time: ZonedDateTime = ZonedDateTime.of(LocalDateTime.of(2020, 10, 1, 12, 6, 21), ZoneId.of("+00"))
-  val mockClock: Clock    = Clock.fixed(time.toInstant, time.getZone)
-  val dateTimeUtils       = new DateTimeUtils(mockClock)
+  implicit val arbInstant: Arbitrary[Instant] = Arbitrary(
+    for {
+      year  <- Gen.choose(2000, 2100)
+      month <- Gen.choose(1, 12)
+      dom   <- Gen.choose(1, 28)
+      hour  <- Gen.choose(0, 23)
+      min   <- Gen.choose(0, 59)
+      sec   <- Gen.choose(0, 59)
+    } yield {
+      val time: ZonedDateTime = ZonedDateTime.of(LocalDateTime.of(year, month, dom, hour, min, sec), ZoneOffset.UTC)
+      time.toInstant
+    }
+  )
 
   "currentDateInRFC1123Format" must {
-    "return date in RFC_1123_DATE_TIME format" in {
-      dateTimeUtils.currentDateInRFC1123Format shouldBe "Thu, 01 Oct 2020 12:06:21 GMT"
+    "return correct string for a known date" in {
+      val time: ZonedDateTime = ZonedDateTime.of(LocalDateTime.of(2020, 10, 2, 16, 5, 15), ZoneOffset.UTC)
+      time.toInstant
+
+      DateTimeUtils.httpDateFormatFor(time.toInstant) shouldBe "Fri, 02 Oct 2020 16:05:15 GMT"
+    }
+
+    "return a string in the rfc7231 HTTP-date format" in {
+      val dateRegex =
+        "(Mon|Tue|Wed|Thu|Fri|Sat|Sun), [0-9]{2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2} GMT".r
+      forAll { instant: Instant =>
+        val httpDate = DateTimeUtils.httpDateFormatFor(instant)
+
+        httpDate should fullyMatch regex dateRegex
+      }
+    }
+
+    "return a string that parses (with an English locale) back to the same time" in {
+      val simpleFormat =
+        DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH).withZone(ZoneOffset.UTC)
+
+      forAll { instant: Instant =>
+        val httpDate = DateTimeUtils.httpDateFormatFor(instant)
+
+        ZonedDateTime.parse(httpDate, simpleFormat).toInstant shouldBe instant
+      }
     }
   }
-
 }

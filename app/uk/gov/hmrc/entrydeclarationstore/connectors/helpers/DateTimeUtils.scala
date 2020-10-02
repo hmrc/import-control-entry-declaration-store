@@ -16,20 +16,16 @@
 
 package uk.gov.hmrc.entrydeclarationstore.connectors.helpers
 
+import java.time._
 import java.time.format.DateTimeFormatter
-import java.time.{Clock, ZoneId, ZonedDateTime}
+import java.util.Locale
 
-import com.google.inject.Inject
-import javax.inject.Singleton
+object DateTimeUtils {
 
-@Singleton
-class DateTimeUtils @Inject()(clock: Clock) {
+  // See https://tools.ietf.org/html/rfc7231 HTTP-date (section 7.1.1.1)
+  private val httpDateFormatter: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH).withZone(ZoneId.of("GMT"))
 
-  private def now: ZonedDateTime = ZonedDateTime.now(clock.withZone(ZoneId.of("GMT")))
-
-  def currentDateInRFC1123Format: String =
-    "Thu, 01 Oct 2020 12:06:21 GMT"
-// FIXME ^^^ temporary fix to get over format problem with ...
-//    DateTimeFormatter.RFC_1123_DATE_TIME.format(now)
-// needs to comply with https://tools.ietf.org/html/rfc7231 section 7.1.1.1
+  def httpDateFormatFor(instant: Instant): String =
+    httpDateFormatter.format(instant)
 }
