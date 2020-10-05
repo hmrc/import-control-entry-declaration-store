@@ -16,13 +16,21 @@
 
 package uk.gov.hmrc.entrydeclarationstore.connectors.helpers
 
+import java.time.{Clock, LocalDateTime, ZoneOffset, ZonedDateTime}
+
 import org.scalatest.{Matchers, WordSpec}
 import play.api.http.{HeaderNames, MimeTypes}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.http.HeaderCarrier
 
-class HeaderGeneratorSpec extends WordSpec with Matchers with HeaderNames with MockAppConfig with MockDateTimeUtils {
-  val testHeaderGenerator = new HeaderGenerator(mockDateTimeUtils, mockAppConfig)
+class HeaderGeneratorSpec extends WordSpec with Matchers with HeaderNames with MockAppConfig {
+
+  val clock: Clock = {
+    val t = ZonedDateTime.of(LocalDateTime.of(2015, 8, 13, 13, 28, 22), ZoneOffset.UTC)
+    Clock.fixed(t.toInstant, ZoneOffset.UTC)
+  }
+
+  val testHeaderGenerator = new HeaderGenerator(clock, mockAppConfig)
   val submissionId        = "someId"
   val authToken           = "someToken"
   val env                 = "someEnv"
@@ -30,7 +38,6 @@ class HeaderGeneratorSpec extends WordSpec with Matchers with HeaderNames with M
   "HeaderGenerator.headersForEIS" must {
 
     "create correct headers with CONTENT_TYPE" in {
-      MockDateTimeUtils.currentDateInRFC1123Format returns "Thu, 13 Aug 2015 13:28:22 GMT"
       MockAppConfig.eisBearerToken returns authToken
       MockAppConfig.eisEnvironment returns env
       MockAppConfig.headerWhitelist returns Seq()
@@ -46,7 +53,6 @@ class HeaderGeneratorSpec extends WordSpec with Matchers with HeaderNames with M
     }
 
     "include the Authorization header if it is supplied in AppConf" in {
-      MockDateTimeUtils.currentDateInRFC1123Format returns "Thu, 13 Aug 2015 13:28:22 GMT"
       MockAppConfig.eisBearerToken returns authToken
       MockAppConfig.eisEnvironment returns env
       MockAppConfig.headerWhitelist returns Seq()
@@ -57,7 +63,6 @@ class HeaderGeneratorSpec extends WordSpec with Matchers with HeaderNames with M
     }
 
     "not include the Authorization header if it is empty string in AppConf" in {
-      MockDateTimeUtils.currentDateInRFC1123Format returns "Thu, 13 Aug 2015 13:28:22 GMT"
       MockAppConfig.eisBearerToken returns ""
       MockAppConfig.eisEnvironment returns env
       MockAppConfig.headerWhitelist returns Seq()
@@ -68,15 +73,15 @@ class HeaderGeneratorSpec extends WordSpec with Matchers with HeaderNames with M
     }
 
     "include whitelisted headers" in {
-      MockDateTimeUtils.currentDateInRFC1123Format returns "Thu, 13 Aug 2015 13:28:22 GMT"
       MockAppConfig.eisBearerToken returns authToken
       MockAppConfig.eisEnvironment returns env
-      MockAppConfig.headerWhitelist returns Seq("latencyInMs", "testHeader") anyNumberOfTimes()
-      implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = Seq("TESTHEADER" -> "test", "blacklistheader" -> "200", "latencyInMs" -> "100"))
-      val headers                    = testHeaderGenerator.headersForEIS(submissionId).toMap
+      MockAppConfig.headerWhitelist returns Seq("latencyInMs", "testHeader") anyNumberOfTimes ()
+      implicit val hc: HeaderCarrier =
+        HeaderCarrier(extraHeaders = Seq("TESTHEADER" -> "test", "blacklistheader" -> "200", "latencyInMs" -> "100"))
+      val headers = testHeaderGenerator.headersForEIS(submissionId).toMap
 
-      headers("latencyInMs") shouldBe "100"
-      headers("TESTHEADER") shouldBe "test"
+      headers("latencyInMs")         shouldBe "100"
+      headers("TESTHEADER")          shouldBe "test"
       headers.get("blacklistheader") shouldBe None
     }
   }
