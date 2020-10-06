@@ -16,6 +16,7 @@
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
 import java.time.Instant
+import java.util.UUID
 
 import org.scalatest.concurrent.Eventually
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
@@ -89,6 +90,15 @@ class EntryDeclarationRepoISpec
     receivedDateTime
   )
 
+  def randomEntryDeclaration: EntryDeclarationModel = EntryDeclarationModel(
+    UUID.randomUUID.toString,
+    UUID.randomUUID.toString,
+    eori,
+    payload315,
+    None,
+    receivedDateTime
+  )
+
   def lookupEntryDeclaration(submissionId: String): Option[EntryDeclarationModel] =
     await(repository.find("submissionId" -> submissionId)).headOption.map(_.toEntryDeclarationModel)
 
@@ -125,6 +135,7 @@ class EntryDeclarationRepoISpec
         val duplicate = entryDeclaration313.copy(submissionId = "other")
         await(repository.save(duplicate)) shouldBe false
       }
+
       "housekeepingAt must be initialised to 7 days" in {
         await(repository.find("submissionId" -> submissionId313)).headOption.map(entryDeclaration =>
           entryDeclaration.housekeepingAt.$date - entryDeclaration.receivedDateTime.$date) shouldBe
@@ -389,16 +400,6 @@ class EntryDeclarationRepoISpec
         await(repository.getHousekeepingStatus)    shouldBe HousekeepingStatus.On
       }
 
-      "be effective when on" in {
-        await(repository.removeAll())
-        await(repository.save(entryDeclaration313)) shouldBe true
-        repository.setHousekeepingAt(submissionId313, Instant.now)
-
-        eventually(Timeout(Span(60, Seconds))) {
-          await(repository.lookupEntryDeclaration(submissionId313)) shouldBe None
-        }
-      }
-
       "be updatable (to turn off housekeeping)" in {
         await(repository.enableHousekeeping(false)) shouldBe true
         await(repository.getHousekeepingStatus)     shouldBe HousekeepingStatus.Off
@@ -409,16 +410,6 @@ class EntryDeclarationRepoISpec
         await(repository.getHousekeepingStatus)     shouldBe HousekeepingStatus.Off
       }
 
-      "not be effective when off" in {
-        await(repository.removeAll())
-        await(repository.save(entryDeclaration313)) shouldBe true
-        repository.setHousekeepingAt(submissionId313, Instant.now)
-
-        Thread.sleep(60000)
-        await(repository.lookupEntryDeclaration(submissionId313)) should not be None
-
-      }
-
       "be updatable (to turn on housekeeping)" in {
         await(repository.enableHousekeeping(true)) shouldBe true
         await(repository.getHousekeepingStatus)    shouldBe HousekeepingStatus.On
@@ -427,6 +418,89 @@ class EntryDeclarationRepoISpec
       "allow turning on when already on" in {
         await(repository.enableHousekeeping(true)) shouldBe true
         await(repository.getHousekeepingStatus)    shouldBe HousekeepingStatus.On
+      }
+    }
+
+    "housekeep" when {
+      val now      = Instant.now
+      val numDecls = 10
+
+      def createDeclarations(numDecls: Int): Seq[EntryDeclarationModel] =
+        (1 to numDecls).map { i =>
+          val decl = randomEntryDeclaration
+          await(repository.save(decl)) shouldBe true
+          decl
+        }
+
+      "documents have housekeepingAt set" must {
+        "delete those that have a value equal to or earlier than now" in {
+          await(repository.removeAll())
+          val decls = createDeclarations(numDecls)
+
+          decls.zipWithIndex.map {
+            case (decl, i) =>
+              await(repository.setHousekeepingAt(eori, decl.correlationId, now.minusSeconds(i))) shouldBe true
+          }
+
+          await(repository.housekeep(now, numDecls * 2)) shouldBe numDecls
+
+          decls.map { decl =>
+            await(repository.lookupEntryDeclaration(decl.submissionId)) shouldBe None
+          }
+        }
+
+        "not delete those that have a value later than now" in {
+          await(repository.removeAll())
+          val decls = createDeclarations(numDecls)
+
+          decls.zipWithIndex.map {
+            case (decl, i) =>
+              await(repository.setHousekeepingAt(eori, decl.correlationId, now.plusSeconds(i + 1))) shouldBe true
+          }
+
+          await(repository.housekeep(now, numDecls * 2)) shouldBe 0
+
+          decls.map { decl =>
+            await(repository.lookupEntryDeclaration(decl.submissionId)) should not be None
+          }
+        }
+      }
+
+      "documents have no housekeepingAt set" must {
+        "not delete those documents" in {
+          await(repository.removeAll())
+          val decls = createDeclarations(numDecls)
+
+          await(repository.housekeep(now, numDecls * 2)) shouldBe 0
+
+          decls.map { decl =>
+            await(repository.lookupEntryDeclaration(decl.submissionId)) should not be None
+          }
+        }
+      }
+
+      "more records than the limit require deleting" must {
+        "delete only the oldest ones" in {
+          await(repository.removeAll())
+          val decls = createDeclarations(numDecls)
+
+          decls.zipWithIndex.map {
+            case (decl, i) =>
+              // First ones are the 'oldest'...
+              await(repository.setHousekeepingAt(eori, decl.correlationId, now.minusSeconds(numDecls - i)))
+          }
+
+          val limit = 2
+          await(repository.housekeep(now, limit)) shouldBe limit
+
+          decls.take(limit).map { decl =>
+            await(repository.lookupEntryDeclaration(decl.submissionId)) shouldBe None
+          }
+
+          decls.drop(limit).map { decl =>
+            await(repository.lookupEntryDeclaration(decl.submissionId)) should not be None
+          }
+        }
       }
     }
   }

@@ -18,10 +18,12 @@ package uk.gov.hmrc.entrydeclarationstore.repositories
 
 import java.time.Instant
 
+import akka.stream.Materializer
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
+import reactivemongo.akkastream.cursorProducer
 import reactivemongo.api.commands.Command
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
@@ -63,12 +65,15 @@ trait EntryDeclarationRepo {
   def enableHousekeeping(value: Boolean): Future[Boolean]
 
   def getHousekeepingStatus: Future[HousekeepingStatus]
+
+  def housekeep(now: Instant, limit: Int): Future[Int]
 }
 
 @Singleton
 class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
   implicit mongo: ReactiveMongoComponent,
-  ec: ExecutionContext
+  ec: ExecutionContext,
+  mat: Materializer
 ) extends ReactiveRepository[EntryDeclarationPersisted, BSONObjectID](
       "entryDeclarationStore",
       mongo.mongoConnector.db,
@@ -109,17 +114,18 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
     collection
       .find(
         Json.obj("eori" -> eori, "correlationId" -> correlationId),
-        Some(Json.obj("submissionId" -> 1, "receivedDateTime" -> 1, "housekeepingAt" -> 1, "eisSubmissionDateTime" -> 1))
+        Some(
+          Json.obj("submissionId" -> 1, "receivedDateTime" -> 1, "housekeepingAt" -> 1, "eisSubmissionDateTime" -> 1))
       )
       .one[JsObject](ReadPreference.primaryPreferred)
-      .map ( _.map { doc =>
-          SubmissionIdLookupResult(
-            (doc \ "receivedDateTime").as[PersistableDateTime].toInstant.toString,
-            (doc \ "housekeepingAt").as[PersistableDateTime].toInstant.toString,
-            (doc \ "submissionId").as[String],
-            (doc \ "eisSubmissionDateTime").asOpt[PersistableDateTime].map(_.toInstant.toString)
-          )
-        })
+      .map(_.map { doc =>
+        SubmissionIdLookupResult(
+          (doc \ "receivedDateTime").as[PersistableDateTime].toInstant.toString,
+          (doc \ "housekeepingAt").as[PersistableDateTime].toInstant.toString,
+          (doc \ "submissionId").as[String],
+          (doc \ "eisSubmissionDateTime").asOpt[PersistableDateTime].map(_.toInstant.toString)
+        )
+      })
 
   override def lookupEntryDeclaration(submissionId: String): Future[Option[JsValue]] =
     collection
@@ -272,4 +278,37 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
           HousekeepingStatus.Unknown
       }
     }
+
+  override def housekeep(now: Instant, limit: Int): Future[Int] = {
+    val deleteBuilder = collection.delete(ordered = false)
+
+    collection
+      .find(
+        selector   = Json.obj("housekeepingAt" -> Json.obj("$lte" -> PersistableDateTime(now))),
+        projection = Some(Json.obj("_id" -> 1))
+      )
+      .cursor[JsObject]()
+      .documentSource(maxDocs = limit)
+      .mapAsync(1) { idDoc =>
+        deleteBuilder.element(q = idDoc, limit = Some(1), collation = None)
+      }
+      .batch(100, List(_)) { (deletions, element) => // <<< FIXME 100 from app config
+        element :: deletions
+      }
+      .mapAsync(1) { deletions =>
+        collection
+          .delete()
+          .many(deletions)
+          .map(_.n)
+      }
+      .runFold(0)(_ + _)
+  }
+
+//    collection
+//      .delete()
+//      .one(
+//        q = Json.obj("housekeepingAt" -> Json.obj("$lte" -> PersistableDateTime(now))),
+//        limit = None
+//      )
+//      .map(result => result.n)
 }
