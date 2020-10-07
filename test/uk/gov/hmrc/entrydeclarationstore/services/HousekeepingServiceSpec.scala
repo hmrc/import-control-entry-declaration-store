@@ -22,28 +22,35 @@ import com.kenshoo.play.metrics.Metrics
 import org.scalatest.concurrent.ScalaFutures
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.models.HousekeepingStatus
-import uk.gov.hmrc.entrydeclarationstore.repositories.MockEntryDeclarationRepo
+import uk.gov.hmrc.entrydeclarationstore.repositories.{MockEntryDeclarationRepo, MockHousekeepingRepo}
 import uk.gov.hmrc.entrydeclarationstore.utils.MockMetrics
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-class HousekeepingServiceSpec extends UnitSpec with MockAppConfig with MockEntryDeclarationRepo with ScalaFutures {
+class HousekeepingServiceSpec
+    extends UnitSpec
+    with MockAppConfig
+    with MockEntryDeclarationRepo
+    with MockHousekeepingRepo
+    with ScalaFutures {
 
   val time: Instant = Instant.now
   val clock: Clock  = Clock.fixed(time, ZoneOffset.UTC)
 
   val mockedMetrics: Metrics = new MockMetrics
-  val service                = new HousekeepingService(mockEntryDeclarationRepo, clock, mockAppConfig, mockedMetrics)
+  val service =
+    new HousekeepingService(mockEntryDeclarationRepo, mockHousekeepingRepo, clock, mockAppConfig, mockedMetrics)
 
   "HousekeepingService" when {
     "getting housekeeping status" must {
       "get using the repo" in {
         // WLOG
-        val status = HousekeepingStatus.On
+        val status = HousekeepingStatus(true)
 
-        MockEntryDeclarationRepo.getHousekeepingStatus returns status
+        MockHousekeepingRepo.getHousekeepingStatus returns status
         service.getHousekeepingStatus.futureValue shouldBe status
       }
     }
@@ -51,11 +58,10 @@ class HousekeepingServiceSpec extends UnitSpec with MockAppConfig with MockEntry
     "setting housekeeping status" must {
       "set using the repo" in {
         // WLOG
-        val success = true
-        val value   = false
+        val value = false
 
-        MockEntryDeclarationRepo.enableHousekeeping(value) returns success
-        service.enableHousekeeping(value).futureValue shouldBe success
+        MockHousekeepingRepo.enableHousekeeping(value) returns Future.unit
+        service.enableHousekeeping(value).futureValue
       }
     }
 

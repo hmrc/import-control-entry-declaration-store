@@ -20,18 +20,15 @@ import java.time.Instant
 
 import akka.stream.Materializer
 import javax.inject.{Inject, Singleton}
-import play.api.Logger
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.akkastream.cursorProducer
-import reactivemongo.api.commands.Command
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
 import reactivemongo.api.{ReadPreference, WriteConcern}
-import reactivemongo.bson.{BSONDocument, BSONObjectID}
+import reactivemongo.bson.BSONObjectID
 import reactivemongo.core.errors.DatabaseException
 import reactivemongo.play.json.ImplicitBSONHandlers._
-import reactivemongo.play.json.JSONSerializationPack
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationstore.models._
@@ -62,10 +59,6 @@ trait EntryDeclarationRepo {
 
   def setHousekeepingAt(eori: String, correlationId: String, time: Instant): Future[Boolean]
 
-  def enableHousekeeping(value: Boolean): Future[Boolean]
-
-  def getHousekeepingStatus: Future[HousekeepingStatus]
-
   def housekeep(now: Instant): Future[Int]
 }
 
@@ -82,16 +75,9 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
     )
     with EntryDeclarationRepo {
 
-  private val expireAfterSecondsOn: Long  = 0
-  private val expireAfterSecondsOff: Long = Long.MaxValue
-
   override def indexes: Seq[Index] = Seq(
     Index(Seq(("submissionId", Ascending)), name = Some("submissionIdIndex"), unique = true),
-    //TTL index
-    Index(
-      Seq("housekeepingAt" -> Ascending),
-      name    = Some("housekeepingIndex"),
-      options = BSONDocument("expireAfterSeconds" -> 0)),
+    Index(Seq("housekeepingAt" -> Ascending), name = Some("housekeepingIndex")),
     Index(
       Seq(("eori", Ascending), ("correlationId", Ascending)),
       name   = Some("eoriPlusCorrelationIdIndex"),
@@ -230,54 +216,6 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
       .update(ordered = false, WriteConcern.Default)
       .one(query, Json.obj("$set" -> Json.obj("housekeepingAt" -> PersistableDateTime(time))))
       .map(result => result.n == 1)
-
-  override def enableHousekeeping(value: Boolean): Future[Boolean] = {
-    val ttlSecs = if (value) expireAfterSecondsOn else expireAfterSecondsOff
-
-    val commandDoc = Json.obj(
-      "collMod" -> "entryDeclarationStore",
-      "index"   -> Json.obj("keyPattern" -> Json.obj("housekeepingAt" -> 1), "expireAfterSeconds" -> ttlSecs))
-
-    val runner = Command.CommandWithPackRunner(JSONSerializationPack)
-    runner(mongo.mongoConnector.db(), runner.rawCommand(commandDoc))
-      .cursor[JsObject](ReadPreference.primaryPreferred)
-      .head
-      .map { response =>
-        response.as((JsPath \ "ok").read[Double]) match {
-          case 1.0 =>
-            for {
-              oldTtl <- response.as((JsPath \ "expireAfterSeconds_old").readNullable[Double])
-              newTtl <- response.as((JsPath \ "expireAfterSeconds_new").readNullable[Double])
-            } yield Logger.warn(s"Change to TTL: old TTL $oldTtl, new TTL $newTtl")
-            true
-          case _ =>
-            Logger.warn(s"Change to TTL failed. response: $response")
-            false
-        }
-      }
-  }
-
-  override def getHousekeepingStatus: Future[HousekeepingStatus] =
-    collection.indexesManager.list().map { indexes =>
-      val optTtlSecs = for {
-        idx <- indexes.find(_.key.map(_._1).contains("housekeepingAt"))
-        // Read the expiry from JSON (rather than BSON) so that we can control widening to Long
-        // (from the more strongly typed BSON values which can be either Int32 or Int64)
-        value <- Json.toJson(idx.options).as((JsPath \ "expireAfterSeconds").readNullable[Long])
-      } yield value
-
-      optTtlSecs match {
-        case Some(`expireAfterSecondsOn`)  => HousekeepingStatus.On
-        case Some(`expireAfterSecondsOff`) => HousekeepingStatus.Off
-        case Some(other) =>
-          Logger.warn(
-            s"Cannot get housekeeping status: expireAfterSeconds is $other (neither on: $expireAfterSecondsOn nor off: $expireAfterSecondsOff)")
-          HousekeepingStatus.Unknown
-        case None =>
-          Logger.warn(s"Cannot get housekeeping status: expireAfterSeconds could not be determined")
-          HousekeepingStatus.Unknown
-      }
-    }
 
   override def housekeep(now: Instant): Future[Int] = {
     val deleteBuilder = collection.delete(ordered = false)
