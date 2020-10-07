@@ -66,7 +66,7 @@ trait EntryDeclarationRepo {
 
   def getHousekeepingStatus: Future[HousekeepingStatus]
 
-  def housekeep(now: Instant, limit: Int): Future[Int]
+  def housekeep(now: Instant): Future[Int]
 }
 
 @Singleton
@@ -279,7 +279,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
       }
     }
 
-  override def housekeep(now: Instant, limit: Int): Future[Int] = {
+  override def housekeep(now: Instant): Future[Int] = {
     val deleteBuilder = collection.delete(ordered = false)
 
     collection
@@ -287,12 +287,13 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
         selector   = Json.obj("housekeepingAt" -> Json.obj("$lte" -> PersistableDateTime(now))),
         projection = Some(Json.obj("_id" -> 1))
       )
+      .sort(Json.obj("housekeepingAt" -> 1))
       .cursor[JsObject]()
-      .documentSource(maxDocs = limit)
+      .documentSource(maxDocs = appConfig.housekeepingRunLimit)
       .mapAsync(1) { idDoc =>
         deleteBuilder.element(q = idDoc, limit = Some(1), collation = None)
       }
-      .batch(100, List(_)) { (deletions, element) => // <<< FIXME 100 from app config
+      .batch(appConfig.housekeepingBatchSize, List(_)) { (deletions, element) =>
         element :: deletions
       }
       .mapAsync(1) { deletions =>
@@ -303,12 +304,4 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
       }
       .runFold(0)(_ + _)
   }
-
-//    collection
-//      .delete()
-//      .one(
-//        q = Json.obj("housekeepingAt" -> Json.obj("$lte" -> PersistableDateTime(now))),
-//        limit = None
-//      )
-//      .map(result => result.n)
 }
