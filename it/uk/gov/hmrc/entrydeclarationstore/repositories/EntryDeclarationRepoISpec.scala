@@ -16,11 +16,12 @@
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
 import java.time.Instant
+import java.util.UUID
 
 import org.scalatest.concurrent.Eventually
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.time.{Seconds, Span}
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
+import org.scalatest.{Assertion, BeforeAndAfterAll, Matchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsObject, JsValue, Json}
@@ -33,6 +34,7 @@ import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+import scala.util.Random
 
 class EntryDeclarationRepoISpec
     extends WordSpec
@@ -44,9 +46,17 @@ class EntryDeclarationRepoISpec
     with Eventually
     with Injecting {
 
+  val housekeepingRunLimit: Int  = 20
+  val housekeepingBatchSize: Int = 3
+
   override lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
-    .configure("metrics.enabled" -> "false", "mongodb.defaultTtl" -> defaultTtl.toString)
+    .configure(
+      "metrics.enabled"               -> "false",
+      "mongodb.defaultTtl"            -> defaultTtl.toString,
+      "mongodb.housekeepingRunLimit"  -> housekeepingRunLimit,
+      "mongodb.housekeepingBatchSize" -> housekeepingBatchSize
+    )
     .build()
 
   lazy val repository: EntryDeclarationRepoImpl = inject[EntryDeclarationRepoImpl]
@@ -89,6 +99,15 @@ class EntryDeclarationRepoISpec
     receivedDateTime
   )
 
+  def randomEntryDeclaration: EntryDeclarationModel = EntryDeclarationModel(
+    UUID.randomUUID.toString,
+    UUID.randomUUID.toString,
+    eori,
+    payload315,
+    None,
+    receivedDateTime
+  )
+
   def lookupEntryDeclaration(submissionId: String): Option[EntryDeclarationModel] =
     await(repository.find("submissionId" -> submissionId)).headOption.map(_.toEntryDeclarationModel)
 
@@ -125,6 +144,7 @@ class EntryDeclarationRepoISpec
         val duplicate = entryDeclaration313.copy(submissionId = "other")
         await(repository.save(duplicate)) shouldBe false
       }
+
       "housekeepingAt must be initialised to 7 days" in {
         await(repository.find("submissionId" -> submissionId313)).headOption.map(entryDeclaration =>
           entryDeclaration.housekeepingAt.$date - entryDeclaration.receivedDateTime.$date) shouldBe
@@ -389,16 +409,6 @@ class EntryDeclarationRepoISpec
         await(repository.getHousekeepingStatus)    shouldBe HousekeepingStatus.On
       }
 
-      "be effective when on" in {
-        await(repository.removeAll())
-        await(repository.save(entryDeclaration313)) shouldBe true
-        repository.setHousekeepingAt(submissionId313, Instant.now)
-
-        eventually(Timeout(Span(60, Seconds))) {
-          await(repository.lookupEntryDeclaration(submissionId313)) shouldBe None
-        }
-      }
-
       "be updatable (to turn off housekeeping)" in {
         await(repository.enableHousekeeping(false)) shouldBe true
         await(repository.getHousekeepingStatus)     shouldBe HousekeepingStatus.Off
@@ -409,16 +419,6 @@ class EntryDeclarationRepoISpec
         await(repository.getHousekeepingStatus)     shouldBe HousekeepingStatus.Off
       }
 
-      "not be effective when off" in {
-        await(repository.removeAll())
-        await(repository.save(entryDeclaration313)) shouldBe true
-        repository.setHousekeepingAt(submissionId313, Instant.now)
-
-        Thread.sleep(60000)
-        await(repository.lookupEntryDeclaration(submissionId313)) should not be None
-
-      }
-
       "be updatable (to turn on housekeeping)" in {
         await(repository.enableHousekeeping(true)) shouldBe true
         await(repository.getHousekeepingStatus)    shouldBe HousekeepingStatus.On
@@ -427,6 +427,74 @@ class EntryDeclarationRepoISpec
       "allow turning on when already on" in {
         await(repository.enableHousekeeping(true)) shouldBe true
         await(repository.getHousekeepingStatus)    shouldBe HousekeepingStatus.On
+      }
+    }
+
+    "housekeep" when {
+      val t0 = Instant.now
+
+      def populateDeclarations(numDecls: Int): Seq[EntryDeclarationModel] = {
+        await(repository.removeAll())
+        (1 to numDecls).map { _ =>
+          val decl = randomEntryDeclaration
+          await(repository.save(decl)) shouldBe true
+          decl
+        }
+      }
+
+      def setHousekeepingAt(decls: Seq[EntryDeclarationModel], housekeepingTimes: Seq[Int]): Unit =
+        (decls zip housekeepingTimes).foreach {
+          case (decl, i) =>
+            await(repository.setHousekeepingAt(decl.submissionId, t0.plusSeconds(i))) shouldBe true
+        }
+
+      def assertNotHousekept(decl: EntryDeclarationModel): Assertion =
+        await(repository.lookupEntryDeclaration(decl.submissionId)) should not be None
+
+      def assertHousekept(decl: EntryDeclarationModel): Assertion =
+        await(repository.lookupEntryDeclaration(decl.submissionId)) shouldBe None
+
+      "the time has reached the housekeepingAt for some documents" must {
+        "delete only those documents" in {
+          val numDecls = 10
+          val decls    = populateDeclarations(numDecls)
+          setHousekeepingAt(decls, 1 to decls.size)
+
+          val elapsedSecs = 6
+
+          await(repository.housekeep(t0.plusSeconds(elapsedSecs))) shouldBe elapsedSecs
+
+          decls.take(elapsedSecs) foreach assertHousekept
+          decls.drop(elapsedSecs) foreach assertNotHousekept
+        }
+      }
+
+      "the time has not reached the housekeepingAt for any documents" must {
+        "delete nothing" in {
+          val numDecls = 10
+          val decls    = populateDeclarations(numDecls)
+          setHousekeepingAt(decls, 1 to decls.size)
+
+          await(repository.housekeep(t0)) shouldBe 0
+
+          decls foreach assertNotHousekept
+        }
+      }
+
+      "more records than the limit require deleting" must {
+        "delete only the oldest ones by housekeepingAt even if not created in that order" in {
+          val numDecls = housekeepingRunLimit * 2
+          val decls    = Random.shuffle(populateDeclarations(numDecls))
+
+          setHousekeepingAt(decls, 1 to decls.size)
+
+          val elapsedSecs = numDecls
+
+          await(repository.housekeep(t0.plusSeconds(elapsedSecs))) shouldBe housekeepingRunLimit
+
+          decls.take(housekeepingRunLimit) foreach assertHousekept
+          decls.drop(housekeepingRunLimit) foreach assertNotHousekept
+        }
       }
     }
   }

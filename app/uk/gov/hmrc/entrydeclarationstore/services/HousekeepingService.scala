@@ -18,15 +18,28 @@ package uk.gov.hmrc.entrydeclarationstore.services
 
 import java.time.Clock
 
+import com.codahale.metrics.Gauge
+import com.kenshoo.play.metrics.Metrics
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.models.HousekeepingStatus
 import uk.gov.hmrc.entrydeclarationstore.repositories.EntryDeclarationRepo
+import uk.gov.hmrc.entrydeclarationstore.utils.{EventLogger, Timer}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Success
 
 @Singleton
-class HousekeepingService @Inject()(repo: EntryDeclarationRepo, clock: Clock, appConfig: AppConfig) {
+class HousekeepingService @Inject()(
+  repo: EntryDeclarationRepo,
+  clock: Clock,
+  appConfig: AppConfig,
+  override val metrics: Metrics)(implicit ec: ExecutionContext)
+    extends Timer
+    with EventLogger {
+
+  private lazy val numDeletedHistogram = metrics.defaultRegistry.histogram("housekeep-num-deleted")
+
   def enableHousekeeping(value: Boolean): Future[Boolean] = repo.enableHousekeeping(value)
   def getHousekeepingStatus: Future[HousekeepingStatus]   = repo.getHousekeepingStatus
 
@@ -35,4 +48,10 @@ class HousekeepingService @Inject()(repo: EntryDeclarationRepo, clock: Clock, ap
 
   def setShortTtl(eori: String, correlationId: String): Future[Boolean] =
     repo.setHousekeepingAt(eori, correlationId, clock.instant().plusMillis(appConfig.shortTtl.toMillis))
+
+  def housekeep(): Future[Int] = timeFuture("Housekeeping", "housekeep") {
+    repo.housekeep(clock.instant).andThen {
+      case Success(numDeleted) => numDeletedHistogram.update(numDeleted)
+    }
+  }
 }
