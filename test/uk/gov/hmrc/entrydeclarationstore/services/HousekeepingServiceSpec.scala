@@ -93,10 +93,17 @@ class HousekeepingServiceSpec
 
     "performing housekeeping" must {
       "use the current date" in {
+        MockHousekeepingRepo.getHousekeepingStatus returns HousekeepingStatus(true)
         val numDeleted = 123
         MockEntryDeclarationRepo.housekeep(time) returns numDeleted
 
-        service.housekeep().futureValue shouldBe numDeleted
+        service.housekeep().futureValue shouldBe true
+      }
+
+      "do nothing when housekeeping is off" in {
+        MockHousekeepingRepo.getHousekeepingStatus returns HousekeepingStatus(false)
+
+        service.housekeep().futureValue shouldBe false
       }
     }
   }

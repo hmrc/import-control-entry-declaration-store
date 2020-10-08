@@ -8,6 +8,7 @@ object AppDependencies {
     "uk.gov.hmrc"            %% "simple-reactivemongo"      % "7.30.0-play-26",
     "org.reactivemongo"      %% "reactivemongo-akkastream"  % "0.18.8",
     "uk.gov.hmrc"            %% "bootstrap-backend-play-26" % "2.24.0",
+    "uk.gov.hmrc"            %% "mongo-lock"                % "6.23.0-play-26",
     "org.typelevel"          %% "cats-core"                 % "2.0.0",
     "org.scala-lang.modules" %% "scala-xml"                 % "1.2.0",
     "com.lucidchart"         %% "xtract"                    % "2.2.1",

@@ -38,6 +38,8 @@ trait MockHousekeepingService extends MockFactory {
     def setShortTtl(eori: String, correlationId: String): CallHandler[Future[Boolean]] =
       (mockHousekeepingService.setShortTtl(_: String, _: String)) expects (eori, correlationId)
 
+    def housekeep(): CallHandler[Future[Boolean]] =
+      mockHousekeepingService.housekeep _ expects ()
   }
 
 }

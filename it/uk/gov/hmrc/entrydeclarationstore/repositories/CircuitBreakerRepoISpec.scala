@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
-import org.scalatest.concurrent.Eventually
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -32,7 +31,6 @@ class CircuitBreakerRepoISpec
     with FutureAwaits
     with DefaultAwaitTimeout
     with GuiceOneAppPerSuite
-    with Eventually
     with Injecting {
 
   override lazy val app: Application = new GuiceApplicationBuilder()

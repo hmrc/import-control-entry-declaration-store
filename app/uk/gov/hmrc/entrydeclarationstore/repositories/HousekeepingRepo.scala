@@ -40,8 +40,7 @@ trait HousekeepingRepo {
 @Singleton
 class HousekeepingRepoImpl @Inject()(
   implicit mongo: ReactiveMongoComponent,
-  ec: ExecutionContext,
-  mat: Materializer
+  ec: ExecutionContext
 ) extends ReactiveRepository[HousekeepingStatus, BSONObjectID](
       "houskeeping-status",
       mongo.mongoConnector.db,

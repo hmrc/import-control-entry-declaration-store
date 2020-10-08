@@ -20,7 +20,9 @@ import java.time.Clock
 
 import com.kenshoo.play.metrics.Metrics
 import javax.inject.{Inject, Singleton}
+import play.api.Logger
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
+import uk.gov.hmrc.entrydeclarationstore.housekeeping.Housekeeper
 import uk.gov.hmrc.entrydeclarationstore.models.HousekeepingStatus
 import uk.gov.hmrc.entrydeclarationstore.repositories.{EntryDeclarationRepo, HousekeepingRepo}
 import uk.gov.hmrc.entrydeclarationstore.utils.{EventLogger, Timer}
@@ -35,7 +37,8 @@ class HousekeepingService @Inject()(
   clock: Clock,
   appConfig: AppConfig,
   override val metrics: Metrics)(implicit ec: ExecutionContext)
-    extends Timer
+    extends Housekeeper
+    with Timer
     with EventLogger {
 
   private lazy val numDeletedHistogram = metrics.defaultRegistry.histogram("housekeep-num-deleted")
@@ -49,9 +52,25 @@ class HousekeepingService @Inject()(
   def setShortTtl(eori: String, correlationId: String): Future[Boolean] =
     entryDeclarationRepo.setHousekeepingAt(eori, correlationId, clock.instant().plusMillis(appConfig.shortTtl.toMillis))
 
-  def housekeep(): Future[Int] = timeFuture("Housekeeping", "housekeep") {
-    entryDeclarationRepo.housekeep(clock.instant).andThen {
-      case Success(numDeleted) => numDeletedHistogram.update(numDeleted)
+  def housekeep(): Future[Boolean] = {
+    def doHouskeeping() =
+      timeFuture("Housekeeping", "housekeep") {
+        entryDeclarationRepo
+          .housekeep(clock.instant)
+          .andThen {
+            case Success(numDeleted) => numDeletedHistogram.update(numDeleted)
+          }
+          .map(_ => true)
+      }
+
+    housekeepingRepo.getHousekeepingStatus.flatMap {
+      case HousekeepingStatus(true) =>
+        Logger.info("Running housekeeping")
+        doHouskeeping()
+
+      case HousekeepingStatus(false) =>
+        Logger.info("Skipping housekeeping")
+        Future.successful(false)
     }
   }
 }

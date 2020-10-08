@@ -18,7 +18,6 @@ package uk.gov.hmrc.entrydeclarationstore.repositories
 import java.time.Instant
 import java.util.UUID
 
-import org.scalatest.concurrent.Eventually
 import org.scalatest.{Assertion, BeforeAndAfterAll, Matchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -41,7 +40,6 @@ class EntryDeclarationRepoISpec
     with DefaultAwaitTimeout
     with GuiceOneAppPerSuite
     with BeforeAndAfterAll
-    with Eventually
     with Injecting {
 
   val housekeepingRunLimit: Int  = 20
