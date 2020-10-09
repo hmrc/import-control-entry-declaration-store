@@ -25,6 +25,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.{Application, Environment, Mode}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Injecting
+import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.duration._
@@ -36,6 +37,7 @@ class RetryingSpec extends UnitSpec with ScalaFutures with GuiceOneAppPerSuite w
 
   override lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
+    .disable[HousekeepingScheduler]
     .configure("metrics.enabled" -> "false")
     .build()
 

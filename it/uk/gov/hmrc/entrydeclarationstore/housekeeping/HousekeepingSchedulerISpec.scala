@@ -43,7 +43,6 @@ class HousekeepingSchedulerISpec
     with Injecting
     with Eventually {
 
-  // WLOG
   val runInterval: FiniteDuration  = 1.minute
   val lockDuration: FiniteDuration = 1.second
 
@@ -86,8 +85,7 @@ class HousekeepingSchedulerISpec
     "prevent other instances from running until lock released" in {
       val virtualTime2 = new VirtualTime
 
-      val housekeeper2: HousekeepingScheduler =
-        new HousekeepingScheduler(virtualTime2.scheduler, newHousekeeper, inject[AppConfig])
+      new HousekeepingScheduler(virtualTime2.scheduler, newHousekeeper, inject[AppConfig])
 
       virtualTime.advance(runInterval)
       housekeeperProbe.expectMsg(HousekeepCalled)

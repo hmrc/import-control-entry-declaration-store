@@ -31,6 +31,7 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits, Injecting}
 import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
+import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
@@ -50,6 +51,7 @@ class NRSConnectorSpec
 
   override lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
+    .disable[HousekeepingScheduler]
     .configure("metrics.enabled" -> "false", "auditing.enabled" -> "false")
     .build()
 

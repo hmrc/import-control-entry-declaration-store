@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
-import akka.stream.Materializer
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json.{JsObject, Json}

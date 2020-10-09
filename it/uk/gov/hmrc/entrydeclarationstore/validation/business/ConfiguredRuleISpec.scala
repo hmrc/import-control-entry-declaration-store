@@ -11,12 +11,14 @@ import play.api.libs.json.Json
 import play.api.test.Injecting
 import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
+import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
 import uk.gov.hmrc.play.test.UnitSpec
 
 class ConfiguredRuleISpec extends UnitSpec with Injecting with GuiceOneAppPerSuite {
   override lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
+    .disable[HousekeepingScheduler]
     .configure("metrics.enabled" -> "false")
     .build()
 

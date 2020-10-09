@@ -26,9 +26,9 @@ object AppDependencies {
     "org.scalacheck"         %% "scalacheck"                % "1.14.3"        % "test, it",
     "uk.gov.hmrc"            %% "hmrctest"                  % "3.9.0-play-26" % "test, it",
     "com.github.tomakehurst" % "wiremock"                   % "2.26.3"        % "test, it",
-    "org.mockito"            % "mockito-all"                % "1.10.19"       % "test",
-    "com.miguno.akka"        %% "akka-mock-scheduler"       % "0.5.5"         % "test",
-    "com.typesafe.akka"      %% "akka-testkit"              % "2.5.23"        % "test"
+    "org.mockito"            % "mockito-all"                % "1.10.19"       % "test, it",
+    "com.miguno.akka"        %% "akka-mock-scheduler"       % "0.5.5"         % "test, it",
+    "com.typesafe.akka"      %% "akka-testkit"              % "2.5.23"        % "test, it"
   )
 
 // Fixes a transitive dependency clash between wiremock and scalatestplus-play
