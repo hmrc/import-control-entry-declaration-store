@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.entrydeclarationstore.models
 
-sealed trait HousekeepingStatus
+import play.api.libs.json.{Format, Json}
+
+case class HousekeepingStatus(on: Boolean)
+
 object HousekeepingStatus {
-  case object On extends HousekeepingStatus
-  case object Off extends HousekeepingStatus
-  case object Unknown extends HousekeepingStatus
+  implicit val format: Format[HousekeepingStatus] = Json.format[HousekeepingStatus]
 }

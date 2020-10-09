@@ -67,7 +67,7 @@ class CircuitBreakerRepoImpl @Inject()(
     } yield ()
 
   // Note: Pre Mongo 4.2 we cannot update fields conditionally so we have to split open and close methods.
-  // We cannot upsert in these (since match failure would attempt insert and voilate unique _id).
+  // We cannot upsert in these (since match failure would attempt insert and violate unique _id).
   // Hence this, which will insert only when the singleton document is missing, allows open/close without
   // upsert or the need to do racy 'check-then-act' logic:
   private def insertDefaultIfEmpty() =

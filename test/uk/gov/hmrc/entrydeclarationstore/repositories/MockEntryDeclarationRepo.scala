@@ -59,12 +59,6 @@ trait MockEntryDeclarationRepo extends MockFactory {
     def lookupMetadata(submissionId: String): CallHandler[Future[Either[MetadataLookupError, ReplayMetadata]]] =
       (mockEntryDeclarationRepo.lookupMetadata(_: String)(_: LoggingContext)) expects (submissionId, *)
 
-    def enableHousekeeping(value: Boolean): CallHandler[Future[Boolean]] =
-      mockEntryDeclarationRepo.enableHousekeeping _ expects value
-
-    def getHousekeepingStatus: CallHandler[Future[HousekeepingStatus]] =
-      mockEntryDeclarationRepo.getHousekeepingStatus _ expects ()
-
     def setHousekeepingAt(eori: String, correlationId: String, time: Instant): CallHandler[Future[Boolean]] =
       (mockEntryDeclarationRepo.setHousekeepingAt(_: String, _: String, _: Instant)) expects (eori, correlationId, time)
 
@@ -72,7 +66,7 @@ trait MockEntryDeclarationRepo extends MockFactory {
       (mockEntryDeclarationRepo.setHousekeepingAt(_: String, _: Instant)) expects (submissionId, time)
 
     def housekeep(time: Instant): CallHandler[Future[Int]] =
-      (mockEntryDeclarationRepo.housekeep(_: Instant)) expects (time)
+      mockEntryDeclarationRepo.housekeep _ expects time
   }
 
 }

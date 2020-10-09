@@ -25,6 +25,7 @@ import uk.gov.hmrc.entrydeclarationstore.services.MockHousekeepingService
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class HousekeepingControllerSpec extends UnitSpec with MockHousekeepingService {
 
@@ -37,7 +38,7 @@ class HousekeepingControllerSpec extends UnitSpec with MockHousekeepingService {
     "getting housekeeping state" when {
       "housekeeping is on" must {
         "return 200 with housekeeping as true" in {
-          MockHousekeepingService.getHousekeepingStatus returns HousekeepingStatus.On
+          MockHousekeepingService.getHousekeepingStatus returns HousekeepingStatus(on = true)
 
           val result = controller.getStatus()(FakeRequest())
 
@@ -50,7 +51,7 @@ class HousekeepingControllerSpec extends UnitSpec with MockHousekeepingService {
 
     "housekeeping is off" must {
       "return 200 with housekeeping as false" in {
-        MockHousekeepingService.getHousekeepingStatus returns HousekeepingStatus.Off
+        MockHousekeepingService.getHousekeepingStatus returns HousekeepingStatus(on = false)
 
         val result = controller.getStatus()(FakeRequest())
 
@@ -58,23 +59,13 @@ class HousekeepingControllerSpec extends UnitSpec with MockHousekeepingService {
         contentAsJson(result) shouldBe houseKeepingStatusJson(false)
         contentType(result)   shouldBe Some(MimeTypes.JSON)
       }
-
-      "housekeeping is unknown" must {
-        "return 500" in {
-          MockHousekeepingService.getHousekeepingStatus returns HousekeepingStatus.Unknown
-
-          val result = controller.getStatus()(FakeRequest())
-
-          status(result) shouldBe INTERNAL_SERVER_ERROR
-        }
-      }
     }
 
     "setting housekeeping state" when {
       "setting true is successful" must {
         "return 204" in {
           val housekeepingValue = true
-          MockHousekeepingService.enableHousekeeping(housekeepingValue) returns true
+          MockHousekeepingService.enableHousekeeping(housekeepingValue) returns Future.unit
 
           val result = controller.setStatus()(FakeRequest().withBody(houseKeepingStatusJson(housekeepingValue)))
 
@@ -84,22 +75,11 @@ class HousekeepingControllerSpec extends UnitSpec with MockHousekeepingService {
       "setting false is successful" must {
         "return 204" in {
           val housekeepingValue = false
-          MockHousekeepingService.enableHousekeeping(housekeepingValue) returns true
+          MockHousekeepingService.enableHousekeeping(housekeepingValue) returns Future.unit
 
           val result = controller.setStatus()(FakeRequest().withBody(houseKeepingStatusJson(housekeepingValue)))
 
           status(result) shouldBe NO_CONTENT
-        }
-      }
-
-      "setting fails" must {
-        "return 500" in {
-          val housekeepingValue = true
-          MockHousekeepingService.enableHousekeeping(housekeepingValue) returns false
-
-          val result = controller.setStatus()(FakeRequest().withBody(houseKeepingStatusJson(housekeepingValue)))
-
-          status(result) shouldBe INTERNAL_SERVER_ERROR
         }
       }
 
@@ -139,14 +119,16 @@ class HousekeepingControllerSpec extends UnitSpec with MockHousekeepingService {
         "return 204" in {
           MockHousekeepingService.setShortTtl(eori, correlationId) returns true
 
-          status(controller.setShortTtlByEoriAndCorrelationId(eori = eori, correlationId = correlationId)(FakeRequest())) shouldBe NO_CONTENT
+          status(controller.setShortTtlByEoriAndCorrelationId(eori = eori, correlationId = correlationId)(
+            FakeRequest())) shouldBe NO_CONTENT
         }
       }
       "setting fails" must {
         "return 404" in {
           MockHousekeepingService.setShortTtl(eori, correlationId) returns false
 
-          status(controller.setShortTtlByEoriAndCorrelationId(eori = eori, correlationId = correlationId)(FakeRequest())) shouldBe NOT_FOUND
+          status(controller.setShortTtlByEoriAndCorrelationId(eori = eori, correlationId = correlationId)(
+            FakeRequest())) shouldBe NOT_FOUND
         }
       }
     }

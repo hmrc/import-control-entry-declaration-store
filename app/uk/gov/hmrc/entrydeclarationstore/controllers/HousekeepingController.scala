@@ -36,7 +36,7 @@ class HousekeepingController @Inject()(cc: ControllerComponents, service: Housek
       case JsSuccess(HousekeepingEnabled(value), _) =>
         service
           .enableHousekeeping(value)
-          .map(ok => if (ok) NoContent else InternalServerError)
+          .map(_ => NoContent)
 
       case err: JsError =>
         Logger.error(s"Bad request: $err")
@@ -46,9 +46,7 @@ class HousekeepingController @Inject()(cc: ControllerComponents, service: Housek
 
   def getStatus: Action[AnyContent] = Action.async { _ =>
     service.getHousekeepingStatus.map {
-      case HousekeepingStatus.On      => Ok(Json.toJson(HousekeepingEnabled(true)))
-      case HousekeepingStatus.Off     => Ok(Json.toJson(HousekeepingEnabled(false)))
-      case HousekeepingStatus.Unknown => InternalServerError
+      case HousekeepingStatus(value) => Ok(Json.toJson(HousekeepingEnabled(value)))
     }
   }
 

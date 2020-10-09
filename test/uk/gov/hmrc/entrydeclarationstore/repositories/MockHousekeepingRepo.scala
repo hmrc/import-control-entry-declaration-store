@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.entrydeclarationstore.services
+package uk.gov.hmrc.entrydeclarationstore.repositories
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
@@ -22,22 +22,14 @@ import uk.gov.hmrc.entrydeclarationstore.models.HousekeepingStatus
 
 import scala.concurrent.Future
 
-trait MockHousekeepingService extends MockFactory {
-  val mockHousekeepingService: HousekeepingService = mock[HousekeepingService]
+trait MockHousekeepingRepo extends MockFactory {
+  val mockHousekeepingRepo: HousekeepingRepo = mock[HousekeepingRepo]
 
-  object MockHousekeepingService {
+  object MockHousekeepingRepo {
     def enableHousekeeping(value: Boolean): CallHandler[Future[Unit]] =
-      mockHousekeepingService.enableHousekeeping _ expects value
+      mockHousekeepingRepo.enableHousekeeping _ expects value
 
     def getHousekeepingStatus: CallHandler[Future[HousekeepingStatus]] =
-      mockHousekeepingService.getHousekeepingStatus _ expects ()
-
-    def setShortTtl(submissionId: String): CallHandler[Future[Boolean]] =
-      (mockHousekeepingService.setShortTtl(_: String)) expects submissionId
-
-    def setShortTtl(eori: String, correlationId: String): CallHandler[Future[Boolean]] =
-      (mockHousekeepingService.setShortTtl(_: String, _: String)) expects (eori, correlationId)
-
+      mockHousekeepingRepo.getHousekeepingStatus _ expects ()
   }
-
 }
