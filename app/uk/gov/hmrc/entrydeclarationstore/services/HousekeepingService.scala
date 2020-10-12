@@ -54,7 +54,7 @@ class HousekeepingService @Inject()(
 
   def housekeep(): Future[Boolean] = {
     def doHouskeeping() =
-      timeFuture("Housekeeping", "housekeep") {
+      timeFuture("Housekeeping", "housekeep.total", "hkTimer") {
         entryDeclarationRepo
           .housekeep(clock.instant)
           .andThen {
