@@ -24,12 +24,14 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{GET, _}
 import play.api.test.{FakeRequest, Injecting}
 import play.api.{Application, Environment, Mode}
+import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.play.test.UnitSpec
 
 class XmlOrJsonErrorHandlerSpec extends UnitSpec with GuiceOneAppPerSuite with Injecting {
 
   override lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
+    .disable[HousekeepingScheduler]
     .configure("metrics.enabled" -> "false")
     .build()
 

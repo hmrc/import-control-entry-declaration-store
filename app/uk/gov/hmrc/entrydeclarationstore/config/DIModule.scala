@@ -25,10 +25,11 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.entrydeclarationstore.circuitbreaker.{CircuitBreakerActor, CircuitBreakerConfig}
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EisConnector, EisConnectorImpl}
+import uk.gov.hmrc.entrydeclarationstore.housekeeping.{Housekeeper, HousekeepingScheduler}
 import uk.gov.hmrc.entrydeclarationstore.nrs.{NRSConnector, NRSConnectorImpl}
 import uk.gov.hmrc.entrydeclarationstore.reporting.events.{EventConnector, EventConnectorImpl}
-import uk.gov.hmrc.entrydeclarationstore.repositories.{CircuitBreakerRepo, CircuitBreakerRepoImpl, EntryDeclarationRepo, EntryDeclarationRepoImpl, HousekeepingRepo, HousekeepingRepoImpl}
-import uk.gov.hmrc.entrydeclarationstore.services.{EntryDeclarationStore, EntryDeclarationStoreImpl}
+import uk.gov.hmrc.entrydeclarationstore.repositories._
+import uk.gov.hmrc.entrydeclarationstore.services.{EntryDeclarationStore, EntryDeclarationStoreImpl, HousekeepingService}
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
 import uk.gov.hmrc.entrydeclarationstore.validation.business.{Rule, RuleValidator, RuleValidatorImpl}
 import uk.gov.hmrc.entrydeclarationstore.validation.{ValidationHandler, ValidationHandlerImpl}
@@ -38,7 +39,9 @@ class DIModule extends AbstractModule {
 
   override def configure(): Unit = {
     bind(classOf[EntryDeclarationRepo]).to(classOf[EntryDeclarationRepoImpl])
+    bind(classOf[HousekeepingScheduler]).asEagerSingleton()
     bind(classOf[HousekeepingRepo]).to(classOf[HousekeepingRepoImpl])
+    bind(classOf[Housekeeper]).to(classOf[HousekeepingService])
     bind(classOf[CircuitBreakerRepo]).to(classOf[CircuitBreakerRepoImpl])
     bind(classOf[AppConfig]).to(classOf[AppConfigImpl]).asEagerSingleton()
     bind(classOf[EntryDeclarationStore]).to(classOf[EntryDeclarationStoreImpl])

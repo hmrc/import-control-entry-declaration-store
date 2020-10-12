@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
-import org.scalatest.concurrent.Eventually
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits, Injecting}
 import play.api.{Application, Environment, Mode}
+import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.entrydeclarationstore.models.{CircuitBreakerState, CircuitBreakerStatus}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -32,11 +32,11 @@ class CircuitBreakerRepoISpec
     with FutureAwaits
     with DefaultAwaitTimeout
     with GuiceOneAppPerSuite
-    with Eventually
     with Injecting {
 
   override lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
+    .disable[HousekeepingScheduler]
     .configure("metrics.enabled" -> "false")
     .build()
 

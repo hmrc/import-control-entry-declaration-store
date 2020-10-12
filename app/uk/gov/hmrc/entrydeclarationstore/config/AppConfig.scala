@@ -74,6 +74,10 @@ trait AppConfig {
 
   def housekeepingBatchSize: Int
 
+  def housekeepingRunInterval: FiniteDuration
+
+  def housekeepingLockDuration: FiniteDuration
+
   def housekeepingRunLimit: Int
 
   def replayBatchSizeLimit: Int
@@ -163,6 +167,12 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
   lazy val shortTtl: FiniteDuration = getFiniteDuration(config.get[Configuration](s"mongodb"), "shortTtl")
 
   lazy val housekeepingBatchSize: Int = config.get[Configuration](s"mongodb").get[Int]("housekeepingBatchSize")
+
+  lazy val housekeepingRunInterval: FiniteDuration =
+    getFiniteDuration(config.get[Configuration](s"mongodb"), "housekeepingRunInterval")
+
+  lazy val housekeepingLockDuration: FiniteDuration =
+    getFiniteDuration(config.get[Configuration](s"mongodb"), "housekeepingLockDuration")
 
   lazy val housekeepingRunLimit: Int = config.get[Configuration](s"mongodb").get[Int]("housekeepingRunLimit")
 

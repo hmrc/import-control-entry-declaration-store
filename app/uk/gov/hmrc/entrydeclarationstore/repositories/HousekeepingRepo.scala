@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
-import akka.stream.Materializer
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json.{JsObject, Json}
@@ -40,8 +39,7 @@ trait HousekeepingRepo {
 @Singleton
 class HousekeepingRepoImpl @Inject()(
   implicit mongo: ReactiveMongoComponent,
-  ec: ExecutionContext,
-  mat: Materializer
+  ec: ExecutionContext
 ) extends ReactiveRepository[HousekeepingStatus, BSONObjectID](
       "houskeeping-status",
       mongo.mongoConnector.db,

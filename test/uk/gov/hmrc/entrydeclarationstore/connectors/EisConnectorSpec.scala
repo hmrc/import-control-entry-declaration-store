@@ -38,6 +38,7 @@ import play.mvc.Http.Status._
 import uk.gov.hmrc.entrydeclarationstore.circuitbreaker.{CircuitBreaker, CircuitBreakerActor, CircuitBreakerConfig}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.helpers.MockHeaderGenerator
+import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.{CircuitBreakerState, EntryDeclarationMetadata, MessageType}
 import uk.gov.hmrc.entrydeclarationstore.repositories.MockCircuitBreakerRepo
@@ -64,6 +65,7 @@ class EisConnectorSpec
 
   override lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
+    .disable[HousekeepingScheduler]
     .configure(
       "metrics.enabled"                                                                                    -> "false",
       "microservice.services.import-control-entry-declaration-eis.circuitBreaker.openStateRefreshPeriod"   -> "1 minute",

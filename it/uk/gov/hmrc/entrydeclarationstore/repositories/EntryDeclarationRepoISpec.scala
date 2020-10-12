@@ -18,7 +18,6 @@ package uk.gov.hmrc.entrydeclarationstore.repositories
 import java.time.Instant
 import java.util.UUID
 
-import org.scalatest.concurrent.Eventually
 import org.scalatest.{Assertion, BeforeAndAfterAll, Matchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -26,6 +25,7 @@ import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits, Injecting}
 import play.api.{Application, Environment, Mode}
 import reactivemongo.play.json.ImplicitBSONHandlers._
+import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models._
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
@@ -41,7 +41,6 @@ class EntryDeclarationRepoISpec
     with DefaultAwaitTimeout
     with GuiceOneAppPerSuite
     with BeforeAndAfterAll
-    with Eventually
     with Injecting {
 
   val housekeepingRunLimit: Int  = 20
@@ -49,6 +48,7 @@ class EntryDeclarationRepoISpec
 
   override lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
+    .disable[HousekeepingScheduler]
     .configure(
       "metrics.enabled"               -> "false",
       "mongodb.defaultTtl"            -> defaultTtl.toString,
