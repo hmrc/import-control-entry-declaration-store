@@ -220,6 +220,18 @@ class AuthServiceSpec
       }
     }
 
+    "X-Client-Id header present with different case" must {
+      implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders("x-client-id" -> clientId)
+
+      "Attempt CSP auth" in {
+        MockAppConfig.nrsEnabled returns false
+        stubCSPAuth(EmptyRetrieval) returns Future.successful(())
+
+        MockApiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId) returns Some(eori)
+        service.authenticate.futureValue shouldBe Some(UserDetails(eori, ClientType.CSP, None))
+      }
+    }
+
     def authenticateBasedOnICSEnrolmentNrsDisabled(stubScenario: () => Unit)(implicit hc: HeaderCarrier): Unit = {
       "return Some(eori)" when {
         "ICS enrolment with an eori" in {
