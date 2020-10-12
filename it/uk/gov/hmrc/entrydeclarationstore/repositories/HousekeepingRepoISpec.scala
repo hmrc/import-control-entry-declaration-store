@@ -88,7 +88,7 @@ class HousekeepingRepoISpec
 
       "turn off" must {
         "do nothing" in new Scenario {
-          await(repository.getHousekeepingStatus) shouldBe HousekeepingStatus(on = false)
+          await(repository.enableHousekeeping(false))
 
           await(repository.getHousekeepingStatus) shouldBe HousekeepingStatus(on = false)
           await(repository.count)                 shouldBe 1
