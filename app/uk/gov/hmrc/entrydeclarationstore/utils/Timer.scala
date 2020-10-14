@@ -23,21 +23,25 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait Timer {
   self: EventLogger =>
+
+  val defaultTimerGroup: String = "timer"
   type Metric = String
 
   val metrics: Metrics
-  def timeFuture[A](name: String, metric: Metric)(block: => Future[A])(implicit ec: ExecutionContext): Future[A] = {
-    val timer = startTimer(metric)
+  def timeFuture[A](name: String, metric: Metric, timerGroup: String = defaultTimerGroup)(block: => Future[A])(
+    implicit ec: ExecutionContext): Future[A] = {
+    val timer = startTimer(metric, timerGroup)
     block andThen { case _ => stopAndLog(name, timer) }
   }
 
-  def time[A](name: String, metric: Metric)(block: => A): A = {
-    val timer = startTimer(metric)
+  def time[A](name: String, metric: Metric, timerGroup: String = defaultTimerGroup)(block: => A): A = {
+    val timer = startTimer(metric, timerGroup)
     try block
     finally stopAndLog(name, timer)
   }
 
-  protected def startTimer(metric: Metric): Timer.Context = metrics.defaultRegistry.timer(s"$metric-timer").time()
+  protected def startTimer(metric: Metric, timerGroup: String): Timer.Context =
+    metrics.defaultRegistry.timer(s"$metric-$timerGroup").time()
 
   protected def stopAndLog[A](name: String, timer: Timer.Context): Unit = {
     val timeMillis = timer.stop() / 1000000
