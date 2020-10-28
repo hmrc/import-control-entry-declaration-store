@@ -187,7 +187,7 @@ class SubmissionReplayServiceSpec
 
             service.replaySubmissions(submissionIds).futureValue shouldBe Left(ReplayError.EISSubmitError)
           }
-          "EISSendFailure is CircuitBreakerOpen" in abortEisSendFailure(EISSendFailure.CircuitBreakerOpen)
+          "EISSendFailure is TrafficSwitchNotFlowing" in abortEisSendFailure(EISSendFailure.TrafficSwitchNotFlowing)
           "EISSendFailure is ExceptionThrown" in abortEisSendFailure(EISSendFailure.ExceptionThrown)
           "EISSendFailure is Timeout" in abortEisSendFailure(EISSendFailure.Timeout)
           "EISSendFailure is ErrorResponse(401)" in abortEisSendFailure(EISSendFailure.ErrorResponse(UNAUTHORIZED))

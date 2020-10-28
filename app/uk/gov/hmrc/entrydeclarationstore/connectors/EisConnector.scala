@@ -20,7 +20,7 @@ import akka.pattern.CircuitBreakerOpenException
 import javax.inject.{Inject, Singleton}
 import play.api.http.Status
 import play.api.http.Status._
-import uk.gov.hmrc.entrydeclarationstore.circuitbreaker.CircuitBreaker
+import uk.gov.hmrc.entrydeclarationstore.trafficswitch.TrafficSwitch
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.helpers.HeaderGenerator
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
@@ -41,11 +41,11 @@ trait EisConnector {
 
 @Singleton
 class EisConnectorImpl @Inject()(
-  client: HttpClient,
-  circuitBreaker: CircuitBreaker,
-  appConfig: AppConfig,
-  pagerDutyLogger: PagerDutyLogger,
-  headerGenerator: HeaderGenerator)(implicit executionContext: ExecutionContext)
+                                  client: HttpClient,
+                                  circuitBreaker: TrafficSwitch,
+                                  appConfig: AppConfig,
+                                  pagerDutyLogger: PagerDutyLogger,
+                                  headerGenerator: HeaderGenerator)(implicit executionContext: ExecutionContext)
     extends EisConnector {
   val newUrl: String   = s"${appConfig.eisHost}${appConfig.eisNewEnsUrlPath}"
   val amendUrl: String = s"${appConfig.eisHost}${appConfig.eisAmendEnsUrlPath}"
@@ -92,8 +92,8 @@ class EisConnectorImpl @Inject()(
       }
       .recover {
         case _: CircuitBreakerOpenException =>
-          pagerDutyLogger.logEISCircuitBreakerOpen()
-          Some(EISSendFailure.CircuitBreakerOpen)
+          pagerDutyLogger.logEISTrafficSwitchFlowStopped()
+          Some(EISSendFailure.TrafficSwitchNotFlowing)
 
         case _: TimeoutException =>
           pagerDutyLogger.logEISTimeout()
@@ -105,12 +105,12 @@ class EisConnectorImpl @Inject()(
       }
 
   private def withCircuitBreakerIfRequired(bypass: Boolean)(code: => Future[HttpResponse]) =
-    if (bypass) code else circuitBreaker.withCircuitBreaker(code, failureFunction)
+    if (bypass) code else circuitBreaker.withTrafficSwitch(code, failureFunction)
 
   private val failureFunction: Try[HttpResponse] => Boolean = {
     case Success(response) =>
-      // 400s should be submission-specific issues and not open
-      // circuit breaker (esp since their replays would also likely fail
+      // 400s should be submission-specific issues and not traffic not flowing
+      // traffic switch (esp since their replays would also likely fail
       // and affect ongoing submissions).
       !(Status.isSuccessful(response.status) || response.status == BAD_REQUEST)
 

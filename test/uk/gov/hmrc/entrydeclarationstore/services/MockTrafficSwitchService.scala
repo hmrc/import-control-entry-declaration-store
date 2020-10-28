@@ -18,25 +18,25 @@ package uk.gov.hmrc.entrydeclarationstore.services
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
-import uk.gov.hmrc.entrydeclarationstore.models.CircuitBreakerStatus
+import uk.gov.hmrc.entrydeclarationstore.models.TrafficSwitchStatus
 
 import scala.concurrent.Future
 
-trait MockCircuitBreakerService extends MockFactory {
-  val mockCircuitBreakerService: CircuitBreakerService = mock[CircuitBreakerService]
+trait MockTrafficSwitchService extends MockFactory {
+  val mockTrafficSwitchService: TrafficSwitchService = mock[TrafficSwitchService]
 
-  object MockCircuitBreakerService {
-    def resetCircuitBreaker: CallHandler[Future[Unit]] =
-      mockCircuitBreakerService.resetCircuitBreaker _ expects ()
+  object MockTrafficSwitchService {
+    def resetTrafficSwitch: CallHandler[Future[Unit]] =
+      mockTrafficSwitchService.resetTrafficSwitch _ expects ()
 
-    def openCircuitBreaker: CallHandler[Future[Unit]] =
-      mockCircuitBreakerService.openCircuitBreaker _ expects ()
+    def stopTrafficFlow: CallHandler[Future[Unit]] =
+      mockTrafficSwitchService.stopTrafficFlow _ expects ()
 
-    def closeCircuitBreaker: CallHandler[Future[Unit]] =
-      mockCircuitBreakerService.closeCircuitBreaker _ expects ()
+    def startTrafficFlow: CallHandler[Future[Unit]] =
+      mockTrafficSwitchService.startTrafficFlow _ expects ()
 
-    def getCircuitBreakerStatus: CallHandler[Future[CircuitBreakerStatus]] =
-      mockCircuitBreakerService.getCircuitBreakerStatus _ expects ()
+    def getTrafficSwitchStatus: CallHandler[Future[TrafficSwitchStatus]] =
+      mockTrafficSwitchService.getTrafficSwitchStatus _ expects ()
   }
 
 }

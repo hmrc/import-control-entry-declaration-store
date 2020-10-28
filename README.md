@@ -30,11 +30,11 @@ Run Integration Tests: `sbt it:test`
 |```/import-control/housekeeping/status```                  |        PUT        | Internal | Endpoint to set housekeeping status. |
 |```/import-control/housekeeping/submissionid/:submissionId```|        PUT        | Internal | Endpoint to set a short ttl on a specified record. |
 |```/import-control/housekeeping/eoriandcorrelationid/:eori/:correlationId```|        PUT        | Internal | Endpoint to set a short ttl on a specified record. |
-|```/import-control/circuit-breaker```                      |        GET        | Internal | Endpoint to get the circuit breaker status. |
-|```/import-control/circuit-breaker/close```                |        PUT        | Internal | Endpoint to close the circuit breaker. |
+|```/import-control/traffic-switch```                      |        GET        | Internal | Endpoint to get the traffic switch status. |
+|```/import-control/traffic-switch/start```                |        PUT        | Internal | Endpoint start the traffic flowing to EIS. |
 |```/import-control/test-only/submission-ids/:eori/:correlationId``` | GET      | Test | Endpoint to get submission Id from EORI and Correlation Id. |
-|```/import-control/test-only/circuit-breaker/open```       |        PUT        | Test | Endpoint to open the circuit breaker. |
-|```/import-control/test-only/circuit-breaker/reset```      |        PUT        | Test | Endpoint to reset the circuit breaker to initial state. |
+|```/import-control/test-only/traffic-switch/stop```       |        PUT        | Test | Endpoint to stop the traffic flowing to EIS. |
+|```/import-control/test-only/traffic-switch/reset```      |        PUT        | Test | Endpoint to reset the traffic switch to initial state. |
 
 ## API Reference / Documentation 
 For more information on external API endpoints see the RAML at [Developer Hub]("https://developer.service.hmrc.gov.uk/api-documentation/docs/api/service/import-control-entry-declaration-store/1.0") or using the endpoint below

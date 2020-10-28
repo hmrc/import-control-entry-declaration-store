@@ -17,16 +17,15 @@
 package uk.gov.hmrc.entrydeclarationstore.services
 
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.entrydeclarationstore.models.CircuitBreakerState.{Closed, Open}
-import uk.gov.hmrc.entrydeclarationstore.models.CircuitBreakerStatus
-import uk.gov.hmrc.entrydeclarationstore.repositories.CircuitBreakerRepo
+import uk.gov.hmrc.entrydeclarationstore.models.{TrafficSwitchState, TrafficSwitchStatus}
+import uk.gov.hmrc.entrydeclarationstore.repositories.TrafficSwitchRepo
 
 import scala.concurrent.Future
 
 @Singleton
-class CircuitBreakerService @Inject()(repo: CircuitBreakerRepo) {
-  def resetCircuitBreaker: Future[Unit]                     = repo.resetToDefault
-  def openCircuitBreaker: Future[Unit]                      = repo.setCircuitBreakerState(Open)
-  def closeCircuitBreaker: Future[Unit]                     = repo.setCircuitBreakerState(Closed)
-  def getCircuitBreakerStatus: Future[CircuitBreakerStatus] = repo.getCircuitBreakerStatus
+class TrafficSwitchService @Inject()(repo: TrafficSwitchRepo) {
+  def resetTrafficSwitch: Future[Unit]                    = repo.resetToDefault
+  def stopTrafficFlow: Future[Unit]                       = repo.setTrafficSwitchState(TrafficSwitchState.NotFlowing)
+  def startTrafficFlow: Future[Unit]                      = repo.setTrafficSwitchState(TrafficSwitchState.Flowing)
+  def getTrafficSwitchStatus: Future[TrafficSwitchStatus] = repo.getTrafficSwitchStatus
 }

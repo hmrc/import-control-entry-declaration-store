@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.entrydeclarationstore.circuitbreaker
+package uk.gov.hmrc.entrydeclarationstore.trafficswitch
 
 import scala.concurrent.duration.FiniteDuration
 
-case class CircuitBreakerConfig(
-  maxFailures: Int,
-  callTimeout: FiniteDuration,
-  closedStateRefreshPeriod: FiniteDuration,
-  openStateRefreshPeriod: FiniteDuration)
+case class TrafficSwitchConfig(
+                                maxFailures: Int,
+                                callTimeout: FiniteDuration,
+                                flowingStateRefreshPeriod: FiniteDuration,
+                                notFlowingStateRefreshPeriod: FiniteDuration)
