@@ -211,7 +211,7 @@ class TrafficSwitchActorSpec
         expectMsg(TrafficSwitchActor.InternalTrafficNotFlowing(awaitingAck = false))
       }
 
-      "ignore (not reset failure count) when told start flow when told by the state actor" in new Test {
+      "ignore (not reset failure count) when told start flow by the state actor" in new Test {
         trafficSwitchActor ! TrafficSwitchActor.SetState(TrafficSwitchState.Flowing)
 
         trafficSwitchActor ! TrafficSwitchActor.MakeCall(throwException, exceptionAsFailure)

@@ -171,11 +171,11 @@ class EisConnectorSpec
       MockTrafficSwitchRepo.setTrafficSwitchState(TrafficSwitchState.NotFlowing) returns Future.successful(())
 
       (0 until maxCallFailures) foreach { _ =>
-        await(connector.submitMetadata(declarationMetadata, bypassCircuitBreaker = false)) shouldBe Some(expectedError)
+        await(connector.submitMetadata(declarationMetadata, bypassTrafficSwitch = false)) shouldBe Some(expectedError)
       }
 
       (0 until extraCalls) foreach { _ =>
-        await(connector.submitMetadata(declarationMetadata, bypassCircuitBreaker = false)) shouldBe Some(
+        await(connector.submitMetadata(declarationMetadata, bypassTrafficSwitch = false)) shouldBe Some(
           EISSendFailure.TrafficSwitchNotFlowing)
       }
 
@@ -185,14 +185,14 @@ class EisConnectorSpec
     }
 
     def checkTrafficFlowDoesNotStop(
-      expectedError: Option[EISSendFailure],
-      bypassCircuitBreaker: Boolean = false): Int = {
+                                     expectedError: Option[EISSendFailure],
+                                     bypassTrafficSwitch: Boolean = false): Int = {
       wireMockServer.resetRequests()
 
       val totalCalls = maxCallFailures + 10
 
       (0 until totalCalls) foreach { _ =>
-        await(connector.submitMetadata(declarationMetadata, bypassCircuitBreaker)) shouldBe expectedError
+        await(connector.submitMetadata(declarationMetadata, bypassTrafficSwitch)) shouldBe expectedError
       }
 
       verifyRequestCount(totalCalls)
@@ -206,8 +206,8 @@ class EisConnectorSpec
 
   "Calling .submitMetadata" when {
 
-    def connectorSuccessBehaviour(bypassCircuitBreaker: Boolean): Unit =
-      s"bypassing trafficSwitch is $bypassCircuitBreaker" when {
+    def connectorSuccessBehaviour(bypassTrafficSwitch: Boolean): Unit =
+      s"bypassing trafficSwitch is $bypassTrafficSwitch" when {
         "eis responds 202 (Accepted)" must {
           "return None" when {
             "executing a post for a declaration" in new Test {
@@ -219,7 +219,7 @@ class EisConnectorSpec
                     .withHeader(CONTENT_TYPE, MimeTypes.JSON)
                     .withStatus(ACCEPTED)))
 
-              await(connector.submitMetadata(declarationMetadata, bypassCircuitBreaker)) shouldBe None
+              await(connector.submitMetadata(declarationMetadata, bypassTrafficSwitch)) shouldBe None
 
               verify(
                 postRequestedFor(urlPathEqualTo(newUrl))
@@ -236,7 +236,7 @@ class EisConnectorSpec
                     .withHeader(CONTENT_TYPE, MimeTypes.JSON)
                     .withStatus(ACCEPTED)))
 
-              await(connector.submitMetadata(amendmentMetadata, bypassCircuitBreaker)) shouldBe None
+              await(connector.submitMetadata(amendmentMetadata, bypassTrafficSwitch)) shouldBe None
 
               verify(
                 putRequestedFor(urlPathEqualTo(amendUrl))
@@ -247,13 +247,13 @@ class EisConnectorSpec
         }
       }
 
-    def connectorErrorBehaviour(bypassCircuitBreaker: Boolean): Unit =
-      s"bypassing trafficSwitch is $bypassCircuitBreaker" when {
+    def connectorErrorBehaviour(bypassTrafficSwitch: Boolean): Unit =
+      s"bypassing trafficSwitch is $bypassTrafficSwitch" when {
         "eis responds with 400" must {
           "return the ErrorResponse failure" in new Test {
             stubResponse(BAD_REQUEST)
 
-            await(connector.submitMetadata(declarationMetadata, bypassCircuitBreaker)) shouldBe Some(
+            await(connector.submitMetadata(declarationMetadata, bypassTrafficSwitch)) shouldBe Some(
               EISSendFailure.ErrorResponse(BAD_REQUEST))
           }
         }
@@ -262,19 +262,19 @@ class EisConnectorSpec
           "return the ErrorResponse failure" in new Test {
             stubResponse(INTERNAL_SERVER_ERROR)
 
-            await(connector.submitMetadata(declarationMetadata, bypassCircuitBreaker)) shouldBe Some(
+            await(connector.submitMetadata(declarationMetadata, bypassTrafficSwitch)) shouldBe Some(
               EISSendFailure.ErrorResponse(INTERNAL_SERVER_ERROR))
           }
         }
       }
 
-    behave like connectorSuccessBehaviour(bypassCircuitBreaker = false)
-    behave like connectorSuccessBehaviour(bypassCircuitBreaker = true)
+    behave like connectorSuccessBehaviour(bypassTrafficSwitch = false)
+    behave like connectorSuccessBehaviour(bypassTrafficSwitch = true)
 
-    behave like connectorErrorBehaviour(bypassCircuitBreaker = false)
-    behave like connectorErrorBehaviour(bypassCircuitBreaker = true)
+    behave like connectorErrorBehaviour(bypassTrafficSwitch = false)
+    behave like connectorErrorBehaviour(bypassTrafficSwitch = true)
 
-    "traffic switch is not bypasses" must {
+    "traffic switch is not bypassed" must {
       "stop traffic flow after multiple 5xx responses" in new Test {
         stubResponse(SERVICE_UNAVAILABLE)
 
@@ -325,11 +325,11 @@ class EisConnectorSpec
 
         // Wire mock doesn't give much control over exceptions thrown so test private method...
         (0 until maxCallFailures) foreach { _ =>
-          await(connector.submit(bypassCircuitBreaker = false)(Future.failed(new IOException()))) shouldBe Some(
+          await(connector.submit(bypassTrafficSwitch = false)(Future.failed(new IOException()))) shouldBe Some(
             EISSendFailure.ExceptionThrown)
         }
         (0 until extraCalls) foreach { _ =>
-          await(connector.submit(bypassCircuitBreaker = false)(Future.failed(new IOException()))) shouldBe Some(
+          await(connector.submit(bypassTrafficSwitch = false)(Future.failed(new IOException()))) shouldBe Some(
             EISSendFailure.TrafficSwitchNotFlowing)
         }
 
@@ -348,14 +348,14 @@ class EisConnectorSpec
       }
     }
 
-    "traffic switchr is bypassed" must {
+    "traffic switch is bypassed" must {
       "not stop traffic flow the traffic switch on failure" in new Test {
         stubResponse(SERVICE_UNAVAILABLE)
 
         val totalCalls: Int =
           checkTrafficFlowDoesNotStop(
             Some(EISSendFailure.ErrorResponse(SERVICE_UNAVAILABLE)),
-            bypassCircuitBreaker = true)
+            bypassTrafficSwitch = true)
 
         MockPagerDutyLogger.logEISFailure repeated totalCalls
         MockPagerDutyLogger.logEISTrafficSwitchFlowStopped never ()
@@ -366,7 +366,7 @@ class EisConnectorSpec
         checkTrafficFlowStops(EISSendFailure.ErrorResponse(SERVICE_UNAVAILABLE))
 
         stubResponse(OK)
-        checkTrafficFlowDoesNotStop(Some(EISSendFailure.ErrorResponse(OK)), bypassCircuitBreaker = true)
+        checkTrafficFlowDoesNotStop(Some(EISSendFailure.ErrorResponse(OK)), bypassTrafficSwitch = true)
       }
     }
   }

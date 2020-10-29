@@ -29,11 +29,11 @@ trait MockEisConnector extends MockFactory {
 
   object MockEisConnector {
     def submitMetadata(
-      metadata: EntryDeclarationMetadata,
-      bypassCircuitBreaker: Boolean): CallHandler[Future[Option[EISSendFailure]]] =
+                        metadata: EntryDeclarationMetadata,
+                        bypassTrafficSwitch: Boolean): CallHandler[Future[Option[EISSendFailure]]] =
       (mockEisConnector
         .submitMetadata(_: EntryDeclarationMetadata, _: Boolean)(_: HeaderCarrier, _: LoggingContext))
-        .expects(metadata, bypassCircuitBreaker, *, *)
+        .expects(metadata, bypassTrafficSwitch, *, *)
   }
 
 }

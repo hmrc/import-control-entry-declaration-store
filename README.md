@@ -31,7 +31,7 @@ Run Integration Tests: `sbt it:test`
 |```/import-control/housekeeping/submissionid/:submissionId```|        PUT        | Internal | Endpoint to set a short ttl on a specified record. |
 |```/import-control/housekeeping/eoriandcorrelationid/:eori/:correlationId```|        PUT        | Internal | Endpoint to set a short ttl on a specified record. |
 |```/import-control/traffic-switch```                      |        GET        | Internal | Endpoint to get the traffic switch status. |
-|```/import-control/traffic-switch/start```                |        PUT        | Internal | Endpoint start the traffic flowing to EIS. |
+|```/import-control/traffic-switch/start```                |        PUT        | Internal | Endpoint to start the traffic flowing to EIS. |
 |```/import-control/test-only/submission-ids/:eori/:correlationId``` | GET      | Test | Endpoint to get submission Id from EORI and Correlation Id. |
 |```/import-control/test-only/traffic-switch/stop```       |        PUT        | Test | Endpoint to stop the traffic flowing to EIS. |
 |```/import-control/test-only/traffic-switch/reset```      |        PUT        | Test | Endpoint to reset the traffic switch to initial state. |

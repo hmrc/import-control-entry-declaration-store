@@ -78,7 +78,7 @@ class TrafficSwitchServiceSpec extends UnitSpec with MockitoSugar with ScalaFutu
 
     "retrieving the Traffic Switch Status" when {
       "Not Flowing" must {
-        "return nt flowing" in new Setup {
+        "return not flowing" in new Setup {
           setTrafficSwitchStatus(TrafficSwitchState.NotFlowing)
           val result: Future[TrafficSwitchStatus] = trafficSwitchService.getTrafficSwitchStatus
 

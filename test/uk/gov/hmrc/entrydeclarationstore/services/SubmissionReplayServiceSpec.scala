@@ -74,7 +74,7 @@ class SubmissionReplayServiceSpec
           val report = submissionSentToEISReport(submissionIds.head, None)
           MockEntryDeclarationRepo.lookupMetadata(submissionIds.head) returns Future.successful(
             Right(replayMetadata(subId1)))
-          MockEisConnector.submitMetadata(metadata(subId1), bypassCircuitBreaker = true) returns Future.successful(None)
+          MockEisConnector.submitMetadata(metadata(subId1), bypassTrafficSwitch = true) returns Future.successful(None)
           MockReportSender.sendReport(report) returns Future.successful((): Unit)
           MockEntryDeclarationRepo.setSubmissionTime(subId1, Instant.now(clock)) returns Future.successful(true)
 
@@ -87,7 +87,7 @@ class SubmissionReplayServiceSpec
             MockEntryDeclarationRepo
               .lookupMetadata(submissionId)
               .returns(Future.successful(Right(replayMetadata(submissionId))))
-            MockEisConnector.submitMetadata(metadata(submissionId), bypassCircuitBreaker = true) returns Future
+            MockEisConnector.submitMetadata(metadata(submissionId), bypassTrafficSwitch = true) returns Future
               .successful(None)
             MockReportSender.sendReport(report) returns Future.successful((): Unit)
             MockEntryDeclarationRepo.setSubmissionTime(submissionId, Instant.now(clock)) returns Future.successful(true)
@@ -101,7 +101,7 @@ class SubmissionReplayServiceSpec
           val report = submissionSentToEISReport(submissionIds.head, None)
           MockEntryDeclarationRepo.lookupMetadata(submissionIds.head) returns Future.successful(
             Right(replayMetadata(subId1)))
-          MockEisConnector.submitMetadata(metadata(subId1), bypassCircuitBreaker = true) returns Future.successful(None)
+          MockEisConnector.submitMetadata(metadata(subId1), bypassTrafficSwitch = true) returns Future.successful(None)
           MockReportSender.sendReport(report) returns Future.successful((): Unit)
           MockEntryDeclarationRepo.setSubmissionTime(subId1, Instant.now(clock)) returns Future.successful(false)
 
@@ -156,14 +156,14 @@ class SubmissionReplayServiceSpec
             val errorResponse = Some(EISSendFailure.ErrorResponse(BAD_REQUEST))
             val errorReport   = submissionSentToEISReport(submissionIds.head, errorResponse)
             MockEisConnector
-              .submitMetadata(metadata(subId1), bypassCircuitBreaker = true)
+              .submitMetadata(metadata(subId1), bypassTrafficSwitch = true)
               .returns(Future.successful(errorResponse))
             MockReportSender.sendReport(errorReport) returns Future.successful((): Unit)
             val successReport = submissionSentToEISReport(subId2, None)
             MockEntryDeclarationRepo
               .lookupMetadata(subId2)
               .returns(Future.successful(Right(replayMetadata(subId2))))
-            MockEisConnector.submitMetadata(metadata(subId2), bypassCircuitBreaker = true) returns Future.successful(
+            MockEisConnector.submitMetadata(metadata(subId2), bypassTrafficSwitch = true) returns Future.successful(
               None)
             MockReportSender.sendReport(successReport) returns Future.successful((): Unit)
             MockEntryDeclarationRepo.setSubmissionTime(subId2, Instant.now(clock)) returns Future.successful(true)
@@ -179,7 +179,7 @@ class SubmissionReplayServiceSpec
               .lookupMetadata(subId1)
               .returns(Future.successful(Right(replayMetadata(subId1))))
             MockEisConnector
-              .submitMetadata(metadata(subId1), bypassCircuitBreaker = true)
+              .submitMetadata(metadata(subId1), bypassTrafficSwitch = true)
               .returns(Future.successful(Some(eisSendFailure)))
             MockReportSender
               .sendReport(submissionSentToEISReport(subId1, Some(eisSendFailure)))
@@ -206,7 +206,7 @@ class SubmissionReplayServiceSpec
 
           val report = submissionSentToEISReport(subId1, None)
           MockEntryDeclarationRepo.lookupMetadata(subId1) returns Future.successful(Right(replayMetadata(subId1)))
-          MockEisConnector.submitMetadata(metadata(subId1), bypassCircuitBreaker = true) returns Future.successful(None)
+          MockEisConnector.submitMetadata(metadata(subId1), bypassTrafficSwitch = true) returns Future.successful(None)
           MockReportSender.sendReport(report) returns Future.failed(new IOException)
           MockEntryDeclarationRepo.setSubmissionTime(subId1, Instant.now(clock)) returns Future.successful(true)
 

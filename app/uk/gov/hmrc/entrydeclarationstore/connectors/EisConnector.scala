@@ -34,7 +34,7 @@ import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
 trait EisConnector {
-  def submitMetadata(metadata: EntryDeclarationMetadata, bypassCircuitBreaker: Boolean)(
+  def submitMetadata(metadata: EntryDeclarationMetadata, bypassTrafficSwitch: Boolean)(
     implicit hc: HeaderCarrier,
     lc: LoggingContext): Future[Option[EISSendFailure]]
 }
@@ -42,7 +42,7 @@ trait EisConnector {
 @Singleton
 class EisConnectorImpl @Inject()(
                                   client: HttpClient,
-                                  circuitBreaker: TrafficSwitch,
+                                  trafficSwitch: TrafficSwitch,
                                   appConfig: AppConfig,
                                   pagerDutyLogger: PagerDutyLogger,
                                   headerGenerator: HeaderGenerator)(implicit executionContext: ExecutionContext)
@@ -52,10 +52,10 @@ class EisConnectorImpl @Inject()(
 
   implicit val emptyHeaderCarrier: HeaderCarrier = HeaderCarrier()
 
-  def submitMetadata(metadata: EntryDeclarationMetadata, bypassCircuitBreaker: Boolean)(
+  def submitMetadata(metadata: EntryDeclarationMetadata, bypassTrafficSwitch: Boolean)(
     implicit hc: HeaderCarrier,
     lc: LoggingContext): Future[Option[EISSendFailure]] =
-    submit(bypassCircuitBreaker) {
+    submit(bypassTrafficSwitch) {
       val isAmendment = metadata.movementReferenceNumber.isDefined
       val headers     = headerGenerator.headersForEIS(metadata.submissionId)(hc)
       ContextLogger.info(s"sending to EIS")
@@ -76,9 +76,9 @@ class EisConnectorImpl @Inject()(
       .POST[EntryDeclarationMetadata, HttpResponse](newUrl, metadata, headers)
   }
 
-  private[connectors] def submit(bypassCircuitBreaker: Boolean)(code: => Future[HttpResponse])(
+  private[connectors] def submit(bypassTrafficSwitch: Boolean)(code: => Future[HttpResponse])(
     implicit lc: LoggingContext): Future[Option[EISSendFailure]] =
-    withCircuitBreakerIfRequired(bypassCircuitBreaker)(code)
+    withTrafficSwitchIfRequired(bypassTrafficSwitch)(code)
       .map { response =>
         val status = response.status
         ContextLogger.info(s"Send to EIS returned status code: $status")
@@ -104,12 +104,12 @@ class EisConnectorImpl @Inject()(
           Some(EISSendFailure.ExceptionThrown)
       }
 
-  private def withCircuitBreakerIfRequired(bypass: Boolean)(code: => Future[HttpResponse]) =
-    if (bypass) code else circuitBreaker.withTrafficSwitch(code, failureFunction)
+  private def withTrafficSwitchIfRequired(bypass: Boolean)(code: => Future[HttpResponse]) =
+    if (bypass) code else trafficSwitch.withTrafficSwitch(code, failureFunction)
 
   private val failureFunction: Try[HttpResponse] => Boolean = {
     case Success(response) =>
-      // 400s should be submission-specific issues and not traffic not flowing
+      // 400s should be submission-specific issues and not turn off the
       // traffic switch (esp since their replays would also likely fail
       // and affect ongoing submissions).
       !(Status.isSuccessful(response.status) || response.status == BAD_REQUEST)

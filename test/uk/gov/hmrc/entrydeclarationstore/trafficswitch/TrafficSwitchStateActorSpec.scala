@@ -29,7 +29,7 @@ import scala.concurrent.{Future, Promise}
 import scala.util.control.NoStackTrace
 
 class TrafficSwitchStateActorSpec
-    extends TestKit(ActorSystem("CircuitBreakerStateActorSpec"))
+    extends TestKit(ActorSystem("TrafficSwitchStateActorSpec"))
     with UnitSpec
     with BeforeAndAfterAll
     with MockTrafficSwitchRepo {
@@ -185,7 +185,7 @@ class TrafficSwitchStateActorSpec
 
           updatePromise.success(())
 
-          // Because of the way that the mocks work, we get the initial flowing
+          // Because of the way that the mocks work, we get the initial TrafficSwitchState.Flowing
           // here if we didn't get the state at all before the UpdateDatabaseToNotFlowing was received
           parentProbe.expectMsgAnyOf(
             TrafficSwitchActor.SetState(TrafficSwitchState.NotFlowing),

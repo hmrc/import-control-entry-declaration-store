@@ -35,7 +35,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class HousekeepingSchedulerISpec
-    extends TestKit(ActorSystem("CircuitBreakerStateActorSpec"))
+    extends TestKit(ActorSystem("TrafficSwitchStateActorSpec"))
     with WordSpecLike
     with Matchers
     with DefaultAwaitTimeout

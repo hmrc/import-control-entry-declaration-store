@@ -101,17 +101,17 @@ class TrafficSwitchStateActor(trafficSwitchRepo: TrafficSwitchRepo, trafficSwitc
       context.become(running)
   }
 
-  private def notifyState(trafficFlowing: TrafficSwitchState): Unit = {
-    context.parent ! TrafficSwitchActor.SetState(trafficFlowing)
-    refreshAndNotifyStateAfter(refreshPeriodFor(trafficFlowing))
-    lastNotifiedState = Some(trafficFlowing)
+  private def notifyState(state: TrafficSwitchState): Unit = {
+    context.parent ! TrafficSwitchActor.SetState(state)
+    refreshAndNotifyStateAfter(refreshPeriodFor(state))
+    lastNotifiedState = Some(state)
   }
 
   private def refreshAndNotifyStateAfter(period: FiniteDuration): Unit =
     timers.startSingleTimer(GetStateTimerKey, TrafficSwitchStateActor.GetStateFromDatabase, period)
 
-  private def refreshPeriodFor(trafficFlowing: TrafficSwitchState) =
-    trafficFlowing match{
+  private def refreshPeriodFor(state: TrafficSwitchState) =
+    state match{
       case TrafficSwitchState.Flowing => trafficSwitchConfig.flowingStateRefreshPeriod
       case TrafficSwitchState.NotFlowing => trafficSwitchConfig.notFlowingStateRefreshPeriod
     }
