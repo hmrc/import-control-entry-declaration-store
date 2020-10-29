@@ -43,7 +43,6 @@ class DIModule extends AbstractModule {
     bind(classOf[HousekeepingRepo]).to(classOf[HousekeepingRepoImpl])
     bind(classOf[Housekeeper]).to(classOf[HousekeepingService])
     bind(classOf[TrafficSwitchRepo]).to(classOf[TrafficSwitchRepoImpl])
-    bind(classOf[CircuitBreakerRepo]).to(classOf[CircuitBreakerRepoImpl])
     bind(classOf[AppConfig]).to(classOf[AppConfigImpl]).asEagerSingleton()
     bind(classOf[EntryDeclarationStore]).to(classOf[EntryDeclarationStoreImpl])
     bind(classOf[ValidationHandler]).to(classOf[ValidationHandlerImpl])
