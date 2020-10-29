@@ -22,7 +22,7 @@ import com.kenshoo.play.metrics.Metrics
 import org.scalatest.concurrent.ScalaFutures
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.models.HousekeepingStatus
-import uk.gov.hmrc.entrydeclarationstore.repositories.{MockEntryDeclarationRepo, MockHousekeepingRepo}
+import uk.gov.hmrc.entrydeclarationstore.repositories.{MockCircuitBreakerRepo, MockEntryDeclarationRepo, MockHousekeepingRepo}
 import uk.gov.hmrc.entrydeclarationstore.utils.MockMetrics
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -35,6 +35,7 @@ class HousekeepingServiceSpec
     with MockAppConfig
     with MockEntryDeclarationRepo
     with MockHousekeepingRepo
+    with MockCircuitBreakerRepo
     with ScalaFutures {
 
   val time: Instant = Instant.now
@@ -42,7 +43,7 @@ class HousekeepingServiceSpec
 
   val mockedMetrics: Metrics = new MockMetrics
   val service =
-    new HousekeepingService(mockEntryDeclarationRepo, mockHousekeepingRepo, clock, mockAppConfig, mockedMetrics)
+    new HousekeepingService(mockEntryDeclarationRepo, mockHousekeepingRepo, mockCircuitBreakerRepo, clock, mockAppConfig, mockedMetrics)
 
   "HousekeepingService" when {
     "getting housekeeping status" must {
@@ -96,6 +97,7 @@ class HousekeepingServiceSpec
         MockHousekeepingRepo.getHousekeepingStatus returns HousekeepingStatus(true)
         val numDeleted = 123
         MockEntryDeclarationRepo.housekeep(time) returns numDeleted
+        MockCircuitBreakerRepo.dropCollection returns Unit
 
         service.housekeep().futureValue shouldBe true
       }

@@ -16,29 +16,19 @@
 
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
-import java.time.Instant
 
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json.{JsObject, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.{ReadPreference, WriteConcern}
 import reactivemongo.bson.BSONObjectID
-import reactivemongo.play.json.ImplicitBSONHandlers._
-import uk.gov.hmrc.entrydeclarationstore.models.TrafficSwitchState.{Flowing, NotFlowing}
-import uk.gov.hmrc.entrydeclarationstore.models.{TrafficSwitchState, TrafficSwitchStatus}
+import uk.gov.hmrc.entrydeclarationstore.models.TrafficSwitchStatus
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 trait CircuitBreakerRepo {
-    def setCircuitBreakerState(value: TrafficSwitchState): Future[Unit]
 
-    def getCircuitBreakerState: Future[TrafficSwitchState]
-
-    def getCircuitBreakerStatus: Future[TrafficSwitchStatus]
-
-    def resetToDefault: Future[Unit]
+  def dropCollection:Unit
 }
 
 @Singleton
@@ -52,70 +42,5 @@ class CircuitBreakerRepoImpl @Inject()(
       ReactiveMongoFormats.objectIdFormats
     )
     with CircuitBreakerRepo {
-
-  private val singletonId = "af38807c-c127-11ea-b3de-0242ac130004"
-
-  val defaultStatus: TrafficSwitchStatus = TrafficSwitchStatus(TrafficSwitchState.Flowing, None, None)
-
-  override def setCircuitBreakerState(value: TrafficSwitchState): Future[Unit] =
-    for {
-      _ <- insertDefaultIfEmpty()
-      _ <- value match {
-            case NotFlowing   => open()
-            case Flowing => close()
-          }
-    } yield ()
-
-  // Note: Pre Mongo 4.2 we cannot update fields conditionally so we have to split open and close methods.
-  // We cannot upsert in these (since match failure would attempt insert and violate unique _id).
-  // Hence this, which will insert only when the singleton document is missing, allows open/close without
-  // upsert or the need to do racy 'check-then-act' logic:
-  private def insertDefaultIfEmpty() =
-    collection
-      .update(ordered = false, WriteConcern.Default)
-      .one(
-        q = Json.obj("_id" -> singletonId),
-        u = Json.obj(
-          "$setOnInsert" -> defaultStatus
-        ),
-        upsert = true
-      )
-
-  private def open() =
-    collection
-      .update(ordered = false, WriteConcern.Default)
-      .one(
-        q = Json.obj("_id" -> singletonId, "circuitBreakerState" -> "Closed"),
-        u = Json.obj(
-          "$set" -> Json.obj(
-            "circuitBreakerState" -> "Open",
-            "lastOpened"          -> Instant.now()
-          )
-        )
-      )
-
-  private def close() =
-    collection
-      .update(ordered = false, WriteConcern.Default)
-      .one(
-        q = Json.obj("_id" -> singletonId, "circuitBreakerState" -> "Open"),
-        u = Json.obj(
-          "$set" -> Json.obj(
-            "circuitBreakerState" -> "Closed",
-            "lastClosed"          -> Instant.now()
-          )
-        )
-      )
-      .map(_ => ())
-
-  override def getCircuitBreakerStatus: Future[TrafficSwitchStatus] =
-    collection
-      .find(selector = Json.obj("_id" -> singletonId), projection = Option.empty[JsObject])
-      .one[TrafficSwitchStatus](ReadPreference.primaryPreferred)
-      .map(_.getOrElse(defaultStatus))
-
-  override def getCircuitBreakerState: Future[TrafficSwitchState] =
-    getCircuitBreakerStatus.map(_.isTrafficFlowing)
-
-  override def resetToDefault: Future[Unit] = removeAll(WriteConcern.Default).map(_ => ())
+  override def dropCollection: Unit = collection.drop(false)
 }
