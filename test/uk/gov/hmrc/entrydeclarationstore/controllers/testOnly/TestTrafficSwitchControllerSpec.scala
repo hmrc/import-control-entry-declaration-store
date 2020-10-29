@@ -18,34 +18,34 @@ package uk.gov.hmrc.entrydeclarationstore.controllers.testOnly
 
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
-import uk.gov.hmrc.entrydeclarationstore.services.MockCircuitBreakerService
+import uk.gov.hmrc.entrydeclarationstore.services.MockTrafficSwitchService
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class TestCircuitBreakerControllerSpec extends UnitSpec with MockCircuitBreakerService {
+class TestTrafficSwitchControllerSpec extends UnitSpec with MockTrafficSwitchService {
 
-  val controller = new TestCircuitBreakerController(Helpers.stubControllerComponents(), mockCircuitBreakerService)
+  val controller = new TestTrafficSwitchController(Helpers.stubControllerComponents(), mockTrafficSwitchService)
 
-  "TestCircuitBreakerController" when {
-    "opening the circuit breaker" must {
+  "TestTrafficSwitchController" when {
+    "stopping the EIS traffic switch" must {
       "return 204" when {
         "successful" in {
-          MockCircuitBreakerService.openCircuitBreaker returns ((): Unit)
+          MockTrafficSwitchService.stopTrafficFlow returns ((): Unit)
 
-          val result = controller.openCircuitBreaker()(FakeRequest())
+          val result = controller.stopTrafficFlow()(FakeRequest())
 
           status(result) shouldBe NO_CONTENT
         }
       }
     }
   }
-  "resetting the circuit breaker" must {
+  "resetting the traffic switch" must {
     "return 204" when {
       "successful" in {
-        MockCircuitBreakerService.resetCircuitBreaker returns ((): Unit)
+        MockTrafficSwitchService.resetTrafficSwitch returns ((): Unit)
 
-        val result = controller.resetCircuitBreaker()(FakeRequest())
+        val result = controller.resetTrafficSwitch()(FakeRequest())
 
         status(result) shouldBe NO_CONTENT
       }

@@ -16,10 +16,16 @@
 
 package uk.gov.hmrc.entrydeclarationstore.models
 
-import play.api.libs.json.{Json, Reads}
+import play.api.libs.json.Format
+import uk.gov.hmrc.entrydeclarationstore.utils.Enums
 
-case class CircuitBreakerUpdate(circuitBreakerState: CircuitBreakerState)
+sealed trait TrafficSwitchState
 
-object CircuitBreakerUpdate {
-  implicit val reads: Reads[CircuitBreakerUpdate] = Json.reads[CircuitBreakerUpdate]
+object TrafficSwitchState {
+
+  case object Flowing extends TrafficSwitchState
+
+  case object NotFlowing extends TrafficSwitchState
+
+  implicit val formats: Format[TrafficSwitchState] = Enums.format[TrafficSwitchState]
 }

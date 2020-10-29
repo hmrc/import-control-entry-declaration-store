@@ -20,11 +20,11 @@ import java.time.Instant
 
 import play.api.libs.json.{Format, Json}
 
-case class CircuitBreakerStatus(
-  circuitBreakerState: CircuitBreakerState,
-  lastOpened: Option[Instant],
-  lastClosed: Option[Instant])
+case class TrafficSwitchStatus(
+                                isTrafficFlowing: TrafficSwitchState,
+                                lastTrafficStopped: Option[Instant],
+                                lastTrafficStarted: Option[Instant])
 
-object CircuitBreakerStatus {
-  implicit val format: Format[CircuitBreakerStatus] = Json.format[CircuitBreakerStatus]
+object TrafficSwitchStatus {
+  implicit val format: Format[TrafficSwitchStatus] = Json.format[TrafficSwitchStatus]
 }

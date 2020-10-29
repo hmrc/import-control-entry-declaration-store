@@ -125,7 +125,7 @@ class SubmissionSentToEISSpec extends UnitSpec {
 
       "send fails owing to circuit breaker" in {
         val event = implicitly[EventSources[SubmissionSentToEIS]]
-          .eventFor(now, report(Some(EISSendFailure.CircuitBreakerOpen)))
+          .eventFor(now, report(Some(EISSendFailure.TrafficSwitchNotFlowing)))
           .get
 
         Json.toJson(event) shouldBe
@@ -139,7 +139,7 @@ class SubmissionSentToEISSpec extends UnitSpec {
                         |    "messageType" : "IE313",
                         |    "detail" : {
                         |        "failure" : {
-                        |           "type": "CIRCUIT_BREAKER_OPEN"
+                        |           "type": "TRAFFIC_SWITCH_NOT_FLOWING"
                         |        }
                         |    }
                         |}

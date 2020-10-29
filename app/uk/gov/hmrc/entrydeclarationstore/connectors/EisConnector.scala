@@ -20,7 +20,7 @@ import akka.pattern.CircuitBreakerOpenException
 import javax.inject.{Inject, Singleton}
 import play.api.http.Status
 import play.api.http.Status._
-import uk.gov.hmrc.entrydeclarationstore.circuitbreaker.CircuitBreaker
+import uk.gov.hmrc.entrydeclarationstore.trafficswitch.TrafficSwitch
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.helpers.HeaderGenerator
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
@@ -34,28 +34,28 @@ import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
 trait EisConnector {
-  def submitMetadata(metadata: EntryDeclarationMetadata, bypassCircuitBreaker: Boolean)(
+  def submitMetadata(metadata: EntryDeclarationMetadata, bypassTrafficSwitch: Boolean)(
     implicit hc: HeaderCarrier,
     lc: LoggingContext): Future[Option[EISSendFailure]]
 }
 
 @Singleton
 class EisConnectorImpl @Inject()(
-  client: HttpClient,
-  circuitBreaker: CircuitBreaker,
-  appConfig: AppConfig,
-  pagerDutyLogger: PagerDutyLogger,
-  headerGenerator: HeaderGenerator)(implicit executionContext: ExecutionContext)
+                                  client: HttpClient,
+                                  trafficSwitch: TrafficSwitch,
+                                  appConfig: AppConfig,
+                                  pagerDutyLogger: PagerDutyLogger,
+                                  headerGenerator: HeaderGenerator)(implicit executionContext: ExecutionContext)
     extends EisConnector {
   val newUrl: String   = s"${appConfig.eisHost}${appConfig.eisNewEnsUrlPath}"
   val amendUrl: String = s"${appConfig.eisHost}${appConfig.eisAmendEnsUrlPath}"
 
   implicit val emptyHeaderCarrier: HeaderCarrier = HeaderCarrier()
 
-  def submitMetadata(metadata: EntryDeclarationMetadata, bypassCircuitBreaker: Boolean)(
+  def submitMetadata(metadata: EntryDeclarationMetadata, bypassTrafficSwitch: Boolean)(
     implicit hc: HeaderCarrier,
     lc: LoggingContext): Future[Option[EISSendFailure]] =
-    submit(bypassCircuitBreaker) {
+    submit(bypassTrafficSwitch) {
       val isAmendment = metadata.movementReferenceNumber.isDefined
       val headers     = headerGenerator.headersForEIS(metadata.submissionId)(hc)
       ContextLogger.info(s"sending to EIS")
@@ -76,9 +76,9 @@ class EisConnectorImpl @Inject()(
       .POST[EntryDeclarationMetadata, HttpResponse](newUrl, metadata, headers)
   }
 
-  private[connectors] def submit(bypassCircuitBreaker: Boolean)(code: => Future[HttpResponse])(
+  private[connectors] def submit(bypassTrafficSwitch: Boolean)(code: => Future[HttpResponse])(
     implicit lc: LoggingContext): Future[Option[EISSendFailure]] =
-    withCircuitBreakerIfRequired(bypassCircuitBreaker)(code)
+    withTrafficSwitchIfRequired(bypassTrafficSwitch)(code)
       .map { response =>
         val status = response.status
         ContextLogger.info(s"Send to EIS returned status code: $status")
@@ -92,8 +92,8 @@ class EisConnectorImpl @Inject()(
       }
       .recover {
         case _: CircuitBreakerOpenException =>
-          pagerDutyLogger.logEISCircuitBreakerOpen()
-          Some(EISSendFailure.CircuitBreakerOpen)
+          pagerDutyLogger.logEISTrafficSwitchFlowStopped()
+          Some(EISSendFailure.TrafficSwitchNotFlowing)
 
         case _: TimeoutException =>
           pagerDutyLogger.logEISTimeout()
@@ -104,13 +104,13 @@ class EisConnectorImpl @Inject()(
           Some(EISSendFailure.ExceptionThrown)
       }
 
-  private def withCircuitBreakerIfRequired(bypass: Boolean)(code: => Future[HttpResponse]) =
-    if (bypass) code else circuitBreaker.withCircuitBreaker(code, failureFunction)
+  private def withTrafficSwitchIfRequired(bypass: Boolean)(code: => Future[HttpResponse]) =
+    if (bypass) code else trafficSwitch.withTrafficSwitch(code, failureFunction)
 
   private val failureFunction: Try[HttpResponse] => Boolean = {
     case Success(response) =>
-      // 400s should be submission-specific issues and not open
-      // circuit breaker (esp since their replays would also likely fail
+      // 400s should be submission-specific issues and not turn off the
+      // traffic switch (esp since their replays would also likely fail
       // and affect ongoing submissions).
       !(Status.isSuccessful(response.status) || response.status == BAD_REQUEST)
 

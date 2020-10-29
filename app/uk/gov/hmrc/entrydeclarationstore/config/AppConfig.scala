@@ -18,7 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.config
 
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
-import uk.gov.hmrc.entrydeclarationstore.circuitbreaker.CircuitBreakerConfig
+import uk.gov.hmrc.entrydeclarationstore.trafficswitch.TrafficSwitchConfig
 import uk.gov.hmrc.entrydeclarationstore.utils.{Retrying, XmlFormatConfig}
 import uk.gov.hmrc.play.bootstrap.config.{AppName, ServicesConfig}
 
@@ -66,7 +66,7 @@ trait AppConfig {
 
   def headerWhitelist: Seq[String]
 
-  def eisCircuitBreakerConfig: CircuitBreakerConfig
+  def eisTrafficSwitchConfig: TrafficSwitchConfig
 
   def defaultTtl: FiniteDuration
 
@@ -153,12 +153,12 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
 
   lazy val headerWhitelist: Seq[String] = config.get[Seq[String]]("httpHeadersWhitelist")
 
-  lazy val eisCircuitBreakerConfig: CircuitBreakerConfig = {
-    CircuitBreakerConfig(
-      maxFailures              = eisConfig.get[Int]("circuitBreaker.maxFailures"),
-      callTimeout              = getFiniteDuration(eisConfig, "circuitBreaker.callTimeout"),
-      closedStateRefreshPeriod = getFiniteDuration(eisConfig, "circuitBreaker.closedStateRefreshPeriod"),
-      openStateRefreshPeriod   = getFiniteDuration(eisConfig, "circuitBreaker.openStateRefreshPeriod")
+  lazy val eisTrafficSwitchConfig: TrafficSwitchConfig = {
+    TrafficSwitchConfig(
+      maxFailures              = eisConfig.get[Int]("trafficSwitch.maxFailures"),
+      callTimeout              = getFiniteDuration(eisConfig, "trafficSwitch.callTimeout"),
+      flowingStateRefreshPeriod = getFiniteDuration(eisConfig, "trafficSwitch.flowingStateRefreshPeriod"),
+      notFlowingStateRefreshPeriod   = getFiniteDuration(eisConfig, "trafficSwitch.notFlowingStateRefreshPeriod")
     )
   }
 

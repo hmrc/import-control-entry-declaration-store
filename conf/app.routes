@@ -19,5 +19,5 @@ PUT         /import-control/housekeeping/status                     uk.gov.hmrc.
 PUT         /import-control/housekeeping/submissionid/:submissionId                 uk.gov.hmrc.entrydeclarationstore.controllers.HousekeepingController.setShortTtlBySubmissionId(submissionId)
 PUT         /import-control/housekeeping/eoriandcorrelationid/:eori/:correlationId  uk.gov.hmrc.entrydeclarationstore.controllers.HousekeepingController.setShortTtlByEoriAndCorrelationId(eori, correlationId)
 
-GET         /import-control/circuit-breaker                         uk.gov.hmrc.entrydeclarationstore.controllers.CircuitBreakerController.getStatus
-PUT         /import-control/circuit-breaker/close                   uk.gov.hmrc.entrydeclarationstore.controllers.CircuitBreakerController.closeCircuitBreaker
+GET         /import-control/traffic-switch                         uk.gov.hmrc.entrydeclarationstore.controllers.TrafficSwitchController.getStatus
+PUT         /import-control/traffic-switch/start                   uk.gov.hmrc.entrydeclarationstore.controllers.TrafficSwitchController.startTrafficFlow

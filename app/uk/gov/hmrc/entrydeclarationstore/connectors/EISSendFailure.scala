@@ -22,13 +22,13 @@ sealed trait EISSendFailure
 
 object EISSendFailure {
   case class ErrorResponse(status: Int) extends EISSendFailure
-  case object CircuitBreakerOpen extends EISSendFailure
+  case object TrafficSwitchNotFlowing extends EISSendFailure
   case object ExceptionThrown extends EISSendFailure
   case object Timeout extends EISSendFailure
 
   implicit val writes: Writes[EISSendFailure] = Writes {
     case ErrorResponse(status) => JsObject(Seq("type" -> JsString("ERROR_RESPONSE"), "status" -> JsNumber(status)))
-    case CircuitBreakerOpen    => JsObject(Seq("type" -> JsString("CIRCUIT_BREAKER_OPEN")))
+    case TrafficSwitchNotFlowing    => JsObject(Seq("type" -> JsString("TRAFFIC_SWITCH_NOT_FLOWING")))
     case ExceptionThrown       => JsObject(Seq("type" -> JsString("EXCEPTION_THROWN")))
     case Timeout               => JsObject(Seq("type" -> JsString("TIMEOUT")))
   }

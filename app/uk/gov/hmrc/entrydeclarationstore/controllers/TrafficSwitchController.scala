@@ -14,25 +14,26 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.entrydeclarationstore.controllers.testOnly
+package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import javax.inject.{Inject, Singleton}
+import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.entrydeclarationstore.services.CircuitBreakerService
+import uk.gov.hmrc.entrydeclarationstore.services.TrafficSwitchService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.ExecutionContext
 
 @Singleton()
-class TestCircuitBreakerController @Inject()(cc: ControllerComponents, service: CircuitBreakerService)(
+class TrafficSwitchController @Inject()(cc: ControllerComponents, service: TrafficSwitchService)(
   implicit ec: ExecutionContext)
     extends BackendController(cc) {
 
-  def resetCircuitBreaker: Action[AnyContent] = Action.async { _ =>
-    service.resetCircuitBreaker.map(_ => NoContent)
+  def startTrafficFlow: Action[AnyContent] = Action.async { _ =>
+    service.startTrafficFlow.map(_ => NoContent)
   }
 
-  def openCircuitBreaker: Action[AnyContent] = Action.async { _ =>
-    service.openCircuitBreaker.map(_ => NoContent)
+  def getStatus: Action[AnyContent] = Action.async { _ =>
+    service.getTrafficSwitchStatus.map(status => Ok(Json.toJson(status)))
   }
 }

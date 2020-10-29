@@ -23,10 +23,10 @@ class EISSendFailureSpec extends UnitSpec {
 
   "EISSendFailure" should {
     "write to Json correctly" in {
-      Json.toJson(EISSendFailure.CircuitBreakerOpen) shouldBe
+      Json.toJson(EISSendFailure.TrafficSwitchNotFlowing) shouldBe
         Json.parse("""
                      |{
-                     |  "type": "CIRCUIT_BREAKER_OPEN"
+                     |  "type": "TRAFFIC_SWITCH_NOT_FLOWING"
                      |}
                      |""".stripMargin)
 

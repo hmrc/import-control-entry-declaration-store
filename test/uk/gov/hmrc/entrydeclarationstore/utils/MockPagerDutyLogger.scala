@@ -33,8 +33,8 @@ trait MockPagerDutyLogger extends MockFactory {
     def logEISError: CallHandler[Unit] =
       (mockPagerDutyLogger.logEISError(_: Throwable)(_: LoggingContext)).verify(*, *)
 
-    def logEISCircuitBreakerOpen: CallHandler[Unit] =
-      (mockPagerDutyLogger.logEISCircuitBreakerOpen()(_: LoggingContext)).verify(*)
+    def logEISTrafficSwitchFlowStopped: CallHandler[Unit] =
+      (mockPagerDutyLogger.logEISTrafficSwitchFlowStopped()(_: LoggingContext)).verify(*)
 
     def logEventFailure: CallHandler[Unit] =
       (mockPagerDutyLogger.logEventFailure(_: Int)(_: LoggingContext)).verify(*, *)

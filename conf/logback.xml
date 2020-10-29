@@ -34,7 +34,7 @@
         </encoder>
     </appender>
 
-    <logger name="uk.gov.hmrc.entrydeclarationstore.circuitbreaker" level="DEBUG" />
+    <logger name="uk.gov.hmrc.entrydeclarationstore.trafficswitch" level="DEBUG" />
 
     <logger name="accesslog" level="INFO" additivity="false">
         <appender-ref ref="ACCESS_LOG_FILE" />

@@ -18,18 +18,18 @@ package uk.gov.hmrc.entrydeclarationstore.repositories
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
-import uk.gov.hmrc.entrydeclarationstore.models.CircuitBreakerState
+import uk.gov.hmrc.entrydeclarationstore.models.TrafficSwitchState
 
 import scala.concurrent.Future
 
-trait MockCircuitBreakerRepo extends MockFactory {
-  val mockCircuitBreakerRepo: CircuitBreakerRepo = mock[CircuitBreakerRepo]
+trait MockTrafficSwitchRepo extends MockFactory {
+  val mockTrafficSwitchRepo: TrafficSwitchRepo = mock[TrafficSwitchRepo]
 
-  object MockCircuitBreakerRepo {
-    def getCircuitBreakerState: CallHandler[Future[CircuitBreakerState]] =
-      (mockCircuitBreakerRepo.getCircuitBreakerState _).expects()
+  object MockTrafficSwitchRepo {
+    def getTrafficSwitchState: CallHandler[Future[TrafficSwitchState]] =
+      (mockTrafficSwitchRepo.getTrafficSwitchState _).expects()
 
-    def setCircuitBreakerState(circuitBreakerState: CircuitBreakerState): CallHandler[Future[Unit]] =
-      (mockCircuitBreakerRepo.setCircuitBreakerState _).expects(circuitBreakerState)
+    def setTrafficSwitchState(trafficFlowing: TrafficSwitchState): CallHandler[Future[Unit]] =
+      (mockTrafficSwitchRepo.setTrafficSwitchState _).expects(trafficFlowing)
   }
 }

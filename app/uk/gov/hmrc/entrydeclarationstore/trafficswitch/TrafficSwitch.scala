@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.entrydeclarationstore.circuitbreaker
+package uk.gov.hmrc.entrydeclarationstore.trafficswitch
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
 import javax.inject.Inject
-import uk.gov.hmrc.entrydeclarationstore.circuitbreaker.CircuitBreakerActor.{CallResult, MakeCall}
+import uk.gov.hmrc.entrydeclarationstore.trafficswitch.TrafficSwitchActor.{CallResult, MakeCall}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -28,17 +28,17 @@ import scala.reflect.ClassTag
 import scala.util.Try
 
 /**
-  * Circuit breaker that uses external shared open/closed state.
+  * Traffic Switch that uses external shared not flowing/flowing state.
   *
-  * Opens automatically after a number of successive failures
+  * Stops traffic flow automatically after a number of successive failures
   * (or when the state is updated externally by another microservice instance)
-  * but which must be manually closed by updating the external state.
+  * but which must be manually started again by updating the external state.
   */
-class CircuitBreaker @Inject()(circuitBreakerActorFactory: CircuitBreakerActor.Factory, circuitBreakerConfig: CircuitBreakerConfig)(
+class TrafficSwitch @Inject()(trafficSwitchActorFactory: TrafficSwitchActor.Factory, trafficSwitchConfig: TrafficSwitchConfig)(
   implicit actorSystem: ActorSystem, ec: ExecutionContext) {
-  implicit val timeout: Timeout = Timeout(circuitBreakerConfig.callTimeout.plus(2.seconds))
-  val circuitBreakerActor: ActorRef = circuitBreakerActorFactory.apply(actorSystem)
+  implicit val timeout: Timeout = Timeout(trafficSwitchConfig.callTimeout.plus(2.seconds))
+  val trafficSwitchActor: ActorRef = trafficSwitchActorFactory.apply(actorSystem)
 
-  def withCircuitBreaker[T: ClassTag](body: => Future[T], defineFailureFn: Try[T] => Boolean): Future[T] =
-    (circuitBreakerActor ? MakeCall(_ => body, defineFailureFn)).mapTo[CallResult[T]].map(_.value)
+  def withTrafficSwitch[T: ClassTag](body: => Future[T], defineFailureFn: Try[T] => Boolean): Future[T] =
+    (trafficSwitchActor ? MakeCall(_ => body, defineFailureFn)).mapTo[CallResult[T]].map(_.value)
 }

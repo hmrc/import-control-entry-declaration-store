@@ -153,7 +153,7 @@ class EntryDeclarationStoreSpec
       MockReportSender.sendReport(submissionSentToEISReport(messageType, None))
 
       MockEisConnector
-        .submitMetadata(metadataWith(messageType, mrn), bypassCircuitBreaker = false)
+        .submitMetadata(metadataWith(messageType, mrn), bypassTrafficSwitch = false)
         .returns(Future.successful(None))
 
       val setSubmissionTimeComplete: Promise[Unit] = Promise[Unit]
@@ -260,7 +260,7 @@ class EntryDeclarationStoreSpec
         MockReportSender.sendReport(submissionSentToEISReport(messageType, Some(eisSendFailure)))
 
         MockEisConnector
-          .submitMetadata(metadataWith(messageType, mrn), bypassCircuitBreaker = false)
+          .submitMetadata(metadataWith(messageType, mrn), bypassTrafficSwitch = false)
           .returns(Future.successful(Some(eisSendFailure)))
 
         val setSubmissionTimeComplete: Promise[Unit] = Promise[Unit]
@@ -298,7 +298,7 @@ class EntryDeclarationStoreSpec
           .returns(Future.successful(()))
 
         MockEisConnector
-          .submitMetadata(metadataWith(messageType, mrn), bypassCircuitBreaker = false)
+          .submitMetadata(metadataWith(messageType, mrn), bypassTrafficSwitch = false)
           .returns(Promise[Option[EISSendFailure]].future)
 
         entryDeclarationStore
@@ -323,7 +323,7 @@ class EntryDeclarationStoreSpec
         MockReportSender.sendReport(submissionSentToEISReport(messageType, Some(EISSendFailure.ExceptionThrown)))
 
         MockEisConnector
-          .submitMetadata(metadataWith(messageType, mrn), bypassCircuitBreaker = false)
+          .submitMetadata(metadataWith(messageType, mrn), bypassTrafficSwitch = false)
           .returns(Future.failed(new RuntimeException with NoStackTrace))
 
         entryDeclarationStore

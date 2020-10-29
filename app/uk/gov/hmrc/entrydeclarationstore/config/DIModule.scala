@@ -23,7 +23,7 @@ import com.google.inject.{AbstractModule, Provides}
 import javax.inject.Named
 import play.api.libs.json.Json
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.entrydeclarationstore.circuitbreaker.{CircuitBreakerActor, CircuitBreakerConfig}
+import uk.gov.hmrc.entrydeclarationstore.trafficswitch.{TrafficSwitchActor, TrafficSwitchConfig}
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EisConnector, EisConnectorImpl}
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.{Housekeeper, HousekeepingScheduler}
 import uk.gov.hmrc.entrydeclarationstore.nrs.{NRSConnector, NRSConnectorImpl}
@@ -42,6 +42,7 @@ class DIModule extends AbstractModule {
     bind(classOf[HousekeepingScheduler]).asEagerSingleton()
     bind(classOf[HousekeepingRepo]).to(classOf[HousekeepingRepoImpl])
     bind(classOf[Housekeeper]).to(classOf[HousekeepingService])
+    bind(classOf[TrafficSwitchRepo]).to(classOf[TrafficSwitchRepoImpl])
     bind(classOf[CircuitBreakerRepo]).to(classOf[CircuitBreakerRepoImpl])
     bind(classOf[AppConfig]).to(classOf[AppConfigImpl]).asEagerSingleton()
     bind(classOf[EntryDeclarationStore]).to(classOf[EntryDeclarationStoreImpl])
@@ -51,7 +52,7 @@ class DIModule extends AbstractModule {
     bind(classOf[EventConnector]).to(classOf[EventConnectorImpl])
     bind(classOf[NRSConnector]).to(classOf[NRSConnectorImpl])
     bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
-    bind(classOf[CircuitBreakerActor.Factory]).to(classOf[CircuitBreakerActor.FactoryImpl])
+    bind(classOf[TrafficSwitchActor.Factory]).to(classOf[TrafficSwitchActor.FactoryImpl])
   }
 
   @Provides
@@ -59,8 +60,8 @@ class DIModule extends AbstractModule {
     actorSystem.scheduler
 
   @Provides
-  def eisCircuitBreakerConfig(appConfig: AppConfig): CircuitBreakerConfig =
-    appConfig.eisCircuitBreakerConfig
+  def eisTrafficSwitchConfig(appConfig: AppConfig): TrafficSwitchConfig =
+    appConfig.eisTrafficSwitchConfig
 
   @Named("ruleValidator315")
   @Provides
