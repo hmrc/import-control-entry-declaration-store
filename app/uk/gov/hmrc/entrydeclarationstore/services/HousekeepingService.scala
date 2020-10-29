@@ -24,7 +24,7 @@ import play.api.Logger
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.Housekeeper
 import uk.gov.hmrc.entrydeclarationstore.models.HousekeepingStatus
-import uk.gov.hmrc.entrydeclarationstore.repositories.{EntryDeclarationRepo, HousekeepingRepo}
+import uk.gov.hmrc.entrydeclarationstore.repositories.{CircuitBreakerRepo, EntryDeclarationRepo, HousekeepingRepo}
 import uk.gov.hmrc.entrydeclarationstore.utils.{EventLogger, Timer}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -34,7 +34,8 @@ import scala.util.Success
 class HousekeepingService @Inject()(
   entryDeclarationRepo: EntryDeclarationRepo,
   housekeepingRepo: HousekeepingRepo,
-  clock: Clock,
+  circuitBreakerRepo: CircuitBreakerRepo,
+    clock: Clock,
   appConfig: AppConfig,
   override val metrics: Metrics)(implicit ec: ExecutionContext)
     extends Housekeeper
@@ -66,6 +67,7 @@ class HousekeepingService @Inject()(
     housekeepingRepo.getHousekeepingStatus.flatMap {
       case HousekeepingStatus(true) =>
         Logger.info("Running housekeeping")
+        circuitBreakerRepo.dropCollection
         doHouskeeping()
 
       case HousekeepingStatus(false) =>
