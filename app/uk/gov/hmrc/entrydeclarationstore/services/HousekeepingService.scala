@@ -58,7 +58,9 @@ class HousekeepingService @Inject()(
         entryDeclarationRepo
           .housekeep(clock.instant)
           .andThen {
-            case Success(numDeleted) => numDeletedHistogram.update(numDeleted)
+            case Success(numDeleted) =>
+              Logger.info(s"Finished housekeeping. $numDeleted submissions housekept")
+              numDeletedHistogram.update(numDeleted)
           }
           .map(_ => true)
       }
