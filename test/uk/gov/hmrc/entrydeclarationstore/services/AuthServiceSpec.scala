@@ -54,7 +54,7 @@ class AuthServiceSpec
 
   def validICSEnrolment(eori: String): Enrolment =
     Enrolment(
-      key               = "HMRC-ICS-ORG",
+      key               = "HMRC-SS-ORG",
       identifiers       = Seq(EnrolmentIdentifier("EoriTin", eori)),
       state             = "Activated",
       delegatedAuthRule = None)
@@ -169,6 +169,8 @@ class AuthServiceSpec
         "CSP authentication fails" should {
           authenticateBasedOnICSEnrolmentNrsEnabled { () =>
             MockAppConfig.nrsEnabled returns true
+            MockAppConfig.newSSEnrolmentEnabled
+
             stubCSPAuth(cspRetrievalsNRSEnabled) returns Future.failed(authException)
           }
         }
@@ -177,6 +179,7 @@ class AuthServiceSpec
           implicit val hc: HeaderCarrier = HeaderCarrier()
           authenticateBasedOnICSEnrolmentNrsEnabled { () =>
             MockAppConfig.nrsEnabled returns true
+            MockAppConfig.newSSEnrolmentEnabled
           }
         }
       }
@@ -207,6 +210,8 @@ class AuthServiceSpec
         "CSP authentication fails" should {
           authenticateBasedOnICSEnrolmentNrsDisabled { () =>
             MockAppConfig.nrsEnabled returns false
+            MockAppConfig.newSSEnrolmentEnabled
+
             stubCSPAuth(EmptyRetrieval) returns Future.failed(authException)
           }
         }
@@ -215,6 +220,7 @@ class AuthServiceSpec
           implicit val hc: HeaderCarrier = HeaderCarrier()
           authenticateBasedOnICSEnrolmentNrsDisabled { () =>
             MockAppConfig.nrsEnabled returns false
+            MockAppConfig.newSSEnrolmentEnabled
           }
         }
       }
