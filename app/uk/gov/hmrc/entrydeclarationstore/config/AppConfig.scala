@@ -92,6 +92,8 @@ trait AppConfig {
   def nrsRetries: List[FiniteDuration]
 
   def nrsEnabled: Boolean
+
+  def newSSEnrolmentEnabled: Boolean
 }
 
 @Singleton
@@ -188,4 +190,6 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
     Retrying.fibonacciDelays(getFiniteDuration(nrsConfig, "initialDelay"), nrsConfig.get[Int]("numberOfRetries"))
 
   lazy val nrsEnabled: Boolean = nrsConfig.getOptional[Boolean]("enabled").getOrElse(true)
+
+  lazy val newSSEnrolmentEnabled: Boolean = config.get[Boolean]("feature-switch.new-ss-enrolment")
 }

@@ -94,8 +94,9 @@ class AuthService @Inject()(
     EitherT(authorised(AuthProviders(AuthProvider.GovernmentGateway))
       .retrieve(retrieval and allEnrolments) {
         case identityParts ~ usersEnrolments =>
+          val enrolmentKey = if(appConfig.newSSEnrolmentEnabled) "HMRC-SS-ORG" else "HMRC-ICS-ORG"
           val icsEnrolments =
-            usersEnrolments.enrolments.filter(enrolment => enrolment.isActivated && enrolment.key == "HMRC-ICS-ORG")
+            usersEnrolments.enrolments.filter(enrolment => enrolment.isActivated && enrolment.key == enrolmentKey)
 
           val eoris = for {
             enrolment <- icsEnrolments

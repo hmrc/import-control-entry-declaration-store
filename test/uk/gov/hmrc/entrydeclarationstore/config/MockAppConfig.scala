@@ -73,6 +73,8 @@ trait MockAppConfig extends MockFactory {
     def nrsRetries: CallHandler[List[FiniteDuration]] = mockAppConfig.nrsRetries _ expects ()
 
     def nrsEnabled: CallHandler[Boolean] = mockAppConfig.nrsEnabled _ expects ()
+
+    def newSSEnrolmentEnabled: CallHandler[Boolean] =   (mockAppConfig.newSSEnrolmentEnabled _) stubs() returns(true)
   }
 
 }
