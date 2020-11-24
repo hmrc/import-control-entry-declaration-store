@@ -59,7 +59,7 @@ trait MockAppConfig extends MockFactory {
 
     def businessRules315: CallHandler[Seq[String]] = mockAppConfig.businessRules315 _ expects ()
 
-    def headerWhitelist: CallHandler[Seq[String]] = mockAppConfig.headerWhitelist _ expects ()
+    def headerWhitelist: CallHandler[Seq[String]] = mockAppConfig.headerAllowlist _ expects ()
 
     def replayBatchSizeLimit: CallHandler[Int] = mockAppConfig.replayBatchSizeLimit _ expects ()
 

@@ -64,7 +64,7 @@ trait AppConfig {
 
   def businessRules313: Seq[String]
 
-  def headerWhitelist: Seq[String]
+  def headerAllowlist: Seq[String]
 
   def eisTrafficSwitchConfig: TrafficSwitchConfig
 
@@ -153,7 +153,7 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
 
   lazy val businessRules313: Seq[String] = config.get[Seq[String]]("businessRules313")
 
-  lazy val headerWhitelist: Seq[String] = config.get[Seq[String]]("httpHeadersWhitelist")
+  lazy val headerAllowlist: Seq[String] = config.get[Seq[String]]("bootstrap.http.headersAllowlist")
 
   lazy val eisTrafficSwitchConfig: TrafficSwitchConfig = {
     TrafficSwitchConfig(
