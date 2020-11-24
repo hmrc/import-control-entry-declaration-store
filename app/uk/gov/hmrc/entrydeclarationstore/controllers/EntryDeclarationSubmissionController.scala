@@ -22,8 +22,8 @@ import com.kenshoo.play.metrics.Metrics
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, ControllerComponents, Request}
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
-import uk.gov.hmrc.entrydeclarationstore.models.ErrorWrapper
 import uk.gov.hmrc.entrydeclarationstore.nrs.{NRSMetadata, NRSService, NRSSubmission}
+import uk.gov.hmrc.entrydeclarationstore.reporting.audit.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, EntryDeclarationStore, MRNMismatchError}
 import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils.StringWithSha256
 import uk.gov.hmrc.entrydeclarationstore.utils.{EoriUtils, EventLogger, Timer}
@@ -33,16 +33,17 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.ExecutionContext
 import scala.xml.Elem
 
-@Singleton()
+@Singleton
 class EntryDeclarationSubmissionController @Inject()(
   cc: ControllerComponents,
   service: EntryDeclarationStore,
   val authService: AuthService,
   nrsService: NRSService,
+  auditHandler: AuditHandler,
   clock: Clock,
   override val metrics: Metrics
 )(implicit ec: ExecutionContext)
-    extends AuthorisedController(cc)
+    extends AuthorisedController(cc, auditHandler)
     with Timer
     with EventLogger {
 
@@ -63,30 +64,32 @@ class EntryDeclarationSubmissionController @Inject()(
     </ns:SuccessResponse>
   // @formatter:on
 
-  val postSubmission: Action[String] = authorisedAction.async(parse.tolerantText) { implicit request =>
-    handleSubmission(None)
+  val postSubmission: Action[String] = authorisedAction(None).async(parse.tolerantText) { implicit request =>
+    handleSubmission
   }
 
   val postSubmissionTestOnly: Action[String] = postSubmission
 
-  def putAmendment(mrn: String): Action[String] = authorisedAction.async(parse.tolerantText) { implicit request =>
-    handleSubmission(Some(mrn))
+  def putAmendment(mrn: String): Action[String] = authorisedAction(Some(mrn)).async(parse.tolerantText) { implicit request =>
+    handleSubmission
   }
 
-  private def handleSubmission(mrn: Option[String])(implicit request: UserRequest[String]) = {
+  private def handleSubmission(implicit request: UserRequest[String]) = {
     val receivedDateTime = Instant.now(clock)
 
     service
-      .handleSubmission(request.userDetails.eori, request.body, mrn, receivedDateTime, request.userDetails.clientType)
+      .handleSubmission(request.userDetails.eori, request.body, request.mrn, receivedDateTime, request.userDetails.clientType)
       .map {
-        case Left(failure @ ErrorWrapper(err)) =>
-          err match {
+        case Left(failure) =>
+          auditHandler.audit(AuditEvent.auditFailure(request.mrn.isDefined))
+          failure.error match {
             case _: ValidationErrors => BadRequest(failure.toXml)
             case MRNMismatchError    => BadRequest(failure.toXml)
             case _                   => InternalServerError(failure.toXml)
           }
         case Right(success) =>
           submitToNRSIfReqd(request, receivedDateTime)
+          auditHandler.audit(AuditEvent.auditSuccess(request.mrn.isDefined))
           Ok(xmlSuccessResponse(success.correlationId))
       }
   }
@@ -96,8 +99,9 @@ class EntryDeclarationSubmissionController @Inject()(
     request.userDetails.identityData.foreach { identityData =>
       implicit val lc: LoggingContext = LoggingContext(eori = Some(request.userDetails.eori))
 
-      val submission =
-        NRSSubmission(request.body, NRSMetadata(receivedDateTime, request.userDetails.eori, identityData, request, request.body.calculateSha256))
+      val submission = NRSSubmission(
+        request.body,
+        NRSMetadata(receivedDateTime, request.userDetails.eori, identityData, request, request.body.calculateSha256))
 
       nrsService.submit(submission)
     }

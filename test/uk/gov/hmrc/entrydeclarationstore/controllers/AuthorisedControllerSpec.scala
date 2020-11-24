@@ -27,6 +27,7 @@ import play.api.test.{FakeRequest, ResultExtractors}
 import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.entrydeclarationstore.nrs.NRSMetadataTestData
 import uk.gov.hmrc.entrydeclarationstore.reporting.ClientType
+import uk.gov.hmrc.entrydeclarationstore.reporting.audit.{AuditEvent, MockAuditHandler}
 import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, MockAuthService, UserDetails}
 import uk.gov.hmrc.entrydeclarationstore.utils.{EventLogger, MockMetrics, Timer}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -43,16 +44,13 @@ class AuthorisedControllerSpec
     with ResultExtractors
     with ScalaFutures
     with MockAuthService
+    with MockAuditHandler
     with NRSMetadataTestData {
 
   lazy val cc: ControllerComponents = stubControllerComponents()
   lazy val bearerToken              = "Bearer Token"
   def request(body: String): Request[String] =
-    FakeRequest()
-      .withHeaders(
-        HeaderNames.AUTHORIZATION -> bearerToken
-      )
-      .withBody(body)
+    FakeRequest().withHeaders(HeaderNames.AUTHORIZATION -> bearerToken).withBody(body)
 
   val eori                   = "GB123"
   val clientType: ClientType = ClientType.CSP
@@ -64,9 +62,10 @@ class AuthorisedControllerSpec
   val userDetails: UserDetails = UserDetails(eori, clientType, None)
 
   trait Test {
-    val hc: HeaderCarrier = HeaderCarrier()
+    val hc: HeaderCarrier   = HeaderCarrier()
+    val mrn: Option[String] = None
 
-    class TestController extends AuthorisedController(cc) with Timer with EventLogger {
+    class TestController extends AuthorisedController(cc, mockAuditHandler) with Timer with EventLogger {
       override val authService: AuthService = mockAuthService
 
       override def eoriCorrectForRequest[A](request: Request[A], eori: String): Boolean =
@@ -75,7 +74,8 @@ class AuthorisedControllerSpec
           case _         => false
         }
 
-      def action(): Action[String] = authorisedAction.async(parse.tolerantText) { userRequest =>
+      def action(): Action[String] = authorisedAction(mrn).async(parse.tolerantText) { userRequest =>
+        userRequest.mrn         shouldBe mrn
         userRequest.userDetails shouldBe userDetails
         Future.successful(Ok(Json.obj()))
       }
@@ -121,6 +121,7 @@ class AuthorisedControllerSpec
     "auth eori does not match that in the request payload" should {
       "return a 403" in new Test {
         MockAuthService.authenticate returns Future.successful(Some(userDetails))
+        MockAuditHandler.audit(AuditEvent.auditFailure(mrn.isDefined)) returns Future.successful((): Unit)
 
         private val result: Future[Result] = controller.action()(request(bodyContainingOtherEori))
         status(await(result))                                     shouldBe FORBIDDEN

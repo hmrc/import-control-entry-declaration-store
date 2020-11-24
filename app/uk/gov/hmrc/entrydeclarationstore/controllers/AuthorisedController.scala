@@ -18,6 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import play.api.mvc._
 import uk.gov.hmrc.entrydeclarationstore.models.StandardError
+import uk.gov.hmrc.entrydeclarationstore.reporting.audit.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, UserDetails}
 import uk.gov.hmrc.entrydeclarationstore.utils.Timer
 import uk.gov.hmrc.entrydeclarationstore.utils.XmlFormats._
@@ -26,16 +27,16 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.{ExecutionContext, Future}
 
-abstract class AuthorisedController(cc: ControllerComponents) extends BackendController(cc) {
+abstract class AuthorisedController(cc: ControllerComponents, auditHandler: AuditHandler) extends BackendController(cc) {
   self: Timer =>
 
-  case class UserRequest[A](request: Request[A], userDetails: UserDetails) extends WrappedRequest[A](request)
+  case class UserRequest[A](request: Request[A], mrn: Option[String], userDetails: UserDetails) extends WrappedRequest[A](request)
 
   val authService: AuthService
 
   def eoriCorrectForRequest[A](request: Request[A], eori: String): Boolean
 
-  def authorisedAction: ActionBuilder[UserRequest, AnyContent] =
+  def authorisedAction(mrn: Option[String]): ActionBuilder[UserRequest, AnyContent] =
     new ActionBuilder[UserRequest, AnyContent] {
 
       override def parser: BodyParser[AnyContent] = cc.parsers.defaultBodyParser
@@ -52,8 +53,9 @@ abstract class AuthorisedController(cc: ControllerComponents) extends BackendCon
           authService.authenticate.flatMap {
             case Some(userDetails) =>
               if (eoriCorrectForRequest(request, userDetails.eori)) {
-                block(UserRequest(request, userDetails))
+                block(UserRequest(request, mrn, userDetails))
               } else {
+                auditHandler.audit(AuditEvent.auditFailure(mrn.isDefined))
                 error(StandardError.forbidden)
               }
 

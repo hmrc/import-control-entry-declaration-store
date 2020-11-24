@@ -37,7 +37,7 @@ class SubmissionSentToEISSpec extends UnitSpec {
 
   "SubmissionSentToEIS" must {
     "have the correct associated JSON event" when {
-      "successfully send" in {
+      "successfully sent" in {
         val event = implicitly[EventSources[SubmissionSentToEIS]].eventFor(now, report(None)).get
 
         Json.toJson(event) shouldBe
@@ -147,19 +147,25 @@ class SubmissionSentToEISSpec extends UnitSpec {
       }
     }
 
-    "have the correct associated audit event" in {
-      val event = implicitly[EventSources[SubmissionSentToEIS]].auditEventFor(report(None)).get
+    "have the correct associated audit event" when {
+      "successfully sent" in {
+        val event = implicitly[EventSources[SubmissionSentToEIS]].auditEventFor(report(None)).get
 
-      event.auditType       shouldBe "SubmissionForwarded"
-      event.transactionName shouldBe "ENS submission forwarded to EIS"
+        event.auditType       shouldBe "SubmissionForwarded"
+        event.transactionName shouldBe "ENS submission forwarded to EIS"
 
-      Json.toJson(event.detail) shouldBe
-        Json.parse("""
-                     |{
-                     |    "eori" : "eori",
-                     |    "correlationId": "correlationId"
-                     |}
-                     |""".stripMargin)
+        Json.toJson(event.detail) shouldBe
+          Json.parse("""
+                       |{
+                       |    "eori" : "eori",
+                       |    "correlationId": "correlationId"
+                       |}
+                       |""".stripMargin)
+      }
+      "unsuccessfully sent" in {
+        //TODO find out if events to be separate -> we audit on all attempts
+        fail
+      }
     }
   }
 }
