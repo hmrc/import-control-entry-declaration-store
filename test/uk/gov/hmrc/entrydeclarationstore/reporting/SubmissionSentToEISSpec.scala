@@ -18,7 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.reporting
 
 import java.time.Instant
 
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.entrydeclarationstore.connectors.EISSendFailure
 import uk.gov.hmrc.entrydeclarationstore.models.MessageType
 import uk.gov.hmrc.play.test.UnitSpec
@@ -162,9 +162,14 @@ class SubmissionSentToEISSpec extends UnitSpec {
                        |}
                        |""".stripMargin)
       }
-      "unsuccessfully sent" in {
-        //TODO find out if events to be separate -> we audit on all attempts
-        fail
+      "send fails" in {
+        val event = implicitly[EventSources[SubmissionSentToEIS]]
+          .auditEventFor(report(Some(EISSendFailure.ErrorResponse(503))))
+          .get
+
+        event.auditType       shouldBe "SubmissionUndelivered"
+        event.transactionName shouldBe "ENS Submission failed to forward to EIS"
+        event.detail          shouldBe JsObject.empty
       }
     }
   }
