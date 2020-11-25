@@ -40,7 +40,7 @@ class HeaderGeneratorSpec extends WordSpec with Matchers with HeaderNames with M
     "create correct headers with CONTENT_TYPE" in {
       MockAppConfig.eisBearerToken returns authToken
       MockAppConfig.eisEnvironment returns env
-      MockAppConfig.headerWhitelist returns Seq()
+      MockAppConfig.headerAllowlist returns Seq()
       implicit val hc: HeaderCarrier = HeaderCarrier()
       val headers                    = testHeaderGenerator.headersForEIS(submissionId).toMap
 
@@ -55,7 +55,7 @@ class HeaderGeneratorSpec extends WordSpec with Matchers with HeaderNames with M
     "include the Authorization header if it is supplied in AppConf" in {
       MockAppConfig.eisBearerToken returns authToken
       MockAppConfig.eisEnvironment returns env
-      MockAppConfig.headerWhitelist returns Seq()
+      MockAppConfig.headerAllowlist returns Seq()
       implicit val hc: HeaderCarrier = HeaderCarrier()
       val headers                    = testHeaderGenerator.headersForEIS(submissionId).toMap
 
@@ -65,24 +65,24 @@ class HeaderGeneratorSpec extends WordSpec with Matchers with HeaderNames with M
     "not include the Authorization header if it is empty string in AppConf" in {
       MockAppConfig.eisBearerToken returns ""
       MockAppConfig.eisEnvironment returns env
-      MockAppConfig.headerWhitelist returns Seq()
+      MockAppConfig.headerAllowlist returns Seq()
       implicit val hc: HeaderCarrier = HeaderCarrier()
       val headers                    = testHeaderGenerator.headersForEIS(submissionId).toMap
 
       headers.contains(AUTHORIZATION) shouldBe false
     }
 
-    "include whitelisted headers" in {
+    "include allowListed headers" in {
       MockAppConfig.eisBearerToken returns authToken
       MockAppConfig.eisEnvironment returns env
-      MockAppConfig.headerWhitelist returns Seq("latencyInMs", "testHeader") anyNumberOfTimes ()
+      MockAppConfig.headerAllowlist returns Seq("latencyInMs", "testHeader") anyNumberOfTimes ()
       implicit val hc: HeaderCarrier =
-        HeaderCarrier(extraHeaders = Seq("TESTHEADER" -> "test", "blacklistheader" -> "200", "latencyInMs" -> "100"))
+        HeaderCarrier(extraHeaders = Seq("TESTHEADER" -> "test", "denylistheader" -> "200", "latencyInMs" -> "100"))
       val headers = testHeaderGenerator.headersForEIS(submissionId).toMap
 
       headers("latencyInMs")         shouldBe "100"
       headers("TESTHEADER")          shouldBe "test"
-      headers.get("blacklistheader") shouldBe None
+      headers.get("denylistheader") shouldBe None
     }
   }
 }
