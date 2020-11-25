@@ -64,17 +64,13 @@ class EntryDeclarationSubmissionController @Inject()(
     </ns:SuccessResponse>
   // @formatter:on
 
-  val postSubmission: Action[String] = authorisedAction(None).async(parse.tolerantText) { implicit request =>
-    handleSubmission
-  }
+  val postSubmission: Action[String] = handleSubmission(None)
 
   val postSubmissionTestOnly: Action[String] = postSubmission
 
-  def putAmendment(mrn: String): Action[String] = authorisedAction(Some(mrn)).async(parse.tolerantText) { implicit request =>
-    handleSubmission
-  }
+  def putAmendment(mrn: String): Action[String] = handleSubmission(Some(mrn))
 
-  private def handleSubmission(implicit request: UserRequest[String]) = {
+  private def handleSubmission(mrn: Option[String]) = authorisedAction(mrn).async(parse.tolerantText) { implicit request =>
     val receivedDateTime = Instant.now(clock)
 
     service
