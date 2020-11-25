@@ -23,15 +23,3 @@ case class AuditEvent(
   transactionName: String,
   detail: JsObject
 )
-
-object AuditEvent {
-  def auditFailure(isAmendment: Boolean): AuditEvent =
-    if (isAmendment) { AuditEvent("UnsuccessfulAmendment", "Unsuccessful amendment", JsObject.empty) } else {
-      AuditEvent("UnsuccessfulDeclaration", "Unsuccessful declaration", JsObject.empty)
-    }
-
-  def auditSuccess(isAmendment: Boolean): AuditEvent =
-    if (isAmendment) { AuditEvent("SuccessfulAmendment", "Successful amendment", JsObject.empty) } else {
-      AuditEvent("SuccessfulDeclaration", "Successful declaration", JsObject.empty)
-    }
-}
