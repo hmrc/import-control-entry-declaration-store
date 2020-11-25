@@ -18,7 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.services
 
 import org.scalatest.concurrent.ScalaFutures
 import play.api.libs.json.JsString
-import uk.gov.hmrc.entrydeclarationstore.models.SubmissionIdLookupResult
+import uk.gov.hmrc.entrydeclarationstore.models.{EisSubmissionState, SubmissionIdLookupResult}
 import uk.gov.hmrc.entrydeclarationstore.repositories.MockEntryDeclarationRepo
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -32,8 +32,8 @@ class EntryDeclarationRetrievalServiceSpec extends UnitSpec with MockEntryDeclar
   val submissionId      = "submissionId"
   val correlationId     = "correlationId"
   val payload: JsString = JsString("payload")
-  val submissionIdAndReceivedDateTime: SubmissionIdLookupResult =
-    SubmissionIdLookupResult("dateTime", "housekeepingAt", "SubId", Some("eisSentTime"))
+  val submissionIdLookupResult: SubmissionIdLookupResult =
+    SubmissionIdLookupResult("dateTime", "housekeepingAt", "SubId", Some("eisSentTime"), EisSubmissionState.Sent)
 
   "EntryDeclarationRetrievalService" when {
 
@@ -42,11 +42,11 @@ class EntryDeclarationRetrievalServiceSpec extends UnitSpec with MockEntryDeclar
         "return it" in {
           MockEntryDeclarationRepo
             .lookupSubmissionIdAndReceivedDateTime(eori, correlationId)
-            .returns(Future.successful(Some(submissionIdAndReceivedDateTime)))
+            .returns(Future.successful(Some(submissionIdLookupResult)))
 
           entryDeclarationRetrievalService
             .retrieveSubmissionIdAndReceivedDateTime(eori, correlationId)
-            .futureValue shouldBe Some(submissionIdAndReceivedDateTime)
+            .futureValue shouldBe Some(submissionIdLookupResult)
         }
       }
 

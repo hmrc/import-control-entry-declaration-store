@@ -43,7 +43,7 @@ trait MockEntryDeclarationRepo extends MockFactory {
 
     def setSubmissionTime(submissionId: String, time: Instant): CallHandler[Future[Boolean]] =
       (mockEntryDeclarationRepo
-        .setSubmissionTime(_: String, _: Instant)(_: LoggingContext)) expects (submissionId, time, *)
+        .setEisSubmissionSuccess(_: String, _: Instant)(_: LoggingContext)) expects (submissionId, time, *)
 
     def lookupAcceptanceEnrichment(submissionId: String): CallHandler[Future[Option[AcceptanceEnrichment]]] =
       mockEntryDeclarationRepo.lookupAcceptanceEnrichment _ expects submissionId

@@ -167,73 +167,140 @@ class EntryDeclarationRepoISpec
 
     val eisSubmissionDateTime = Instant.now
 
-    "setting the submission time" when {
+    "setting the eis submission as success" when {
+      trait Scenario {
+        await(repository.removeAll())
+        await(repository.save(entryDeclaration313))
+      }
+
       "EntryDeclaration exists" must {
-        "update it and return true" in {
-          await(repository.setSubmissionTime(submissionId313, eisSubmissionDateTime)) shouldBe true
+        "update the submission time, set the state as Sent and return true" in new Scenario {
+          await(repository.setEisSubmissionSuccess(submissionId313, eisSubmissionDateTime)) shouldBe true
 
           lookupEntryDeclaration(submissionId313) shouldBe
-            Some(entryDeclaration313.copy(eisSubmissionDateTime = Some(eisSubmissionDateTime)))
+            Some(
+              entryDeclaration313.copy(
+                eisSubmissionDateTime = Some(eisSubmissionDateTime),
+                eisSubmissionState    = EisSubmissionState.Sent
+              ))
         }
       }
 
       "EntryDeclaration does not exist" must {
-        "return false" in {
-          await(repository.setSubmissionTime("unknownsubmissionId", eisSubmissionDateTime)) shouldBe false
+        "return false" in new Scenario {
+          await(repository.setEisSubmissionSuccess("unknownsubmissionId", eisSubmissionDateTime)) shouldBe false
+        }
+      }
+    }
+
+    "setting the eis submission as failure" when {
+      trait Scenario {
+        await(repository.removeAll())
+        await(repository.save(entryDeclaration313))
+      }
+
+      "EntryDeclaration exists" must {
+        "update the submission time, set the state as Sent and return true" in new Scenario {
+          await(repository.setEisSubmissionFailure(submissionId313)) shouldBe true
+
+          lookupEntryDeclaration(submissionId313) shouldBe
+            Some(
+              entryDeclaration313.copy(
+                eisSubmissionDateTime = None,
+                eisSubmissionState    = EisSubmissionState.Error
+              ))
+        }
+      }
+
+      "EntryDeclaration does not exist" must {
+        "return false" in new Scenario {
+          await(repository.setEisSubmissionSuccess("unknownsubmissionId", eisSubmissionDateTime)) shouldBe false
         }
       }
     }
 
     "looking up a submissionId from an eori & correlationId" when {
+      trait Scenario {
+        await(repository.removeAll())
+        await(repository.save(entryDeclaration313))
+      }
+
       "a document with the eori & correlationId exists in the database" must {
-        "return its submissionId" in {
-          await(repository.lookupSubmissionId(eori, correlationId315)) shouldBe
-            Some(SubmissionIdLookupResult(receivedDateTime.toString, housekeepingAt.toString, submissionId315, None))
+        "return its submissionId" in new Scenario {
+          await(repository.lookupSubmissionId(eori, correlationId313)) shouldBe
+            Some(
+              SubmissionIdLookupResult(
+                receivedDateTime.toString,
+                housekeepingAt.toString,
+                submissionId313,
+                None,
+                EisSubmissionState.NotSent))
         }
-        "return the eisSubmissionDateTime if it exists" in {
+
+        "return the eisSubmissionDateTime and Sent status if set" in new Scenario {
+          await(repository.setEisSubmissionSuccess(submissionId313, eisSubmissionDateTime))
           await(repository.lookupSubmissionId(eori, correlationId313)) shouldBe Some(
             SubmissionIdLookupResult(
               receivedDateTime.toString,
               housekeepingAt.toString,
               submissionId313,
-              Some(eisSubmissionDateTime.toString)))
+              Some(eisSubmissionDateTime.toString),
+              EisSubmissionState.Sent))
+        }
+
+        "return the Error status if set" in new Scenario {
+          await(repository.setEisSubmissionFailure(submissionId313))
+          await(repository.lookupSubmissionId(eori, correlationId313)) shouldBe Some(
+            SubmissionIdLookupResult(
+              receivedDateTime.toString,
+              housekeepingAt.toString,
+              submissionId313,
+              None,
+              EisSubmissionState.Error))
         }
       }
 
       "no document with the eori & correlationId exists in the database" must {
-        "return None" in {
+        "return None" in new Scenario {
           await(repository.lookupSubmissionId("unknownEori", "unknownCorrelationId313")) shouldBe None
         }
       }
 
       // Check find uses both fields...
       "document with the same eori but different correlationId exists in the database" must {
-        "return None" in {
+        "return None" in new Scenario {
           await(repository.lookupSubmissionId(eori, "unknownCorrelationId313")) shouldBe None
         }
       }
 
       "document with the different eori but same correlationId exists in the database" must {
-        "return None" in {
+        "return None" in new Scenario {
           await(repository.lookupSubmissionId("unknown", correlationId313)) shouldBe None
         }
       }
     }
 
     "looking up an acceptance enrichment" when {
+      trait Scenario {
+        await(repository.removeAll())
+        await(repository.save(entryDeclaration313))
+        await(repository.save(entryDeclaration315))
+        await(repository.setEisSubmissionSuccess(submissionId313, eisSubmissionDateTime))
+      }
+
       "a document with the submissionId exists in the database" must {
-        "return the enrichment" in {
+        "return the enrichment" in new Scenario {
           await(repository.lookupAcceptanceEnrichment(submissionId313)) shouldBe
             Some(AcceptanceEnrichment(Some(eisSubmissionDateTime), payload313))
         }
-        "omit the EISSubmissionDateTime if it doesn't exist" in {
+        "omit the EISSubmissionDateTime if it doesn't exist" in new Scenario {
           await(repository.lookupAcceptanceEnrichment(submissionId315)) shouldBe
             Some(AcceptanceEnrichment(None, payload315))
         }
       }
 
       "no document with the submissionId exists in the database" must {
-        "return None" in {
+        "return None" in new Scenario {
           await(repository.lookupAcceptanceEnrichment("unknownsubmissionId313")) shouldBe None
         }
       }
@@ -241,44 +308,52 @@ class EntryDeclarationRepoISpec
 
     "looking up a rejection enrichment" when {
       "an amendment" when {
+        trait Scenario {
+          await(repository.removeAll())
+          await(repository.save(entryDeclaration313))
+        }
+
         "a document with the submissionId exists in the database" must {
           val expected = ResourceUtils.withInputStreamFor("jsons/AmendmentRejectionEnrichmentPayload.json")(Json.parse)
-          "return the enrichment" in {
-            await(repository.removeAll())
-            await(repository.save(entryDeclaration313))
-            await(repository.save(entryDeclaration315))
 
+          "return the enrichment" in new Scenario {
             await(repository.lookupAmendmentRejectionEnrichment(submissionId313)) shouldBe
               Some(AmendmentRejectionEnrichment(None, expected))
           }
-          "include the EISSubmissionDateTime if it exists" in {
-            await(repository.setSubmissionTime(submissionId313, eisSubmissionDateTime))
+          "include the EISSubmissionDateTime if it exists" in new Scenario {
+            await(repository.setEisSubmissionSuccess(submissionId313, eisSubmissionDateTime))
 
             await(repository.lookupAmendmentRejectionEnrichment(submissionId313)) shouldBe
               Some(AmendmentRejectionEnrichment(Some(eisSubmissionDateTime), expected))
           }
         }
         "no document with the submissionId exists in the database" must {
-          "return None" in {
+          "return None" in new Scenario {
             await(repository.lookupAmendmentRejectionEnrichment("unknownsubmissionId313")) shouldBe None
           }
         }
       }
-      "an declaration" when {
+
+      "a declaration" when {
+        trait Scenario {
+          await(repository.removeAll())
+          await(repository.save(entryDeclaration315))
+        }
+
         "a document with the submissionId exists in the database" must {
-          "return the enrichment" in {
+          "return the enrichment" in new Scenario {
             await(repository.lookupDeclarationRejectionEnrichment(submissionId315)) shouldBe
               Some(DeclarationRejectionEnrichment(None))
           }
-          "include the EISSubmissionDateTime if it exists" in {
-            await(repository.setSubmissionTime(submissionId315, eisSubmissionDateTime))
+          "include the EISSubmissionDateTime if it exists" in new Scenario {
+            await(repository.setEisSubmissionSuccess(submissionId315, eisSubmissionDateTime))
 
             await(repository.lookupDeclarationRejectionEnrichment(submissionId315)) shouldBe
               Some(DeclarationRejectionEnrichment(Some(eisSubmissionDateTime)))
           }
         }
         "no document with the submissionId exists in the database" must {
-          "return None" in {
+          "return None" in new Scenario {
             await(repository.lookupDeclarationRejectionEnrichment("unknownsubmissionId313")) shouldBe None
           }
         }
@@ -287,7 +362,12 @@ class EntryDeclarationRepoISpec
 
     "looking up metadata" when {
       "a IE313 submission with the submissionId exists in the database" must {
-        "return the metadata" in {
+        trait Scenario {
+          await(repository.removeAll())
+          await(repository.save(entryDeclaration313))
+        }
+
+        "return the metadata" in new Scenario {
           await(repository.lookupMetadata(submissionId313)) shouldBe
             Right(
               ReplayMetadata(
@@ -305,7 +385,12 @@ class EntryDeclarationRepoISpec
       }
 
       "a IE315 submission with the submissionId exists in the database" must {
-        "return the metadata" in {
+        trait Scenario {
+          await(repository.removeAll())
+          await(repository.save(entryDeclaration315))
+        }
+
+        "return the metadata" in new Scenario {
           await(repository.lookupMetadata(submissionId315)) shouldBe
             Right(
               ReplayMetadata(

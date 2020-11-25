@@ -129,7 +129,7 @@ class EntryDeclarationStoreImpl @Inject()(
           sendSubmissionSendToEISReport(input, eori, Some(EISSendFailure.ExceptionThrown))
       }
       .foreach {
-        case None => entryDeclarationRepo.setSubmissionTime(submissionId, Instant.now(clock))
+        case None => entryDeclarationRepo.setEisSubmissionSuccess(submissionId, Instant.now(clock))
         case _    =>
       }
   }

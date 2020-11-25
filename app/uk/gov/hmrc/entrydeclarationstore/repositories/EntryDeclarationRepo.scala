@@ -44,7 +44,9 @@ trait EntryDeclarationRepo {
 
   def lookupEntryDeclaration(submissionId: String): Future[Option[JsValue]]
 
-  def setSubmissionTime(submissionId: String, time: Instant)(implicit lc: LoggingContext): Future[Boolean]
+  def setEisSubmissionSuccess(submissionId: String, time: Instant)(implicit lc: LoggingContext): Future[Boolean]
+
+  def setEisSubmissionFailure(submissionId: String)(implicit lc: LoggingContext): Future[Boolean]
 
   def lookupAcceptanceEnrichment(submissionId: String): Future[Option[AcceptanceEnrichment]]
 
@@ -101,7 +103,12 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
       .find(
         Json.obj("eori" -> eori, "correlationId" -> correlationId),
         Some(
-          Json.obj("submissionId" -> 1, "receivedDateTime" -> 1, "housekeepingAt" -> 1, "eisSubmissionDateTime" -> 1))
+          Json.obj(
+            "submissionId"          -> 1,
+            "receivedDateTime"      -> 1,
+            "housekeepingAt"        -> 1,
+            "eisSubmissionDateTime" -> 1,
+            "eisSubmissionState"    -> 1))
       )
       .one[JsObject](ReadPreference.primaryPreferred)
       .map(_.map { doc =>
@@ -109,7 +116,8 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
           (doc \ "receivedDateTime").as[PersistableDateTime].toInstant.toString,
           (doc \ "housekeepingAt").as[PersistableDateTime].toInstant.toString,
           (doc \ "submissionId").as[String],
-          (doc \ "eisSubmissionDateTime").asOpt[PersistableDateTime].map(_.toInstant.toString)
+          (doc \ "eisSubmissionDateTime").asOpt[PersistableDateTime].map(_.toInstant.toString),
+          (doc \ "eisSubmissionState").as[EisSubmissionState]
         )
       })
 
@@ -119,17 +127,33 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
       .one[JsObject](ReadPreference.primaryPreferred)
       .map(_.map(doc => (doc \ "payload").as[JsValue]))
 
-  override def setSubmissionTime(submissionId: String, time: Instant)(implicit lc: LoggingContext): Future[Boolean] =
+  override def setEisSubmissionSuccess(submissionId: String, time: Instant)(
+    implicit lc: LoggingContext): Future[Boolean] =
     collection
       .update(ordered = false, WriteConcern.Default)
       .one(
         Json.obj("submissionId" -> submissionId),
-        Json.obj("$set"         -> Json.obj("eisSubmissionDateTime" -> PersistableDateTime(time)))
+        Json.obj("$set" -> Json
+          .obj("eisSubmissionDateTime" -> PersistableDateTime(time), "eisSubmissionState" -> EisSubmissionState.Sent))
       )
       .map(result => result.nModified > 0)
       .recover {
         case e: DatabaseException =>
-          ContextLogger.error(s"Unable to set submission time for entry declaration", e)
+          ContextLogger.error(s"Unable to set eis submission success for entry declaration", e)
+          false
+      }
+
+  override def setEisSubmissionFailure(submissionId: String)(implicit lc: LoggingContext): Future[Boolean] =
+    collection
+      .update(ordered = false, WriteConcern.Default)
+      .one(
+        Json.obj("submissionId" -> submissionId),
+        Json.obj("$set"         -> Json.obj("eisSubmissionState" -> EisSubmissionState.Error))
+      )
+      .map(result => result.nModified > 0)
+      .recover {
+        case e: DatabaseException =>
+          ContextLogger.error(s"Unable to set eis submission failure for entry declaration", e)
           false
       }
 

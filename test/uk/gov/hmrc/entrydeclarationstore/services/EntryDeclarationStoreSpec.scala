@@ -100,7 +100,15 @@ class EntryDeclarationStoreSpec
     </ie:CC313A>
 
   private def declarationWith(mrn: Option[String]) =
-    EntryDeclarationModel(correlationId, submissionId, eori, jsonPayload, mrn, receivedDateTime, None)
+    EntryDeclarationModel(
+      correlationId,
+      submissionId,
+      eori,
+      jsonPayload,
+      mrn,
+      receivedDateTime,
+      None,
+      EisSubmissionState.NotSent)
 
   private def metadataWith(messageType: MessageType, mrn: Option[String]) =
     EntryDeclarationMetadata(submissionId, messageType, transportMode, receivedDateTime, mrn)
@@ -265,7 +273,7 @@ class EntryDeclarationStoreSpec
 
         val setSubmissionTimeComplete: Promise[Unit] = Promise[Unit]
         (stubEntryDeclarationRepo
-          .setSubmissionTime(_: String, _: Instant)(_: LoggingContext))
+          .setEisSubmissionSuccess(_: String, _: Instant)(_: LoggingContext))
           .when(*, *, *)
           .onCall { _ =>
             setSubmissionTimeComplete.success(())

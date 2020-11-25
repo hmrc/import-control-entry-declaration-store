@@ -104,7 +104,7 @@ class SubmissionReplayService @Inject()(
         for {
           replayError <- eisConnector.submitMetadata(replayMetadata.metadata, bypassTrafficSwitch = true)
           eventSent   <- sendEvent(replayMetadata, replayError)
-          _           <- setSubmissionTime(submissionId, replayError)
+          _           <- setSubmissionState(submissionId, replayError)
         } yield {
           if (eventSent) {
             replayError match {
@@ -119,10 +119,10 @@ class SubmissionReplayService @Inject()(
       case None => Future.successful(Right(false))
     }
 
-  private def setSubmissionTime(submissionId: String, eisSendFailure: Option[EISSendFailure])(
+  private def setSubmissionState(submissionId: String, eisSendFailure: Option[EISSendFailure])(
     implicit lc: LoggingContext): Future[Boolean] =
     eisSendFailure match {
-      case None    => entryDeclarationRepo.setSubmissionTime(submissionId, Instant.now(clock))
+      case None    => entryDeclarationRepo.setEisSubmissionSuccess(submissionId, Instant.now(clock))
       case Some(_) => Future.successful(false)
     }
   private def sendEvent(replayMetadata: ReplayMetadata, eisSendFailure: Option[EISSendFailure])(
