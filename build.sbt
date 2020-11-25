@@ -32,6 +32,8 @@ lazy val coverageSettings: Seq[Setting[_]] = {
   )
 }
 
+val silencerVersion = "1.7.1"
+
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(
     play.sbt.PlayScala,
@@ -54,3 +56,10 @@ lazy val microservice = Project(appName, file("."))
   .configs(IntegrationTest)
   .settings(integrationTestSettings(): _*)
   .settings(resourceDirectory in IntegrationTest := baseDirectory.value / "test" / "resources")
+  .settings(
+    scalacOptions += "-P:silencer:pathFilters=views;routes",
+    libraryDependencies ++= Seq(
+      compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
+      "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
+    )
+  )
