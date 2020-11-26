@@ -41,9 +41,13 @@ trait MockEntryDeclarationRepo extends MockFactory {
     def lookupEntryDeclaration(submissionId: String): CallHandler[Future[Option[JsValue]]] =
       mockEntryDeclarationRepo.lookupEntryDeclaration _ expects submissionId
 
-    def setSubmissionTime(submissionId: String, time: Instant): CallHandler[Future[Boolean]] =
+    def setEisSubmissionSuccess(submissionId: String, time: Instant): CallHandler[Future[Boolean]] =
       (mockEntryDeclarationRepo
         .setEisSubmissionSuccess(_: String, _: Instant)(_: LoggingContext)) expects (submissionId, time, *)
+
+    def setEisSubmissionFailure(submissionId: String): CallHandler[Future[Boolean]] =
+      (mockEntryDeclarationRepo
+        .setEisSubmissionFailure(_: String)(_: LoggingContext)) expects (submissionId, *)
 
     def lookupAcceptanceEnrichment(submissionId: String): CallHandler[Future[Option[AcceptanceEnrichment]]] =
       mockEntryDeclarationRepo.lookupAcceptanceEnrichment _ expects submissionId
