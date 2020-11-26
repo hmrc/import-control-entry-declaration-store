@@ -22,8 +22,8 @@ import com.kenshoo.play.metrics.Metrics
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, ControllerComponents, Request}
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
-import uk.gov.hmrc.entrydeclarationstore.models.ErrorWrapper
 import uk.gov.hmrc.entrydeclarationstore.nrs.{NRSMetadata, NRSService, NRSSubmission}
+import uk.gov.hmrc.entrydeclarationstore.reporting.{ReportSender, SubmissionHandled}
 import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, EntryDeclarationStore, MRNMismatchError}
 import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils.StringWithSha256
 import uk.gov.hmrc.entrydeclarationstore.utils.{EoriUtils, EventLogger, Timer}
@@ -33,12 +33,13 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.ExecutionContext
 import scala.xml.Elem
 
-@Singleton()
+@Singleton
 class EntryDeclarationSubmissionController @Inject()(
   cc: ControllerComponents,
   service: EntryDeclarationStore,
   val authService: AuthService,
   nrsService: NRSService,
+  reportSender: ReportSender,
   clock: Clock,
   override val metrics: Metrics
 )(implicit ec: ExecutionContext)
@@ -46,10 +47,17 @@ class EntryDeclarationSubmissionController @Inject()(
     with Timer
     with EventLogger {
 
-  override def eoriCorrectForRequest[A](request: Request[A], eori: String): Boolean =
-    request.body match {
-      case payload: String => eori == EoriUtils.eoriFromXmlString(payload)
-      case _               => false
+  def eoriCorrectForRequest(mrn: Option[String]): (Request[_], String) => Boolean =
+    (request, eori) =>
+      request.body match {
+        case payload: String =>
+          if (EoriUtils.eoriFromXmlString(payload) == eori) { true } else {
+            implicit val lc: LoggingContext           = LoggingContext()
+            implicit val headerCarrier: HeaderCarrier = hc(request)
+            reportSender.sendReport(SubmissionHandled.Failure(mrn.isDefined): SubmissionHandled)
+            false
+          }
+        case _ => false
     }
 
   def xmlSuccessResponse(correlationId: String): Elem =
@@ -63,41 +71,43 @@ class EntryDeclarationSubmissionController @Inject()(
     </ns:SuccessResponse>
   // @formatter:on
 
-  val postSubmission: Action[String] = authorisedAction.async(parse.tolerantText) { implicit request =>
-    handleSubmission(None)
-  }
+  val postSubmission: Action[String] = handleSubmission(None)
 
   val postSubmissionTestOnly: Action[String] = postSubmission
 
-  def putAmendment(mrn: String): Action[String] = authorisedAction.async(parse.tolerantText) { implicit request =>
-    handleSubmission(Some(mrn))
-  }
+  def putAmendment(mrn: String): Action[String] = handleSubmission(Some(mrn))
 
-  private def handleSubmission(mrn: Option[String])(implicit request: UserRequest[String]) = {
-    val receivedDateTime = Instant.now(clock)
+  private def handleSubmission(mrn: Option[String]) =
+    authorisedAction(eoriCorrectForRequest(mrn)).async(parse.tolerantText) { implicit request =>
+      val receivedDateTime = Instant.now(clock)
 
-    service
-      .handleSubmission(request.userDetails.eori, request.body, mrn, receivedDateTime, request.userDetails.clientType)
-      .map {
-        case Left(failure @ ErrorWrapper(err)) =>
-          err match {
-            case _: ValidationErrors => BadRequest(failure.toXml)
-            case MRNMismatchError    => BadRequest(failure.toXml)
-            case _                   => InternalServerError(failure.toXml)
-          }
-        case Right(success) =>
-          submitToNRSIfReqd(request, receivedDateTime)
-          Ok(xmlSuccessResponse(success.correlationId))
-      }
-  }
+      implicit val lc: LoggingContext = LoggingContext()
+
+      service
+        .handleSubmission(request.userDetails.eori, request.body, mrn, receivedDateTime, request.userDetails.clientType)
+        .map {
+          case Left(failure) =>
+            reportSender.sendReport(SubmissionHandled.Failure(mrn.isDefined): SubmissionHandled)
+            failure.error match {
+              case _: ValidationErrors => BadRequest(failure.toXml)
+              case MRNMismatchError    => BadRequest(failure.toXml)
+              case _                   => InternalServerError(failure.toXml)
+            }
+          case Right(success) =>
+            submitToNRSIfReqd(request, receivedDateTime)
+            reportSender.sendReport(SubmissionHandled.Success(mrn.isDefined): SubmissionHandled)
+            Ok(xmlSuccessResponse(success.correlationId))
+        }
+    }
 
   private def submitToNRSIfReqd(request: UserRequest[String], receivedDateTime: Instant)(
     implicit hc: HeaderCarrier): Unit =
     request.userDetails.identityData.foreach { identityData =>
       implicit val lc: LoggingContext = LoggingContext(eori = Some(request.userDetails.eori))
 
-      val submission =
-        NRSSubmission(request.body, NRSMetadata(receivedDateTime, request.userDetails.eori, identityData, request, request.body.calculateSha256))
+      val submission = NRSSubmission(
+        request.body,
+        NRSMetadata(receivedDateTime, request.userDetails.eori, identityData, request, request.body.calculateSha256))
 
       nrsService.submit(submission)
     }

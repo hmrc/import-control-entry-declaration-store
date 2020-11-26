@@ -33,9 +33,7 @@ abstract class AuthorisedController(cc: ControllerComponents) extends BackendCon
 
   val authService: AuthService
 
-  def eoriCorrectForRequest[A](request: Request[A], eori: String): Boolean
-
-  def authorisedAction: ActionBuilder[UserRequest, AnyContent] =
+  def authorisedAction(eoriCorrectForRequest: (Request[_], String) => Boolean): ActionBuilder[UserRequest, AnyContent] =
     new ActionBuilder[UserRequest, AnyContent] {
 
       override def parser: BodyParser[AnyContent] = cc.parsers.defaultBodyParser

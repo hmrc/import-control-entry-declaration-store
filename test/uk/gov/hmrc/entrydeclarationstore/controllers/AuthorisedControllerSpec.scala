@@ -48,11 +48,7 @@ class AuthorisedControllerSpec
   lazy val cc: ControllerComponents = stubControllerComponents()
   lazy val bearerToken              = "Bearer Token"
   def request(body: String): Request[String] =
-    FakeRequest()
-      .withHeaders(
-        HeaderNames.AUTHORIZATION -> bearerToken
-      )
-      .withBody(body)
+    FakeRequest().withHeaders(HeaderNames.AUTHORIZATION -> bearerToken).withBody(body)
 
   val eori                   = "GB123"
   val clientType: ClientType = ClientType.CSP
@@ -64,18 +60,19 @@ class AuthorisedControllerSpec
   val userDetails: UserDetails = UserDetails(eori, clientType, None)
 
   trait Test {
-    val hc: HeaderCarrier = HeaderCarrier()
+    val hc: HeaderCarrier   = HeaderCarrier()
+    val mrn: Option[String] = None
 
     class TestController extends AuthorisedController(cc) with Timer with EventLogger {
       override val authService: AuthService = mockAuthService
 
-      override def eoriCorrectForRequest[A](request: Request[A], eori: String): Boolean =
+      def eoriCorrectForRequest(request: Request[_], eori: String): Boolean =
         request.body match {
           case b: String => b.contains(eori)
           case _         => false
         }
 
-      def action(): Action[String] = authorisedAction.async(parse.tolerantText) { userRequest =>
+      def action(): Action[String] = authorisedAction(eoriCorrectForRequest).async(parse.tolerantText) { userRequest =>
         userRequest.userDetails shouldBe userDetails
         Future.successful(Ok(Json.obj()))
       }
