@@ -20,12 +20,13 @@ import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.entrydeclarationstore.models.{TrafficSwitchState, TrafficSwitchStatus}
 import uk.gov.hmrc.entrydeclarationstore.repositories.TrafficSwitchRepo
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class TrafficSwitchService @Inject()(repo: TrafficSwitchRepo) {
+class TrafficSwitchService @Inject()(repo: TrafficSwitchRepo)(implicit ec: ExecutionContext) {
   def resetTrafficSwitch: Future[Unit]                    = repo.resetToDefault
   def stopTrafficFlow: Future[Unit]                       = repo.setTrafficSwitchState(TrafficSwitchState.NotFlowing)
   def startTrafficFlow: Future[Unit]                      = repo.setTrafficSwitchState(TrafficSwitchState.Flowing)
   def getTrafficSwitchStatus: Future[TrafficSwitchStatus] = repo.getTrafficSwitchStatus
+  def getTrafficSwitchState: Future[TrafficSwitchState]   = getTrafficSwitchStatus.map(_.isTrafficFlowing)
 }

@@ -19,7 +19,7 @@ package uk.gov.hmrc.entrydeclarationstore.trafficswitch
 import scala.concurrent.duration.FiniteDuration
 
 case class TrafficSwitchConfig(
-                                maxFailures: Int,
-                                callTimeout: FiniteDuration,
-                                flowingStateRefreshPeriod: FiniteDuration,
-                                notFlowingStateRefreshPeriod: FiniteDuration)
+  maxFailures: Int,
+  callTimeout: FiniteDuration,
+  flowingStateRefreshPeriod: FiniteDuration,
+  notFlowingStateRefreshPeriod: FiniteDuration)

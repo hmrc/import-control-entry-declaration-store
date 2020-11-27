@@ -22,8 +22,8 @@ import akka.pattern.{CircuitBreakerOpenException, pipe}
 import javax.inject.Inject
 import play.api.libs.concurrent.InjectedActorSupport
 import uk.gov.hmrc.entrydeclarationstore.models.TrafficSwitchState
+import uk.gov.hmrc.entrydeclarationstore.services.TrafficSwitchService
 import uk.gov.hmrc.entrydeclarationstore.trafficswitch.TrafficSwitchActor._
-import uk.gov.hmrc.entrydeclarationstore.repositories.TrafficSwitchRepo
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future, Promise, TimeoutException}
@@ -35,11 +35,11 @@ object TrafficSwitchActor {
     def apply(actorRefFactory: ActorRefFactory): ActorRef
   }
 
-  class FactoryImpl @Inject()(trafficSwitchRepo: TrafficSwitchRepo, trafficSwitchConfig: TrafficSwitchConfig)
+  class FactoryImpl @Inject()(trafficSwitchService: TrafficSwitchService, trafficSwitchConfig: TrafficSwitchConfig)
       extends Factory {
     override def apply(actorRefFactory: ActorRefFactory): ActorRef = {
       val stateActorFactory =
-        TrafficSwitchStateActor.factory(trafficSwitchRepo, trafficSwitchConfig)
+        TrafficSwitchStateActor.factory(trafficSwitchService, trafficSwitchConfig)
 
       actorRefFactory.actorOf(props(trafficSwitchConfig, stateActorFactory))
     }

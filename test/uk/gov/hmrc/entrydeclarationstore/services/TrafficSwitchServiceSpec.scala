@@ -19,10 +19,11 @@ package uk.gov.hmrc.entrydeclarationstore.services
 import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
-import uk.gov.hmrc.entrydeclarationstore.repositories.TrafficSwitchRepo
 import uk.gov.hmrc.entrydeclarationstore.models.{TrafficSwitchState, TrafficSwitchStatus}
+import uk.gov.hmrc.entrydeclarationstore.repositories.TrafficSwitchRepo
 import uk.gov.hmrc.play.test.UnitSpec
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class TrafficSwitchServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures {
@@ -92,6 +93,25 @@ class TrafficSwitchServiceSpec extends UnitSpec with MockitoSugar with ScalaFutu
           val result: Future[TrafficSwitchStatus] = trafficSwitchService.getTrafficSwitchStatus
 
           result.futureValue shouldBe TrafficSwitchStatus(TrafficSwitchState.Flowing, None, None)
+        }
+      }
+    }
+    "retrieving the Traffic Switch State" when {
+      "Not Flowing" must {
+        "return not flowing" in new Setup {
+          setTrafficSwitchStatus(TrafficSwitchState.NotFlowing)
+          val result: Future[TrafficSwitchState] = trafficSwitchService.getTrafficSwitchState
+
+          result.futureValue shouldBe TrafficSwitchState.NotFlowing
+        }
+      }
+
+      "Flowing" must {
+        "return flowing" in new Setup {
+          setTrafficSwitchStatus(TrafficSwitchState.Flowing)
+          val result: Future[TrafficSwitchState] = trafficSwitchService.getTrafficSwitchState
+
+          result.futureValue shouldBe TrafficSwitchState.Flowing
         }
       }
     }

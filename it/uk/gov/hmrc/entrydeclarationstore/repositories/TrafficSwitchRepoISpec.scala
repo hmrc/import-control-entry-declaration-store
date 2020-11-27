@@ -55,12 +55,6 @@ class TrafficSwitchRepoISpec
         }
       }
 
-      "getTrafficSwitchState" must {
-        "return state as flowing" in new Scenario {
-          await(repository.getTrafficSwitchState) shouldBe TrafficSwitchState.Flowing
-        }
-      }
-
       "set flowing" must {
         "do nothing" in new Scenario {
           await(repository.setTrafficSwitchState(TrafficSwitchState.Flowing))
@@ -103,12 +97,6 @@ class TrafficSwitchRepoISpec
           initialStatus.isTrafficFlowing   shouldBe TrafficSwitchState.NotFlowing
           initialStatus.lastTrafficStarted shouldBe empty
           initialStatus.lastTrafficStopped should not be empty
-        }
-      }
-
-      "getTrafficSwitchState" must {
-        "return state as not flowing" in new Scenario {
-          await(repository.getTrafficSwitchState) shouldBe TrafficSwitchState.NotFlowing
         }
       }
 
@@ -155,12 +143,6 @@ class TrafficSwitchRepoISpec
           initialStatus.isTrafficFlowing   shouldBe TrafficSwitchState.Flowing
           initialStatus.lastTrafficStarted should not be empty
           initialStatus.lastTrafficStopped should not be empty
-        }
-      }
-
-      "getTrafficSwitchState" must {
-        "return state as closed" in new Scenario {
-          await(repository.getTrafficSwitchState) shouldBe TrafficSwitchState.Flowing
         }
       }
 

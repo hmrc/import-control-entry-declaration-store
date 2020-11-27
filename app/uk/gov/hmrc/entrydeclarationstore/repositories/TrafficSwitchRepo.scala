@@ -33,8 +33,6 @@ import scala.concurrent.{ExecutionContext, Future}
 trait TrafficSwitchRepo {
   def setTrafficSwitchState(value: TrafficSwitchState): Future[Unit]
 
-  def getTrafficSwitchState: Future[TrafficSwitchState]
-
   def getTrafficSwitchStatus: Future[TrafficSwitchStatus]
 
   def resetToDefault: Future[Unit]
@@ -112,9 +110,6 @@ class TrafficSwitchRepoImpl @Inject()(
       .find(selector = Json.obj("_id" -> singletonId), projection = Option.empty[JsObject])
       .one[TrafficSwitchStatus](ReadPreference.primaryPreferred)
       .map(_.getOrElse(defaultStatus))
-
-  override def getTrafficSwitchState: Future[TrafficSwitchState] =
-    getTrafficSwitchStatus.map(_.isTrafficFlowing)
 
   override def resetToDefault: Future[Unit] = removeAll(WriteConcern.Default).map(_ => ())
 }
