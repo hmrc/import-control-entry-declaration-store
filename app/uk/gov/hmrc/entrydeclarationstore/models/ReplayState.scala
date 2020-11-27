@@ -16,23 +16,18 @@
 
 package uk.gov.hmrc.entrydeclarationstore.models
 
-import org.scalatest.Inspectors
-import play.api.libs.json.{JsString, Json}
-import uk.gov.hmrc.play.test.UnitSpec
+import java.time.Instant
 
-class EisSubmissionStateSpec extends UnitSpec with Inspectors {
-  import EisSubmissionState._
-  "EisSubmissionState" must {
-    "serialize to JSON correctly" in {
-      Json.toJson(Sent)    shouldBe JsString("sent")
-      Json.toJson(NotSent) shouldBe JsString("not-sent")
-      Json.toJson(Error)   shouldBe JsString("error")
-    }
+import play.api.libs.json.{Format, Json}
 
-    "round trip correctly back to the object" in {
-      forAll(List(Sent, NotSent, Error)) { value =>
-        Json.toJson(value).as[EisSubmissionState] shouldBe value
-      }
-    }
-  }
+case class ReplayState(
+  startTime: Instant,
+  endTime: Option[Instant],
+  completed: Boolean,
+  successCount: Int,
+  failureCount: Int,
+  totalToReplay: Int)
+
+object ReplayState {
+  implicit val formats: Format[ReplayState] = Json.format[ReplayState]
 }
