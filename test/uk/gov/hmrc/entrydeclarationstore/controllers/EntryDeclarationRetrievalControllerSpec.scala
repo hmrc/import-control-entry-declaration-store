@@ -23,7 +23,7 @@ import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
-import uk.gov.hmrc.entrydeclarationstore.models.SubmissionIdLookupResult
+import uk.gov.hmrc.entrydeclarationstore.models.{EisSubmissionState, SubmissionIdLookupResult}
 import uk.gov.hmrc.entrydeclarationstore.services.MockEntryDeclarationRetrievalService
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -45,8 +45,8 @@ class EntryDeclarationRetrievalControllerSpec
   val submissionId     = "submissionId"
   val correlationId    = "correlationId"
   val receivedDateTime = "receivedDateTime"
-  val receivedDateTimeAndSubmissionID: SubmissionIdLookupResult =
-    SubmissionIdLookupResult("dateTime", "housekeepingAt", "SubID", Some("eisSentTime"))
+  val submissionIdLookupResult: SubmissionIdLookupResult =
+    SubmissionIdLookupResult("dateTime", "housekeepingAt", "SubID", Some("eisSentTime"), EisSubmissionState.Sent)
 
   val bearerToken: String = "bearerToken"
 
@@ -56,12 +56,12 @@ class EntryDeclarationRetrievalControllerSpec
         "return OK with the submissionId in a JSON object" in {
           MockEntryDeclarationRetrievalService
             .retrieveSubmissionIdAndReceivedDateTime(eori, correlationId)
-            .returns(Future.successful(Some(receivedDateTimeAndSubmissionID)))
+            .returns(Future.successful(Some(submissionIdLookupResult)))
 
           val result: Future[Result] = controller.retrieveDataFromMongo(eori, correlationId)(FakeRequest())
 
           status(result)        shouldBe OK
-          contentAsJson(result) shouldBe Json.toJson(receivedDateTimeAndSubmissionID)
+          contentAsJson(result) shouldBe Json.toJson(submissionIdLookupResult)
           contentType(result)   shouldBe Some(MimeTypes.JSON)
         }
       }

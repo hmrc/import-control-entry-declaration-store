@@ -17,7 +17,7 @@
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
 import play.api.libs.json.{Format, JsValue, Json}
-import uk.gov.hmrc.entrydeclarationstore.models.{EntryDeclarationModel, InstantFormatter}
+import uk.gov.hmrc.entrydeclarationstore.models.{EisSubmissionState, EntryDeclarationModel, InstantFormatter}
 
 import scala.concurrent.duration._
 
@@ -29,7 +29,8 @@ private[repositories] case class EntryDeclarationPersisted(
   payload: JsValue,
   mrn: Option[String],
   receivedDateTime: PersistableDateTime,
-  eisSubmissionDateTime: Option[PersistableDateTime] = None
+  eisSubmissionDateTime: Option[PersistableDateTime],
+  eisSubmissionState: EisSubmissionState
 ) {
   def toEntryDeclarationModel: EntryDeclarationModel =
     EntryDeclarationModel(
@@ -39,7 +40,8 @@ private[repositories] case class EntryDeclarationPersisted(
       payload               = payload,
       mrn                   = mrn,
       receivedDateTime      = receivedDateTime.toInstant,
-      eisSubmissionDateTime = eisSubmissionDateTime.map(_.toInstant)
+      eisSubmissionDateTime = eisSubmissionDateTime.map(_.toInstant),
+      eisSubmissionState    = eisSubmissionState
     )
 }
 
@@ -50,6 +52,7 @@ private[repositories] object EntryDeclarationPersisted extends InstantFormatter 
     import entryDeclarationModel._
 
     val housekeepingAt = PersistableDateTime(receivedDateTime.toEpochMilli + defaultTtl.toMillis)
+
     EntryDeclarationPersisted(
       submissionId          = submissionId,
       eori                  = eori,
@@ -58,7 +61,8 @@ private[repositories] object EntryDeclarationPersisted extends InstantFormatter 
       payload               = payload,
       mrn                   = mrn,
       receivedDateTime      = PersistableDateTime(receivedDateTime),
-      eisSubmissionDateTime = eisSubmissionDateTime.map(PersistableDateTime(_))
+      eisSubmissionDateTime = eisSubmissionDateTime.map(PersistableDateTime(_)),
+      eisSubmissionState    = eisSubmissionState
     )
   }
 }

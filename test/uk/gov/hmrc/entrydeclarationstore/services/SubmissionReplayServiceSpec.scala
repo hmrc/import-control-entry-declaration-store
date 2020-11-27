@@ -76,7 +76,7 @@ class SubmissionReplayServiceSpec
             Right(replayMetadata(subId1)))
           MockEisConnector.submitMetadata(metadata(subId1), bypassTrafficSwitch = true) returns Future.successful(None)
           MockReportSender.sendReport(report) returns Future.successful((): Unit)
-          MockEntryDeclarationRepo.setSubmissionTime(subId1, Instant.now(clock)) returns Future.successful(true)
+          MockEntryDeclarationRepo.setEisSubmissionSuccess(subId1, Instant.now(clock)) returns Future.successful(true)
 
           service.replaySubmissions(submissionIds).futureValue shouldBe Right(ReplayResult(1, 0))
         }
@@ -90,7 +90,8 @@ class SubmissionReplayServiceSpec
             MockEisConnector.submitMetadata(metadata(submissionId), bypassTrafficSwitch = true) returns Future
               .successful(None)
             MockReportSender.sendReport(report) returns Future.successful((): Unit)
-            MockEntryDeclarationRepo.setSubmissionTime(submissionId, Instant.now(clock)) returns Future.successful(true)
+            MockEntryDeclarationRepo.setEisSubmissionSuccess(submissionId, Instant.now(clock)) returns Future
+              .successful(true)
           }
 
           service.replaySubmissions(submissionIds).futureValue shouldBe Right(ReplayResult(2, 0))
@@ -103,7 +104,7 @@ class SubmissionReplayServiceSpec
             Right(replayMetadata(subId1)))
           MockEisConnector.submitMetadata(metadata(subId1), bypassTrafficSwitch = true) returns Future.successful(None)
           MockReportSender.sendReport(report) returns Future.successful((): Unit)
-          MockEntryDeclarationRepo.setSubmissionTime(subId1, Instant.now(clock)) returns Future.successful(false)
+          MockEntryDeclarationRepo.setEisSubmissionSuccess(subId1, Instant.now(clock)) returns Future.successful(false)
 
           service.replaySubmissions(submissionIds).futureValue shouldBe Right(ReplayResult(1, 0))
         }
@@ -166,7 +167,7 @@ class SubmissionReplayServiceSpec
             MockEisConnector.submitMetadata(metadata(subId2), bypassTrafficSwitch = true) returns Future.successful(
               None)
             MockReportSender.sendReport(successReport) returns Future.successful((): Unit)
-            MockEntryDeclarationRepo.setSubmissionTime(subId2, Instant.now(clock)) returns Future.successful(true)
+            MockEntryDeclarationRepo.setEisSubmissionSuccess(subId2, Instant.now(clock)) returns Future.successful(true)
 
             service.replaySubmissions(submissionIds).futureValue shouldBe Right(ReplayResult(1, 1))
           }
@@ -208,7 +209,7 @@ class SubmissionReplayServiceSpec
           MockEntryDeclarationRepo.lookupMetadata(subId1) returns Future.successful(Right(replayMetadata(subId1)))
           MockEisConnector.submitMetadata(metadata(subId1), bypassTrafficSwitch = true) returns Future.successful(None)
           MockReportSender.sendReport(report) returns Future.failed(new IOException)
-          MockEntryDeclarationRepo.setSubmissionTime(subId1, Instant.now(clock)) returns Future.successful(true)
+          MockEntryDeclarationRepo.setEisSubmissionSuccess(subId1, Instant.now(clock)) returns Future.successful(true)
 
           service.replaySubmissions(submissionIds).futureValue shouldBe Left(ReplayError.EISEventError)
         }

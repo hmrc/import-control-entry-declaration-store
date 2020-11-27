@@ -16,20 +16,22 @@
 
 package uk.gov.hmrc.entrydeclarationstore.models
 
-import java.time.Instant
+import cats.Show
+import play.api.libs.json.Format
+import uk.gov.hmrc.entrydeclarationstore.utils.Enums
 
-import play.api.libs.json.{Format, JsValue, Json}
+sealed trait EisSubmissionState
 
-case class EntryDeclarationModel(
-  correlationId: String,
-  submissionId: String,
-  eori: String,
-  payload: JsValue,
-  mrn: Option[String],
-  receivedDateTime: Instant,
-  eisSubmissionDateTime: Option[Instant] = None,
-  eisSubmissionState: EisSubmissionState = EisSubmissionState.NotSent)
+object EisSubmissionState {
+  case object NotSent extends EisSubmissionState
+  case object Sent extends EisSubmissionState
+  case object Error extends EisSubmissionState
 
-object EntryDeclarationModel extends InstantFormatter {
-  implicit val format: Format[EntryDeclarationModel] = Json.format[EntryDeclarationModel]
+  implicit private val show: Show[EisSubmissionState] = Show.show[EisSubmissionState] {
+    case EisSubmissionState.Sent    => "sent"
+    case EisSubmissionState.NotSent => "not-sent"
+    case EisSubmissionState.Error   => "error"
+  }
+
+  implicit val jsonFormat: Format[EisSubmissionState] = Enums.format[EisSubmissionState]
 }

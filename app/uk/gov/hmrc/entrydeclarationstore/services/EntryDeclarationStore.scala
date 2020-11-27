@@ -124,14 +124,16 @@ class EntryDeclarationStoreImpl @Inject()(
 
       eisConnector.submitMetadata(metadata, bypassTrafficSwitch = false)
     }.andThen {
-        case Success(result) => sendSubmissionSendToEISReport(input, eori, result)
-        case Failure(_) =>
-          sendSubmissionSendToEISReport(input, eori, Some(EISSendFailure.ExceptionThrown))
-      }
-      .foreach {
-        case None => entryDeclarationRepo.setSubmissionTime(submissionId, Instant.now(clock))
-        case _    =>
-      }
+      case Success(result) =>
+        sendSubmissionSendToEISReport(input, eori, result)
+        result match {
+          case None    => entryDeclarationRepo.setEisSubmissionSuccess(submissionId, Instant.now(clock))
+          case Some(_) => entryDeclarationRepo.setEisSubmissionFailure(submissionId)
+        }
+      case Failure(NonFatal(_)) =>
+        sendSubmissionSendToEISReport(input, eori, Some(EISSendFailure.ExceptionThrown))
+        entryDeclarationRepo.setEisSubmissionFailure(submissionId)
+    }
   }
 
   private def saveToDatabase(entryDeclaration: EntryDeclarationModel)(

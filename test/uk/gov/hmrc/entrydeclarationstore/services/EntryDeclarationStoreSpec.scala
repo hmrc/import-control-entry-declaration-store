@@ -25,19 +25,17 @@ import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import play.api.libs.json.{JsString, JsValue}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, MockEisConnector}
-import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models._
 import uk.gov.hmrc.entrydeclarationstore.models.json.MockDeclarationToJsonConverter
 import uk.gov.hmrc.entrydeclarationstore.reporting.{ClientType, MockReportSender, SubmissionReceived, SubmissionSentToEIS}
-import uk.gov.hmrc.entrydeclarationstore.repositories.{EntryDeclarationRepo, MockEntryDeclarationRepo}
+import uk.gov.hmrc.entrydeclarationstore.repositories.MockEntryDeclarationRepo
 import uk.gov.hmrc.entrydeclarationstore.utils.{MockIdGenerator, MockMetrics, XmlFormatConfig}
 import uk.gov.hmrc.entrydeclarationstore.validation._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
-import scala.concurrent.{Future, Promise, TimeoutException}
+import scala.concurrent.{Future, Promise}
 import scala.util.control.NoStackTrace
 import scala.xml.NodeSeq
 
@@ -100,7 +98,15 @@ class EntryDeclarationStoreSpec
     </ie:CC313A>
 
   private def declarationWith(mrn: Option[String]) =
-    EntryDeclarationModel(correlationId, submissionId, eori, jsonPayload, mrn, receivedDateTime, None)
+    EntryDeclarationModel(
+      correlationId,
+      submissionId,
+      eori,
+      jsonPayload,
+      mrn,
+      receivedDateTime,
+      None,
+      EisSubmissionState.NotSent)
 
   private def metadataWith(messageType: MessageType, mrn: Option[String]) =
     EntryDeclarationMetadata(submissionId, messageType, transportMode, receivedDateTime, mrn)
@@ -156,9 +162,10 @@ class EntryDeclarationStoreSpec
         .submitMetadata(metadataWith(messageType, mrn), bypassTrafficSwitch = false)
         .returns(Future.successful(None))
 
-      val setSubmissionTimeComplete: Promise[Unit] = Promise[Unit]
-      MockEntryDeclarationRepo.setSubmissionTime(submissionId, now).returns {
-        setSubmissionTimeComplete.success(())
+      // Called async so wait on promise to be sure it's called...
+      val setEisSubmissionStateUpdated: Promise[Unit] = Promise[Unit]
+      MockEntryDeclarationRepo.setEisSubmissionSuccess(submissionId, now).onCall { _ =>
+        setEisSubmissionStateUpdated.success(())
         Future.successful(true)
       }
 
@@ -166,7 +173,7 @@ class EntryDeclarationStoreSpec
         .handleSubmission(eori, payload, mrn, receivedDateTime, clientType)
         .futureValue shouldBe Right(SuccessResponse(correlationId))
 
-      await(setSubmissionTimeComplete)
+      await(setEisSubmissionStateUpdated.future)
     }
 
   "EntryDeclarationStore" when {
@@ -226,30 +233,14 @@ class EntryDeclarationStoreSpec
     }
 
     "EIS submission fails" should {
-      "Not set submission time" in new Test {
-
-        // Need to use _stub_ for repo so that we can check we're not calling setSubmissionTime
-        // (which is called asynchronously)
-        val stubEntryDeclarationRepo: EntryDeclarationRepo = stub[EntryDeclarationRepo]
-        val entryDeclarationStore = new EntryDeclarationStoreImpl(
-          stubEntryDeclarationRepo,
-          mockValidationHandler,
-          mockIdGenerator,
-          mockDeclarationToJsonConverter,
-          mockEisConnector,
-          mockReportSender,
-          clock,
-          mockedMetrics,
-          mockAppConfig
-        )
-
+      "still send report and set failure status in database" in new Test {
         MockAppConfig.validateXMLtoJsonTransformation.returns(false)
         MockValidationHandler.handleValidation(payload, mrn) returns Right(xmlPayload)
         MockDeclarationToJsonConverter.convertToJson(xmlPayload).returns(Right(jsonPayload))
 
-        (stubEntryDeclarationRepo
-          .save(_: EntryDeclarationModel)(_: LoggingContext))
-          .when(declarationWith(mrn), *) returns Future.successful(true)
+        MockEntryDeclarationRepo
+          .saveEntryDeclaration(declarationWith(mrn))
+          .returns(Future.successful(true))
 
         // WLOG...
         val eisSendFailure: EISSendFailure.ExceptionThrown.type = EISSendFailure.ExceptionThrown
@@ -263,23 +254,18 @@ class EntryDeclarationStoreSpec
           .submitMetadata(metadataWith(messageType, mrn), bypassTrafficSwitch = false)
           .returns(Future.successful(Some(eisSendFailure)))
 
-        val setSubmissionTimeComplete: Promise[Unit] = Promise[Unit]
-        (stubEntryDeclarationRepo
-          .setSubmissionTime(_: String, _: Instant)(_: LoggingContext))
-          .when(*, *, *)
-          .onCall { _ =>
-            setSubmissionTimeComplete.success(())
-            Future.successful(true)
-          }
+        // Called async so wait on promise to be sure it's called...
+        val setEisSubmissionStateUpdated: Promise[Unit] = Promise[Unit]
+        MockEntryDeclarationRepo.setEisSubmissionFailure(submissionId).onCall { _ =>
+          setEisSubmissionStateUpdated.success(())
+          Future.successful(true)
+        }
 
         inside(entryDeclarationStore.handleSubmission(eori, payload, mrn, receivedDateTime, clientType).futureValue) {
           case Right(response) => response shouldBe a[SuccessResponse]
         }
 
-        // Expect setSubmissionTime NOT to be called...
-        intercept[TimeoutException] {
-          await(setSubmissionTimeComplete.future)(100.millis)
-        }
+        await(setEisSubmissionStateUpdated.future)
       }
     }
 
@@ -308,7 +294,7 @@ class EntryDeclarationStoreSpec
     }
 
     "EIS submission results in a failed future" should {
-      "still EIS send report" in new Test {
+      "still send report and set failure status in database" in new Test {
         MockAppConfig.validateXMLtoJsonTransformation.returns(false)
         MockValidationHandler.handleValidation(payload, mrn) returns Right(xmlPayload)
         MockDeclarationToJsonConverter.convertToJson(xmlPayload).returns(Right(jsonPayload))
@@ -326,9 +312,18 @@ class EntryDeclarationStoreSpec
           .submitMetadata(metadataWith(messageType, mrn), bypassTrafficSwitch = false)
           .returns(Future.failed(new RuntimeException with NoStackTrace))
 
+        // Called async so wait on promise to be sure it's called...
+        val setEisSubmissionStateUpdated: Promise[Unit] = Promise[Unit]
+        MockEntryDeclarationRepo.setEisSubmissionFailure(submissionId).onCall { _ =>
+          setEisSubmissionStateUpdated.success(())
+          Future.successful(true)
+        }
+
         entryDeclarationStore
           .handleSubmission(eori, payload, mrn, receivedDateTime, clientType)
           .futureValue shouldBe Right(SuccessResponse(correlationId))
+
+        await(setEisSubmissionStateUpdated.future)
       }
     }
   }
