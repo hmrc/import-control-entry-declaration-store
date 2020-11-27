@@ -16,19 +16,19 @@
 
 package uk.gov.hmrc.entrydeclarationstore.reporting
 
-import java.time.Instant
+import java.time.{Duration, Instant}
 
 import play.api.libs.json.Json
 import uk.gov.hmrc.entrydeclarationstore.reporting.audit.AuditEvent
 import uk.gov.hmrc.entrydeclarationstore.reporting.events.Event
 
-case class TrafficStarted(timeTakenMillis: Long)
+case class TrafficStarted(durationStopped: Duration)
 
 object TrafficStarted {
   implicit val eventSources: EventSources[TrafficStarted] = new EventSources[TrafficStarted] {
     override def eventFor(timestamp: Instant, report: TrafficStarted): Option[Event] = None
 
     override def auditEventFor(report: TrafficStarted): Option[AuditEvent] =
-      Some(AuditEvent("TrafficStarted", "Traffic Started", Json.obj("durationStopped" -> report.timeTakenMillis)))
+      Some(AuditEvent("TrafficStarted", "Traffic Started", Json.obj("durationStopped" -> report.durationStopped.toMillis)))
   }
 }

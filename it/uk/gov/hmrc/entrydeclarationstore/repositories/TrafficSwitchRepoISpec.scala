@@ -42,36 +42,38 @@ class TrafficSwitchRepoISpec
 
   lazy val repository: TrafficSwitchRepoImpl = inject[TrafficSwitchRepoImpl]
 
+
   "TrafficSwitchRepo" when {
     "database is empty" when {
 
       trait Scenario {
         await(repository.removeAll())
+        val defaultStatus = TrafficSwitchStatus(TrafficSwitchState.Flowing, None, None)
       }
 
       "getTrafficSwitchStatus" must {
         "return state as flowing" in new Scenario {
-          await(repository.getTrafficSwitchStatus) shouldBe TrafficSwitchStatus(TrafficSwitchState.Flowing, None, None)
+          await(repository.getTrafficSwitchStatus) shouldBe defaultStatus
         }
       }
 
       "set flowing" must {
         "do nothing" in new Scenario {
-          await(repository.setTrafficSwitchState(TrafficSwitchState.Flowing)) shouldBe None
+          await(repository.setTrafficSwitchState(TrafficSwitchState.Flowing)) shouldBe defaultStatus
 
-          await(repository.getTrafficSwitchStatus) shouldBe TrafficSwitchStatus(TrafficSwitchState.Flowing, None, None)
+          await(repository.getTrafficSwitchStatus) shouldBe defaultStatus
         }
       }
 
       "set not flowing" must {
         "set not flowing and update the last traffic stopped date" in new Scenario {
-          val setResult: Option[TrafficSwitchStatus] = await(repository.setTrafficSwitchState(TrafficSwitchState.NotFlowing))
+          val setResult: TrafficSwitchStatus = await(repository.setTrafficSwitchState(TrafficSwitchState.NotFlowing))
 
           val getResult: TrafficSwitchStatus = await(repository.getTrafficSwitchStatus)
           getResult.isTrafficFlowing   shouldBe TrafficSwitchState.NotFlowing
           getResult.lastTrafficStopped should not be empty
           getResult.lastTrafficStarted shouldBe empty
-          setResult shouldBe Some(getResult)
+          setResult shouldBe getResult
         }
       }
 
@@ -103,7 +105,7 @@ class TrafficSwitchRepoISpec
 
       "set not flowing" must {
         "do nothing" in new Scenario {
-          await(repository.setTrafficSwitchState(TrafficSwitchState.NotFlowing)) shouldBe None
+          await(repository.setTrafficSwitchState(TrafficSwitchState.NotFlowing)) shouldBe initialStatus
 
           await(repository.getTrafficSwitchStatus) shouldBe initialStatus
         }
@@ -111,13 +113,13 @@ class TrafficSwitchRepoISpec
 
       "set flowing" must {
         "set flowing and update the last traffic started date" in new Scenario {
-          val setResult = await(repository.setTrafficSwitchState(TrafficSwitchState.Flowing))
+          val setResult: TrafficSwitchStatus = await(repository.setTrafficSwitchState(TrafficSwitchState.Flowing))
 
           val getResult: TrafficSwitchStatus = await(repository.getTrafficSwitchStatus)
           getResult.isTrafficFlowing   shouldBe TrafficSwitchState.Flowing
           getResult.lastTrafficStarted should not be empty
           getResult.lastTrafficStopped shouldBe initialStatus.lastTrafficStopped
-          setResult shouldBe Some(getResult)
+          setResult shouldBe getResult
         }
       }
 
@@ -150,7 +152,7 @@ class TrafficSwitchRepoISpec
 
       "set flowing" must {
         "do nothing" in new Scenario {
-          await(repository.setTrafficSwitchState(TrafficSwitchState.Flowing)) shouldBe None
+          await(repository.setTrafficSwitchState(TrafficSwitchState.Flowing)) shouldBe initialStatus
 
           await(repository.getTrafficSwitchStatus) shouldBe initialStatus
         }
@@ -158,13 +160,13 @@ class TrafficSwitchRepoISpec
 
       "set not flowing" must {
         "set not flowing and update the last traffic stopped date" in new Scenario {
-          val setResult = await(repository.setTrafficSwitchState(TrafficSwitchState.NotFlowing))
+          val setResult: TrafficSwitchStatus = await(repository.setTrafficSwitchState(TrafficSwitchState.NotFlowing))
 
           val getResult: TrafficSwitchStatus = await(repository.getTrafficSwitchStatus)
           getResult.isTrafficFlowing   shouldBe TrafficSwitchState.NotFlowing
           getResult.lastTrafficStarted shouldBe initialStatus.lastTrafficStarted
           getResult.lastTrafficStopped shouldBe >(initialStatus.lastTrafficStopped)
-          setResult shouldBe Some(getResult)
+          setResult shouldBe getResult
         }
       }
 
@@ -191,7 +193,7 @@ class TrafficSwitchRepoISpec
 
       "set not flowing" must {
         "do nothing" in new Scenario {
-          await(repository.setTrafficSwitchState(TrafficSwitchState.NotFlowing)) shouldBe None
+          await(repository.setTrafficSwitchState(TrafficSwitchState.NotFlowing)) shouldBe initialStatus
 
           await(repository.getTrafficSwitchStatus) shouldBe initialStatus
         }
@@ -199,13 +201,13 @@ class TrafficSwitchRepoISpec
 
       "set flowing" must {
         "set flowing and update the last traffic started date" in new Scenario {
-          val setResult = await(repository.setTrafficSwitchState(TrafficSwitchState.Flowing))
+          val setResult: TrafficSwitchStatus = await(repository.setTrafficSwitchState(TrafficSwitchState.Flowing))
 
           val getResult: TrafficSwitchStatus = await(repository.getTrafficSwitchStatus)
           getResult.isTrafficFlowing   shouldBe TrafficSwitchState.Flowing
           getResult.lastTrafficStarted shouldBe >(initialStatus.lastTrafficStarted)
           getResult.lastTrafficStopped shouldBe initialStatus.lastTrafficStopped
-          setResult shouldBe Some(getResult)
+          setResult shouldBe getResult
         }
       }
 

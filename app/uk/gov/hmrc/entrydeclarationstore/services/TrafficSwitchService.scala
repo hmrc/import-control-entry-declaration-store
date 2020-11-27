@@ -32,17 +32,20 @@ class TrafficSwitchService @Inject()(repo: TrafficSwitchRepo, reportSender: Repo
   implicit ec: ExecutionContext) {
   def resetTrafficSwitch: Future[Unit] = repo.resetToDefault
   def stopTrafficFlow: Future[Unit]    = repo.setTrafficSwitchState(TrafficSwitchState.NotFlowing).map(_ => ())
-  def startTrafficFlow: Future[Unit] = {
-    val result = repo.setTrafficSwitchState(TrafficSwitchState.Flowing)
-      result.map(_.map {
+  def startTrafficFlow: Future[Unit] =
+    for {
+      result <- repo.setTrafficSwitchState(TrafficSwitchState.Flowing)
+    } yield {
+      result match {
         case TrafficSwitchStatus(_, Some(timeStopped), Some(timeStarted)) =>
           reportSender.sendReport(
-            TrafficStarted(Duration.between(timeStopped, timeStarted).toMillis)
+            TrafficStarted(Duration.between(timeStopped, timeStarted))
           )(implicitly[EventSources[TrafficStarted]], HeaderCarrier(), LoggingContext())
         case _ =>
-      })
-      result.map(_ => ())
-  }
+      }
+      ()
+    }
+
   def getTrafficSwitchStatus: Future[TrafficSwitchStatus] = repo.getTrafficSwitchStatus
   def getTrafficSwitchState: Future[TrafficSwitchState]   = getTrafficSwitchStatus.map(_.isTrafficFlowing)
 }

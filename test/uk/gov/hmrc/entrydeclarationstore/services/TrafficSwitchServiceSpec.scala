@@ -48,7 +48,7 @@ class TrafficSwitchServiceSpec extends UnitSpec with ScalaFutures with MockRepor
 
     def mockSetTrafficSwitch(
       trafficFlow: TrafficSwitchState,
-      response: Option[TrafficSwitchStatus]): CallHandler[Future[Option[TrafficSwitchStatus]]] =
+      response: TrafficSwitchStatus): CallHandler[Future[TrafficSwitchStatus]] =
       MockTrafficSwitchRepo.setTrafficSwitchState(trafficFlow) returns Future.successful(response)
 
     def mockGetTrafficSwitchStatus(trafficFlow: TrafficSwitchState): CallHandler[Future[TrafficSwitchStatus]] =
@@ -72,7 +72,7 @@ class TrafficSwitchServiceSpec extends UnitSpec with ScalaFutures with MockRepor
     "stopping the flow on the Traffic Switch" should {
       "call the Traffic Switch Repo" in new Setup {
         val state: TrafficSwitchState = TrafficSwitchState.NotFlowing
-        mockSetTrafficSwitch(state, Some(trafficSwitchStatus(state)))
+        mockSetTrafficSwitch(state, trafficSwitchStatus(state))
         val result: Future[Unit] = trafficSwitchService.stopTrafficFlow
 
         result.futureValue shouldBe expectedResult.futureValue
@@ -82,8 +82,8 @@ class TrafficSwitchServiceSpec extends UnitSpec with ScalaFutures with MockRepor
     "starting the flow on the Traffic Switch" should {
       "call the Traffic Switch Repo" in new Setup {
         val state: TrafficSwitchState = TrafficSwitchState.Flowing
-        mockSetTrafficSwitch(state, Some(trafficSwitchStatus(state)))
-        MockReportSender.sendReport(TrafficStarted(timeDifference.toMillis)) returns Future.successful((): Unit) noMoreThanOnce()
+        mockSetTrafficSwitch(state, trafficSwitchStatus(state))
+        MockReportSender.sendReport(TrafficStarted(timeDifference)) returns Future.successful((): Unit) noMoreThanOnce()
         val result: Future[Unit] = trafficSwitchService.startTrafficFlow
 
         result.futureValue shouldBe expectedResult.futureValue
@@ -91,29 +91,29 @@ class TrafficSwitchServiceSpec extends UnitSpec with ScalaFutures with MockRepor
       "not wait for report to send" in new Setup {
         val promise: Promise[Unit] = Promise[Unit]
         val state: TrafficSwitchState = TrafficSwitchState.Flowing
-        mockSetTrafficSwitch(state, Some(trafficSwitchStatus(state)))
-        MockReportSender.sendReport(TrafficStarted(timeDifference.toMillis)) returns promise.future noMoreThanOnce()
+        mockSetTrafficSwitch(state, trafficSwitchStatus(state))
+        MockReportSender.sendReport(TrafficStarted(timeDifference)) returns promise.future noMoreThanOnce()
         val result: Future[Unit] = trafficSwitchService.startTrafficFlow
 
         result.futureValue shouldBe expectedResult.futureValue
       }
       "not send a report if no startTime is returned" in new Setup {
         val state: TrafficSwitchState = TrafficSwitchState.Flowing
-        mockSetTrafficSwitch(state, Some(trafficSwitchStatus(state).copy(lastTrafficStarted = None)))
+        mockSetTrafficSwitch(state, trafficSwitchStatus(state).copy(lastTrafficStarted = None))
         val result: Future[Unit] = trafficSwitchService.startTrafficFlow
 
         result.futureValue shouldBe expectedResult.futureValue
       }
       "not send a report if no stopTime is returned" in new Setup {
         val state: TrafficSwitchState = TrafficSwitchState.Flowing
-        mockSetTrafficSwitch(state, Some(trafficSwitchStatus(state).copy(lastTrafficStopped = None)))
+        mockSetTrafficSwitch(state, trafficSwitchStatus(state).copy(lastTrafficStopped = None))
         val result: Future[Unit] = trafficSwitchService.startTrafficFlow
 
         result.futureValue shouldBe expectedResult.futureValue
       }
-      "not send a report if nothing is returned" in new Setup {
+      "not send a report if no times is returned" in new Setup {
         val state: TrafficSwitchState = TrafficSwitchState.Flowing
-        mockSetTrafficSwitch(state, None)
+        mockSetTrafficSwitch(state, TrafficSwitchStatus(state, None, None))
         val result: Future[Unit] = trafficSwitchService.startTrafficFlow
 
         result.futureValue shouldBe expectedResult.futureValue
