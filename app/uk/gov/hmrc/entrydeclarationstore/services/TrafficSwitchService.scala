@@ -39,6 +39,7 @@ class TrafficSwitchService @Inject()(repo: TrafficSwitchRepo, reportSender: Repo
           reportSender.sendReport(
             TrafficStarted(Duration.between(timeStopped, timeStarted).toMillis)
           )(implicitly[EventSources[TrafficStarted]], HeaderCarrier(), LoggingContext())
+        case _ =>
       })
       result.map(_ => ())
   }

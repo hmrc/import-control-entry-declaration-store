@@ -26,7 +26,7 @@ import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, SuccessResponse}
 import uk.gov.hmrc.entrydeclarationstore.nrs._
-import uk.gov.hmrc.entrydeclarationstore.reporting.{ClientType, MockReportSender, SubmissionHandled}
+import uk.gov.hmrc.entrydeclarationstore.reporting.{ClientType, FailureType, MockReportSender, SubmissionHandled}
 import uk.gov.hmrc.entrydeclarationstore.services._
 import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils.StringWithSha256
 import uk.gov.hmrc.entrydeclarationstore.utils.{MockMetrics, XmlFormatConfig, XmlFormats}
@@ -137,8 +137,8 @@ class EntryDeclarationSubmissionControllerSpec
   </err:ErrorResponse>)
   // @formatter:on
   
-  private def mockReportUnsuccessfulSubmission(isAmendment: Boolean) =
-    MockReportSender.sendReport(SubmissionHandled.Failure(isAmendment)) returns Future.successful(():Unit)
+  private def mockReportUnsuccessfulSubmission(isAmendment: Boolean, failureType: FailureType) =
+    MockReportSender.sendReport(SubmissionHandled.Failure(isAmendment, failureType)) returns Future.successful(():Unit)
 
   private def mockReportSuccessfulSubmission(isAmendment: Boolean) =
     MockReportSender.sendReport(SubmissionHandled.Success(isAmendment)) returns Future.successful(():Unit)
@@ -157,19 +157,19 @@ class EntryDeclarationSubmissionControllerSpec
     "return 403" when {
       "eori does not match that from auth service" in {
         MockAuthService.authenticate returns Some(UserDetails("OTHEREORI", clientType, None))
-        mockReportUnsuccessfulSubmission(mrn.isDefined)
+        mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.EORIMismatchError)
         check(fakeRequest, FORBIDDEN, "FORBIDDEN")
       }
 
       "empty eori element (MesSenMES3) in xml (so that level 2 validation for this is not preempted)" in {
         MockAuthService.authenticate returns Some(UserDetails(eori, clientType, None))
-        mockReportUnsuccessfulSubmission(mrn.isDefined)
+        mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.EORIMismatchError)
         check(FakeRequest().withBody(payloadNoEori.toString), FORBIDDEN, "FORBIDDEN")
       }
 
       "no eori element (MesSenMES3) in xml (so that level 2 validation for this is not preempted)" in {
         MockAuthService.authenticate returns Some(UserDetails(eori, clientType, None))
-        mockReportUnsuccessfulSubmission(mrn.isDefined)
+        mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.EORIMismatchError)
         check(FakeRequest().withBody(payloadBlankEori.toString), FORBIDDEN, "FORBIDDEN")
       }
     }
@@ -195,7 +195,7 @@ class EntryDeclarationSubmissionControllerSpec
     "The submission fails with ValidationErrors" should {
       "Return BAD_REQUEST" in {
         mockFailWithError(validationErrors, None)
-        mockReportUnsuccessfulSubmission(mrn.isDefined)
+        mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.ValidationErrors)
 
         val result: Future[Result] = handler(fakeRequest)
         status(result) shouldBe BAD_REQUEST
@@ -206,7 +206,7 @@ class EntryDeclarationSubmissionControllerSpec
       }
       "Not submit to nrs even if enabled" in {
         mockFailWithError(validationErrors, Some(identityData))
-        mockReportUnsuccessfulSubmission(mrn.isDefined)
+        mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.ValidationErrors)
         MockNRSService.submit(nrsSubmission).never()
 
         await(handler(fakeRequest))
@@ -216,7 +216,7 @@ class EntryDeclarationSubmissionControllerSpec
     "The submission fails with a ServerError (e.g. database problem)" should {
       "Return INTERNAL_SERVER_ERROR" in {
         mockFailWithError(ServerError, None)
-        mockReportUnsuccessfulSubmission(mrn.isDefined)
+        mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.InternalServerError)
 
         val result: Future[Result] = handler(fakeRequest)
         status(result) shouldBe INTERNAL_SERVER_ERROR
@@ -227,7 +227,7 @@ class EntryDeclarationSubmissionControllerSpec
       }
       "Not submit to nrs even if enabled" in {
         mockFailWithError(ServerError, Some(identityData))
-        mockReportUnsuccessfulSubmission(mrn.isDefined)
+        mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.InternalServerError)
         MockNRSService.submit(nrsSubmission).never()
 
         await(handler(fakeRequest))
@@ -318,7 +318,7 @@ class EntryDeclarationSubmissionControllerSpec
     "The MRN in the body doesnt match the MRN in URL" should {
       "Return MRNMismatch Bad Request error" in {
         MockAuthService.authenticate returns Some(UserDetails(eori, clientType, None))
-        mockReportUnsuccessfulSubmission(true)
+        mockReportUnsuccessfulSubmission(isAmendment = true, FailureType.MRNMismatchError)
         MockEntryDeclarationStore
           .handleSubmission(eori, payloadString, Some(mrn), now, clientType)
           .returns(Future.successful(Left(ErrorWrapper(MRNMismatchError))))
@@ -335,7 +335,7 @@ class EntryDeclarationSubmissionControllerSpec
 
       "Not submit to nrs even if enabled" in {
         MockAuthService.authenticate returns Some(UserDetails(eori, clientType, Some(identityData)))
-        mockReportUnsuccessfulSubmission(true)
+        mockReportUnsuccessfulSubmission(isAmendment = true, FailureType.MRNMismatchError)
         MockEntryDeclarationStore
           .handleSubmission(eori, payloadString, Some(mrn), now, clientType)
           .returns(Future.successful(Left(ErrorWrapper(MRNMismatchError))))

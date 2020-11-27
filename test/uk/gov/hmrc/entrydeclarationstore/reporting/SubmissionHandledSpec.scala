@@ -18,14 +18,20 @@ package uk.gov.hmrc.entrydeclarationstore.reporting
 
 import java.time.Instant
 
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.play.test.UnitSpec
 
 class SubmissionHandledSpec extends UnitSpec {
 
-  val now: Instant = Instant.now
+  val now: Instant  = Instant.now
 
-  def checkEvents(submissionHandled: SubmissionHandled, auditType: String, transactionName: String): Unit = {
+  val failureType: FailureType = FailureType.MRNMismatchError
+
+  def checkEvents(
+    submissionHandled: SubmissionHandled,
+    auditType: String,
+    transactionName: String,
+    detail: JsObject): Unit = {
     "have the correct associated JSON event" in {
       val event = implicitly[EventSources[SubmissionHandled]].eventFor(now, submissionHandled)
 
@@ -37,22 +43,30 @@ class SubmissionHandledSpec extends UnitSpec {
 
       event.auditType       shouldBe auditType
       event.transactionName shouldBe transactionName
-      event.detail          shouldBe JsObject.empty
+      event.detail          shouldBe detail
     }
   }
 
   "SubmissionHandled" when {
     "Success(true)" must {
-      checkEvents(SubmissionHandled.Success(true), "SuccessfulAmendment", "Successful amendment")
+      checkEvents(SubmissionHandled.Success(true), "SuccessfulAmendment", "Successful amendment", JsObject.empty)
     }
     "Success(false)" must {
-      checkEvents(SubmissionHandled.Success(false), "SuccessfulDeclaration", "Successful declaration")
+      checkEvents(SubmissionHandled.Success(false), "SuccessfulDeclaration", "Successful declaration", JsObject.empty)
     }
-    "Failure(true)" must {
-      checkEvents(SubmissionHandled.Failure(true), "UnsuccessfulAmendment", "Unsuccessful amendment")
+    "Failure(true, FailureType)" must {
+      checkEvents(
+        SubmissionHandled.Failure(isAmendment = true, failureType),
+        "UnsuccessfulAmendment",
+        "Unsuccessful amendment",
+        Json.obj("failureType" -> failureType))
     }
-    "Failure(false)" must {
-      checkEvents(SubmissionHandled.Failure(false), "UnsuccessfulDeclaration", "Unsuccessful declaration")
+    "Failure(false, FailureType)" must {
+      checkEvents(
+        SubmissionHandled.Failure(isAmendment = false, failureType),
+        "UnsuccessfulDeclaration",
+        "Unsuccessful declaration",
+        Json.obj("failureType" -> failureType))
     }
   }
 }
