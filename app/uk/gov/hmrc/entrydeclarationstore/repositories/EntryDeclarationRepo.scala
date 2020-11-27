@@ -18,7 +18,9 @@ package uk.gov.hmrc.entrydeclarationstore.repositories
 
 import java.time.Instant
 
+import akka.NotUsed
 import akka.stream.Materializer
+import akka.stream.scaladsl.Source
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
@@ -62,6 +64,12 @@ trait EntryDeclarationRepo {
   def setHousekeepingAt(eori: String, correlationId: String, time: Instant): Future[Boolean]
 
   def housekeep(now: Instant): Future[Int]
+
+  def getUndeliveredCounts: Future[JsObject]
+
+  def totalUndeliveredMessages(receivedNoLaterThan: Instant): Future[Int]
+
+  def getUndeliveredSubmissionIds(receivedNoLaterThan: Instant, limit: Option[Int] = None): Source[String, NotUsed]
 }
 
 @Singleton
@@ -265,5 +273,70 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
           .map(_.n)
       }
       .runFold(0)(_ + _)
+  }
+
+  override def getUndeliveredCounts: Future[JsObject] = {
+    import collection.BatchCommands.AggregationFramework
+    import AggregationFramework._
+
+    val matchQuery: collection.PipelineOperator = Match(undeliveredSubmissionsSelector(None))
+
+    val groupTransportType = Group(Json.obj("_id" -> "$payload.itinerary.modeOfTransportAtBorder"))(
+      "transportMode" -> First(JsString("$payload.itinerary.modeOfTransportAtBorder")),
+      "count"         -> Sum(JsNumber(1))
+    )
+
+    val groupIntoArray = Group(Json.obj("_id" -> ""))(
+      "totalCount" -> SumField("count"),
+      "transportCounts" -> Push(
+        Json.obj(
+          "transportMode" -> "$transportMode",
+          "count"         -> "$count"
+        )
+      )
+    )
+
+    val project = Project(
+      Json.obj(
+        "_id" -> 0
+      ))
+
+    val aggregation = collection.aggregateWith[JsObject](explain = false)(_ =>
+      matchQuery -> List(groupTransportType, groupIntoArray, project))
+    aggregation.headOption.map {
+      case Some(results) => results
+      case None          => Json.obj("totalCount" -> JsNumber(0))
+    }
+
+  }
+
+  override def totalUndeliveredMessages(receivedNoLaterThan: Instant): Future[Int] =
+    count(undeliveredSubmissionsSelector(Some(receivedNoLaterThan)))
+
+  override def getUndeliveredSubmissionIds(receivedNoLaterThan: Instant, limit: Option[Int]): Source[String, NotUsed] =
+    collection
+      .find(
+        selector = undeliveredSubmissionsSelector(Some(receivedNoLaterThan)),
+        projection = Some(
+          Json.obj(
+            "_id"          -> 0,
+            "submissionId" -> 1
+          ))
+      )
+      .sort(Json.obj("receivedDateTime" -> -1))
+      .cursor[SubmissionId]()
+      .documentSource(maxDocs = limit.getOrElse(Int.MaxValue))
+      .map(_.value)
+      .mapMaterializedValue(_ => NotUsed)
+
+  private def undeliveredSubmissionsSelector(optEndTime: Option[Instant]) = {
+    val endTimeClause =
+      optEndTime
+        .map(endTime => Json.obj("receivedDateTime" -> Json.obj("$lte" -> PersistableDateTime(endTime))))
+        .getOrElse(JsObject.empty)
+
+    Json.obj(
+      "eisSubmissionState" -> EisSubmissionState.Error
+    ) ++ endTimeClause
   }
 }
