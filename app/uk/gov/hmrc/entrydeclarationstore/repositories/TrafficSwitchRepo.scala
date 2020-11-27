@@ -31,7 +31,7 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import scala.concurrent.{ExecutionContext, Future}
 
 trait TrafficSwitchRepo {
-  def setTrafficSwitchState(value: TrafficSwitchState): Future[Unit]
+  def setTrafficSwitchState(value: TrafficSwitchState): Future[Option[TrafficSwitchStatus]]
 
   def getTrafficSwitchStatus: Future[TrafficSwitchStatus]
 
@@ -54,14 +54,13 @@ class TrafficSwitchRepoImpl @Inject()(
 
   val defaultStatus: TrafficSwitchStatus = TrafficSwitchStatus(TrafficSwitchState.Flowing, None, None)
 
-  override def setTrafficSwitchState(value: TrafficSwitchState): Future[Unit] =
-    for {
+  override def setTrafficSwitchState(value: TrafficSwitchState): Future[Option[TrafficSwitchStatus]] = for {
       _ <- insertDefaultIfEmpty()
-      _ <- value match {
+      result <- value match {
         case TrafficSwitchState.Flowing => startTrafficFlow
         case TrafficSwitchState.NotFlowing => stopTrafficFlow
       }
-    } yield ()
+    } yield result
 
   // Note: Pre Mongo 4.2 we cannot update fields conditionally so we have to split not flowing and flowing methods.
   // We cannot upsert in these (since match failure would attempt insert and violate unique _id).
@@ -78,32 +77,39 @@ class TrafficSwitchRepoImpl @Inject()(
         upsert = true
       )
 
-  private def stopTrafficFlow() =
+  private def stopTrafficFlow =
     collection
-      .update(ordered = false, WriteConcern.Default)
-      .one(
-        q = Json.obj("_id" -> singletonId, "isTrafficFlowing" -> TrafficSwitchState.Flowing),
-        u = Json.obj(
-          "$set" -> Json.obj(
-            "isTrafficFlowing" -> TrafficSwitchState.NotFlowing,
-            "lastTrafficStopped"          -> Instant.now()
-          )
-        )
-      )
+      .findAndUpdate[JsObject, JsObject](
+        selector = Json.obj("_id" -> singletonId, "isTrafficFlowing" -> TrafficSwitchState.Flowing),
+        update =
+          Json.obj("$set" -> Json.obj("isTrafficFlowing" -> TrafficSwitchState.NotFlowing, "lastTrafficStopped" -> Instant.now)),
+        fetchNewObject           = true,
+        upsert                   = false,
+        sort                     = None,
+        fields                   = None,
+        bypassDocumentValidation = false,
+        writeConcern             = WriteConcern.Default,
+        maxTime                  = None,
+        collation                = None,
+        arrayFilters             = Seq.empty
+      ).map(_.result[TrafficSwitchStatus])
 
-  private def startTrafficFlow() =
+  private def startTrafficFlow =
     collection
-      .update(ordered = false, WriteConcern.Default)
-      .one(
-        q = Json.obj("_id" -> singletonId, "isTrafficFlowing" -> TrafficSwitchState.NotFlowing),
-        u = Json.obj(
-          "$set" -> Json.obj(
-            "isTrafficFlowing" -> TrafficSwitchState.Flowing,
-            "lastTrafficStarted"          -> Instant.now()
-          )
-        )
-      )
-      .map(_ => ())
+      .findAndUpdate[JsObject, JsObject](
+        selector = Json.obj("_id" -> singletonId, "isTrafficFlowing" -> TrafficSwitchState.NotFlowing),
+        update =
+          Json.obj("$set" -> Json.obj("isTrafficFlowing" -> TrafficSwitchState.Flowing, "lastTrafficStarted" -> Instant.now)),
+        fetchNewObject           = true,
+        upsert                   = false,
+        sort                     = None,
+        fields                   = None,
+        bypassDocumentValidation = false,
+        writeConcern             = WriteConcern.Default,
+        maxTime                  = None,
+        collation                = None,
+        arrayFilters             = Seq.empty
+      ).map(_.result[TrafficSwitchStatus])
 
   override def getTrafficSwitchStatus: Future[TrafficSwitchStatus] =
     collection
