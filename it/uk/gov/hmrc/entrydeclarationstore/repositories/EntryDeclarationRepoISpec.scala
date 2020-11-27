@@ -200,7 +200,7 @@ class EntryDeclarationRepoISpec
       }
 
       "EntryDeclaration exists" must {
-        "update the submission time, set the state as Sent and return true" in new Scenario {
+        "update the submission time, set the state as Error and return true" in new Scenario {
           await(repository.setEisSubmissionFailure(submissionId313)) shouldBe true
 
           lookupEntryDeclaration(submissionId313) shouldBe
