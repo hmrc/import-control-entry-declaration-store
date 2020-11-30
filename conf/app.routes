@@ -1,23 +1,25 @@
 # microservice specific routes
 
-POST        /                                                       uk.gov.hmrc.entrydeclarationstore.controllers.EntryDeclarationSubmissionController.postSubmission
-PUT         /:mrn                                                   uk.gov.hmrc.entrydeclarationstore.controllers.EntryDeclarationSubmissionController.putAmendment(mrn)
+POST        /                                                                             uk.gov.hmrc.entrydeclarationstore.controllers.EntryDeclarationSubmissionController.postSubmission
+PUT         /:mrn                                                                         uk.gov.hmrc.entrydeclarationstore.controllers.EntryDeclarationSubmissionController.putAmendment(mrn)
 
 # internal routes
-GET         /import-control/entry-summary-declaration/:id           uk.gov.hmrc.entrydeclarationstore.controllers.EntryDeclarationRetrievalController.getSubmission(id)
+GET         /import-control/entry-summary-declaration/:id                                 uk.gov.hmrc.entrydeclarationstore.controllers.EntryDeclarationRetrievalController.getSubmission(id)
 
-GET         /import-control/amendment/acceptance-enrichment/:id     uk.gov.hmrc.entrydeclarationstore.controllers.EnrichmentController.getAcceptanceEnrichment(id)
-GET         /import-control/declaration/acceptance-enrichment/:id   uk.gov.hmrc.entrydeclarationstore.controllers.EnrichmentController.getAcceptanceEnrichment(id)
-GET         /import-control/amendment/rejection-enrichment/:id      uk.gov.hmrc.entrydeclarationstore.controllers.EnrichmentController.getAmendmentRejectionEnrichment(id)
-GET         /import-control/declaration/rejection-enrichment/:id    uk.gov.hmrc.entrydeclarationstore.controllers.EnrichmentController.getDeclarationRejectionEnrichment(id)
+GET         /import-control/amendment/acceptance-enrichment/:id                           uk.gov.hmrc.entrydeclarationstore.controllers.EnrichmentController.getAcceptanceEnrichment(id)
+GET         /import-control/declaration/acceptance-enrichment/:id                         uk.gov.hmrc.entrydeclarationstore.controllers.EnrichmentController.getAcceptanceEnrichment(id)
+GET         /import-control/amendment/rejection-enrichment/:id                            uk.gov.hmrc.entrydeclarationstore.controllers.EnrichmentController.getAmendmentRejectionEnrichment(id)
+GET         /import-control/declaration/rejection-enrichment/:id                          uk.gov.hmrc.entrydeclarationstore.controllers.EnrichmentController.getDeclarationRejectionEnrichment(id)
 
-POST        /import-control/replay-batch                            uk.gov.hmrc.entrydeclarationstore.controllers.SubmissionReplayController.replay
+POST        /import-control/replay-batch                                                  uk.gov.hmrc.entrydeclarationstore.controllers.SubmissionReplayController.replay
 
-GET         /import-control/housekeeping/status                     uk.gov.hmrc.entrydeclarationstore.controllers.HousekeepingController.getStatus
-PUT         /import-control/housekeeping/status                     uk.gov.hmrc.entrydeclarationstore.controllers.HousekeepingController.setStatus
+GET         /import-control/housekeeping/status                                           uk.gov.hmrc.entrydeclarationstore.controllers.HousekeepingController.getStatus
+PUT         /import-control/housekeeping/status                                           uk.gov.hmrc.entrydeclarationstore.controllers.HousekeepingController.setStatus
 
-PUT         /import-control/housekeeping/submissionid/:submissionId                 uk.gov.hmrc.entrydeclarationstore.controllers.HousekeepingController.setShortTtlBySubmissionId(submissionId)
-PUT         /import-control/housekeeping/eoriandcorrelationid/:eori/:correlationId  uk.gov.hmrc.entrydeclarationstore.controllers.HousekeepingController.setShortTtlByEoriAndCorrelationId(eori, correlationId)
+PUT         /import-control/housekeeping/submissionid/:submissionId                       uk.gov.hmrc.entrydeclarationstore.controllers.HousekeepingController.setShortTtlBySubmissionId(submissionId)
+PUT         /import-control/housekeeping/eoriandcorrelationid/:eori/:correlationId        uk.gov.hmrc.entrydeclarationstore.controllers.HousekeepingController.setShortTtlByEoriAndCorrelationId(eori, correlationId)
 
-GET         /import-control/traffic-switch                         uk.gov.hmrc.entrydeclarationstore.controllers.TrafficSwitchController.getStatus
-PUT         /import-control/traffic-switch/start                   uk.gov.hmrc.entrydeclarationstore.controllers.TrafficSwitchController.startTrafficFlow
+GET         /import-control/traffic-switch                                                uk.gov.hmrc.entrydeclarationstore.controllers.TrafficSwitchController.getStatus
+PUT         /import-control/traffic-switch/start                                          uk.gov.hmrc.entrydeclarationstore.controllers.TrafficSwitchController.startTrafficFlow
+
+GET         /import-control/replays/:replayId                                             uk.gov.hmrc.entrydeclarationstore.controllers.ReplayStateRetrievalController.retrieveReplayState(replayId)

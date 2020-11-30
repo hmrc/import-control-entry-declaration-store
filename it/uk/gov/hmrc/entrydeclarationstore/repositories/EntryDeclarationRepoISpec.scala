@@ -18,10 +18,12 @@ package uk.gov.hmrc.entrydeclarationstore.repositories
 import java.time.Instant
 import java.util.UUID
 
+import akka.stream.Materializer
+import akka.stream.scaladsl.Sink
 import org.scalatest.{Assertion, BeforeAndAfterAll, Matchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.libs.json._
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits, Injecting}
 import play.api.{Application, Environment, Mode}
 import reactivemongo.play.json.ImplicitBSONHandlers._
@@ -56,6 +58,8 @@ class EntryDeclarationRepoISpec
       "mongodb.housekeepingBatchSize" -> housekeepingBatchSize
     )
     .build()
+
+  implicit lazy val materializer: Materializer = inject[Materializer]
 
   lazy val repository: EntryDeclarationRepoImpl = inject[EntryDeclarationRepoImpl]
 
@@ -97,13 +101,16 @@ class EntryDeclarationRepoISpec
     receivedDateTime
   )
 
-  def randomEntryDeclaration: EntryDeclarationModel = EntryDeclarationModel(
+  def randomEntryDeclaration(
+    receivedDateTime: Instant              = receivedDateTime,
+    eisSubmissionState: EisSubmissionState = EisSubmissionState.NotSent): EntryDeclarationModel = EntryDeclarationModel(
     UUID.randomUUID.toString,
     UUID.randomUUID.toString,
     eori,
     payload315,
     None,
-    receivedDateTime
+    receivedDateTime   = receivedDateTime,
+    eisSubmissionState = eisSubmissionState
   )
 
   def lookupEntryDeclaration(submissionId: String): Option[EntryDeclarationModel] =
@@ -492,7 +499,7 @@ class EntryDeclarationRepoISpec
       def populateDeclarations(numDecls: Int): Seq[EntryDeclarationModel] = {
         await(repository.removeAll())
         (1 to numDecls).map { _ =>
-          val decl = randomEntryDeclaration
+          val decl = randomEntryDeclaration()
           await(repository.save(decl)) shouldBe true
           decl
         }
@@ -551,6 +558,88 @@ class EntryDeclarationRepoISpec
           decls.take(housekeepingRunLimit) foreach assertHousekept
           decls.drop(housekeepingRunLimit) foreach assertNotHousekept
         }
+      }
+    }
+
+    "there are submissions in error (undelivered)" must {
+
+      trait Scenario {
+        await(repository.removeAll())
+
+        def createSubmissions(number: Int, eisSubmissionState: EisSubmissionState): Seq[EntryDeclarationModel] =
+          (0 until number).map { i =>
+            val declaration =
+              randomEntryDeclaration(receivedDateTime.minusSeconds(i), eisSubmissionState)
+            await(repository.save(declaration))
+            declaration
+          }
+
+        val numErrorDeclarations = 5
+        val errorDeclarationIdsNewestFirst: Seq[String] =
+          createSubmissions(numErrorDeclarations, EisSubmissionState.Error).map(_.submissionId)
+
+        // Queries should ignore these...
+        createSubmissions(5, EisSubmissionState.NotSent)
+        createSubmissions(5, EisSubmissionState.Sent)
+      }
+
+      "count submission in error" in new Scenario {
+        await(repository.totalUndeliveredMessages(receivedNoLaterThan = receivedDateTime)) shouldBe numErrorDeclarations
+      }
+
+      "not count later submission in error than the cut-off" in new Scenario {
+        val numExclude = 2
+        await(repository.totalUndeliveredMessages(receivedNoLaterThan = receivedDateTime.minusSeconds(numExclude))) shouldBe numErrorDeclarations - numExclude
+      }
+
+      "get the submissionIds" in new Scenario {
+        await(
+          repository
+            .getUndeliveredSubmissionIds(receivedNoLaterThan = receivedDateTime)
+            .runWith(Sink.seq)) shouldBe errorDeclarationIdsNewestFirst
+      }
+
+      "not include later submissionIds than the cut-off" in new Scenario {
+        val numExclude = 2
+        await(
+          repository
+            .getUndeliveredSubmissionIds(receivedNoLaterThan = receivedDateTime.minusSeconds(numExclude))
+            .runWith(Sink.seq)) shouldBe errorDeclarationIdsNewestFirst.drop(numExclude)
+      }
+
+      "allow limiting the number of submissionIds (starting at the most recent)" in new Scenario {
+        val limit = 8
+        await(
+          repository
+            .getUndeliveredSubmissionIds(receivedNoLaterThan = receivedDateTime, limit = Some(limit))
+            .runWith(Sink.seq)) shouldBe errorDeclarationIdsNewestFirst.take(limit)
+      }
+
+      "allow geting total counts of submissionIds by transport mode" in new Scenario {
+        await(repository.getUndeliveredCounts) shouldBe
+          Json.obj(
+            "totalCount"      -> numErrorDeclarations,
+            "transportCounts" -> Seq(Json.obj("transportMode" -> "2", "count" -> numErrorDeclarations))
+          )
+      }
+
+      "allow geting total counts of submissionIds by transport mode where multiple transport modes" in new Scenario {
+        await(
+          repository.collection
+            .update(ordered = false)
+            .one(
+              q = Json.obj("submissionId" -> errorDeclarationIdsNewestFirst.head),
+              u = Json.obj("$set"         -> Json.obj("payload.itinerary.modeOfTransportAtBorder" -> "10"))
+            ))
+
+        val result: JsObject = await(repository.getUndeliveredCounts)
+
+        result.value("totalCount") shouldBe JsNumber(numErrorDeclarations)
+
+        val transportCounts: JsArray = result.value("transportCounts").as[JsArray]
+        transportCounts.value.length shouldBe 2
+        transportCounts.value.contains(Json.obj("transportMode" -> "10", "count" -> 1))
+        transportCounts.value.contains(Json.obj("transportMode" -> "2", "count"  -> (numErrorDeclarations - 1)))
       }
     }
   }
