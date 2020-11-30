@@ -37,7 +37,7 @@ class TrafficSwitchService @Inject()(repo: TrafficSwitchRepo, reportSender: Repo
       result <- repo.setTrafficSwitchState(TrafficSwitchState.Flowing)
     } yield {
       result match {
-        case TrafficSwitchStatus(_, Some(timeStopped), Some(timeStarted)) =>
+        case Some(TrafficSwitchStatus(_, Some(timeStopped), Some(timeStarted))) =>
           reportSender.sendReport(
             TrafficStarted(Duration.between(timeStopped, timeStarted))
           )(implicitly[EventSources[TrafficStarted]], HeaderCarrier(), LoggingContext())

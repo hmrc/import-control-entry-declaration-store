@@ -26,7 +26,7 @@ trait MockTrafficSwitchRepo extends MockFactory {
   val mockTrafficSwitchRepo: TrafficSwitchRepo = mock[TrafficSwitchRepo]
 
   object MockTrafficSwitchRepo {
-    def setTrafficSwitchState(value: TrafficSwitchState): CallHandler[Future[TrafficSwitchStatus]] =
+    def setTrafficSwitchState(value: TrafficSwitchState): CallHandler[Future[Option[TrafficSwitchStatus]]] =
       mockTrafficSwitchRepo.setTrafficSwitchState _ expects value
 
     def getTrafficSwitchStatus: CallHandler[Future[TrafficSwitchStatus]] =
