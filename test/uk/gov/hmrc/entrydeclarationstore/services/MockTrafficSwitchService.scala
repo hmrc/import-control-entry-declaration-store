@@ -18,7 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.services
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
-import uk.gov.hmrc.entrydeclarationstore.models.TrafficSwitchStatus
+import uk.gov.hmrc.entrydeclarationstore.models.{TrafficSwitchState, TrafficSwitchStatus}
 
 import scala.concurrent.Future
 
@@ -37,6 +37,9 @@ trait MockTrafficSwitchService extends MockFactory {
 
     def getTrafficSwitchStatus: CallHandler[Future[TrafficSwitchStatus]] =
       mockTrafficSwitchService.getTrafficSwitchStatus _ expects ()
+
+    def getTrafficSwitchState: CallHandler[Future[TrafficSwitchState]] =
+      mockTrafficSwitchService.getTrafficSwitchState _ expects ()
   }
 
 }

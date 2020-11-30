@@ -21,11 +21,10 @@ import akka.pattern.CircuitBreakerOpenException
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import org.scalatest.{BeforeAndAfterAll, Inside}
 import uk.gov.hmrc.entrydeclarationstore.models.TrafficSwitchState
-import uk.gov.hmrc.entrydeclarationstore.repositories.MockTrafficSwitchRepo
 import uk.gov.hmrc.play.test.UnitSpec
 
-import scala.concurrent.{Future, Promise, TimeoutException}
 import scala.concurrent.duration._
+import scala.concurrent.{Future, Promise, TimeoutException}
 import scala.util.Try
 import scala.util.control.NoStackTrace
 
@@ -33,7 +32,6 @@ class TrafficSwitchActorSpec
     extends TestKit(ActorSystem("TrafficSwitchActorSpec"))
     with UnitSpec
     with BeforeAndAfterAll
-    with MockTrafficSwitchRepo
     with ImplicitSender
     with Inside {
   override def afterAll(): Unit = TestKit.shutdownActorSystem(system)
@@ -53,9 +51,7 @@ class TrafficSwitchActorSpec
     val stateProbe: TestProbe = TestProbe()
 
     val trafficSwitchActor: ActorRef =
-      system.actorOf(TrafficSwitchActor.props(config, new TrafficSwitchStateActor.Factory {
-        override def apply(actorRefFactory: ActorRefFactory): ActorRef = stateProbe.ref
-      }))
+      system.actorOf(TrafficSwitchActor.props(config, (_: ActorRefFactory) => stateProbe.ref))
 
     def tripTrafficSwitch(): Unit = {
       for (_ <- 1 to config.maxFailures)

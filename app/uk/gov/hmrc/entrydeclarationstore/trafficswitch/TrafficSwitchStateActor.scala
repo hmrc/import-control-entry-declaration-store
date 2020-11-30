@@ -21,8 +21,8 @@ import akka.event.LoggingReceive
 import akka.pattern.pipe
 import play.api.Logger
 import uk.gov.hmrc.entrydeclarationstore.models.TrafficSwitchState
+import uk.gov.hmrc.entrydeclarationstore.services.TrafficSwitchService
 import uk.gov.hmrc.entrydeclarationstore.trafficswitch.TrafficSwitchStateActor._
-import uk.gov.hmrc.entrydeclarationstore.repositories.TrafficSwitchRepo
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
@@ -31,11 +31,11 @@ import scala.util.{Failure, Success, Try}
 object TrafficSwitchStateActor {
   type Factory = ActorRefFactory => ActorRef
 
-  def factory(trafficSwitchRepo: TrafficSwitchRepo, trafficSwitchConfig: TrafficSwitchConfig): Factory =
-    actorRefFactory => actorRefFactory.actorOf(props(trafficSwitchRepo, trafficSwitchConfig))
+  def factory(trafficSwitchService: TrafficSwitchService, trafficSwitchConfig: TrafficSwitchConfig): Factory =
+    actorRefFactory => actorRefFactory.actorOf(props(trafficSwitchService, trafficSwitchConfig))
 
-  def props(trafficSwitchRepo: TrafficSwitchRepo, trafficSwitchConfig: TrafficSwitchConfig): Props =
-    Props(new TrafficSwitchStateActor(trafficSwitchRepo, trafficSwitchConfig))
+  def props(trafficSwitchService: TrafficSwitchService, trafficSwitchConfig: TrafficSwitchConfig): Props =
+    Props(new TrafficSwitchStateActor(trafficSwitchService, trafficSwitchConfig))
 
   private case object GetStateFromDatabase
 
@@ -48,7 +48,7 @@ object TrafficSwitchStateActor {
   private case class GetStateResult(result: Try[TrafficSwitchState])
 }
 
-class TrafficSwitchStateActor(trafficSwitchRepo: TrafficSwitchRepo, trafficSwitchConfig: TrafficSwitchConfig)
+class TrafficSwitchStateActor(trafficSwitchService: TrafficSwitchService, trafficSwitchConfig: TrafficSwitchConfig)
     extends Actor
     with Timers {
 
@@ -62,8 +62,8 @@ class TrafficSwitchStateActor(trafficSwitchRepo: TrafficSwitchRepo, trafficSwitc
 
   private def running: Receive = LoggingReceive.withLabel(s"running") {
     case UpdateDatabaseToNotFlowing =>
-      trafficSwitchRepo
-        .setTrafficSwitchState(TrafficSwitchState.NotFlowing)
+      trafficSwitchService
+        .stopTrafficFlow
         .map(_ => DatabaseUpdatedToNotFlowing)
         .pipeTo(self)
 
@@ -72,7 +72,7 @@ class TrafficSwitchStateActor(trafficSwitchRepo: TrafficSwitchRepo, trafficSwitc
       context.become(updatingDatabaseToNotFlowing)
 
     case GetStateFromDatabase =>
-      trafficSwitchRepo.getTrafficSwitchState
+      trafficSwitchService.getTrafficSwitchState
         .map(state => GetStateResult(Success(state)))
         .recover { case e => GetStateResult(Failure(e)) }
         .pipeTo(self)

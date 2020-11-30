@@ -35,13 +35,13 @@ import play.api.libs.json.Json
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits, Injecting}
 import play.api.{Application, Environment, Mode}
 import play.mvc.Http.Status._
-import uk.gov.hmrc.entrydeclarationstore.trafficswitch.{TrafficSwitch, TrafficSwitchActor, TrafficSwitchConfig}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.helpers.MockHeaderGenerator
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.{EntryDeclarationMetadata, MessageType, TrafficSwitchState}
-import uk.gov.hmrc.entrydeclarationstore.repositories.MockTrafficSwitchRepo
+import uk.gov.hmrc.entrydeclarationstore.services.MockTrafficSwitchService
+import uk.gov.hmrc.entrydeclarationstore.trafficswitch.{TrafficSwitch, TrafficSwitchActor, TrafficSwitchConfig}
 import uk.gov.hmrc.entrydeclarationstore.utils.MockPagerDutyLogger
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
@@ -57,7 +57,7 @@ class EisConnectorSpec
     with BeforeAndAfterAll
     with GuiceOneAppPerSuite
     with Injecting
-    with MockTrafficSwitchRepo
+    with MockTrafficSwitchService
     with MockAppConfig
     with MockPagerDutyLogger
     with MockHeaderGenerator
@@ -112,11 +112,11 @@ class EisConnectorSpec
     private val trafficSwitchConfig: TrafficSwitchConfig =
       TrafficSwitchConfig(maxCallFailures, callTimeout, 1.minute, 1.minute)
 
-    MockTrafficSwitchRepo.getTrafficSwitchState returns Future.successful(TrafficSwitchState.Flowing) anyNumberOfTimes ()
+    MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(TrafficSwitchState.Flowing) anyNumberOfTimes ()
 
     val trafficSwitch: TrafficSwitch =
       new TrafficSwitch(
-        new TrafficSwitchActor.FactoryImpl(mockTrafficSwitchRepo, trafficSwitchConfig),
+        new TrafficSwitchActor.FactoryImpl(mockTrafficSwitchService, trafficSwitchConfig),
         trafficSwitchConfig)
 
     val connector =
@@ -168,7 +168,7 @@ class EisConnectorSpec
 
       val extraCalls = 10
 
-      MockTrafficSwitchRepo.setTrafficSwitchState(TrafficSwitchState.NotFlowing) returns Future.successful(())
+      MockTrafficSwitchService.stopTrafficFlow returns Future.successful(())
 
       (0 until maxCallFailures) foreach { _ =>
         await(connector.submitMetadata(declarationMetadata, bypassTrafficSwitch = false)) shouldBe Some(expectedError)

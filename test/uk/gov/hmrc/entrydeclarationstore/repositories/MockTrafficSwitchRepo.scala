@@ -18,7 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.repositories
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
-import uk.gov.hmrc.entrydeclarationstore.models.TrafficSwitchState
+import uk.gov.hmrc.entrydeclarationstore.models.{TrafficSwitchState, TrafficSwitchStatus}
 
 import scala.concurrent.Future
 
@@ -26,10 +26,13 @@ trait MockTrafficSwitchRepo extends MockFactory {
   val mockTrafficSwitchRepo: TrafficSwitchRepo = mock[TrafficSwitchRepo]
 
   object MockTrafficSwitchRepo {
-    def getTrafficSwitchState: CallHandler[Future[TrafficSwitchState]] =
-      (mockTrafficSwitchRepo.getTrafficSwitchState _).expects()
+    def setTrafficSwitchState(value: TrafficSwitchState): CallHandler[Future[Option[TrafficSwitchStatus]]] =
+      mockTrafficSwitchRepo.setTrafficSwitchState _ expects value
 
-    def setTrafficSwitchState(trafficFlowing: TrafficSwitchState): CallHandler[Future[Unit]] =
-      (mockTrafficSwitchRepo.setTrafficSwitchState _).expects(trafficFlowing)
+    def getTrafficSwitchStatus: CallHandler[Future[TrafficSwitchStatus]] =
+      mockTrafficSwitchRepo.getTrafficSwitchStatus _ expects ()
+
+    def resetToDefault: CallHandler[Future[Unit]] =
+      mockTrafficSwitchRepo.resetToDefault _ expects ()
   }
 }

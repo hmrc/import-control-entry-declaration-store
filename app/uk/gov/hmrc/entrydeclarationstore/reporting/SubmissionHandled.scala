@@ -17,17 +17,20 @@
 package uk.gov.hmrc.entrydeclarationstore.reporting
 import java.time.Instant
 
-import play.api.libs.json.JsObject
+import play.api.libs.json.{Format, JsObject, Json}
 import uk.gov.hmrc.entrydeclarationstore.reporting.audit.AuditEvent
 import uk.gov.hmrc.entrydeclarationstore.reporting.events.Event
+import uk.gov.hmrc.entrydeclarationstore.utils.Enums
 
 sealed trait SubmissionHandled {
   val isAmendment: Boolean
 }
 
+sealed trait FailureType
+
 object SubmissionHandled {
   case class Success(isAmendment: Boolean) extends SubmissionHandled
-  case class Failure(isAmendment: Boolean) extends SubmissionHandled
+  case class Failure(isAmendment: Boolean, failureType: FailureType) extends SubmissionHandled
 
   implicit val eventSources: EventSources[SubmissionHandled] = new EventSources[SubmissionHandled] {
     override def eventFor(timestamp: Instant, report: SubmissionHandled): Option[Event] = None
@@ -36,10 +39,19 @@ object SubmissionHandled {
       report match {
         case Success(true)  => AuditEvent("SuccessfulAmendment", "Successful amendment", JsObject.empty)
         case Success(false) => AuditEvent("SuccessfulDeclaration", "Successful declaration", JsObject.empty)
-        case Failure(true)  => AuditEvent("UnsuccessfulAmendment", "Unsuccessful amendment", JsObject.empty)
-        case Failure(false) => AuditEvent("UnsuccessfulDeclaration", "Unsuccessful declaration", JsObject.empty)
+        case Failure(true, reason) =>
+          AuditEvent("UnsuccessfulAmendment", "Unsuccessful amendment", Json.obj("failureType" -> reason))
+        case Failure(false, reason) =>
+          AuditEvent("UnsuccessfulDeclaration", "Unsuccessful declaration", Json.obj("failureType" -> reason))
       }
     }
   }
+}
 
+object FailureType {
+  case object MRNMismatchError extends FailureType
+  case object ValidationErrors extends FailureType
+  case object EORIMismatchError extends FailureType
+  case object InternalServerError extends FailureType
+  implicit val formats: Format[FailureType] = Enums.format[FailureType]
 }

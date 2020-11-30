@@ -23,7 +23,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, ControllerComponents, Request}
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.nrs.{NRSMetadata, NRSService, NRSSubmission}
-import uk.gov.hmrc.entrydeclarationstore.reporting.{ReportSender, SubmissionHandled}
+import uk.gov.hmrc.entrydeclarationstore.reporting.{FailureType, ReportSender, SubmissionHandled}
 import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, EntryDeclarationStore, MRNMismatchError}
 import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils.StringWithSha256
 import uk.gov.hmrc.entrydeclarationstore.utils.{EoriUtils, EventLogger, Timer}
@@ -54,7 +54,7 @@ class EntryDeclarationSubmissionController @Inject()(
           if (EoriUtils.eoriFromXmlString(payload) == eori) { true } else {
             implicit val lc: LoggingContext           = LoggingContext()
             implicit val headerCarrier: HeaderCarrier = hc(request)
-            reportSender.sendReport(SubmissionHandled.Failure(mrn.isDefined): SubmissionHandled)
+            reportSender.sendReport(SubmissionHandled.Failure(mrn.isDefined, FailureType.EORIMismatchError): SubmissionHandled)
             false
           }
         case _ => false
@@ -87,11 +87,16 @@ class EntryDeclarationSubmissionController @Inject()(
         .handleSubmission(request.userDetails.eori, request.body, mrn, receivedDateTime, request.userDetails.clientType)
         .map {
           case Left(failure) =>
-            reportSender.sendReport(SubmissionHandled.Failure(mrn.isDefined): SubmissionHandled)
             failure.error match {
-              case _: ValidationErrors => BadRequest(failure.toXml)
-              case MRNMismatchError    => BadRequest(failure.toXml)
-              case _                   => InternalServerError(failure.toXml)
+              case _: ValidationErrors =>
+                reportSender.sendReport(SubmissionHandled.Failure(mrn.isDefined, FailureType.ValidationErrors): SubmissionHandled)
+                BadRequest(failure.toXml)
+              case MRNMismatchError    =>
+                reportSender.sendReport(SubmissionHandled.Failure(mrn.isDefined, FailureType.MRNMismatchError): SubmissionHandled)
+                BadRequest(failure.toXml)
+              case _                   =>
+                reportSender.sendReport(SubmissionHandled.Failure(mrn.isDefined, FailureType.InternalServerError): SubmissionHandled)
+                InternalServerError(failure.toXml)
             }
           case Right(success) =>
             submitToNRSIfReqd(request, receivedDateTime)

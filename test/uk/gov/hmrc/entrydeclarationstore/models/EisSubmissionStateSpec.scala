@@ -18,7 +18,6 @@ package uk.gov.hmrc.entrydeclarationstore.models
 
 import org.scalatest.Inspectors
 import play.api.libs.json.{JsString, Json}
-import uk.gov.hmrc.entrydeclarationstore.utils.{Enum, Foo}
 import uk.gov.hmrc.play.test.UnitSpec
 
 class EisSubmissionStateSpec extends UnitSpec with Inspectors {

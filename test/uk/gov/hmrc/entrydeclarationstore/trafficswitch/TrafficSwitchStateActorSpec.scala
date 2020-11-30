@@ -21,7 +21,7 @@ import akka.testkit.{TestKit, TestProbe}
 import org.scalatest.BeforeAndAfterAll
 import reactivemongo.core.errors.GenericDatabaseException
 import uk.gov.hmrc.entrydeclarationstore.models.TrafficSwitchState
-import uk.gov.hmrc.entrydeclarationstore.repositories.MockTrafficSwitchRepo
+import uk.gov.hmrc.entrydeclarationstore.services.MockTrafficSwitchService
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.duration._
@@ -32,7 +32,7 @@ class TrafficSwitchStateActorSpec
     extends TestKit(ActorSystem("TrafficSwitchStateActorSpec"))
     with UnitSpec
     with BeforeAndAfterAll
-    with MockTrafficSwitchRepo {
+    with MockTrafficSwitchService {
   override def afterAll(): Unit = TestKit.shutdownActorSystem(system)
 
   val shortTime: FiniteDuration = 10.millis
@@ -57,9 +57,9 @@ class TrafficSwitchStateActorSpec
           val parentProbe = TestProbe()
 
           val state = TrafficSwitchState.Flowing
-          MockTrafficSwitchRepo.getTrafficSwitchState returns Future.successful(state)
+          MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(state)
 
-          parentProbe.childActorOf(TrafficSwitchStateActor.props(mockTrafficSwitchRepo, config))
+          parentProbe.childActorOf(TrafficSwitchStateActor.props(mockTrafficSwitchService, config))
 
           parentProbe.expectMsg(TrafficSwitchActor.SetState(state))
         }
@@ -69,9 +69,9 @@ class TrafficSwitchStateActorSpec
         "assume the traffic switch is flowing" in {
           val parentProbe = TestProbe()
 
-          MockTrafficSwitchRepo.getTrafficSwitchState returns Future.failed(dbException)
+          MockTrafficSwitchService.getTrafficSwitchState returns Future.failed(dbException)
 
-          val stateActor = parentProbe.childActorOf(TrafficSwitchStateActor.props(mockTrafficSwitchRepo, config))
+          val stateActor = parentProbe.childActorOf(TrafficSwitchStateActor.props(mockTrafficSwitchService, config))
 
           parentProbe.expectMsg(TrafficSwitchActor.SetState(TrafficSwitchState.Flowing))
 
@@ -81,13 +81,13 @@ class TrafficSwitchStateActorSpec
         "retry at next refresh period" in {
           val parentProbe = TestProbe()
 
-          MockTrafficSwitchRepo.getTrafficSwitchState returns Future.failed(dbException)
+          MockTrafficSwitchService.getTrafficSwitchState returns Future.failed(dbException)
 
           val state = TrafficSwitchState.NotFlowing
-          MockTrafficSwitchRepo.getTrafficSwitchState returns Future.successful(state)
+          MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(state)
 
           val stateActor = parentProbe.childActorOf(
-            TrafficSwitchStateActor.props(mockTrafficSwitchRepo, config.copy(flowingStateRefreshPeriod = shortTime)))
+            TrafficSwitchStateActor.props(mockTrafficSwitchService, config.copy(flowingStateRefreshPeriod = shortTime)))
 
           parentProbe.expectMsg(TrafficSwitchActor.SetState(TrafficSwitchState.Flowing))
           parentProbe.expectMsg(TrafficSwitchActor.SetState(TrafficSwitchState.NotFlowing))
@@ -103,10 +103,10 @@ class TrafficSwitchStateActorSpec
           val parentProbe = TestProbe()
 
           val state = TrafficSwitchState.Flowing
-          MockTrafficSwitchRepo.getTrafficSwitchState returns Future.successful(state) anyNumberOfTimes ()
+          MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(state) anyNumberOfTimes ()
 
           val stateActor = parentProbe.childActorOf(
-            TrafficSwitchStateActor.props(mockTrafficSwitchRepo, config.copy(flowingStateRefreshPeriod = shortTime)))
+            TrafficSwitchStateActor.props(mockTrafficSwitchService, config.copy(flowingStateRefreshPeriod = shortTime)))
 
           parentProbe.expectMsg(TrafficSwitchActor.SetState(state))
           parentProbe.expectMsg(TrafficSwitchActor.SetState(state))
@@ -121,10 +121,10 @@ class TrafficSwitchStateActorSpec
           val parentProbe = TestProbe()
 
           val state = TrafficSwitchState.NotFlowing
-          MockTrafficSwitchRepo.getTrafficSwitchState returns Future.successful(state) anyNumberOfTimes ()
+          MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(state) anyNumberOfTimes ()
 
           val stateActor = parentProbe.childActorOf(
-            TrafficSwitchStateActor.props(mockTrafficSwitchRepo, config.copy(notFlowingStateRefreshPeriod = shortTime)))
+            TrafficSwitchStateActor.props(mockTrafficSwitchService, config.copy(notFlowingStateRefreshPeriod = shortTime)))
 
           parentProbe.expectMsg(TrafficSwitchActor.SetState(state))
           parentProbe.expectMsg(TrafficSwitchActor.SetState(state))
@@ -138,12 +138,12 @@ class TrafficSwitchStateActorSpec
         "update the state in mongo to be not flowing and use notFlowingStateRefreshPeriod" in {
           val parentProbe = TestProbe()
 
-          MockTrafficSwitchRepo.getTrafficSwitchState returns Future.successful(TrafficSwitchState.Flowing)
-          MockTrafficSwitchRepo.setTrafficSwitchState(TrafficSwitchState.NotFlowing) returns Future.successful(())
-          MockTrafficSwitchRepo.getTrafficSwitchState returns Future.successful(TrafficSwitchState.NotFlowing) anyNumberOfTimes ()
+          MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(TrafficSwitchState.Flowing)
+          MockTrafficSwitchService.stopTrafficFlow returns Future.successful(())
+          MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(TrafficSwitchState.NotFlowing) anyNumberOfTimes ()
 
           val stateActor = parentProbe.childActorOf(
-            TrafficSwitchStateActor.props(mockTrafficSwitchRepo, config.copy(notFlowingStateRefreshPeriod = shortTime)))
+            TrafficSwitchStateActor.props(mockTrafficSwitchService, config.copy(notFlowingStateRefreshPeriod = shortTime)))
 
           parentProbe.expectMsg(TrafficSwitchActor.SetState(TrafficSwitchState.Flowing))
 
@@ -160,15 +160,15 @@ class TrafficSwitchStateActorSpec
         "not send further state updates until mongo update has completed" in {
           val parentProbe = TestProbe()
 
-          MockTrafficSwitchRepo.getTrafficSwitchState returns Future.successful(TrafficSwitchState.Flowing)
+          MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(TrafficSwitchState.Flowing)
 
           val updatePromise = Promise[Unit]
-          MockTrafficSwitchRepo.setTrafficSwitchState(TrafficSwitchState.NotFlowing) returns updatePromise.future
-          MockTrafficSwitchRepo.getTrafficSwitchState returns Future.successful(TrafficSwitchState.NotFlowing) anyNumberOfTimes ()
+          MockTrafficSwitchService.stopTrafficFlow returns updatePromise.future
+          MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(TrafficSwitchState.NotFlowing) anyNumberOfTimes ()
 
           val stateActor = parentProbe.childActorOf(
             TrafficSwitchStateActor.props(
-              mockTrafficSwitchRepo,
+              mockTrafficSwitchService,
               config.copy(notFlowingStateRefreshPeriod = shortTime, flowingStateRefreshPeriod = shortTime)))
 
           stateActor ! TrafficSwitchStateActor.UpdateDatabaseToNotFlowing
@@ -200,13 +200,13 @@ class TrafficSwitchStateActorSpec
         "continue to periodically send database state as normal if mongo update fails" in {
           val parentProbe = TestProbe()
 
-          MockTrafficSwitchRepo.getTrafficSwitchState returns Future.successful(TrafficSwitchState.Flowing) anyNumberOfTimes ()
+          MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(TrafficSwitchState.Flowing) anyNumberOfTimes ()
 
-          MockTrafficSwitchRepo.setTrafficSwitchState(TrafficSwitchState.NotFlowing) returns Future.failed(dbException)
+          MockTrafficSwitchService.stopTrafficFlow returns Future.failed(dbException)
 
           val stateActor = parentProbe.childActorOf(
             TrafficSwitchStateActor.props(
-              mockTrafficSwitchRepo,
+              mockTrafficSwitchService,
               config.copy(flowingStateRefreshPeriod = shortTime, notFlowingStateRefreshPeriod = shortTime)))
 
           stateActor ! TrafficSwitchStateActor.UpdateDatabaseToNotFlowing
@@ -227,14 +227,14 @@ class TrafficSwitchStateActorSpec
           val parentProbe = TestProbe()
 
           // To initialize..
-          MockTrafficSwitchRepo.getTrafficSwitchState returns Future.successful(TrafficSwitchState.NotFlowing)
+          MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(TrafficSwitchState.NotFlowing)
 
           // Subsequently fail then recover...
-          MockTrafficSwitchRepo.getTrafficSwitchState returns Future.failed(dbException)
-          MockTrafficSwitchRepo.getTrafficSwitchState returns Future.successful(TrafficSwitchState.Flowing)
+          MockTrafficSwitchService.getTrafficSwitchState returns Future.failed(dbException)
+          MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(TrafficSwitchState.Flowing)
 
           val stateActor = parentProbe.childActorOf(
-            TrafficSwitchStateActor.props(mockTrafficSwitchRepo, config.copy(notFlowingStateRefreshPeriod = shortTime)))
+            TrafficSwitchStateActor.props(mockTrafficSwitchService, config.copy(notFlowingStateRefreshPeriod = shortTime)))
 
           parentProbe.expectMsg(TrafficSwitchActor.SetState(TrafficSwitchState.NotFlowing))
           parentProbe.expectMsg(TrafficSwitchActor.SetState(TrafficSwitchState.Flowing))

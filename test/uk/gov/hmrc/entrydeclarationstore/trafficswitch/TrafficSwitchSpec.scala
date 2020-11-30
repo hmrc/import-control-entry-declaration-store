@@ -27,7 +27,7 @@ import play.api.test.Injecting
 import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.entrydeclarationstore.models.TrafficSwitchState
-import uk.gov.hmrc.entrydeclarationstore.repositories.MockTrafficSwitchRepo
+import uk.gov.hmrc.entrydeclarationstore.services.MockTrafficSwitchService
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -40,7 +40,7 @@ class TrafficSwitchSpec
     extends UnitSpec
     with ScalaFutures
     with Eventually
-    with MockTrafficSwitchRepo
+    with MockTrafficSwitchService
     with GuiceOneAppPerSuite
     with Injecting {
 
@@ -73,16 +73,16 @@ class TrafficSwitchSpec
     def throwException: Future[Nothing] = Future.failed(e)
 
     def trafficSwitch(trafficSwitchConfig: TrafficSwitchConfig = defaultConfig): TrafficSwitch = {
-      MockTrafficSwitchRepo.getTrafficSwitchState returns TrafficSwitchState.Flowing noMoreThanOnce ()
+      MockTrafficSwitchService.getTrafficSwitchState returns TrafficSwitchState.Flowing noMoreThanOnce ()
       new TrafficSwitch(trafficSwitchActorFactory(trafficSwitchConfig), trafficSwitchConfig)
     }
 
     def trafficSwitchActorFactory(trafficSwitchConfig: TrafficSwitchConfig = defaultConfig) =
-      new TrafficSwitchActor.FactoryImpl(mockTrafficSwitchRepo, trafficSwitchConfig)
+      new TrafficSwitchActor.FactoryImpl(mockTrafficSwitchService, trafficSwitchConfig)
 
     def trafficSwitchNotFlowing(trafficSwitchConfig: TrafficSwitchConfig = defaultConfig): TrafficSwitch = {
       val ts: TrafficSwitch = trafficSwitch(trafficSwitchConfig)
-      MockTrafficSwitchRepo.setTrafficSwitchState(TrafficSwitchState.NotFlowing) returns unit
+      MockTrafficSwitchService.stopTrafficFlow returns unit
 
       for (_ <- 1 to maxFailures) {
         ts.withTrafficSwitch(throwException, exceptionAsFailure).failed.futureValue shouldBe e
@@ -119,7 +119,7 @@ class TrafficSwitchSpec
       "set state to not flowing after max failures" in new Test {
         val ts: TrafficSwitch = trafficSwitch()
 
-        MockTrafficSwitchRepo.setTrafficSwitchState(TrafficSwitchState.NotFlowing) returns unit
+        MockTrafficSwitchService.stopTrafficFlow returns unit
 
         for (_ <- 1 to maxFailures)
           ts.withTrafficSwitch(throwException, exceptionAsFailure).failed.futureValue shouldBe e
@@ -132,7 +132,7 @@ class TrafficSwitchSpec
 
         val promise: Promise[String] = Promise[String]
 
-        MockTrafficSwitchRepo.setTrafficSwitchState(TrafficSwitchState.NotFlowing) returns unit
+        MockTrafficSwitchService.stopTrafficFlow returns unit
 
         val results: Seq[Throwable] = Future
           .sequence((1 to maxFailures)
@@ -146,7 +146,7 @@ class TrafficSwitchSpec
 
       "failsafe timeout (ask timeout) if repo takes ages to initialize traffic switch actor" in new Test {
         val promise: Promise[TrafficSwitchState] = Promise[TrafficSwitchState]
-        MockTrafficSwitchRepo.getTrafficSwitchState returns promise.future anyNumberOfTimes ()
+        MockTrafficSwitchService.getTrafficSwitchState returns promise.future anyNumberOfTimes ()
 
         val ts = new TrafficSwitch(trafficSwitchActorFactory(shortTimeoutConfig), shortTimeoutConfig)
 
@@ -154,7 +154,7 @@ class TrafficSwitchSpec
       }
 
       "continue to work when exception actually thrown by call" in new Test {
-        MockTrafficSwitchRepo.getTrafficSwitchState returns TrafficSwitchState.Flowing anyNumberOfTimes ()
+        MockTrafficSwitchService.getTrafficSwitchState returns TrafficSwitchState.Flowing anyNumberOfTimes ()
         val ts = new TrafficSwitch(trafficSwitchActorFactory(shortTimeoutConfig), shortTimeoutConfig)
 
         // Will probably fail with a timeout - the crucial thing is that CB will continue to accept calls
@@ -180,7 +180,7 @@ class TrafficSwitchSpec
       "start flowing when the state is manually changed to flowing" in new Test {
         val ts: TrafficSwitch = trafficSwitchNotFlowing(defaultConfig.copy(notFlowingStateRefreshPeriod = 50.millis))
 
-        MockTrafficSwitchRepo.getTrafficSwitchState returns TrafficSwitchState.Flowing anyNumberOfTimes ()
+        MockTrafficSwitchService.getTrafficSwitchState returns TrafficSwitchState.Flowing anyNumberOfTimes ()
 
         eventually {
           ts.withTrafficSwitch(sayHi, exceptionAsFailure).futureValue shouldBe "hi"

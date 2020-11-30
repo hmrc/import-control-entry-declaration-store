@@ -16,16 +16,36 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
-import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.entrydeclarationstore.models.{TrafficSwitchState, TrafficSwitchStatus}
-import uk.gov.hmrc.entrydeclarationstore.repositories.TrafficSwitchRepo
+import java.time.Duration
 
-import scala.concurrent.Future
+import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
+import uk.gov.hmrc.entrydeclarationstore.models.{TrafficSwitchState, TrafficSwitchStatus}
+import uk.gov.hmrc.entrydeclarationstore.reporting.{EventSources, ReportSender, TrafficStarted}
+import uk.gov.hmrc.entrydeclarationstore.repositories.TrafficSwitchRepo
+import uk.gov.hmrc.http.HeaderCarrier
+
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class TrafficSwitchService @Inject()(repo: TrafficSwitchRepo) {
-  def resetTrafficSwitch: Future[Unit]                    = repo.resetToDefault
-  def stopTrafficFlow: Future[Unit]                       = repo.setTrafficSwitchState(TrafficSwitchState.NotFlowing)
-  def startTrafficFlow: Future[Unit]                      = repo.setTrafficSwitchState(TrafficSwitchState.Flowing)
+class TrafficSwitchService @Inject()(repo: TrafficSwitchRepo, reportSender: ReportSender)(
+  implicit ec: ExecutionContext) {
+  def resetTrafficSwitch: Future[Unit] = repo.resetToDefault
+  def stopTrafficFlow: Future[Unit]    = repo.setTrafficSwitchState(TrafficSwitchState.NotFlowing).map(_ => ())
+  def startTrafficFlow: Future[Unit] =
+    for {
+      result <- repo.setTrafficSwitchState(TrafficSwitchState.Flowing)
+    } yield {
+      result match {
+        case Some(TrafficSwitchStatus(_, Some(timeStopped), Some(timeStarted))) =>
+          reportSender.sendReport(
+            TrafficStarted(Duration.between(timeStopped, timeStarted))
+          )(implicitly[EventSources[TrafficStarted]], HeaderCarrier(), LoggingContext())
+        case _ =>
+      }
+      ()
+    }
+
   def getTrafficSwitchStatus: Future[TrafficSwitchStatus] = repo.getTrafficSwitchStatus
+  def getTrafficSwitchState: Future[TrafficSwitchState]   = getTrafficSwitchStatus.map(_.isTrafficFlowing)
 }
