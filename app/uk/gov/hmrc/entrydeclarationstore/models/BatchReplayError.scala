@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.entrydeclarationstore.models
 
-sealed trait ReplayError
+sealed trait BatchReplayError
 
-object ReplayError {
-  case object MetadataRetrievalError extends ReplayError
-  case object EISSubmitError extends ReplayError
-  case object EISEventError extends ReplayError
+object BatchReplayError {
+  case object MetadataRetrievalError extends BatchReplayError
+  case object EISSubmitError extends BatchReplayError
+  case object EISEventError extends BatchReplayError
 }

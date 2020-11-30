@@ -25,7 +25,7 @@ import play.api.http.Status.BAD_REQUEST
 import reactivemongo.core.errors.ReactiveMongoException
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, EisConnector}
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
-import uk.gov.hmrc.entrydeclarationstore.models.{ReplayError, ReplayMetadata, ReplayResult}
+import uk.gov.hmrc.entrydeclarationstore.models.{BatchReplayError, BatchReplayResult, ReplayMetadata}
 import uk.gov.hmrc.entrydeclarationstore.reporting.{ReportSender, SubmissionSentToEIS}
 import uk.gov.hmrc.entrydeclarationstore.repositories.{EntryDeclarationRepo, MetadataLookupError}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -40,11 +40,11 @@ class SubmissionReplayService @Inject()(
   reportSender: ReportSender,
   clock: Clock)(implicit ec: ExecutionContext) {
 
-  case class Abort(error: ReplayError)
+  case class Abort(error: BatchReplayError)
   case class Counts(successCount: Int, failureCount: Int)
 
   def replaySubmissions(submissionIds: Seq[String])(
-    implicit hc: HeaderCarrier): Future[Either[ReplayError, ReplayResult]] =
+    implicit hc: HeaderCarrier): Future[Either[BatchReplayError, BatchReplayResult]] =
     submissionIds
       .foldLeft(Future.successful(Counts(0, 0).asRight[Abort]): Future[Either[Abort, Counts]]) { (acc, submissionId) =>
         acc.flatMap {
@@ -53,11 +53,11 @@ class SubmissionReplayService @Inject()(
         }
       }
       .map {
-        case Right(counts) => Right(ReplayResult(counts.successCount, counts.failureCount))
+        case Right(counts) => Right(BatchReplayResult(counts.successCount, counts.failureCount))
         case Left(abort)   => Left(abort.error)
       }
       .recover {
-        case _: ReactiveMongoException => Left(ReplayError.MetadataRetrievalError)
+        case _: ReactiveMongoException => Left(BatchReplayError.MetadataRetrievalError)
       }
 
   private def replaySubmissionId(submissionId: String, state: Counts)(
@@ -88,7 +88,7 @@ class SubmissionReplayService @Inject()(
         case Left(MetadataLookupError.DataFormatError)  => Right(None)
       }
       .recover {
-        case _: ReactiveMongoException => Left(Abort(ReplayError.MetadataRetrievalError))
+        case _: ReactiveMongoException => Left(Abort(BatchReplayError.MetadataRetrievalError))
       }
   }
 
@@ -110,10 +110,10 @@ class SubmissionReplayService @Inject()(
             replayError match {
               case None                                            => Right(true)
               case Some(EISSendFailure.ErrorResponse(BAD_REQUEST)) => Right(false)
-              case Some(_)                                         => Left(Abort(ReplayError.EISSubmitError))
+              case Some(_)                                         => Left(Abort(BatchReplayError.EISSubmitError))
             }
           } else {
-            Left(Abort(ReplayError.EISEventError))
+            Left(Abort(BatchReplayError.EISEventError))
           }
         }
       case None => Future.successful(Right(false))

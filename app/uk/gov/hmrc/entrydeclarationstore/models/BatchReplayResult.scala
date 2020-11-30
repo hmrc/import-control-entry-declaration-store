@@ -14,22 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.entrydeclarationstore.utils
+package uk.gov.hmrc.entrydeclarationstore.models
 
-import org.scalamock.handlers.CallHandler
-import org.scalamock.scalatest.MockFactory
+import play.api.libs.json.{Json, Writes}
 
-trait MockIdGenerator extends MockFactory {
-  val mockIdGenerator: IdGenerator = mock[IdGenerator]
-
-  object MockIdGenerator {
-    def generateCorrelationId: CallHandler[String] =
-      mockIdGenerator.generateCorrelationId _ expects ()
-
-    def generateSubmissionId: CallHandler[String] =
-      mockIdGenerator.generateSubmissionId _ expects ()
-
-    def generateUuid(): CallHandler[String] =
-      (mockIdGenerator.generateUuid _).expects()
-  }
+case class BatchReplayResult(
+  successCount: Int,
+  failureCount: Int
+)
+object BatchReplayResult {
+  implicit val writes: Writes[BatchReplayResult] = Json.writes[BatchReplayResult]
 }

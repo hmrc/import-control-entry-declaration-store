@@ -31,10 +31,10 @@ trait MockReplayStateRepo extends MockFactory {
     def lookupState(replayId: String): CallHandler[Future[Option[ReplayState]]] =
       (mockReplayStateRepo.lookupState _).expects(replayId)
 
-    def setState(replayId: String, replayState: ReplayState): CallHandler[Future[Boolean]] =
+    def setState(replayId: String, replayState: ReplayState): CallHandler[Future[Unit]] =
       (mockReplayStateRepo.setState(_: String, _: ReplayState)).expects(replayId, replayState)
 
-    def insert(replayId: String, totalToReplay: Int, startTime: Instant): CallHandler[Future[Boolean]] =
+    def insert(replayId: String, totalToReplay: Int, startTime: Instant): CallHandler[Future[Unit]] =
       (mockReplayStateRepo.insert(_: String, _: Int, _: Instant)).expects(replayId, totalToReplay, startTime)
 
     def incrementCounts(replayId: String, successesToAdd: Int, failuresToAdd: Int): CallHandler[Future[Boolean]] =

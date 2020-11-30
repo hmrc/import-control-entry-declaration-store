@@ -94,6 +94,8 @@ trait AppConfig {
   def nrsEnabled: Boolean
 
   def newSSEnrolmentEnabled: Boolean
+
+  def replayBatchSize: Int
 }
 
 @Singleton
@@ -157,10 +159,10 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
 
   lazy val eisTrafficSwitchConfig: TrafficSwitchConfig = {
     TrafficSwitchConfig(
-      maxFailures              = eisConfig.get[Int]("trafficSwitch.maxFailures"),
-      callTimeout              = getFiniteDuration(eisConfig, "trafficSwitch.callTimeout"),
-      flowingStateRefreshPeriod = getFiniteDuration(eisConfig, "trafficSwitch.flowingStateRefreshPeriod"),
-      notFlowingStateRefreshPeriod   = getFiniteDuration(eisConfig, "trafficSwitch.notFlowingStateRefreshPeriod")
+      maxFailures                  = eisConfig.get[Int]("trafficSwitch.maxFailures"),
+      callTimeout                  = getFiniteDuration(eisConfig, "trafficSwitch.callTimeout"),
+      flowingStateRefreshPeriod    = getFiniteDuration(eisConfig, "trafficSwitch.flowingStateRefreshPeriod"),
+      notFlowingStateRefreshPeriod = getFiniteDuration(eisConfig, "trafficSwitch.notFlowingStateRefreshPeriod")
     )
   }
 
@@ -192,4 +194,6 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
   lazy val nrsEnabled: Boolean = nrsConfig.getOptional[Boolean]("enabled").getOrElse(true)
 
   lazy val newSSEnrolmentEnabled: Boolean = config.get[Boolean]("feature-switch.new-ss-enrolment")
+
+  val replayBatchSize: Int = config.getOptional[Int]("replay.batchSize").getOrElse(10)
 }

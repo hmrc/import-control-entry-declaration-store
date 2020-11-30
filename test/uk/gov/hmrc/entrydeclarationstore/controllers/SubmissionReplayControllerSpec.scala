@@ -22,7 +22,7 @@ import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
-import uk.gov.hmrc.entrydeclarationstore.models.{ReplayError, ReplayResult, ReplaySubmissionIds}
+import uk.gov.hmrc.entrydeclarationstore.models.{BatchReplayError, BatchReplayResult, ReplaySubmissionIds}
 import uk.gov.hmrc.entrydeclarationstore.services.MockSubmissionReplayService
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -40,10 +40,10 @@ class SubmissionReplayControllerSpec extends UnitSpec with MockSubmissionReplayS
   "SubmissionReplayController.replay" when {
     "replay successful" should {
       "return 200 with the success and failure counts" in {
-        val replayResult = ReplayResult(2, 3)
+        val replayResult = BatchReplayResult(2, 3)
         MockAppConfig.replayBatchSizeLimit.returns(3)
         MockSubmissionReplayService
-          .replaySubmission(submissionIds.submissionIds)
+          .replaySubmissions(submissionIds.submissionIds)
           .returns(Future.successful(Right(replayResult)))
 
         val result: Future[Result] = controller.replay(request)
@@ -55,10 +55,10 @@ class SubmissionReplayControllerSpec extends UnitSpec with MockSubmissionReplayS
     }
     "replay unsuccessful" should {
       "return 500" in {
-        val replayError = Left(ReplayError.EISEventError)
+        val replayError = Left(BatchReplayError.EISEventError)
         MockAppConfig.replayBatchSizeLimit.returns(3)
         MockSubmissionReplayService
-          .replaySubmission(submissionIds.submissionIds)
+          .replaySubmissions(submissionIds.submissionIds)
           .returns(Future.successful(replayError))
 
         val result: Future[Result] = controller.replay(request)
