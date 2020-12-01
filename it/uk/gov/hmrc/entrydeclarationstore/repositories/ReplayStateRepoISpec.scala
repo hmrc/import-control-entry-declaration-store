@@ -23,6 +23,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.{Application, Environment, Mode}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits, Injecting}
+import reactivemongo.core.errors.DatabaseException
 import uk.gov.hmrc.entrydeclarationstore.models.ReplayState
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -55,11 +56,13 @@ class ReplayStateRepoISpec
   val replayState: ReplayState = ReplayState(startTime, None, completed = false, 0, 0, totalToReplay)
   "ReplayStateRepo" when {
     "inserting a submission" should {
-      "return true if successful" in {
-        await(repository.insert(replayId, totalToReplay, startTime)) shouldBe true
+      "work" in {
+        await(repository.insert(replayId, totalToReplay, startTime))
       }
-      "return false if replayId exists" in {
-        await(repository.insert(replayId, totalToReplay, startTime)) shouldBe false
+      "fail if the replayId exists" in {
+        intercept[DatabaseException] {
+          await(repository.insert(replayId, totalToReplay, startTime))
+        }
       }
       "create a replay of the correct format" in {
         await(repository.lookupState(replayId)) shouldBe Some(replayState)
@@ -106,22 +109,22 @@ class ReplayStateRepoISpec
       val t1            = Instant.now
 
       "no state for a replayId exists" must {
-        "insert and return true" in {
+        "insert" in {
           val replayState = ReplayState(t1, None, completed = false, 0, 0, 0)
 
-          await(repository.setState(otherReplayId, replayState)) shouldBe true
-          await(repository.lookupState(otherReplayId))           shouldBe Some(replayState)
+          await(repository.setState(otherReplayId, replayState))
+          await(repository.lookupState(otherReplayId)) shouldBe Some(replayState)
         }
       }
       "state for a replayId already exists" must {
-        "update and return true" in {
+        "update" in {
           val t2 = t1.plusSeconds(1)
 
           // Update every field...
           val updatedReplayState = ReplayState(t2, Some(t2), completed = true, 123, 654, 777)
 
-          await(repository.setState(otherReplayId, updatedReplayState)) shouldBe true
-          await(repository.lookupState(otherReplayId))                  shouldBe Some(updatedReplayState)
+          await(repository.setState(otherReplayId, updatedReplayState))
+          await(repository.lookupState(otherReplayId)) shouldBe Some(updatedReplayState)
         }
       }
     }

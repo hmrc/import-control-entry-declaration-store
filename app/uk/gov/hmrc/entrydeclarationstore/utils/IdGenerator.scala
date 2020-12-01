@@ -43,4 +43,6 @@ class IdGenerator {
     }.mkString
 
   def generateSubmissionId: String = UUID.randomUUID.toString
+
+  def generateUuid: String = UUID.randomUUID.toString
 }

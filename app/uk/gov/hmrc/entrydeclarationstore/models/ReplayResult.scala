@@ -16,12 +16,9 @@
 
 package uk.gov.hmrc.entrydeclarationstore.models
 
-import play.api.libs.json.{Json, Writes}
+sealed trait ReplayResult
 
-case class ReplayResult(
-  successCount: Int,
-  failureCount: Int
-)
 object ReplayResult {
-  implicit val writes: Writes[ReplayResult] = Json.writes[ReplayResult]
+  case class Completed(numBatches: Int) extends ReplayResult
+  case object Aborted extends ReplayResult
 }

@@ -18,6 +18,8 @@ package uk.gov.hmrc.entrydeclarationstore.repositories
 
 import java.time.Instant
 
+import akka.NotUsed
+import akka.stream.scaladsl.Source
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
 import play.api.libs.json.JsValue
@@ -71,6 +73,14 @@ trait MockEntryDeclarationRepo extends MockFactory {
 
     def housekeep(time: Instant): CallHandler[Future[Int]] =
       mockEntryDeclarationRepo.housekeep _ expects time
+
+    def totalUndeliveredMessages(receivedNoLaterThan: Instant): CallHandler[Future[Int]] =
+      (mockEntryDeclarationRepo.totalUndeliveredMessages _).expects(receivedNoLaterThan)
+
+    def getUndeliveredSubmissionIds(
+      receivedNoLaterThan: Instant,
+      limit: Option[Int]): CallHandler[Source[String, NotUsed]] =
+      (mockEntryDeclarationRepo.getUndeliveredSubmissionIds _).expects(receivedNoLaterThan, limit)
   }
 
 }

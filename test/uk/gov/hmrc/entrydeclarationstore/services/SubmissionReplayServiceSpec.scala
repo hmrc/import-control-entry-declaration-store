@@ -78,7 +78,7 @@ class SubmissionReplayServiceSpec
           MockReportSender.sendReport(report) returns Future.successful((): Unit)
           MockEntryDeclarationRepo.setEisSubmissionSuccess(subId1, Instant.now(clock)) returns Future.successful(true)
 
-          service.replaySubmissions(submissionIds).futureValue shouldBe Right(ReplayResult(1, 0))
+          service.replaySubmissions(submissionIds).futureValue shouldBe Right(BatchReplayResult(1, 0))
         }
         "increment success counts" in {
           val submissionIds = Seq(subId1, subId2)
@@ -94,7 +94,7 @@ class SubmissionReplayServiceSpec
               .successful(true)
           }
 
-          service.replaySubmissions(submissionIds).futureValue shouldBe Right(ReplayResult(2, 0))
+          service.replaySubmissions(submissionIds).futureValue shouldBe Right(BatchReplayResult(2, 0))
         }
         "ignore failures to update the EIS submission time" in {
           val submissionIds = Seq(subId1)
@@ -106,7 +106,7 @@ class SubmissionReplayServiceSpec
           MockReportSender.sendReport(report) returns Future.successful((): Unit)
           MockEntryDeclarationRepo.setEisSubmissionSuccess(subId1, Instant.now(clock)) returns Future.successful(false)
 
-          service.replaySubmissions(submissionIds).futureValue shouldBe Right(ReplayResult(1, 0))
+          service.replaySubmissions(submissionIds).futureValue shouldBe Right(BatchReplayResult(1, 0))
         }
       }
 
@@ -120,7 +120,7 @@ class SubmissionReplayServiceSpec
               //WLOG
               .returns(Future.successful(Left(MetadataLookupError.DataFormatError)))
 
-            service.replaySubmissions(submissionIds).futureValue shouldBe Right(ReplayResult(0, 1))
+            service.replaySubmissions(submissionIds).futureValue shouldBe Right(BatchReplayResult(0, 1))
           }
           "MetadataLookupError is MetadataNotFound" in {
             val submissionIds = Seq(subId1)
@@ -130,7 +130,7 @@ class SubmissionReplayServiceSpec
               //WLOG
               .returns(Future.successful(Left(MetadataLookupError.MetadataNotFound)))
 
-            service.replaySubmissions(submissionIds).futureValue shouldBe Right(ReplayResult(0, 1))
+            service.replaySubmissions(submissionIds).futureValue shouldBe Right(BatchReplayResult(0, 1))
           }
         }
         "terminate and return Left" when {
@@ -141,7 +141,7 @@ class SubmissionReplayServiceSpec
               .lookupMetadata(submissionIds.head)
               .returns(Future.failed(GenericDatabaseException("abc", None)))
 
-            service.replaySubmissions(submissionIds).futureValue shouldBe Left(ReplayError.MetadataRetrievalError)
+            service.replaySubmissions(submissionIds).futureValue shouldBe Left(BatchReplayError.MetadataRetrievalError)
           }
         }
       }
@@ -169,7 +169,7 @@ class SubmissionReplayServiceSpec
             MockReportSender.sendReport(successReport) returns Future.successful((): Unit)
             MockEntryDeclarationRepo.setEisSubmissionSuccess(subId2, Instant.now(clock)) returns Future.successful(true)
 
-            service.replaySubmissions(submissionIds).futureValue shouldBe Right(ReplayResult(1, 1))
+            service.replaySubmissions(submissionIds).futureValue shouldBe Right(BatchReplayResult(1, 1))
           }
         }
         "terminate and return Left" when {
@@ -186,7 +186,7 @@ class SubmissionReplayServiceSpec
               .sendReport(submissionSentToEISReport(subId1, Some(eisSendFailure)))
               .returns(Future.successful((): Unit))
 
-            service.replaySubmissions(submissionIds).futureValue shouldBe Left(ReplayError.EISSubmitError)
+            service.replaySubmissions(submissionIds).futureValue shouldBe Left(BatchReplayError.EISSubmitError)
           }
           "EISSendFailure is TrafficSwitchNotFlowing" in abortEisSendFailure(EISSendFailure.TrafficSwitchNotFlowing)
           "EISSendFailure is ExceptionThrown" in abortEisSendFailure(EISSendFailure.ExceptionThrown)
@@ -211,7 +211,7 @@ class SubmissionReplayServiceSpec
           MockReportSender.sendReport(report) returns Future.failed(new IOException)
           MockEntryDeclarationRepo.setEisSubmissionSuccess(subId1, Instant.now(clock)) returns Future.successful(true)
 
-          service.replaySubmissions(submissionIds).futureValue shouldBe Left(ReplayError.EISEventError)
+          service.replaySubmissions(submissionIds).futureValue shouldBe Left(BatchReplayError.EISEventError)
         }
       }
     }

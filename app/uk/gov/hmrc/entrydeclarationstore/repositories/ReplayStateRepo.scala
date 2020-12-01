@@ -25,7 +25,6 @@ import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
 import reactivemongo.api.{ReadPreference, WriteConcern}
 import reactivemongo.bson.BSONObjectID
-import reactivemongo.core.errors.DatabaseException
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.entrydeclarationstore.models.ReplayState
 import uk.gov.hmrc.mongo.ReactiveRepository
@@ -36,9 +35,9 @@ import scala.concurrent.{ExecutionContext, Future}
 trait ReplayStateRepo {
   def lookupState(replayId: String): Future[Option[ReplayState]]
 
-  def setState(replayId: String, replayState: ReplayState): Future[Boolean]
+  def setState(replayId: String, replayState: ReplayState): Future[Unit]
 
-  def insert(replayId: String, totalToReplay: Int, startTime: Instant): Future[Boolean]
+  def insert(replayId: String, totalToReplay: Int, startTime: Instant): Future[Unit]
 
   def incrementCounts(replayId: String, successesToAdd: Int, failuresToAdd: Int): Future[Boolean]
 
@@ -65,7 +64,7 @@ class ReplayStateRepoImpl @Inject()(
       .one[ReplayStatePersisted](ReadPreference.primaryPreferred)
       .map(_.map(_.toDomain))
 
-  override def setState(replayId: String, replayState: ReplayState): Future[Boolean] =
+  override def setState(replayId: String, replayState: ReplayState): Future[Unit] =
     collection
       .update(ordered = false, WriteConcern.Default)
       .one(
@@ -73,24 +72,11 @@ class ReplayStateRepoImpl @Inject()(
         u      = Json.toJson(ReplayStatePersisted.fromDomain(replayId, replayState)).as[JsObject],
         upsert = true
       )
-      .map(_ => true)
-      .recover {
-        case e: DatabaseException =>
-          logger.error(s"Unable to put  replay with replayId: $replayId", e)
-          false
-      }
+      .map(_ => ())
 
-  override def insert(replayId: String, totalToReplay: Int, startTime: Instant): Future[Boolean] =
+  override def insert(replayId: String, totalToReplay: Int, startTime: Instant): Future[Unit] =
     insert(ReplayStatePersisted(replayId, PersistableDateTime(startTime), totalToReplay))
-      .map(result => result.ok)
-      .recover {
-        case e: DatabaseException =>
-          logger.error(
-            s"Unable to insert replay with replayId: $replayId, totalToReplay: $totalToReplay, startTime: $startTime",
-            e
-          )
-          false
-      }
+      .map(_ => ())
 
   override def incrementCounts(replayId: String, successesToAdd: Int, failuresToAdd: Int): Future[Boolean] =
     collection
@@ -100,11 +86,6 @@ class ReplayStateRepoImpl @Inject()(
         Json.obj("$inc"     -> Json.obj("successCount" -> successesToAdd, "failureCount" -> failuresToAdd))
       )
       .map(result => result.nModified > 0)
-      .recover {
-        case e: DatabaseException =>
-          logger.error(s"Unable to increment counts for replay with replayId=$replayId", e)
-          false
-      }
 
   override def setCompleted(replayId: String, endTime: Instant): Future[Boolean] =
     collection
@@ -114,9 +95,4 @@ class ReplayStateRepoImpl @Inject()(
         Json.obj("$set"     -> Json.obj("completed" -> true, "endTime" -> PersistableDateTime(endTime)))
       )
       .map(result => result.nModified > 0)
-      .recover {
-        case e: DatabaseException =>
-          logger.error(s"Unable to set completed for replay with replayId=$replayId", e)
-          false
-      }
 }
