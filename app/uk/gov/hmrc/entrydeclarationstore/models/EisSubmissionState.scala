@@ -17,6 +17,7 @@
 package uk.gov.hmrc.entrydeclarationstore.models
 
 import cats.Show
+import cats.implicits._
 import play.api.libs.json.Format
 import uk.gov.hmrc.entrydeclarationstore.utils.Enums
 
@@ -32,6 +33,8 @@ object EisSubmissionState {
     case EisSubmissionState.NotSent => "not-sent"
     case EisSubmissionState.Error   => "error"
   }
+
+  def mongoFormatString(eisSubmissionState: EisSubmissionState): String = eisSubmissionState.show
 
   implicit val jsonFormat: Format[EisSubmissionState] = Enums.format[EisSubmissionState]
 }

@@ -34,5 +34,12 @@ class EisSubmissionStateSpec extends UnitSpec with Inspectors {
         Json.toJson(value).as[EisSubmissionState] shouldBe value
       }
     }
+
+    // So that we can reference the object in e.g. BSONDocument without hard-coding the string
+    "know its own format string" in {
+      mongoFormatString(Sent)    shouldBe "sent"
+      mongoFormatString(NotSent) shouldBe "not-sent"
+      mongoFormatString(Error)   shouldBe "error"
+    }
   }
 }
