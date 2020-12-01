@@ -67,18 +67,6 @@ class ReplayControllerSpec extends UnitSpec with MockReplayOrchestrator {
       }
     }
 
-    "return INTERNAL_SERVER_ERROR" when {
-      "request could not be handled" in {
-        fail
-//        MockReplayOrchestrator.startReplay(Some(limit)) returns Future.successful(None)
-//
-//        val result = controller.startReplay(fakeRequest)
-//
-//        status(result)      shouldBe INTERNAL_SERVER_ERROR
-//        contentType(result) shouldBe None
-      }
-    }
-
     "return BAD_REQUEST" when {
       "request body cannot be read as an ReplayLimit object" in {
         val replayLimitJson = Json.parse("""
