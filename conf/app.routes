@@ -23,3 +23,4 @@ GET         /import-control/traffic-switch                                      
 PUT         /import-control/traffic-switch/start                                          uk.gov.hmrc.entrydeclarationstore.controllers.TrafficSwitchController.startTrafficFlow
 
 GET         /import-control/replays/:replayId                                             uk.gov.hmrc.entrydeclarationstore.controllers.ReplayStateRetrievalController.retrieveReplayState(replayId)
+POST        /import-control/replays                                                       uk.gov.hmrc.entrydeclarationstore.controllers.ReplayController.startReplay
