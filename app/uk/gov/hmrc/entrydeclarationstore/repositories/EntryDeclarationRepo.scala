@@ -28,7 +28,7 @@ import reactivemongo.akkastream.cursorProducer
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
 import reactivemongo.api.{ReadPreference, WriteConcern}
-import reactivemongo.bson.BSONObjectID
+import reactivemongo.bson.{BSONDocument, BSONObjectID}
 import reactivemongo.core.errors.DatabaseException
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
@@ -92,6 +92,11 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
       Seq(("eori", Ascending), ("correlationId", Ascending)),
       name   = Some("eoriPlusCorrelationIdIndex"),
       unique = true
+    ),
+    Index(
+      Seq("eisSubmissionState" -> Ascending, "receivedDateTime" -> Ascending),
+      partialFilter =
+        Some(BSONDocument("eisSubmissionState" -> EisSubmissionState.mongoFormatString(EisSubmissionState.Error)))
     )
   )
 
