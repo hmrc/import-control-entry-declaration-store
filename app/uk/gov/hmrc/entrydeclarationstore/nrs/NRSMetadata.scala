@@ -45,7 +45,7 @@ object NRSMetadata extends InstantFormatter {
     checkSum: String
   ): NRSMetadata =
     NRSMetadata(
-      businessId              = "safety-and-security",
+      businessId              = "iceds",
       notableEvent            = "entry-declaration",
       payloadContentType      = MimeTypes.XML,
       payloadSha256Checksum   = checkSum,

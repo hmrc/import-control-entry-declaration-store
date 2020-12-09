@@ -30,7 +30,7 @@ trait NRSMetadataTestData {
 
   val nrsMetadataJson: JsValue = Json.parse("""
                                               |{
-                                              |    "businessId": "safety-and-security",
+                                              |    "businessId": "iceds",
                                               |    "notableEvent": "entry-declaration",
                                               |    "payloadContentType": "application/xml",
                                               |    "payloadSha256Checksum":"d6f0c835e8a559832d4a831de9ca84a96cfd42a4c968e7aa09c1fd56c934393a",
