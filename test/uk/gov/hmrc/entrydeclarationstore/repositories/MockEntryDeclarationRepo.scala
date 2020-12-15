@@ -17,12 +17,11 @@
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
 import java.time.Instant
-
 import akka.NotUsed
 import akka.stream.scaladsl.Source
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsObject, JsValue}
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models._
 
@@ -81,6 +80,9 @@ trait MockEntryDeclarationRepo extends MockFactory {
       receivedNoLaterThan: Instant,
       limit: Option[Int]): CallHandler[Source[String, NotUsed]] =
       (mockEntryDeclarationRepo.getUndeliveredSubmissionIds _).expects(receivedNoLaterThan, limit)
+
+    def getUndeliveredCounts: CallHandler[Future[UndeliveredCounts]] =
+      (mockEntryDeclarationRepo.getUndeliveredCounts _).expects
   }
 
 }

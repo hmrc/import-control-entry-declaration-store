@@ -16,20 +16,19 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
-import java.time.{Clock, Instant}
-
 import cats.data.EitherT
 import cats.implicits._
-import javax.inject.{Inject, Singleton}
 import play.api.http.Status.BAD_REQUEST
 import reactivemongo.core.errors.ReactiveMongoException
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, EisConnector}
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
-import uk.gov.hmrc.entrydeclarationstore.models.{BatchReplayError, BatchReplayResult, ReplayMetadata}
+import uk.gov.hmrc.entrydeclarationstore.models.{BatchReplayError, BatchReplayResult, ReplayMetadata, UndeliveredCounts}
 import uk.gov.hmrc.entrydeclarationstore.reporting.{ReportSender, SubmissionSentToEIS}
 import uk.gov.hmrc.entrydeclarationstore.repositories.{EntryDeclarationRepo, MetadataLookupError}
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.{Clock, Instant}
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
@@ -42,6 +41,8 @@ class SubmissionReplayService @Inject()(
 
   case class Abort(error: BatchReplayError)
   case class Counts(successCount: Int, failureCount: Int)
+
+  def getUndeliveredCounts: Future[UndeliveredCounts] = entryDeclarationRepo.getUndeliveredCounts
 
   def replaySubmissions(submissionIds: Seq[String])(
     implicit hc: HeaderCarrier): Future[Either[BatchReplayError, BatchReplayResult]] =

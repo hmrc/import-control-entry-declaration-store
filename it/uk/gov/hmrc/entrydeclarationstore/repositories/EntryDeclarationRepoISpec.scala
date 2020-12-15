@@ -17,7 +17,6 @@ package uk.gov.hmrc.entrydeclarationstore.repositories
 
 import java.time.Instant
 import java.util.UUID
-
 import akka.stream.Materializer
 import akka.stream.scaladsl.Sink
 import org.scalatest.{Assertion, BeforeAndAfterAll, Matchers, WordSpec}
@@ -29,7 +28,7 @@ import play.api.{Application, Environment, Mode}
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
-import uk.gov.hmrc.entrydeclarationstore.models._
+import uk.gov.hmrc.entrydeclarationstore.models.{TransportCount, _}
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -617,10 +616,13 @@ class EntryDeclarationRepoISpec
 
       "allow geting total counts of submissionIds by transport mode" in new Scenario {
         await(repository.getUndeliveredCounts) shouldBe
-          Json.obj(
-            "totalCount"      -> numErrorDeclarations,
-            "transportCounts" -> Seq(Json.obj("transportMode" -> "2", "count" -> numErrorDeclarations))
-          )
+          UndeliveredCounts(numErrorDeclarations, Some(Seq(TransportCount("2", numErrorDeclarations))))
+      }
+
+      "allow geting total counts of submissionIds by transport mode when no undelivered" in new Scenario {
+        await(repository.removeAll())
+
+        await(repository.getUndeliveredCounts) shouldBe UndeliveredCounts(totalCount = 0, transportCounts = None)
       }
 
       "allow geting total counts of submissionIds by transport mode where multiple transport modes" in new Scenario {
@@ -632,14 +634,16 @@ class EntryDeclarationRepoISpec
               u = Json.obj("$set"         -> Json.obj("payload.itinerary.modeOfTransportAtBorder" -> "10"))
             ))
 
-        val result: JsObject = await(repository.getUndeliveredCounts)
+        val result: UndeliveredCounts = await(repository.getUndeliveredCounts)
 
-        result.value("totalCount") shouldBe JsNumber(numErrorDeclarations)
-
-        val transportCounts: JsArray = result.value("transportCounts").as[JsArray]
-        transportCounts.value.length shouldBe 2
-        transportCounts.value.contains(Json.obj("transportMode" -> "10", "count" -> 1))
-        transportCounts.value.contains(Json.obj("transportMode" -> "2", "count"  -> (numErrorDeclarations - 1)))
+        result shouldBe
+          UndeliveredCounts(
+            numErrorDeclarations,
+            Some(
+              Seq(
+                TransportCount("10", 1),
+                TransportCount("2", numErrorDeclarations - 1)
+              )))
       }
     }
   }

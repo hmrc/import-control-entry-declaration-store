@@ -19,17 +19,20 @@ package uk.gov.hmrc.entrydeclarationstore.controllers
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.{contentType, _}
 import play.api.test.{FakeRequest, Helpers}
-import uk.gov.hmrc.entrydeclarationstore.models.ReplayResult
+import play.mvc.Http.MimeTypes
+import uk.gov.hmrc.entrydeclarationstore.models.{ReplayResult, TransportCount, UndeliveredCounts}
 import uk.gov.hmrc.entrydeclarationstore.orchestrators.MockReplayOrchestrator
+import uk.gov.hmrc.entrydeclarationstore.services.MockSubmissionReplayService
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, Promise}
 
-class ReplayControllerSpec extends UnitSpec with MockReplayOrchestrator {
-  val controller = new ReplayController(Helpers.stubControllerComponents(), mockReplayOrchestrator)
-  val limit      = 100
-  val replayId   = "replayId"
+class ReplayControllerSpec extends UnitSpec with MockReplayOrchestrator with MockSubmissionReplayService {
+  val controller =
+    new ReplayController(Helpers.stubControllerComponents(), mockReplayOrchestrator, mockSubmissionReplayService)
+  val limit    = 100
+  val replayId = "replayId"
 
   val replayIdJson: JsValue = Json.parse(s"""{"replayId": "$replayId"}""")
 
@@ -82,6 +85,27 @@ class ReplayControllerSpec extends UnitSpec with MockReplayOrchestrator {
         status(result)      shouldBe BAD_REQUEST
         contentType(result) shouldBe None
       }
+    }
+  }
+
+  "ReplayController getUndeliveredCounts" should {
+    "work" in {
+      val undeliveredCounts = UndeliveredCounts(totalCount = 2, Some(Seq(TransportCount("11", 2))))
+      MockSubmissionReplayService.getUndeliveredCounts returns Future.successful(undeliveredCounts)
+
+      val result = controller.getUndeliveredCounts(FakeRequest())
+
+      status(result)      shouldBe OK
+      contentType(result) shouldBe Some(MimeTypes.JSON)
+      contentAsJson(result) shouldBe
+        Json.parse("""
+                     |{
+                     |"totalCount": 2,
+                     |"transportCounts": [
+                     | { "transportMode": "11", "count": 2}
+                     |]
+                     |}
+                     |""".stripMargin)
     }
   }
 }

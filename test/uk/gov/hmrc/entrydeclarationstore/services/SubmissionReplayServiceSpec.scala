@@ -18,9 +18,9 @@ package uk.gov.hmrc.entrydeclarationstore.services
 
 import java.io.IOException
 import java.time.{Clock, Instant, ZoneOffset}
-
 import org.scalatest.concurrent.ScalaFutures
 import play.api.http.Status._
+import play.api.libs.json.Json
 import reactivemongo.core.errors.GenericDatabaseException
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, MockEisConnector}
 import uk.gov.hmrc.entrydeclarationstore.models._
@@ -213,6 +213,16 @@ class SubmissionReplayServiceSpec
 
           service.replaySubmissions(submissionIds).futureValue shouldBe Left(BatchReplayError.EISEventError)
         }
+      }
+    }
+
+    "getting undelivered counts" must {
+      "work" in {
+        // WLOG - service just passes through from repo...
+        val undeliveredCounts = UndeliveredCounts(totalCount = 123, transportCounts = None)
+
+        MockEntryDeclarationRepo.getUndeliveredCounts returns undeliveredCounts
+        service.getUndeliveredCounts.futureValue shouldBe undeliveredCounts
       }
     }
   }
