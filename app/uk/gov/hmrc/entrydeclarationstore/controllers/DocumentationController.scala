@@ -17,9 +17,10 @@
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import controllers.Assets
+
 import javax.inject.{Inject, Singleton}
 import play.api.http.HttpErrorHandler
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
@@ -38,6 +39,17 @@ class DocumentationController @Inject()(
     assets.at(s"/public/api/documentation/$version", s"${endpointName.replaceAll(" ", "-")}.xml")
 
   def definition(): Action[AnyContent] = Action {
+
+    val allowListAccess =
+      if (appConfig.allowListEnabled) {
+        s""""access": {
+           |  "type": "PRIVATE",
+           |  "whitelistedApplicationIds": ${Json.toJson(appConfig.allowListApplicationIds)}
+           |},""".stripMargin
+      } else {
+        ""
+      }
+
     Ok(Json.parse(s"""{
                      |  "scopes": [
                      |    {
@@ -58,6 +70,7 @@ class DocumentationController @Inject()(
                      |        "version": "1.0",
                      |        "status": "${appConfig.apiStatus}",
                      |        "endpointsEnabled": ${appConfig.apiEndpointsEnabled},
+                     |        $allowListAccess
                      |        "fieldDefinitions": [
                      |          {
                      |            "name": "authenticatedEori",

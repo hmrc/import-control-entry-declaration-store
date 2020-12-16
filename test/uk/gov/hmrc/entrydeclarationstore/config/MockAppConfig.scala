@@ -32,6 +32,14 @@ trait MockAppConfig extends MockFactory {
 
     def apiGatewayContext: CallHandler[String] = mockAppConfig.apiGatewayContext _ expects ()
 
+    def apiStatus: CallHandler[String] = mockAppConfig.apiStatus _ expects ()
+
+    def apiEndpointsEnabled: CallHandler[Boolean] = mockAppConfig.apiEndpointsEnabled _ expects ()
+
+    def allowListEnabled: CallHandler[Boolean] = mockAppConfig.allowListEnabled _ expects ()
+
+    def allowListApplicationIds: CallHandler[Seq[String]] = mockAppConfig.allowListApplicationIds _ expects ()
+
     def eventsHost: CallHandler[String] = mockAppConfig.eventsHost _ expects ()
 
     def eisHost: CallHandler[String] = mockAppConfig.eisHost _ expects ()
@@ -74,7 +82,7 @@ trait MockAppConfig extends MockFactory {
 
     def nrsEnabled: CallHandler[Boolean] = mockAppConfig.nrsEnabled _ expects ()
 
-    def newSSEnrolmentEnabled: CallHandler[Boolean] = (mockAppConfig.newSSEnrolmentEnabled _) stubs () returns (true)
+    def newSSEnrolmentEnabled: CallHandler[Boolean] = mockAppConfig.newSSEnrolmentEnabled _ stubs () returns true
 
     def replayBatchSize: CallHandler[Int] = (mockAppConfig.replayBatchSize _).expects
   }
