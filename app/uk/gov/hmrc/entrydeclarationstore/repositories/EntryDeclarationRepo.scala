@@ -65,7 +65,7 @@ trait EntryDeclarationRepo {
 
   def housekeep(now: Instant): Future[Int]
 
-  def getUndeliveredCounts: Future[JsObject]
+  def getUndeliveredCounts: Future[UndeliveredCounts]
 
   def totalUndeliveredMessages(receivedNoLaterThan: Instant): Future[Int]
 
@@ -280,11 +280,9 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
       .runFold(0)(_ + _)
   }
 
-  override def getUndeliveredCounts: Future[JsObject] = {
+  override def getUndeliveredCounts: Future[UndeliveredCounts] = {
     import collection.BatchCommands.AggregationFramework
     import AggregationFramework._
-
-    val matchQuery: collection.PipelineOperator = Match(undeliveredSubmissionsSelector(None))
 
     val groupTransportType = Group(Json.obj("_id" -> "$payload.itinerary.modeOfTransportAtBorder"))(
       "transportMode" -> First(JsString("$payload.itinerary.modeOfTransportAtBorder")),
@@ -301,18 +299,12 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
       )
     )
 
-    val project = Project(
-      Json.obj(
-        "_id" -> 0
-      ))
-
     val aggregation = collection.aggregateWith[JsObject](explain = false)(_ =>
-      matchQuery -> List(groupTransportType, groupIntoArray, project))
+      Match(undeliveredSubmissionsSelector(None)) -> List(groupTransportType, groupIntoArray))
     aggregation.headOption.map {
-      case Some(results) => results
-      case None          => Json.obj("totalCount" -> JsNumber(0))
+      case Some(results) => results.as[UndeliveredCounts].sorted
+      case None          => UndeliveredCounts(totalCount = 0, transportCounts = None)
     }
-
   }
 
   override def totalUndeliveredMessages(receivedNoLaterThan: Instant): Future[Int] =

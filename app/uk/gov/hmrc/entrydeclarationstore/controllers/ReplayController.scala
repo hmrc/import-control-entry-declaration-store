@@ -18,9 +18,10 @@ package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
-import play.api.mvc.{Action, ControllerComponents}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.entrydeclarationstore.models.ReplayLimit
 import uk.gov.hmrc.entrydeclarationstore.orchestrators.ReplayOrchestrator
+import uk.gov.hmrc.entrydeclarationstore.services.SubmissionReplayService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -28,14 +29,15 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class ReplayController @Inject()(
   cc: ControllerComponents,
-  service: ReplayOrchestrator
+  replayOrchestrator: ReplayOrchestrator,
+  submissionReplayService: SubmissionReplayService
 )(implicit ec: ExecutionContext)
     extends BackendController(cc) {
 
   val startReplay: Action[JsValue] = Action.async(parse.json) { implicit request =>
     request.body.validate[ReplayLimit] match {
       case JsSuccess(replayLimit, _) =>
-        val (futureReplayId, _) = service
+        val (futureReplayId, _) = replayOrchestrator
           .startReplay(replayLimit.value)
 
         futureReplayId.map { replayId =>
@@ -44,6 +46,12 @@ class ReplayController @Inject()(
 
       case JsError(_) =>
         Future.successful(BadRequest)
+    }
+  }
+
+  def getUndeliveredCounts: Action[AnyContent] = Action.async { _ =>
+    submissionReplayService.getUndeliveredCounts.map { counts =>
+      Ok(Json.toJson(counts))
     }
   }
 }
