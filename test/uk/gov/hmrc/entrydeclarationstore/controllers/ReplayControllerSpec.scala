@@ -49,7 +49,7 @@ class ReplayControllerSpec extends UnitSpec with MockReplayOrchestrator with Moc
   "ReplayController startReplay" should {
     "return Accepted" when {
       "request with limit defined is handled successfully" in {
-        MockReplayOrchestrator.startReplay(Some(limit)) returns (Future.successful(replayId), ignoredReplayResultFuture)
+        MockReplayOrchestrator.startReplay(Some(limit)) returns Future.successful(replayId) -> ignoredReplayResultFuture
 
         val result = controller.startReplay(fakeRequest)
 
@@ -59,7 +59,7 @@ class ReplayControllerSpec extends UnitSpec with MockReplayOrchestrator with Moc
       }
 
       "request with no limit defined is handled successfully" in {
-        MockReplayOrchestrator.startReplay(None) returns (Future.successful(replayId), ignoredReplayResultFuture)
+        MockReplayOrchestrator.startReplay(None) returns Future.successful(replayId) -> ignoredReplayResultFuture
         val noLimitReplayJson: JsValue        = Json.parse("{}")
         val fakeRequest: FakeRequest[JsValue] = FakeRequest().withBody(noLimitReplayJson)
         val result                            = controller.startReplay(fakeRequest)

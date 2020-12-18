@@ -16,11 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
-import java.io.IOException
-import java.time.{Clock, Instant, ZoneOffset}
 import org.scalatest.concurrent.ScalaFutures
 import play.api.http.Status._
-import play.api.libs.json.Json
 import reactivemongo.core.errors.GenericDatabaseException
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, MockEisConnector}
 import uk.gov.hmrc.entrydeclarationstore.models._
@@ -29,6 +26,8 @@ import uk.gov.hmrc.entrydeclarationstore.repositories.{MetadataLookupError, Mock
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
 
+import java.io.IOException
+import java.time.{Clock, Instant, ZoneOffset}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 

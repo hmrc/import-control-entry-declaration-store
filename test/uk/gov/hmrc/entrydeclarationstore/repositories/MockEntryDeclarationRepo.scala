@@ -16,15 +16,15 @@
 
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
-import java.time.Instant
 import akka.NotUsed
 import akka.stream.scaladsl.Source
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
-import play.api.libs.json.{JsObject, JsValue}
+import play.api.libs.json.JsValue
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models._
 
+import java.time.Instant
 import scala.concurrent.Future
 
 trait MockEntryDeclarationRepo extends MockFactory {

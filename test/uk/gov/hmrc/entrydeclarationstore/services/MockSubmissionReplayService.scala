@@ -18,7 +18,6 @@ package uk.gov.hmrc.entrydeclarationstore.services
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
-import play.api.libs.json.JsObject
 import uk.gov.hmrc.entrydeclarationstore.models.{BatchReplayError, BatchReplayResult, UndeliveredCounts}
 import uk.gov.hmrc.http.HeaderCarrier
 

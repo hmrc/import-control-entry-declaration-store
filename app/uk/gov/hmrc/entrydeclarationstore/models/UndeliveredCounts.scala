@@ -17,7 +17,6 @@
 package uk.gov.hmrc.entrydeclarationstore.models
 
 import play.api.libs.json._
-import play.api.libs.functional.syntax._
 
 case class TransportCount(transportMode: String, count: Int)
 
