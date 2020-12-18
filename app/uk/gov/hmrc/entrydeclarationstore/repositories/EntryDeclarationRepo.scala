@@ -302,7 +302,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
     val aggregation = collection.aggregateWith[JsObject](explain = false)(_ =>
       Match(undeliveredSubmissionsSelector(None)) -> List(groupTransportType, groupIntoArray))
     aggregation.headOption.map {
-      case Some(results) => results.as[UndeliveredCounts]
+      case Some(results) => results.as[UndeliveredCounts].sorted
       case None          => UndeliveredCounts(totalCount = 0, transportCounts = None)
     }
   }

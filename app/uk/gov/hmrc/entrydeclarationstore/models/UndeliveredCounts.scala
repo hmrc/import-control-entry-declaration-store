@@ -24,7 +24,12 @@ object TransportCount {
   implicit val formats: Format[TransportCount] = Json.format[TransportCount]
 }
 
-case class UndeliveredCounts(totalCount: Int, transportCounts: Option[Seq[TransportCount]])
+case class UndeliveredCounts(totalCount: Int, transportCounts: Option[Seq[TransportCount]]) {
+  def sorted: UndeliveredCounts =
+    UndeliveredCounts(totalCount = totalCount, transportCounts = transportCounts.map { tcs =>
+      tcs.sortBy(_.transportMode)
+    })
+}
 
 object UndeliveredCounts {
   implicit val formats: Format[UndeliveredCounts] = Json.format[UndeliveredCounts]
