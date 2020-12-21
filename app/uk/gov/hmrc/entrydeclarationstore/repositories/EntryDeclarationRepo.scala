@@ -336,10 +336,4 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
       "eisSubmissionState" -> EisSubmissionState.Error
     ) ++ endTimeClause
   }
-
-  override def ensureIndexes(implicit ec: ExecutionContext): Future[Seq[Boolean]] =
-    collection.indexesManager
-      .drop("conversationIdIndex")
-      .recover { case _ => 1 }
-      .flatMap(_ => super.ensureIndexes)
 }
