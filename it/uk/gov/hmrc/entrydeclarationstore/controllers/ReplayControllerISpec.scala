@@ -102,7 +102,11 @@ class ReplayControllerISpec
                                          |    "messageIdentification": "messageID"
                                          |  },
                                          |  "itinerary": {
-                                         |    "modeOfTransportAtBorder": "2"
+                                         |    "modeOfTransportAtBorder": "2",
+                                         |    "officeOfFirstEntry": {
+                                         |      "reference": "AB3C4D5E",
+                                         |      "expectedDateTimeOfArrival": "2003-02-11T12:34:00.000Z"
+                                         |    }
                                          |  }
                                          |}""".stripMargin)
 
