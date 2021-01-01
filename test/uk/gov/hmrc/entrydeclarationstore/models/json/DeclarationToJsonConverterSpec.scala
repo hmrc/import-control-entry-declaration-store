@@ -77,11 +77,6 @@ class DeclarationToJsonConverterSpec extends UnitSpec with Inside {
         }
       }
     }
-    "example" should {
-      "be false" in {
-        declarationToJsonConverter.validateJson(ResourceUtils.withInputStreamFor("jsons/MUST_FAIL_TEST_CASE.json")(Json.parse)) shouldBe true
-      }
-    }
     "for bad xml" should {
       "return Left(ServerError)" in {
         val input: InputParameters = InputParameters(
