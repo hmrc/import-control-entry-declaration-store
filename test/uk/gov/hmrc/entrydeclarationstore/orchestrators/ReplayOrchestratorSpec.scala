@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 
 package uk.gov.hmrc.entrydeclarationstore.orchestrators
-
-import java.time.{Clock, Instant, ZoneOffset}
 
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
@@ -34,6 +32,7 @@ import uk.gov.hmrc.entrydeclarationstore.utils.MockIdGenerator
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
 
+import java.time.{Clock, Instant, ZoneOffset}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, Promise}
 import scala.util.control.NoStackTrace

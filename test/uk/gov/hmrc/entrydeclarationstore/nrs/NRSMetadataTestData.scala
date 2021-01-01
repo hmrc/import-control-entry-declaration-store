@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.entrydeclarationstore.nrs
 
-import java.time.Instant
-
 import org.joda.time.{DateTime, LocalDate}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Headers
@@ -25,6 +23,8 @@ import play.api.test.FakeRequest
 import uk.gov.hmrc.auth.core.retrieve._
 import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, User}
 import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils.StringWithSha256
+
+import java.time.Instant
 
 trait NRSMetadataTestData {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
-import java.time.{Clock, Instant, ZoneOffset}
-
 import com.kenshoo.play.metrics.Metrics
 import org.scalatest.concurrent.ScalaFutures
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
@@ -26,9 +24,10 @@ import uk.gov.hmrc.entrydeclarationstore.repositories.{MockEntryDeclarationRepo,
 import uk.gov.hmrc.entrydeclarationstore.utils.MockMetrics
 import uk.gov.hmrc.play.test.UnitSpec
 
-import scala.concurrent.duration._
+import java.time.{Clock, Instant, ZoneOffset}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 class HousekeepingServiceSpec
     extends UnitSpec

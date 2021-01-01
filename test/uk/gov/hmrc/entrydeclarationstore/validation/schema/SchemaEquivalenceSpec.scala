@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.util.Random
-import scala.xml.transform.{RewriteRule, RuleTransformer}
 import scala.xml._
+import scala.xml.transform.{RewriteRule, RuleTransformer}
 
 /**
   * Tests that re-written schemas for E315 & E313 are equivalent to the originals

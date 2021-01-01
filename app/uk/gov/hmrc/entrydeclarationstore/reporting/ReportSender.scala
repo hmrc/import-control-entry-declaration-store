@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 
 package uk.gov.hmrc.entrydeclarationstore.reporting
-import java.time.{Clock, Instant}
-
 import com.google.inject.Inject
 import com.kenshoo.play.metrics.Metrics
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
@@ -25,6 +23,7 @@ import uk.gov.hmrc.entrydeclarationstore.reporting.events.{Event, EventConnector
 import uk.gov.hmrc.entrydeclarationstore.utils.{EventLogger, Timer}
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.{Clock, Instant}
 import scala.concurrent.{ExecutionContext, Future}
 
 class ReportSender @Inject()(

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,6 @@
 
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
-import java.time.Instant
-
-import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsObject, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.{ReadPreference, WriteConcern}
@@ -28,6 +25,8 @@ import uk.gov.hmrc.entrydeclarationstore.models.{TrafficSwitchState, TrafficSwit
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
+import java.time.Instant
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 trait TrafficSwitchRepo {

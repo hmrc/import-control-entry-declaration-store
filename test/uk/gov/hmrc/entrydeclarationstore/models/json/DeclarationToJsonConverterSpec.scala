@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.entrydeclarationstore.models.json
 
-import java.time.Instant
-
 import org.scalatest.Inside
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
@@ -26,6 +24,7 @@ import uk.gov.hmrc.entrydeclarationstore.services.ServerError
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
 import uk.gov.hmrc.play.test.UnitSpec
 
+import java.time.Instant
 import scala.xml.{Elem, XML}
 
 class DeclarationToJsonConverterSpec extends UnitSpec with Inside {
@@ -76,6 +75,11 @@ class DeclarationToJsonConverterSpec extends UnitSpec with Inside {
             declarationToJsonConverter.validateJson(ie313) shouldBe true
           case Left(_) => fail
         }
+      }
+    }
+    "example" should {
+      "be false" in {
+        declarationToJsonConverter.validateJson(ResourceUtils.withInputStreamFor("jsons/MUST_FAIL_TEST_CASE.json")(Json.parse)) shouldBe true
       }
     }
     "for bad xml" should {

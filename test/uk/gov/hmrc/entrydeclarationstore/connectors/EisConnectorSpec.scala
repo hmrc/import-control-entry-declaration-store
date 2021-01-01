@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 
 package uk.gov.hmrc.entrydeclarationstore.connectors
-
-import java.io.IOException
 
 import akka.actor.ActorSystem
 import akka.stream.actor.ActorPublisherMessage.Request
@@ -45,6 +43,7 @@ import uk.gov.hmrc.entrydeclarationstore.trafficswitch.{TrafficSwitch, TrafficSw
 import uk.gov.hmrc.entrydeclarationstore.utils.MockPagerDutyLogger
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
+import java.io.IOException
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package uk.gov.hmrc.entrydeclarationstore.validation
 
 import cats.implicits._
 import com.kenshoo.play.metrics.Metrics
-import javax.inject.{Inject, Named}
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationstore.models.ErrorWrapper
@@ -27,6 +26,7 @@ import uk.gov.hmrc.entrydeclarationstore.utils.{EventLogger, Timer, XmlFormatCon
 import uk.gov.hmrc.entrydeclarationstore.validation.business.RuleValidator
 import uk.gov.hmrc.entrydeclarationstore.validation.schema.{SchemaTypeE313, SchemaTypeE315, SchemaValidator}
 
+import javax.inject.{Inject, Named}
 import scala.xml.NodeSeq
 
 trait ValidationHandler {

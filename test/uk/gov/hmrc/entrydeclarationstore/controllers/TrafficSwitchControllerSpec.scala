@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,6 @@
 
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
-import java.time.Instant
-import java.time.temporal.ChronoUnit
-
 import play.api.http.MimeTypes
 import play.api.libs.json.Json
 import play.api.test.Helpers._
@@ -27,6 +24,8 @@ import uk.gov.hmrc.entrydeclarationstore.models.{TrafficSwitchState, TrafficSwit
 import uk.gov.hmrc.entrydeclarationstore.services.MockTrafficSwitchService
 import uk.gov.hmrc.play.test.UnitSpec
 
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class TrafficSwitchControllerSpec extends UnitSpec with MockTrafficSwitchService {

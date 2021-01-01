@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,12 @@
 package uk.gov.hmrc.entrydeclarationstore.housekeeping
 
 import akka.actor.Scheduler
-import javax.inject.{Inject, Singleton}
 import org.joda.time.{Duration => JodaDuration}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.lock.{ExclusiveTimePeriodLock, LockRepository}
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton

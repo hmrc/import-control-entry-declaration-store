@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,24 +16,24 @@
 
 package uk.gov.hmrc.entrydeclarationstore.config
 
-import java.time.Clock
-
 import akka.actor.{ActorSystem, Scheduler}
 import com.google.inject.{AbstractModule, Provides}
-import javax.inject.Named
 import play.api.libs.json.Json
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.entrydeclarationstore.trafficswitch.{TrafficSwitchActor, TrafficSwitchConfig}
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EisConnector, EisConnectorImpl}
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.{Housekeeper, HousekeepingScheduler}
 import uk.gov.hmrc.entrydeclarationstore.nrs.{NRSConnector, NRSConnectorImpl}
 import uk.gov.hmrc.entrydeclarationstore.reporting.events.{EventConnector, EventConnectorImpl}
 import uk.gov.hmrc.entrydeclarationstore.repositories._
 import uk.gov.hmrc.entrydeclarationstore.services.{EntryDeclarationStore, EntryDeclarationStoreImpl, HousekeepingService}
+import uk.gov.hmrc.entrydeclarationstore.trafficswitch.{TrafficSwitchActor, TrafficSwitchConfig}
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
 import uk.gov.hmrc.entrydeclarationstore.validation.business.{Rule, RuleValidator, RuleValidatorImpl}
 import uk.gov.hmrc.entrydeclarationstore.validation.{ValidationHandler, ValidationHandlerImpl}
 import uk.gov.hmrc.play.bootstrap.auth.DefaultAuthConnector
+
+import java.time.Clock
+import javax.inject.Named
 
 class DIModule extends AbstractModule {
 

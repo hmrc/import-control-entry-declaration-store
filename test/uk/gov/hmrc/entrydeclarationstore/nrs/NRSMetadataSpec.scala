@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.entrydeclarationstore.nrs
 
-import java.time.Instant
-
 import play.api.libs.json.Json
 import play.api.mvc.Headers
 import play.api.test.FakeRequest
-import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils.StringWithSha256
+import uk.gov.hmrc.play.test.UnitSpec
+
+import java.time.Instant
 
 class NRSMetadataSpec extends UnitSpec with NRSMetadataTestData {
   "NRSMetadata" must {

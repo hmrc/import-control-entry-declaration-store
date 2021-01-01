@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
-import java.time.Instant
-
 import play.api.libs.json.{Format, Json}
+
+import java.time.Instant
 
 //This allows consistent listing of the date time in ascending order. Instant writes drops 'insignificant zeros'
 private[repositories] case class PersistableDateTime($date: Long) {
