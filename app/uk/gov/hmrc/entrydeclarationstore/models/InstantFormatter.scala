@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.entrydeclarationstore.models
 
-import java.time.{Instant, ZoneOffset}
-import java.time.format.DateTimeFormatter
-
 import play.api.libs.json.{Format, Reads, Writes}
+
+import java.time.format.DateTimeFormatter
+import java.time.{Instant, ZoneOffset}
 
 trait InstantFormatter {
   val dateTimeWithMillis: DateTimeFormatter =

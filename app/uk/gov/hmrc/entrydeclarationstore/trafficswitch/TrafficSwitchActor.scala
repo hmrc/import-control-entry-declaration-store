@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,12 @@ package uk.gov.hmrc.entrydeclarationstore.trafficswitch
 import akka.actor.{Actor, ActorRef, ActorRefFactory, Cancellable, Props, Stash, Status}
 import akka.event.LoggingReceive
 import akka.pattern.{CircuitBreakerOpenException, pipe}
-import javax.inject.Inject
 import play.api.libs.concurrent.InjectedActorSupport
 import uk.gov.hmrc.entrydeclarationstore.models.TrafficSwitchState
 import uk.gov.hmrc.entrydeclarationstore.services.TrafficSwitchService
 import uk.gov.hmrc.entrydeclarationstore.trafficswitch.TrafficSwitchActor._
 
+import javax.inject.Inject
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future, Promise, TimeoutException}
 import scala.util.control.{NoStackTrace, NonFatal}

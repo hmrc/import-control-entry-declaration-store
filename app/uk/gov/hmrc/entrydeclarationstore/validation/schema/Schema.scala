@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.entrydeclarationstore.validation.schema
 
+import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
+
 import javax.xml.XMLConstants
 import javax.xml.validation.{Schema, SchemaFactory}
-import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
 
 trait SchemaType {
   private[validation] val schema: Schema

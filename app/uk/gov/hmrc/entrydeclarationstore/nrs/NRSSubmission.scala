@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.entrydeclarationstore.nrs
 
-import java.nio.charset.StandardCharsets
-import java.util.Base64
-
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{JsPath, OWrites}
+
+import java.nio.charset.StandardCharsets
+import java.util.Base64
 
 case class NRSSubmission(payload: String, metadata: NRSMetadata)
 

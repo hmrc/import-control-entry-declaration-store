@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.entrydeclarationstore.connectors.helpers
 
-import java.time.Clock
-
-import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.http.HeaderNames._
 import play.api.http.MimeTypes
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.http.HeaderCarrier
+
+import java.time.Clock
+import javax.inject.{Inject, Singleton}
 
 @Singleton
 class HeaderGenerator @Inject()(clock: Clock, appConfig: AppConfig) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.entrydeclarationstore.connectors.helpers
 
-import java.time.{Clock, LocalDateTime, ZoneOffset, ZonedDateTime}
-
 import org.scalatest.{Matchers, WordSpec}
 import play.api.http.{HeaderNames, MimeTypes}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.http.HeaderCarrier
+
+import java.time.{Clock, LocalDateTime, ZoneOffset, ZonedDateTime}
 
 class HeaderGeneratorSpec extends WordSpec with Matchers with HeaderNames with MockAppConfig {
 

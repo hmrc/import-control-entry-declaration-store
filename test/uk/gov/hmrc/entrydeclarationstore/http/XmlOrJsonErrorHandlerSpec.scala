@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.entrydeclarationstore.http
 
-import java.io.IOException
-
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.MimeTypes
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -26,6 +24,8 @@ import play.api.test.{FakeRequest, Injecting}
 import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.play.test.UnitSpec
+
+import java.io.IOException
 
 class XmlOrJsonErrorHandlerSpec extends UnitSpec with GuiceOneAppPerSuite with Injecting {
 

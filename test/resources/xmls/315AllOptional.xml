@@ -74,10 +74,10 @@
             <DocRefDCLNG>en</DocRefDCLNG>
         </PRODOCDC2>
         <SPEMENMT2>
-            <AddInfCodMT23>Additional information coded</AddInfCodMT23>
+            <AddInfCodMT23>123</AddInfCodMT23>
         </SPEMENMT2>
         <SPEMENMT2>
-            <AddInfCodMT23>Additional information coded2</AddInfCodMT23>
+            <AddInfCodMT23>1234</AddInfCodMT23>
         </SPEMENMT2>
         <TRACONCO2>
             <NamCO27>consignor goods name</NamCO27>
@@ -110,14 +110,14 @@
             <IdeMeaTraGIMEATRA972LNG>en</IdeMeaTraGIMEATRA972LNG>
         </IDEMEATRAGI970>
         <PACGS2>
-            <KinOfPacGS23>abc</KinOfPacGS23>
+            <KinOfPacGS23>ab</KinOfPacGS23>
             <NumOfPacGS24>100</NumOfPacGS24>
             <NumOfPieGS25>100</NumOfPieGS25>
             <MarNumOfPacGSL21>Marks numbers of packages (long)</MarNumOfPacGSL21>
             <MarNumOfPacGSL21LNG>en</MarNumOfPacGSL21LNG>
         </PACGS2>
         <PACGS2>
-            <KinOfPacGS23>abd</KinOfPacGS23>
+            <KinOfPacGS23>ab</KinOfPacGS23>
             <NumOfPacGS24>1002</NumOfPacGS24>
             <NumOfPieGS25>1002</NumOfPieGS25>
             <MarNumOfPacGSL21>Marks numbers of packages (long)2</MarNumOfPacGSL21>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.entrydeclarationstore.nrs
 
-import java.time.Instant
-
 import play.api.http.MimeTypes
-import play.api.libs.json.{JsObject, JsString, JsValue, Json, Writes}
+import play.api.libs.json._
 import play.api.mvc.RequestHeader
 import uk.gov.hmrc.entrydeclarationstore.models.InstantFormatter
+
+import java.time.Instant
 
 case class NRSMetadata(
   businessId: String,

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
-import java.time.Instant
-
 import play.api.http.MimeTypes
 import play.api.libs.json.Json
 import play.api.test.Helpers._
@@ -26,6 +24,7 @@ import uk.gov.hmrc.entrydeclarationstore.models.ReplayState
 import uk.gov.hmrc.entrydeclarationstore.services.MockReplayStateRetrievalService
 import uk.gov.hmrc.play.test.UnitSpec
 
+import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ReplayStateRetrievalControllerSpec extends UnitSpec with MockReplayStateRetrievalService {

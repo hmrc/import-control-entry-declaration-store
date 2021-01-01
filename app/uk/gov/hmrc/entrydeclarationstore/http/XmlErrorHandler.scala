@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.entrydeclarationstore.http
 
-import javax.inject.Inject
 import play.api.http.HttpErrorHandler
 import play.api.http.Status._
 import play.api.mvc.Results._
@@ -29,6 +28,7 @@ import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendHeaderCarrierProvider
 import uk.gov.hmrc.play.bootstrap.config.HttpAuditEvent
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class XmlErrorHandler @Inject()(

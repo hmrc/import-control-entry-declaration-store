@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.entrydeclarationstore.trafficswitch
 
-import java.util.concurrent.atomic.AtomicBoolean
-
 import akka.actor.ActorSystem
 import akka.pattern.{AskTimeoutException, CircuitBreakerOpenException}
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
@@ -30,6 +28,7 @@ import uk.gov.hmrc.entrydeclarationstore.models.TrafficSwitchState
 import uk.gov.hmrc.entrydeclarationstore.services.MockTrafficSwitchService
 import uk.gov.hmrc.play.test.UnitSpec
 
+import java.util.concurrent.atomic.AtomicBoolean
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.{FiniteDuration, _}
 import scala.concurrent.{Future, Promise, TimeoutException}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
-import java.time.{Clock, Instant, ZoneOffset}
-
 import com.kenshoo.play.metrics.Metrics
 import play.api.http.MimeTypes
 import play.api.mvc.{Request, Result}
@@ -33,6 +31,7 @@ import uk.gov.hmrc.entrydeclarationstore.utils.{MockMetrics, XmlFormatConfig, Xm
 import uk.gov.hmrc.entrydeclarationstore.validation.{ValidationError, ValidationErrors}
 import uk.gov.hmrc.play.test.UnitSpec
 
+import java.time.{Clock, Instant, ZoneOffset}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, Promise}
 import scala.xml.{XML => _, _}

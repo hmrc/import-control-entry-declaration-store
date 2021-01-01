@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,12 @@
 
 package uk.gov.hmrc.entrydeclarationstore.validation.business
 
-import java.lang
-
 import groovy.lang.Closure
 import uk.gov.hmrc.entrydeclarationstore.validation.business.Assert.CompilationContext
 import uk.gov.hmrc.entrydeclarationstore.validation.business.AssertEvaluator.ContextHelper
 import uk.gov.hmrc.play.test.UnitSpec
 
+import java.lang
 import scala.xml.Node
 
 class ContextHelperSpec extends UnitSpec {

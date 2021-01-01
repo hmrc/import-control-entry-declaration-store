@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,9 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
-import java.time.{Clock, Instant}
-
 import cats.data.EitherT
 import cats.implicits._
 import com.kenshoo.play.metrics.Metrics
-import javax.inject.{Inject, Singleton}
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, EisConnector}
@@ -34,6 +31,8 @@ import uk.gov.hmrc.entrydeclarationstore.utils._
 import uk.gov.hmrc.entrydeclarationstore.validation.ValidationHandler
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.{Clock, Instant}
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success}

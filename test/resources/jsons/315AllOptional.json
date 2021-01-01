@@ -121,8 +121,8 @@
           }
         ],
         "specialMentions": [
-          "Additional information coded",
-          "Additional information coded2"
+          "123",
+          "1234"
         ],
         "consignor": {
           "name": "consignor goods name",
@@ -162,14 +162,14 @@
         ],
         "packages": [
           {
-            "kindOfPackages": "abc",
+            "kindOfPackages": "ab",
             "numberOfPackages": "100",
             "numberOfPieces": "100",
             "marks": "Marks numbers of packages (long)",
             "marksLanguage": "en"
           },
           {
-            "kindOfPackages": "abd",
+            "kindOfPackages": "ab",
             "numberOfPackages": "1002",
             "numberOfPieces": "1002",
             "marks": "Marks numbers of packages (long)2",
