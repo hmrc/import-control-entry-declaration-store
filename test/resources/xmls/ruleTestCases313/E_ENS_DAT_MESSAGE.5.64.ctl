@@ -77,14 +77,14 @@
     <err:RaisedBy>ChRIS</err:RaisedBy>
     <err:Number>8703</err:Number>
     <err:Type>business</err:Type>
-    <err:Text>The field 'Language (box 2)' within Goods Item.Trader Consignor must not be present if the GB 'TIN' has been declared (C501)</err:Text>
+    <err:Text>The field 'Language' within Goods Item.Trader Consignor must not be present if the GB 'TIN' has been declared (C501)</err:Text>
     <err:Location>/ie:CC313A[1]/GOOITEGDS[1]/TRACONCO2[1]/NADLNGGTCO[1]</err:Location>
   </err:Error>
   <err:Error>
     <err:RaisedBy>ChRIS</err:RaisedBy>
     <err:Number>8703</err:Number>
     <err:Type>business</err:Type>
-    <err:Text>The field 'Language (box 2)' within Goods Item.Trader Consignor must not be present if the GB 'TIN' has been declared (C501)</err:Text>
+    <err:Text>The field 'Language' within Goods Item.Trader Consignor must not be present if the GB 'TIN' has been declared (C501)</err:Text>
     <err:Location>/ie:CC313A[1]/GOOITEGDS[2]/TRACONCO2[1]/NADLNGGTCO[1]</err:Location>
   </err:Error>
 </err:ErrorResponse>

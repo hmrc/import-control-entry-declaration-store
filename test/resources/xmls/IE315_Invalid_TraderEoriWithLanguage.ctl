@@ -7,7 +7,7 @@
         <err:Number>8630</err:Number>
         <err:Type>business</err:Type>
         <err:Text>
-            The field 'Language (box 2)' within Import Operation.Trader Consignor must not be present if the GB 'TIN' has been declared (C501)
+            The field 'Language' within Import Operation.Trader Consignor must not be present if the GB 'TIN' has been declared (C501)
         </err:Text>
         <err:Location>/ie:CC315A[1]/TRACONCO1[1]/NADLNGCO[1]</err:Location>
     </err:Error>
