@@ -6,7 +6,7 @@
       "test": "not('../TINCO159') || !(getValue('../TINCO159').startsWith('GB'))",
       "localErrorMessage": "[Language] should not be present if GB [TIN] is present",
       "errorMessage": "The field 'Language (box 2)' within  Import Operation.Trader Consignor must not be present if the GB 'TIN' has been declared (C501)",
-      "errorCode": "8630"
+      "errorCode": "8700"
     }
   ]
 }
