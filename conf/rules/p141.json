@@ -5,7 +5,7 @@
     {
       "test": "not('../TINCE159') || !(getValue('../TINCE159').startsWith('GB'))",
       "localErrorMessage": "[Language] should not be present if GB [TIN] is present",
-      "errorMessage": "The field 'Language (box 8)' within Import Operation.Trader Consignee must not be present if the GB 'TIN' has been declared (C501)",
+      "errorMessage": "The field 'Language' within Import Operation.Trader Consignee must not be present if the GB 'TIN' has been declared (C501)",
       "errorCode": "8701"
     }
   ]
