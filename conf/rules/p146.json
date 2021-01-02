@@ -1,0 +1,12 @@
+{
+  "element": "/TRACARENT601/TRACARENT601LNG",
+  "name": "p146",
+  "asserts": [
+    {
+      "test": "not('../TINTRACARENT602') || !(getValue('../TINTRACARENT602').startsWith('GB'))",
+      "localErrorMessage": "[Language] should not be present if GB [TIN] is present",
+      "errorMessage": "The field 'Language' within Trader at Entry (Carrier) must not be present if the GB 'TIN' has been declared (C501)",
+      "errorCode": "8706"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "element": "/GOOITEGDS/PRTNOT640/PRTNOT640LNG",
+  "name": "p145",
+  "asserts": [
+    {
+      "test": "not('../TINPRTNOT641') || !(getValue('../TINPRTNOT641').startsWith('GB'))",
+      "localErrorMessage": "[Language] should not be present if GB [TIN] is present",
+      "errorMessage": "The field 'Language' within Goods Item.Notify Party must not be present if GB 'TIN' has been declared (C501)",
+      "errorCode": "8705"
+    }
+  ]
+}

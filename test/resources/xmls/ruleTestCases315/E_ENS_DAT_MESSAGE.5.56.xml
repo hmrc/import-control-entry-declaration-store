@@ -37,7 +37,7 @@
       <!--The following node should cause an error (code: 8643)--><PosCodCO223>AB12 3CD</PosCodCO223>
       <!--The following node should cause an error (code: 8644)--><CitCO224>city</CitCO224>
       <!--The following node should cause an error (code: 8645)--><CouCO225>GB</CouCO225>
-      <NADLNGGTCO>aa</NADLNGGTCO>
+      <!--The following node should cause an error (code: 8703)--><NADLNGGTCO>aa</NADLNGGTCO>
       <TINCO259>GBA</TINCO259>
     </TRACONCO2>
     <COMCODGODITM>
@@ -59,7 +59,7 @@
       <!--The following node should cause an error (code: 8643)--><PosCodCO223>AB12 3CD</PosCodCO223>
       <!--The following node should cause an error (code: 8644)--><CitCO224>city</CitCO224>
       <!--The following node should cause an error (code: 8645)--><CouCO225>GB</CouCO225>
-      <NADLNGGTCO>bb</NADLNGGTCO>
+      <!--The following node should cause an error (code: 8703)--><NADLNGGTCO>bb</NADLNGGTCO>
       <TINCO259>GBA</TINCO259>
     </TRACONCO2>
     <COMCODGODITM>

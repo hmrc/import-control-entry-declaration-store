@@ -2,7 +2,7 @@
 <!--
   Test case control file
   -->
-<err:ErrorResponse xmlns:err="http://www.govtalk.gov.uk/CM/errorresponse" xmlns:dsl="http://decisionsoft.com/rim/errorExtension" SchemaVersion="2.0">
+<err:ErrorResponse xmlns:err="http://www.govtalk.gov.uk/CM/errorresponse" SchemaVersion="2.0">
   <err:Error>
     <err:RaisedBy>ChRIS</err:RaisedBy>
     <err:Number>8644</err:Number>
@@ -72,5 +72,19 @@
     <err:Type>business</err:Type>
     <err:Text>The 'Total Number of Packages' is equal to the sum of all 'Number of Packages' + all 'Number of pieces' + a value of '1' for each declared 'bulk' (R105)</err:Text>
     <err:Location>/ie:CC313A[1]/HEAHEA[1]</err:Location>
+  </err:Error>
+  <err:Error>
+    <err:RaisedBy>ChRIS</err:RaisedBy>
+    <err:Number>8703</err:Number>
+    <err:Type>business</err:Type>
+    <err:Text>The field 'Language (box 2)' within Goods Item.Trader Consignor must not be present if the GB 'TIN' has been declared (C501)</err:Text>
+    <err:Location>/ie:CC313A[1]/GOOITEGDS[1]/TRACONCO2[1]/NADLNGGTCO[1]</err:Location>
+  </err:Error>
+  <err:Error>
+    <err:RaisedBy>ChRIS</err:RaisedBy>
+    <err:Number>8703</err:Number>
+    <err:Type>business</err:Type>
+    <err:Text>The field 'Language (box 2)' within Goods Item.Trader Consignor must not be present if the GB 'TIN' has been declared (C501)</err:Text>
+    <err:Location>/ie:CC313A[1]/GOOITEGDS[2]/TRACONCO2[1]/NADLNGGTCO[1]</err:Location>
   </err:Error>
 </err:ErrorResponse>
