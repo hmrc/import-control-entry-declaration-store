@@ -171,6 +171,7 @@
         {"$ref": "#/definitions/traderContactDetails"},
         {
           "properties":{
+            "language":{"$ref": "#/definitions/languageCode"},
             "eori": {"$ref": "#/definitions/eori"}
           },
           "required" :["eori"],
