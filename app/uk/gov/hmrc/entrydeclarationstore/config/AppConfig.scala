@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.config
 
-import play.api.Configuration
+import play.api.{Configuration, Logger}
 import uk.gov.hmrc.entrydeclarationstore.trafficswitch.TrafficSwitchConfig
 import uk.gov.hmrc.entrydeclarationstore.utils.{Retrying, XmlFormatConfig}
 import uk.gov.hmrc.play.bootstrap.config.{AppName, ServicesConfig}
@@ -61,6 +61,10 @@ trait AppConfig {
   def eisInboundBearerToken: String
 
   def eisEnvironment: String
+
+  def eisRetries: List[FiniteDuration]
+
+  def eisRetryStatusCodes: Set[Int]
 
   def validateXMLtoJsonTransformation: Boolean
 
@@ -156,6 +160,11 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
   lazy val eisInboundBearerToken: String =
     config.get[String]("microservice.services.import-control-entry-declaration-eis.inboundBearerToken")
 
+  lazy val eisRetries: List[FiniteDuration] =
+    Retrying.fibonacciDelays(getFiniteDuration(eisConfig, "initialDelay"), nrsConfig.get[Int]("numberOfRetries"))
+
+  lazy val eisRetryStatusCodes: Set[Int] = eisConfig.get[Seq[Int]]("retryStatusCodes").toSet
+
   lazy val validateXMLtoJsonTransformation: Boolean =
     config.getOptional[Boolean]("validateXMLtoJsonTransformation").getOrElse(false)
 
@@ -166,9 +175,16 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
   lazy val headerAllowlist: Seq[String] = config.get[Seq[String]]("bootstrap.http.headersAllowlist")
 
   lazy val eisTrafficSwitchConfig: TrafficSwitchConfig = {
+    val callTimeout    = getFiniteDuration(eisConfig, "trafficSwitch.callTimeout")
+    val totalRetryTime = nrsRetries.fold(Duration.Zero)(_ + _)
+
+    if (callTimeout < totalRetryTime) {
+      Logger.warn(s"Configured call timeout $callTimeout is less than total retry timeout $totalRetryTime")
+    }
+
     TrafficSwitchConfig(
       maxFailures                  = eisConfig.get[Int]("trafficSwitch.maxFailures"),
-      callTimeout                  = getFiniteDuration(eisConfig, "trafficSwitch.callTimeout"),
+      callTimeout                  = callTimeout,
       flowingStateRefreshPeriod    = getFiniteDuration(eisConfig, "trafficSwitch.flowingStateRefreshPeriod"),
       notFlowingStateRefreshPeriod = getFiniteDuration(eisConfig, "trafficSwitch.notFlowingStateRefreshPeriod")
     )

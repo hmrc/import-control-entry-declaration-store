@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.entrydeclarationstore.connectors
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, Scheduler}
 import akka.stream.actor.ActorPublisherMessage.Request
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.client.{CountMatchingStrategy, WireMock}
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
-import com.github.tomakehurst.wiremock.stubbing.StubMapping
+import com.github.tomakehurst.wiremock.stubbing.{Scenario, StubMapping}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -66,14 +66,15 @@ class EisConnectorSpec
     .in(Environment.simple(mode = Mode.Dev))
     .disable[HousekeepingScheduler]
     .configure(
-      "metrics.enabled"                                                                                    -> "false",
-      "microservice.services.import-control-entry-declaration-eis.trafficSwitch.notFlowingStateRefreshPeriod"   -> "1 minute",
-      "microservice.services.import-control-entry-declaration-eis.trafficSwitch.flowingStateRefreshPeriod" -> "1 minute"
+      "metrics.enabled"                                                                                       -> "false",
+      "microservice.services.import-control-entry-declaration-eis.trafficSwitch.notFlowingStateRefreshPeriod" -> "1 minute",
+      "microservice.services.import-control-entry-declaration-eis.trafficSwitch.flowingStateRefreshPeriod"    -> "1 minute"
     )
     .build()
 
   val httpClient: HttpClient            = inject[HttpClient]
   implicit val actorSystem: ActorSystem = inject[ActorSystem]
+  implicit val scheduler: Scheduler     = actorSystem.scheduler
 
   // So that we can check that only those headers from the HeaderGenerator are included
   private val extraHeader = "extraHeader"
@@ -88,6 +89,7 @@ class EisConnectorSpec
 
   val maxCallFailures                    = 5
   val defaultCallTimeout: FiniteDuration = 1.second
+  val eisRetryStatusCodes: Set[Int]      = Set(BAD_GATEWAY, 499)
 
   var port: Int = _
 
@@ -100,13 +102,15 @@ class EisConnectorSpec
   override def afterAll(): Unit =
     wireMockServer.stop()
 
-  class Test(callTimeout: FiniteDuration = defaultCallTimeout) {
+  class Test(callTimeout: FiniteDuration = defaultCallTimeout, retryDelays: List[FiniteDuration] = Nil) {
     val newUrl   = "/safetyandsecurity/newenssubmission/v1"
     val amendUrl = "/safetyandsecurity/amendsubmission/v1"
 
     MockAppConfig.eisHost returns s"http://localhost:$port" anyNumberOfTimes ()
     MockAppConfig.eisNewEnsUrlPath returns newUrl anyNumberOfTimes ()
     MockAppConfig.eisAmendEnsUrlPath returns amendUrl anyNumberOfTimes ()
+    MockAppConfig.eisRetries returns retryDelays anyNumberOfTimes ()
+    MockAppConfig.eisRetryStatusCodes returns eisRetryStatusCodes anyNumberOfTimes ()
 
     private val trafficSwitchConfig: TrafficSwitchConfig =
       TrafficSwitchConfig(maxCallFailures, callTimeout, 1.minute, 1.minute)
@@ -153,6 +157,26 @@ class EisConnectorSpec
               .withHeader(CONTENT_TYPE, MimeTypes.JSON)
               .withStatus(statusCode)))
 
+    def stubResponseRetries(subsequentStatusCodes: Seq[Int]): Unit = {
+      def attempted(i: Int) = if (i == 0) Scenario.STARTED else s"Attempted $i"
+
+      wireMockServer.resetScenarios()
+
+      subsequentStatusCodes.zipWithIndex.foreach {
+        case (code, i) =>
+          wireMockServer
+            .stubFor(
+              post(urlPathEqualTo(newUrl))
+                .withRequestBody(equalToJson(Json.toJson(declarationMetadata).toString()))
+                .inScenario("Retry")
+                .whenScenarioStateIs(attempted(i))
+                .willReturn(aResponse()
+                  .withHeader(CONTENT_TYPE, MimeTypes.JSON)
+                  .withStatus(code))
+                .willSetStateTo(attempted(i + 1)))
+      }
+    }
+
     def stubDelayedResponse(delay: FiniteDuration, statusCode: Int): StubMapping =
       wireMockServer.stubFor(
         post(urlPathEqualTo(newUrl))
@@ -184,8 +208,8 @@ class EisConnectorSpec
     }
 
     def checkTrafficFlowDoesNotStop(
-                                     expectedError: Option[EISSendFailure],
-                                     bypassTrafficSwitch: Boolean = false): Int = {
+      expectedError: Option[EISSendFailure],
+      bypassTrafficSwitch: Boolean = false): Int = {
       wireMockServer.resetRequests()
 
       val totalCalls = maxCallFailures + 10
@@ -366,6 +390,68 @@ class EisConnectorSpec
 
         stubResponse(OK)
         checkTrafficFlowDoesNotStop(Some(EISSendFailure.ErrorResponse(OK)), bypassTrafficSwitch = true)
+      }
+    }
+
+    "retrying is configured" must {
+      val maxRetries = 5
+
+      eisRetryStatusCodes.foreach(retryUntilSuccess)
+      eisRetryStatusCodes.foreach(giveUpAfterMaxRetries)
+
+      def retryDelays(numRetries: Int): List[FiniteDuration] = List.fill(numRetries)(10.millis)
+
+      def retryUntilSuccess(failureStatusCode: Int): Unit =
+        s"retry for status code $failureStatusCode" in new Test(retryDelays = retryDelays(maxRetries)) {
+          val numRetries = 2
+
+          wireMockServer.resetRequests()
+          stubResponseRetries(List.fill(numRetries)(failureStatusCode) :+ ACCEPTED)
+
+          await(connector.submitMetadata(declarationMetadata, bypassTrafficSwitch = false)) shouldBe None
+
+          verifyRequestCount(numRetries + 1)
+        }
+
+      def giveUpAfterMaxRetries(failureStatusCode: Int): Unit =
+        s"give up after all retries for status code $failureStatusCode" in new Test(
+          retryDelays = retryDelays(maxRetries)) {
+          wireMockServer.resetRequests()
+          stubResponseRetries(List.fill(maxRetries + 1)(failureStatusCode))
+
+          await(connector.submitMetadata(declarationMetadata, bypassTrafficSwitch = false)) shouldBe
+            Some(EISSendFailure.ErrorResponse(failureStatusCode))
+
+          verifyRequestCount(maxRetries + 1)
+        }
+
+      "not trip the traffic switch due to retries" in new Test(retryDelays = retryDelays(maxCallFailures)) {
+        // WLOG
+        val failureStatusCode: Int = eisRetryStatusCodes.head
+
+        wireMockServer.resetRequests()
+        stubResponseRetries(List.fill(maxCallFailures + 1)(failureStatusCode))
+        await(connector.submitMetadata(declarationMetadata, bypassTrafficSwitch = false)) shouldBe
+          Some(EISSendFailure.ErrorResponse(failureStatusCode))
+
+        // Check still ok...
+        stubResponse(ACCEPTED)
+        await(connector.submitMetadata(declarationMetadata, bypassTrafficSwitch = false)) shouldBe None
+
+        verifyRequestCount(maxCallFailures + 2)
+      }
+
+      "not retry other status codes" in new Test(retryDelays = retryDelays(maxRetries)) {
+        val failureStatusCode: Int = INTERNAL_SERVER_ERROR
+        eisRetryStatusCodes shouldNot contain(failureStatusCode)
+
+        wireMockServer.resetRequests()
+
+        stubResponseRetries(List.fill(1)(failureStatusCode))
+        await(connector.submitMetadata(declarationMetadata, bypassTrafficSwitch = false)) shouldBe
+          Some(EISSendFailure.ErrorResponse(failureStatusCode))
+
+        verifyRequestCount(1)
       }
     }
   }
