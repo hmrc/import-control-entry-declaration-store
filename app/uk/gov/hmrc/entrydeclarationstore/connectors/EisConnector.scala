@@ -69,14 +69,14 @@ class EisConnectorImpl @Inject()(
 
   private def putAmendment(metadata: EntryDeclarationMetadata, headers: Seq[(String, String)], attemptNumber: Int)(
     implicit lc: LoggingContext): Future[HttpResponse] = {
-    ContextLogger.info(s"sending PUT request to $amendUrl")
+    ContextLogger.info(s"sending PUT request to $amendUrl attempt $attemptNumber")
     client
       .PUT[EntryDeclarationMetadata, HttpResponse](amendUrl, metadata, headers)
   }
 
   private def postNew(metadata: EntryDeclarationMetadata, headers: Seq[(String, String)], attemptNumber: Int)(
     implicit lc: LoggingContext): Future[HttpResponse] = {
-    ContextLogger.info(s"sending POST request to $newUrl")
+    ContextLogger.info(s"sending POST request to $newUrl attempt $attemptNumber")
     client
       .POST[EntryDeclarationMetadata, HttpResponse](newUrl, metadata, headers)
   }
