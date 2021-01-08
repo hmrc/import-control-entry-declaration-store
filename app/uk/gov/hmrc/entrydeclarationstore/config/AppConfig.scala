@@ -175,7 +175,7 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
 
   lazy val eisTrafficSwitchConfig: TrafficSwitchConfig = {
     val callTimeout    = getFiniteDuration(eisConfig, "trafficSwitch.callTimeout")
-    val totalRetryTime = nrsRetries.fold(Duration.Zero)(_ + _)
+    val totalRetryTime = eisRetries.fold(Duration.Zero)(_ + _)
 
     if (callTimeout < totalRetryTime) {
       Logger.warn(s"Configured call timeout $callTimeout is less than total retry timeout $totalRetryTime")
