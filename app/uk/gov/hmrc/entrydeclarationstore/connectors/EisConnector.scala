@@ -65,7 +65,7 @@ class EisConnectorImpl @Inject()(
       val headers     = headerGenerator.headersForEIS(metadata.submissionId)(hc)
 
       retry(appConfig.eisRetries, retryCondition) { attempt =>
-        ContextLogger.info(if (attempt == 0) "sending to EIS" else s"sending to EIS retry $attempt of $numRetries")
+        logSending(attempt)
 
         if (isAmendment) putAmendment(metadata, headers) else postNew(metadata, headers)
       }
@@ -90,7 +90,7 @@ class EisConnectorImpl @Inject()(
     withTrafficSwitchIfRequired(bypassTrafficSwitch)(code)
       .map { response =>
         val status = response.status
-        ContextLogger.info(s"Send to EIS returned status code: $status")
+        logSendResult(response, willRetry = false)
 
         if (status == ACCEPTED) {
           None
@@ -130,12 +130,23 @@ class EisConnectorImpl @Inject()(
     case Success(response) =>
       val willRetry = appConfig.eisRetryStatusCodes.contains(response.status)
 
-      if (willRetry) {
-        ContextLogger.info(s"sending to EIS failed with status ${response.status}. Will retry.")
-      }
+      // So we don't duplicate logging when not retrying...
+      if (willRetry) logSendResult(response, willRetry = true)
 
       willRetry
 
     case _ => false
+  }
+
+  private def logSending(attempt: Int)(implicit lc: LoggingContext): Unit = {
+    val retryInfo = if (attempt > 0) s" retry $attempt of $numRetries" else ""
+
+    ContextLogger.info(s"Sending to EIS$retryInfo")
+  }
+
+  private def logSendResult(response: HttpResponse, willRetry: Boolean)(implicit lc: LoggingContext): Unit = {
+    val retryInfo = if (willRetry) " will retry" else ""
+
+    ContextLogger.info(s"Send to EIS returned status code: ${response.status}$retryInfo")
   }
 }

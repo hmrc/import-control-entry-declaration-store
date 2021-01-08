@@ -20,7 +20,7 @@ import akka.actor.{ActorSystem, Scheduler}
 import akka.stream.actor.ActorPublisherMessage.Request
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock._
-import com.github.tomakehurst.wiremock.client.{CountMatchingStrategy, WireMock}
+import com.github.tomakehurst.wiremock.client.{CountMatchingStrategy, MappingBuilder, ResponseDefinitionBuilder, WireMock}
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import com.github.tomakehurst.wiremock.stubbing.{Scenario, StubMapping}
 import org.scalatest.concurrent.Eventually
@@ -148,31 +148,41 @@ class EisConnectorSpec
     MockHeaderGenerator
       .headersForEIS(submissionId) returns Seq(expectedHeader -> expectedHeaderValue) anyNumberOfTimes ()
 
+    def requestBuilder(amendment: Boolean): MappingBuilder =
+      if (amendment) {
+        put(urlPathEqualTo(amendUrl))
+          .withRequestBody(equalToJson(Json.toJson(amendmentMetadata).toString()))
+          .withHeader(expectedHeader, equalTo(expectedHeaderValue))
+      } else {
+        post(urlPathEqualTo(newUrl))
+          .withRequestBody(equalToJson(Json.toJson(declarationMetadata).toString()))
+          .withHeader(expectedHeader, equalTo(expectedHeaderValue))
+      }
+
+    def responseBuilder(statusCode: Int): ResponseDefinitionBuilder =
+      aResponse()
+        .withHeader(CONTENT_TYPE, MimeTypes.JSON)
+        .withStatus(statusCode)
+
     def stubResponse(statusCode: Int): StubMapping =
       wireMockServer
         .stubFor(
-          post(urlPathEqualTo(newUrl))
-            .withRequestBody(equalToJson(Json.toJson(declarationMetadata).toString()))
-            .willReturn(aResponse()
-              .withHeader(CONTENT_TYPE, MimeTypes.JSON)
-              .withStatus(statusCode)))
+          requestBuilder(amendment = false)
+            .willReturn(responseBuilder(statusCode)))
 
-    def stubResponseRetries(subsequentStatusCodes: Seq[Int]): Unit = {
+    def stubResponseRetries(successiveStatusCodes: Seq[Int], amendment: Boolean = false): Unit = {
       def attempted(i: Int) = if (i == 0) Scenario.STARTED else s"Attempted $i"
 
       wireMockServer.resetScenarios()
 
-      subsequentStatusCodes.zipWithIndex.foreach {
+      successiveStatusCodes.zipWithIndex.foreach {
         case (code, i) =>
           wireMockServer
             .stubFor(
-              post(urlPathEqualTo(newUrl))
-                .withRequestBody(equalToJson(Json.toJson(declarationMetadata).toString()))
+              requestBuilder(amendment)
                 .inScenario("Retry")
                 .whenScenarioStateIs(attempted(i))
-                .willReturn(aResponse()
-                  .withHeader(CONTENT_TYPE, MimeTypes.JSON)
-                  .withStatus(code))
+                .willReturn(responseBuilder(code))
                 .willSetStateTo(attempted(i + 1)))
       }
     }
@@ -223,8 +233,15 @@ class EisConnectorSpec
       totalCalls
     }
 
-    def verifyRequestCount(expected: Int): Unit =
-      verify(new CountMatchingStrategy(CountMatchingStrategy.EQUAL_TO, expected), postRequestedFor(urlEqualTo(newUrl)))
+    def verifyRequestCount(expected: Int, amendment: Boolean = false): Unit = {
+      val patternBuilder = if (amendment) {
+        putRequestedFor(urlEqualTo(amendUrl))
+      } else {
+        postRequestedFor(urlEqualTo(newUrl))
+      }
+
+      verify(new CountMatchingStrategy(CountMatchingStrategy.EQUAL_TO, expected), patternBuilder)
+    }
   }
 
   "Calling .submitMetadata" when {
@@ -234,13 +251,8 @@ class EisConnectorSpec
         "eis responds 202 (Accepted)" must {
           "return None" when {
             "executing a post for a declaration" in new Test {
-              wireMockServer.stubFor(
-                post(urlPathEqualTo(newUrl))
-                  .withHeader(expectedHeader, equalTo(expectedHeaderValue))
-                  .withRequestBody(equalToJson(Json.toJson(declarationMetadata).toString))
-                  .willReturn(aResponse()
-                    .withHeader(CONTENT_TYPE, MimeTypes.JSON)
-                    .withStatus(ACCEPTED)))
+              wireMockServer.stubFor(requestBuilder(amendment = false)
+                .willReturn(responseBuilder(ACCEPTED)))
 
               await(connector.submitMetadata(declarationMetadata, bypassTrafficSwitch)) shouldBe None
 
@@ -251,13 +263,8 @@ class EisConnectorSpec
             }
 
             "executing a put for an amendment" in new Test {
-              wireMockServer.stubFor(
-                put(urlPathEqualTo(amendUrl))
-                  .withHeader(expectedHeader, equalTo(expectedHeaderValue))
-                  .withRequestBody(equalToJson(Json.toJson(amendmentMetadata).toString))
-                  .willReturn(aResponse()
-                    .withHeader(CONTENT_TYPE, MimeTypes.JSON)
-                    .withStatus(ACCEPTED)))
+              wireMockServer.stubFor(requestBuilder(amendment = true)
+                .willReturn(responseBuilder(ACCEPTED)))
 
               await(connector.submitMetadata(amendmentMetadata, bypassTrafficSwitch)) shouldBe None
 
@@ -424,6 +431,19 @@ class EisConnectorSpec
 
           verifyRequestCount(maxRetries + 1)
         }
+
+      "retry for amendments" in new Test(retryDelays = retryDelays(maxRetries)) {
+        // WLOG
+        val failureStatusCode: Int = eisRetryStatusCodes.head
+        val numRetries             = 2
+
+        wireMockServer.resetRequests()
+        stubResponseRetries(List.fill(numRetries)(failureStatusCode) :+ ACCEPTED, amendment = true)
+
+        await(connector.submitMetadata(amendmentMetadata, bypassTrafficSwitch = false)) shouldBe None
+
+        verifyRequestCount(numRetries + 1, amendment = true)
+      }
 
       "not trip the traffic switch due to retries" in new Test(retryDelays = retryDelays(maxCallFailures)) {
         // WLOG
