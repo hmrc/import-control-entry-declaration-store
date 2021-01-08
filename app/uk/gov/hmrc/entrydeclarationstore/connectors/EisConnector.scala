@@ -53,6 +53,8 @@ class EisConnectorImpl @Inject()(
   val newUrl: String   = s"${appConfig.eisHost}${appConfig.eisNewEnsUrlPath}"
   val amendUrl: String = s"${appConfig.eisHost}${appConfig.eisAmendEnsUrlPath}"
 
+  private lazy val numRetries = appConfig.eisRetries.length
+
   implicit val emptyHeaderCarrier: HeaderCarrier = HeaderCarrier()
 
   def submitMetadata(metadata: EntryDeclarationMetadata, bypassTrafficSwitch: Boolean)(
@@ -61,22 +63,24 @@ class EisConnectorImpl @Inject()(
     submit(bypassTrafficSwitch) {
       val isAmendment = metadata.movementReferenceNumber.isDefined
       val headers     = headerGenerator.headersForEIS(metadata.submissionId)(hc)
-      ContextLogger.info(s"sending to EIS")
-      retry(appConfig.eisRetries, retryCondition) { attemptNumber =>
-        if (isAmendment) putAmendment(metadata, headers, attemptNumber) else postNew(metadata, headers, attemptNumber)
+
+      retry(appConfig.eisRetries, retryCondition) { attempt =>
+        ContextLogger.info(if (attempt == 0) "sending to EIS" else s"sending to EIS retry $attempt of $numRetries")
+
+        if (isAmendment) putAmendment(metadata, headers) else postNew(metadata, headers)
       }
     }
 
-  private def putAmendment(metadata: EntryDeclarationMetadata, headers: Seq[(String, String)], attemptNumber: Int)(
+  private def putAmendment(metadata: EntryDeclarationMetadata, headers: Seq[(String, String)])(
     implicit lc: LoggingContext): Future[HttpResponse] = {
-    ContextLogger.info(s"sending PUT request to $amendUrl attempt $attemptNumber")
+    ContextLogger.info(s"sending PUT request to $amendUrl")
     client
       .PUT[EntryDeclarationMetadata, HttpResponse](amendUrl, metadata, headers)
   }
 
-  private def postNew(metadata: EntryDeclarationMetadata, headers: Seq[(String, String)], attemptNumber: Int)(
+  private def postNew(metadata: EntryDeclarationMetadata, headers: Seq[(String, String)])(
     implicit lc: LoggingContext): Future[HttpResponse] = {
-    ContextLogger.info(s"sending POST request to $newUrl attempt $attemptNumber")
+    ContextLogger.info(s"sending POST request to $newUrl")
     client
       .POST[EntryDeclarationMetadata, HttpResponse](newUrl, metadata, headers)
   }
@@ -122,8 +126,16 @@ class EisConnectorImpl @Inject()(
     case Failure(_) => true
   }
 
-  private val retryCondition: Try[HttpResponse] => Boolean = {
-    case Success(response) => appConfig.eisRetryStatusCodes.contains(response.status)
-    case _                 => false
+  private def retryCondition(implicit lc: LoggingContext): Try[HttpResponse] => Boolean = {
+    case Success(response) =>
+      val willRetry = appConfig.eisRetryStatusCodes.contains(response.status)
+
+      if (willRetry) {
+        ContextLogger.info(s"sending to EIS failed with status ${response.status}. Will retry.")
+      }
+
+      willRetry
+
+    case _ => false
   }
 }

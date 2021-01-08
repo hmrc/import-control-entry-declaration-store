@@ -36,8 +36,8 @@ trait Retrying {
   /**
     * Retries an operation returning a future
     * @param delays delays between retries
-    * @param retryCondition whether to retry based on a result or otherwise return that result (which may be a failed future)
-    * @param task the task returning a future (a function that accepts the attempt number)
+    * @param retryCondition a function to determine whether to retry based on a result
+    * @param task the task returning a future (a function that accepts the retry number; 0 = initial attempt)
     * @return the result of the last attempt
     */
   def retry[A](delays: List[FiniteDuration], retryCondition: Try[A] => Boolean)(task: Int => Future[A]): Future[A] = {

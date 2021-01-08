@@ -160,8 +160,7 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
   lazy val eisInboundBearerToken: String =
     config.get[String]("microservice.services.import-control-entry-declaration-eis.inboundBearerToken")
 
-  lazy val eisRetries: List[FiniteDuration] =
-    Retrying.fibonacciDelays(getFiniteDuration(eisConfig, "initialDelay"), nrsConfig.get[Int]("numberOfRetries"))
+  lazy val eisRetries: List[FiniteDuration] = fibonacciRetryDelays(eisConfig)
 
   lazy val eisRetryStatusCodes: Set[Int] = eisConfig.get[Seq[Int]]("retryStatusCodes").toSet
 
@@ -212,12 +211,14 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
 
   lazy val nrsApiKey: String = nrsConfig.get[String]("xApiKey")
 
-  lazy val nrsRetries: List[FiniteDuration] =
-    Retrying.fibonacciDelays(getFiniteDuration(nrsConfig, "initialDelay"), nrsConfig.get[Int]("numberOfRetries"))
+  lazy val nrsRetries: List[FiniteDuration] = fibonacciRetryDelays(nrsConfig)
 
   lazy val nrsEnabled: Boolean = nrsConfig.getOptional[Boolean]("enabled").getOrElse(true)
 
   lazy val newSSEnrolmentEnabled: Boolean = config.get[Boolean]("feature-switch.new-ss-enrolment")
 
   val replayBatchSize: Int = config.getOptional[Int]("replay.batchSize").getOrElse(10)
+
+  private def fibonacciRetryDelays(conf: Configuration): List[FiniteDuration] =
+    Retrying.fibonacciDelays(getFiniteDuration(conf, "initialDelay"), conf.get[Int]("numberOfRetries"))
 }
