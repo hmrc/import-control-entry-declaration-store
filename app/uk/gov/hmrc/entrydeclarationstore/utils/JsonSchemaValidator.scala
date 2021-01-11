@@ -34,12 +34,16 @@ object JsonSchemaValidator {
       val jsonSchema: JsonNode     = mapper.readTree(ResourceUtils.url(schemaDoc))
       val validator: JsonValidator = factory.getValidator
       val report: ProcessingReport = validator.validate(jsonSchema, inputJson)
-      if (!report.isSuccess) ContextLogger.error(s"Failed to validate $inputDoc and $report")
+      if (!report.isSuccess) {
+        ContextLogger.debug(s"Failed to validate $inputDoc: $report")
+        ContextLogger.error(s"Failed to validate JSON: $report")
+      }
 
       report.isSuccess
     } catch {
       case e: Exception =>
-        ContextLogger.error(s"Failed to validate $inputDoc", e)
+        ContextLogger.debug(s"Failed to validate $inputDoc", e)
+        ContextLogger.error(s"Failed to validate JSON", e)
         false
     }
 }

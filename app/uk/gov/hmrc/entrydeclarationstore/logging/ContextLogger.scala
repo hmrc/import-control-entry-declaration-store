@@ -20,6 +20,12 @@ import play.api.Logger
 
 object ContextLogger {
 
+  def debug(message: => String)(implicit lc: LoggingContext): Unit =
+    Logger.debug(formatMessage(message))
+
+  def debug(message: => String, e: => Throwable)(implicit lc: LoggingContext): Unit =
+    Logger.debug(formatMessage(message), e)
+
   def info(message: => String)(implicit lc: LoggingContext): Unit =
     Logger.info(formatMessage(message))
 
