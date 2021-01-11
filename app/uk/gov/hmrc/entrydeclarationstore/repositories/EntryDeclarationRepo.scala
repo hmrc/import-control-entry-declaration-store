@@ -162,7 +162,13 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
         Json.obj("submissionId" -> submissionId),
         Json.obj("$set"         -> Json.obj("eisSubmissionState" -> EisSubmissionState.Error))
       )
-      .map(result => result.nModified > 0)
+      .map { result =>
+        val success = result.nModified > 0
+        if (success) {
+          ContextLogger.warn("Submission set to Undelivered")
+        }
+        success
+      }
       .recover {
         case e: DatabaseException =>
           ContextLogger.error(s"Unable to set eis submission failure for entry declaration", e)
