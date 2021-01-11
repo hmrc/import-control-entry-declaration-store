@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.config
 
-import play.api.Configuration
+import play.api.{Configuration, Logger}
 import uk.gov.hmrc.entrydeclarationstore.trafficswitch.TrafficSwitchConfig
 import uk.gov.hmrc.entrydeclarationstore.utils.{Retrying, XmlFormatConfig}
 import uk.gov.hmrc.play.bootstrap.config.{AppName, ServicesConfig}
@@ -61,6 +61,10 @@ trait AppConfig {
   def eisInboundBearerToken: String
 
   def eisEnvironment: String
+
+  def eisRetries: List[FiniteDuration]
+
+  def eisRetryStatusCodes: Set[Int]
 
   def validateXMLtoJsonTransformation: Boolean
 
@@ -156,6 +160,10 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
   lazy val eisInboundBearerToken: String =
     config.get[String]("microservice.services.import-control-entry-declaration-eis.inboundBearerToken")
 
+  lazy val eisRetries: List[FiniteDuration] = fibonacciRetryDelays(eisConfig)
+
+  lazy val eisRetryStatusCodes: Set[Int] = eisConfig.get[Seq[Int]]("retryStatusCodes").toSet
+
   lazy val validateXMLtoJsonTransformation: Boolean =
     config.getOptional[Boolean]("validateXMLtoJsonTransformation").getOrElse(false)
 
@@ -166,9 +174,16 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
   lazy val headerAllowlist: Seq[String] = config.get[Seq[String]]("bootstrap.http.headersAllowlist")
 
   lazy val eisTrafficSwitchConfig: TrafficSwitchConfig = {
+    val callTimeout    = getFiniteDuration(eisConfig, "trafficSwitch.callTimeout")
+    val totalRetryTime = eisRetries.fold(Duration.Zero)(_ + _)
+
+    if (callTimeout < totalRetryTime) {
+      Logger.warn(s"Configured call timeout $callTimeout is less than total retry timeout $totalRetryTime")
+    }
+
     TrafficSwitchConfig(
       maxFailures                  = eisConfig.get[Int]("trafficSwitch.maxFailures"),
-      callTimeout                  = getFiniteDuration(eisConfig, "trafficSwitch.callTimeout"),
+      callTimeout                  = callTimeout,
       flowingStateRefreshPeriod    = getFiniteDuration(eisConfig, "trafficSwitch.flowingStateRefreshPeriod"),
       notFlowingStateRefreshPeriod = getFiniteDuration(eisConfig, "trafficSwitch.notFlowingStateRefreshPeriod")
     )
@@ -196,12 +211,14 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
 
   lazy val nrsApiKey: String = nrsConfig.get[String]("xApiKey")
 
-  lazy val nrsRetries: List[FiniteDuration] =
-    Retrying.fibonacciDelays(getFiniteDuration(nrsConfig, "initialDelay"), nrsConfig.get[Int]("numberOfRetries"))
+  lazy val nrsRetries: List[FiniteDuration] = fibonacciRetryDelays(nrsConfig)
 
   lazy val nrsEnabled: Boolean = nrsConfig.getOptional[Boolean]("enabled").getOrElse(true)
 
   lazy val newSSEnrolmentEnabled: Boolean = config.get[Boolean]("feature-switch.new-ss-enrolment")
 
   val replayBatchSize: Int = config.getOptional[Int]("replay.batchSize").getOrElse(10)
+
+  private def fibonacciRetryDelays(conf: Configuration): List[FiniteDuration] =
+    Retrying.fibonacciDelays(getFiniteDuration(conf, "initialDelay"), conf.get[Int]("numberOfRetries"))
 }

@@ -54,6 +54,10 @@ trait MockAppConfig extends MockFactory {
 
     def eisEnvironment: CallHandler[String] = mockAppConfig.eisEnvironment _ expects ()
 
+    def eisRetries: CallHandler[List[FiniteDuration]] = mockAppConfig.eisRetries _ expects ()
+
+    def eisRetryStatusCodes: CallHandler[Set[Int]] = mockAppConfig.eisRetryStatusCodes _ expects ()
+
     def xmlFormatConfig: CallHandler[XmlFormatConfig] = mockAppConfig.xmlFormatConfig _ expects ()
 
     def validateXMLtoJsonTransformation: CallHandler[Boolean] =
