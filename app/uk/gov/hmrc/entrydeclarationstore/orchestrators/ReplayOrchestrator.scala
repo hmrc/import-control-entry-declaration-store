@@ -20,7 +20,7 @@ import akka.stream.Materializer
 import akka.stream.scaladsl.Sink
 import play.api.Logger
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
-import uk.gov.hmrc.entrydeclarationstore.models.ReplayResult
+import uk.gov.hmrc.entrydeclarationstore.models.{ReplayResult, ReplayStartResult}
 import uk.gov.hmrc.entrydeclarationstore.repositories.{EntryDeclarationRepo, ReplayStateRepo}
 import uk.gov.hmrc.entrydeclarationstore.services.SubmissionReplayService
 import uk.gov.hmrc.entrydeclarationstore.utils.IdGenerator
@@ -45,7 +45,7 @@ class ReplayOrchestrator @Inject()(
     * @param limit an optional limit on the number of submissions to replay
     * @return a tuple consisting of the unique replay id and (mainly for testing) the overall final result of the replay
     */
-  def startReplay(limit: Option[Int])(implicit hc: HeaderCarrier): (Future[String], Future[ReplayResult]) = {
+  def startReplay(limit: Option[Int])(implicit hc: HeaderCarrier): (Future[ReplayStartResult], Future[ReplayResult]) = {
     val replayStartTime = clock.instant
 
     val futureReplayId = for {
@@ -60,7 +60,7 @@ class ReplayOrchestrator @Inject()(
       replayResult <- startReplay(limit, replayStartTime, replayId)
     } yield replayResult
 
-    (futureReplayId, futureReplayResult)
+    (futureReplayId.map(ReplayStartResult.Started(_)), futureReplayResult)
   }
 
   private def insertState(replayId: String, totalToReplay: Int, startTime: Instant): Future[Unit] =

@@ -190,8 +190,14 @@ class ReplayControllerISpec
           replaySuccessfully(numDeclarations = batchSize * 2, limit = None)
         }
 
-        "be able to imit the number replayed" in {
+        "be able to limit the number replayed" in {
           replaySuccessfully(numDeclarations = batchSize, limit = Some(batchSize / 2))
+        }
+      }
+
+      "a replay is already in progress" must {
+        "return CONFLICT with the latest replayId" in {
+          fail
         }
       }
 

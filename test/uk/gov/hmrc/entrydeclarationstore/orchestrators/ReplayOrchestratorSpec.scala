@@ -25,7 +25,7 @@ import play.api.test.Injecting
 import play.api.{Application, Environment, Mode}
 import reactivemongo.core.errors.ConnectionException
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
-import uk.gov.hmrc.entrydeclarationstore.models.{BatchReplayError, BatchReplayResult, ReplayResult}
+import uk.gov.hmrc.entrydeclarationstore.models.{BatchReplayError, BatchReplayResult, ReplayResult, ReplayStartResult}
 import uk.gov.hmrc.entrydeclarationstore.repositories.{MockEntryDeclarationRepo, MockReplayStateRepo}
 import uk.gov.hmrc.entrydeclarationstore.services.MockSubmissionReplayService
 import uk.gov.hmrc.entrydeclarationstore.utils.MockIdGenerator
@@ -122,7 +122,7 @@ class ReplayOrchestratorSpec
           val completeFuture = willSetCompleted
 
           val (fReplayId, result) = replayOrchestrator.startReplay(None)
-          fReplayId.futureValue shouldBe replayId
+          fReplayId.futureValue shouldBe ReplayStartResult.Started(replayId)
           result.futureValue    shouldBe ReplayResult.Completed(numBatches = 1)
 
           await(completeFuture)
@@ -145,7 +145,7 @@ class ReplayOrchestratorSpec
         val completeFuture = willSetCompleted
 
         val (fReplayId, result) = replayOrchestrator.startReplay(replayLimit)
-        fReplayId.futureValue shouldBe replayId
+        fReplayId.futureValue shouldBe ReplayStartResult.Started(replayId)
         result.futureValue    shouldBe ReplayResult.Completed(numBatches = 1)
 
         await(completeFuture)
@@ -167,7 +167,7 @@ class ReplayOrchestratorSpec
         val completeFuture = willSetCompleted
 
         val (fReplayId, result) = replayOrchestrator.startReplay(replayLimit)
-        fReplayId.futureValue shouldBe replayId
+        fReplayId.futureValue shouldBe ReplayStartResult.Started(replayId)
         result.futureValue    shouldBe ReplayResult.Completed(numBatches = 1)
 
         await(completeFuture)
@@ -208,7 +208,7 @@ class ReplayOrchestratorSpec
         val completeFuture = willSetCompleted
 
         val (fReplayId, result) = replayOrchestrator.startReplay(None)
-        fReplayId.futureValue shouldBe replayId
+        fReplayId.futureValue shouldBe ReplayStartResult.Started(replayId)
         result.futureValue    shouldBe ReplayResult.Aborted
 
         await(completeFuture)
@@ -229,7 +229,7 @@ class ReplayOrchestratorSpec
           val completeFuture = willSetCompleted
 
           val (fReplayId, result) = replayOrchestrator.startReplay(None)
-          fReplayId.futureValue shouldBe replayId
+          fReplayId.futureValue shouldBe ReplayStartResult.Started(replayId)
           result.futureValue    shouldBe ReplayResult.Completed(numBatches = 3)
 
           await(completeFuture)
@@ -251,7 +251,7 @@ class ReplayOrchestratorSpec
           val completeFuture = willSetCompleted
 
           val (fReplayId, result) = replayOrchestrator.startReplay(None)
-          fReplayId.futureValue shouldBe replayId
+          fReplayId.futureValue shouldBe ReplayStartResult.Started(replayId)
           result.futureValue    shouldBe ReplayResult.Completed(numBatches = 3)
 
           await(completeFuture)
@@ -272,7 +272,7 @@ class ReplayOrchestratorSpec
           val completeFuture = willSetCompleted
 
           val (fReplayId, result) = replayOrchestrator.startReplay(None)
-          fReplayId.futureValue shouldBe replayId
+          fReplayId.futureValue shouldBe ReplayStartResult.Started(replayId)
           result.futureValue    shouldBe ReplayResult.Completed(numBatches = 2)
 
           await(completeFuture)
@@ -298,7 +298,7 @@ class ReplayOrchestratorSpec
           val completeFuture = willSetCompleted
 
           val (fReplayId, result) = replayOrchestrator.startReplay(None)
-          fReplayId.futureValue shouldBe replayId
+          fReplayId.futureValue shouldBe ReplayStartResult.Started(replayId)
           result.futureValue    shouldBe ReplayResult.Aborted
 
           await(completeFuture)
@@ -325,7 +325,7 @@ class ReplayOrchestratorSpec
             val completeFuture = willSetCompleted
 
             val (fReplayId, result) = replayOrchestrator.startReplay(None)
-            fReplayId.futureValue shouldBe replayId
+            fReplayId.futureValue shouldBe ReplayStartResult.Started(replayId)
             result.futureValue    shouldBe ReplayResult.Aborted
 
             await(completeFuture)
@@ -349,7 +349,7 @@ class ReplayOrchestratorSpec
             }
 
           val (fReplayId, _) = replayOrchestrator.startReplay(None)
-          fReplayId.futureValue shouldBe replayId
+          fReplayId.futureValue shouldBe ReplayStartResult.Started(replayId)
 
           await(replayBatchCalled.future)
         }

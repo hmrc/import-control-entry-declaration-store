@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.test.Helpers.{contentType, _}
 import play.api.test.{FakeRequest, Helpers}
 import play.mvc.Http.MimeTypes
-import uk.gov.hmrc.entrydeclarationstore.models.{ReplayResult, TransportCount, UndeliveredCounts}
+import uk.gov.hmrc.entrydeclarationstore.models.{ReplayResult, ReplayStartResult, TransportCount, UndeliveredCounts}
 import uk.gov.hmrc.entrydeclarationstore.orchestrators.MockReplayOrchestrator
 import uk.gov.hmrc.entrydeclarationstore.services.MockSubmissionReplayService
 import uk.gov.hmrc.play.test.UnitSpec
@@ -33,8 +33,6 @@ class ReplayControllerSpec extends UnitSpec with MockReplayOrchestrator with Moc
     new ReplayController(Helpers.stubControllerComponents(), mockReplayOrchestrator, mockSubmissionReplayService)
   val limit    = 100
   val replayId = "replayId"
-
-  val replayIdJson: JsValue = Json.parse(s"""{"replayId": "$replayId"}""")
 
   val replayJson: JsValue = Json.parse(s"""
                                           |{
@@ -49,24 +47,25 @@ class ReplayControllerSpec extends UnitSpec with MockReplayOrchestrator with Moc
   "ReplayController startReplay" should {
     "return Accepted" when {
       "request with limit defined is handled successfully" in {
-        MockReplayOrchestrator.startReplay(Some(limit)) returns Future.successful(replayId) -> ignoredReplayResultFuture
+        MockReplayOrchestrator.startReplay(Some(limit)) returns
+          Future.successful(ReplayStartResult.Started(replayId)) -> ignoredReplayResultFuture
 
         val result = controller.startReplay(fakeRequest)
 
         status(result)        shouldBe ACCEPTED
         contentType(result)   shouldBe Some("application/json")
-        contentAsJson(result) shouldBe replayIdJson
+        contentAsJson(result) shouldBe Json.toJson(ReplayStartResult.Started("replayId"))
       }
 
       "request with no limit defined is handled successfully" in {
-        MockReplayOrchestrator.startReplay(None) returns Future.successful(replayId) -> ignoredReplayResultFuture
+        MockReplayOrchestrator.startReplay(None) returns Future.successful(ReplayStartResult.Started(replayId)) -> ignoredReplayResultFuture
         val noLimitReplayJson: JsValue        = Json.parse("{}")
         val fakeRequest: FakeRequest[JsValue] = FakeRequest().withBody(noLimitReplayJson)
         val result                            = controller.startReplay(fakeRequest)
 
         status(result)        shouldBe ACCEPTED
         contentType(result)   shouldBe Some("application/json")
-        contentAsJson(result) shouldBe replayIdJson
+        contentAsJson(result) shouldBe Json.toJson(ReplayStartResult.Started("replayId"))
       }
     }
 
@@ -84,6 +83,30 @@ class ReplayControllerSpec extends UnitSpec with MockReplayOrchestrator with Moc
 
         status(result)      shouldBe BAD_REQUEST
         contentType(result) shouldBe None
+      }
+    }
+
+    "return Conflict" when {
+      "there is a replay in progress and the last replay id can be determined" in {
+        MockReplayOrchestrator.startReplay(Some(limit)) returns
+          Future.successful(ReplayStartResult.AlreadyRunning(Some(replayId))) -> ignoredReplayResultFuture
+
+        val result = controller.startReplay(fakeRequest)
+
+        status(result)        shouldBe CONFLICT
+        contentType(result)   shouldBe Some("application/json")
+        contentAsJson(result) shouldBe Json.toJson(ReplayStartResult.AlreadyRunning(Some("replayId")))
+      }
+
+      "there is a replay in progress and the last replay id cannot be determined" in {
+        MockReplayOrchestrator.startReplay(Some(limit)) returns
+          Future.successful(ReplayStartResult.AlreadyRunning(None)) -> ignoredReplayResultFuture
+
+        val result = controller.startReplay(fakeRequest)
+
+        status(result)        shouldBe CONFLICT
+        contentType(result)   shouldBe Some("application/json")
+        contentAsJson(result) shouldBe JsObject.empty
       }
     }
   }
