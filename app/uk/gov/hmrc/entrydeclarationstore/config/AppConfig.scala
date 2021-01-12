@@ -88,8 +88,6 @@ trait AppConfig {
 
   def housekeepingRunLimit: Int
 
-  def replayBatchSizeLimit: Int
-
   def logSubmissionPayloads: Boolean
 
   //NRS config items
@@ -203,7 +201,6 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
 
   lazy val housekeepingRunLimit: Int = config.get[Configuration](s"mongodb").get[Int]("housekeepingRunLimit")
 
-  lazy val replayBatchSizeLimit: Int = config.get[Int]("replay.batchSizeLimit")
 
   lazy val logSubmissionPayloads: Boolean = config.get[Boolean]("logSubmissionPayloads")
 

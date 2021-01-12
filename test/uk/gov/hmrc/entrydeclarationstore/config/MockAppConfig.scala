@@ -73,8 +73,6 @@ trait MockAppConfig extends MockFactory {
 
     def headerAllowlist: CallHandler[Seq[String]] = mockAppConfig.headerAllowlist _ expects ()
 
-    def replayBatchSizeLimit: CallHandler[Int] = mockAppConfig.replayBatchSizeLimit _ expects ()
-
     def logSubmissionPayloads: CallHandler[Boolean] = mockAppConfig.logSubmissionPayloads _ expects ()
 
     //NRS config items
