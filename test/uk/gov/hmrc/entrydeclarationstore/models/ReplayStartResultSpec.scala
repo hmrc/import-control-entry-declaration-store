@@ -22,20 +22,31 @@ import uk.gov.hmrc.play.test.UnitSpec
 class ReplayStartResultSpec extends UnitSpec {
   "ReplayStartResult.Started" must {
     "correctly serialize to JSON" in {
-      Json.toJson(ReplayStartResult.Started("someId")) shouldBe Json.parse(s"""{"replayId": "someId"}""")
+      Json.toJson(ReplayStartResult.Started("someId")) shouldBe
+        Json.parse("""{
+                     |  "replayId": "someId", 
+                     |  "alreadyStarted": false
+                     |}""".stripMargin)
     }
   }
 
   "ReplayStartResult.AlreadyRunning" when {
     "the latest replayId can be determined" must {
       "correctly serialize to JSON" in {
-        Json.toJson(ReplayStartResult.AlreadyRunning(Some("someId"))) shouldBe Json.parse(s"""{"replayId": "someId"}""")
+        Json.toJson(ReplayStartResult.AlreadyRunning(Some("someId"))) shouldBe
+          Json.parse("""{
+                       |  "replayId": "someId", 
+                       |  "alreadyStarted": true
+                       |}""".stripMargin)
       }
     }
 
     "the latest replayId cannot be determined" must {
       "correctly serialize to JSON" in {
-        Json.toJson(ReplayStartResult.AlreadyRunning(None)) shouldBe JsObject.empty
+        Json.toJson(ReplayStartResult.AlreadyRunning(None)) shouldBe
+          Json.parse("""{
+                       |  "alreadyStarted": true
+                       |}""".stripMargin)
       }
     }
   }

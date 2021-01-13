@@ -45,7 +45,7 @@ class ReplayControllerSpec extends UnitSpec with MockReplayOrchestrator with Moc
   val ignoredReplayResultFuture: Future[ReplayResult] = Promise[ReplayResult].future
 
   "ReplayController startReplay" should {
-    "return Accepted" when {
+    "return Accepted with Started" when {
       "request with limit defined is handled successfully" in {
         MockReplayOrchestrator.startReplay(Some(limit)) returns
           Future.successful(ReplayStartResult.Started(replayId)) -> ignoredReplayResultFuture
@@ -86,14 +86,14 @@ class ReplayControllerSpec extends UnitSpec with MockReplayOrchestrator with Moc
       }
     }
 
-    "return Conflict" when {
+    "return Accepted with AlreadyRunning" when {
       "there is a replay in progress and the last replay id can be determined" in {
         MockReplayOrchestrator.startReplay(Some(limit)) returns
           Future.successful(ReplayStartResult.AlreadyRunning(Some(replayId))) -> ignoredReplayResultFuture
 
         val result = controller.startReplay(fakeRequest)
 
-        status(result)        shouldBe CONFLICT
+        status(result)        shouldBe ACCEPTED
         contentType(result)   shouldBe Some("application/json")
         contentAsJson(result) shouldBe Json.toJson(ReplayStartResult.AlreadyRunning(Some("replayId")))
       }
@@ -104,9 +104,9 @@ class ReplayControllerSpec extends UnitSpec with MockReplayOrchestrator with Moc
 
         val result = controller.startReplay(fakeRequest)
 
-        status(result)        shouldBe CONFLICT
+        status(result)        shouldBe ACCEPTED
         contentType(result)   shouldBe Some("application/json")
-        contentAsJson(result) shouldBe JsObject.empty
+        contentAsJson(result) shouldBe Json.toJson(ReplayStartResult.AlreadyRunning(None))
       }
     }
   }

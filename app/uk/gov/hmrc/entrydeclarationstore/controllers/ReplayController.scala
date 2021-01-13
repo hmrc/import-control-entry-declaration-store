@@ -42,7 +42,7 @@ class ReplayController @Inject()(
 
         futureReplayStartResult.map {
           case started: ReplayStartResult.Started        => Accepted(Json.toJson(started))
-          case already: ReplayStartResult.AlreadyRunning => Conflict(Json.toJson(already))
+          case already: ReplayStartResult.AlreadyRunning => Accepted(Json.toJson(already))
         }
 
       case JsError(_) =>

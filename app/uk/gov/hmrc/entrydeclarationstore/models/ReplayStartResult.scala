@@ -15,22 +15,30 @@
  */
 
 package uk.gov.hmrc.entrydeclarationstore.models
+import play.api.libs.json._
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{JsPath, Json, Writes}
 
 sealed trait ReplayStartResult
 
 object ReplayStartResult {
   case class Started(replayId: String) extends ReplayStartResult
+  case class AlreadyRunning(replayId: Option[String]) extends ReplayStartResult
 
   object Started {
-    implicit val writes: Writes[Started] = Json.writes[Started]
+    implicit val writes: Writes[Started] = addDiscriminator(Json.writes[Started])
   }
-
-  case class AlreadyRunning(latestReplayId: Option[String]) extends ReplayStartResult
 
   object AlreadyRunning {
-    implicit val writes: Writes[AlreadyRunning] =
-      (JsPath \ "replayId").writeNullable[String].contramap(_.latestReplayId)
+    implicit val writes: Writes[AlreadyRunning] = addDiscriminator(Json.writes[AlreadyRunning])
   }
+
+  private def addDiscriminator[A](writes: OWrites[A]): OWrites[A] =
+    (writes ~ (__ \ "alreadyStarted").write[Boolean]) { (a: A) =>
+      val alreadyStarted = a match {
+        case _: Started        => false
+        case _: AlreadyRunning => true
+      }
+
+      (a, alreadyStarted)
+    }
 }
