@@ -19,10 +19,10 @@ package uk.gov.hmrc.entrydeclarationstore.models
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.play.test.UnitSpec
 
-class ReplayStartResultSpec extends UnitSpec {
+class ReplayInitializationResultSpec extends UnitSpec {
   "ReplayStartResult.Started" must {
     "correctly serialize to JSON" in {
-      Json.toJson(ReplayStartResult.Started("someId")) shouldBe
+      Json.toJson(ReplayInitializationResult.Started("someId")) shouldBe
         Json.parse("""{
                      |  "replayId": "someId", 
                      |  "alreadyStarted": false
@@ -33,7 +33,7 @@ class ReplayStartResultSpec extends UnitSpec {
   "ReplayStartResult.AlreadyRunning" when {
     "the latest replayId can be determined" must {
       "correctly serialize to JSON" in {
-        Json.toJson(ReplayStartResult.AlreadyRunning(Some("someId"))) shouldBe
+        Json.toJson(ReplayInitializationResult.AlreadyRunning(Some("someId"))) shouldBe
           Json.parse("""{
                        |  "replayId": "someId", 
                        |  "alreadyStarted": true
@@ -43,7 +43,7 @@ class ReplayStartResultSpec extends UnitSpec {
 
     "the latest replayId cannot be determined" must {
       "correctly serialize to JSON" in {
-        Json.toJson(ReplayStartResult.AlreadyRunning(None)) shouldBe
+        Json.toJson(ReplayInitializationResult.AlreadyRunning(None)) shouldBe
           Json.parse("""{
                        |  "alreadyStarted": true
                        |}""".stripMargin)

@@ -37,7 +37,7 @@ class ReplayLockImpl @Inject()(lockRepositoryProvider: LockRepositoryProvider, a
   implicit reactiveMongoComponent: ReactiveMongoComponent,
   ec: ExecutionContext)
     extends ReplayLock {
-  private def forceReleaseAfter: JodaDuration = JodaDuration.millis(appConfig.replayLockDuration.toMillis)
+  private val forceReleaseAfter: JodaDuration = JodaDuration.millis(appConfig.replayLockDuration.toMillis)
 
   private val lockId: String = "replay_lock"
 

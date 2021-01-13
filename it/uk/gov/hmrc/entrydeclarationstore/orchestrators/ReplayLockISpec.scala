@@ -111,8 +111,9 @@ class ReplayLockISpec
       }
 
       "no allow renew for a different replayId" in new Scenario {
-        lock.lock("otherId").futureValue shouldBe false
-        isLockedTo(replayId)             shouldBe true
+        lock.renew("otherId").futureValue
+        isLockedTo("otherId") shouldBe false
+        isLockedTo(replayId)  shouldBe true
       }
 
       "allow unlock" in new Scenario {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,17 +18,20 @@ package uk.gov.hmrc.entrydeclarationstore.orchestrators
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
-import uk.gov.hmrc.entrydeclarationstore.models.{ReplayInitializationResult, ReplayResult}
-import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-trait MockReplayOrchestrator extends MockFactory {
-  val mockReplayOrchestrator: ReplayOrchestrator = mock[ReplayOrchestrator]
+trait MockReplayLock extends MockFactory {
+  val mockReplayLock: ReplayLock = mock[ReplayLock]
 
-  object MockReplayOrchestrator {
-    def startReplay(limit: Option[Int]): CallHandler[(Future[ReplayInitializationResult], Future[ReplayResult])] =
-      (mockReplayOrchestrator.startReplay(_: Option[Int])(_: HeaderCarrier)).expects(limit, *)
+  object MockReplayLock {
+    def lock(replayId: String): CallHandler[Future[Boolean]] =
+      (mockReplayLock.lock(_: String)).expects(replayId)
+
+    def renew(replayId: String): CallHandler[Future[Unit]] =
+      (mockReplayLock.renew(_: String)).expects(replayId)
+
+    def unlock(replayId: String): CallHandler[Future[Unit]] =
+      (mockReplayLock.unlock(_: String)).expects(replayId)
   }
-
 }

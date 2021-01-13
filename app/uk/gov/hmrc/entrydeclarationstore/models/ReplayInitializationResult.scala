@@ -18,11 +18,11 @@ package uk.gov.hmrc.entrydeclarationstore.models
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 
-sealed trait ReplayStartResult
+sealed trait ReplayInitializationResult
 
-object ReplayStartResult {
-  case class Started(replayId: String) extends ReplayStartResult
-  case class AlreadyRunning(replayId: Option[String]) extends ReplayStartResult
+object ReplayInitializationResult {
+  case class Started(replayId: String) extends ReplayInitializationResult
+  case class AlreadyRunning(replayId: Option[String]) extends ReplayInitializationResult
 
   object Started {
     implicit val writes: Writes[Started] = addDiscriminator(Json.writes[Started])

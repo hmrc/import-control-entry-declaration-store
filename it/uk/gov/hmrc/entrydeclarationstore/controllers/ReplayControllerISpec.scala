@@ -196,7 +196,7 @@ class ReplayControllerISpec
       }
 
       "a replay is already in progress" must {
-        "return CONFLICT with the latest replayId" in {
+        "return ACCEPT with the latest replayId" in {
           fail
         }
       }

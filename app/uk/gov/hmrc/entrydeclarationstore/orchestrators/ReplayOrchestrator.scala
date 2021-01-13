@@ -20,7 +20,7 @@ import akka.stream.Materializer
 import akka.stream.scaladsl.Sink
 import play.api.Logger
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
-import uk.gov.hmrc.entrydeclarationstore.models.{ReplayResult, ReplayStartResult}
+import uk.gov.hmrc.entrydeclarationstore.models.{ReplayInitializationResult, ReplayResult}
 import uk.gov.hmrc.entrydeclarationstore.repositories.{EntryDeclarationRepo, ReplayStateRepo}
 import uk.gov.hmrc.entrydeclarationstore.services.SubmissionReplayService
 import uk.gov.hmrc.entrydeclarationstore.utils.IdGenerator
@@ -29,7 +29,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import java.time.{Clock, Instant}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.control.NonFatal
+import scala.util.control.{NoStackTrace, NonFatal}
 
 @Singleton
 class ReplayOrchestrator @Inject()(
@@ -37,6 +37,7 @@ class ReplayOrchestrator @Inject()(
   submissionStateRepo: EntryDeclarationRepo,
   replayStateRepo: ReplayStateRepo,
   submissionReplayService: SubmissionReplayService,
+  replayLock: ReplayLock,
   appConfig: AppConfig,
   clock: Clock)(implicit ec: ExecutionContext, mat: Materializer) {
 
@@ -45,22 +46,41 @@ class ReplayOrchestrator @Inject()(
     * @param limit an optional limit on the number of submissions to replay
     * @return a tuple consisting of the unique replay id and (mainly for testing) the overall final result of the replay
     */
-  def startReplay(limit: Option[Int])(implicit hc: HeaderCarrier): (Future[ReplayStartResult], Future[ReplayResult]) = {
+  def startReplay(limit: Option[Int])(
+    implicit hc: HeaderCarrier): (Future[ReplayInitializationResult], Future[ReplayResult]) = {
+
     val replayStartTime = clock.instant
 
-    val futureReplayId = for {
-      totalUndelivered <- submissionStateRepo.totalUndeliveredMessages(receivedNoLaterThan = replayStartTime)
-      replayId    = idGenerator.generateUuid
-      numToReplay = limit.map(lim => lim min totalUndelivered).getOrElse(totalUndelivered)
-      _ <- insertState(replayId, numToReplay, replayStartTime)
-    } yield replayId
+    val initResult = initIfNotRunning(limit, replayStartTime)
 
-    val futureReplayResult = for {
-      replayId     <- futureReplayId
-      replayResult <- startReplay(limit, replayStartTime, replayId)
-    } yield replayResult
+    val futureReplayResult = initResult.flatMap {
+      case ReplayInitializationResult.Started(replayId) =>
+        startReplay(limit, replayStartTime, replayId)
 
-    (futureReplayId.map(ReplayStartResult.Started(_)), futureReplayResult)
+      case ReplayInitializationResult.AlreadyRunning(_) =>
+        // It's a coding error if this is used...
+        Future.failed(new RuntimeException("Replay already running") with NoStackTrace)
+    }
+
+    (initResult, futureReplayResult)
+  }
+
+  private def initIfNotRunning(limit: Option[Int], replayStartTime: Instant): Future[ReplayInitializationResult] = {
+    val replayId = idGenerator.generateUuid
+
+    replayLock
+      .lock(replayId)
+      .flatMap { lockAcquired =>
+        if (lockAcquired) {
+          for {
+            totalUndelivered <- submissionStateRepo.totalUndeliveredMessages(receivedNoLaterThan = replayStartTime)
+            numToReplay = limit.map(lim => lim min totalUndelivered).getOrElse(totalUndelivered)
+            _ <- insertState(replayId, numToReplay, replayStartTime)
+          } yield ReplayInitializationResult.Started(replayId)
+        } else {
+          replayStateRepo.lookupIdOfLatest.map(ReplayInitializationResult.AlreadyRunning(_))
+        }
+      }
   }
 
   private def insertState(replayId: String, totalToReplay: Int, startTime: Instant): Future[Unit] =
