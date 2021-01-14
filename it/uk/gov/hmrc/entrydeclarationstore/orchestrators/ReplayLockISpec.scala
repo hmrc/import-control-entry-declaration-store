@@ -38,9 +38,6 @@ class ReplayLockISpec
     with ScalaFutures
     with IntegrationPatience {
 
-  override def beforeAll(): Unit =
-    lockRepositoryProvider.lockRepository.removeAll().futureValue
-
   val lockDuration: FiniteDuration = 500.millis
 
   override implicit lazy val app: Application = new GuiceApplicationBuilder()
@@ -51,6 +48,9 @@ class ReplayLockISpec
 
   val lockRepositoryProvider: LockRepositoryProvider = inject[LockRepositoryProvider]
   val lock: ReplayLock                               = inject[ReplayLock]
+
+  override def beforeAll(): Unit =
+    lockRepositoryProvider.lockRepository.removeAll().futureValue
 
   val replayId = "someReplayId"
 

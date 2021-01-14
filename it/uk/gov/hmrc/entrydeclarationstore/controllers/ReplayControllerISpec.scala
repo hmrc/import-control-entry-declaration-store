@@ -123,10 +123,13 @@ class ReplayControllerISpec
     decl.submissionId
   }
 
-  def startReplay(limit: Option[Int] = None): String = {
+  def startReplay(limit: Option[Int] = None): String =
+    (startReplayRawJson(limit) \ "replayId").as[String]
+
+  def startReplayRawJson(limit: Option[Int] = None): JsValue = {
     val response = await(client.url(s"http://localhost:$port/import-control/replays").post(replayRequestBody(limit)))
     response.status shouldBe ACCEPTED
-    (response.json \ "replayId").as[String]
+    response.json
   }
 
   def getReplayState(replayId: String): ReplayState = {
@@ -144,6 +147,15 @@ class ReplayControllerISpec
         post(urlPathEqualTo("/safetyandsecurity/newenssubmission/v1"))
           .withRequestBody(containing(submissionId))
           .willReturn(aResponse()
+            .withStatus(statusCode)))
+
+  def willSubmitMetadataToEisSlow(submissionId: String, statusCode: Int): StubMapping =
+    wireMockServer
+      .stubFor(
+        post(urlPathEqualTo("/safetyandsecurity/newenssubmission/v1"))
+          .withRequestBody(containing(submissionId))
+          .willReturn(aResponse()
+            .withFixedDelay(1000)
             .withStatus(statusCode)))
 
   def willSubmitMetadataToEisFault(submissionId: String): StubMapping =
@@ -192,12 +204,6 @@ class ReplayControllerISpec
 
         "be able to limit the number replayed" in {
           replaySuccessfully(numDeclarations = batchSize, limit = Some(batchSize / 2))
-        }
-      }
-
-      "a replay is already in progress" must {
-        "return ACCEPT with the latest replayId" in {
-          fail
         }
       }
 
@@ -285,6 +291,27 @@ class ReplayControllerISpec
             // (but note that we don't have information about the number of
             // successes/failures because the batch as a whole failed)
             await(entryDeclarationRepo.totalUndeliveredMessages(Instant.now)) shouldBe 2
+          }
+        }
+      }
+
+      "a replay is already in progress" must {
+        "return ACCEPT with the latest replayId" in {
+          val submissionId1 = createEntryDeclarationInError()
+
+          await(entryDeclarationRepo.totalUndeliveredMessages(Instant.now)) shouldBe 1
+
+          willSubmitMetadataToEisSlow(submissionId1, ACCEPTED)
+
+          val replayId = startReplay()
+
+          val response2 = startReplayRawJson()
+          (response2 \ "replayId").as[String]        shouldBe replayId
+          (response2 \ "alreadyStarted").as[Boolean] shouldBe true
+
+          eventually {
+            val replayState = getReplayState(replayId)
+            replayState.completed shouldBe true
           }
         }
       }
