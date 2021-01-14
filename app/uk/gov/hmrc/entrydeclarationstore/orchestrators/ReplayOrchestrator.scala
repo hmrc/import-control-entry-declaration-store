@@ -95,7 +95,10 @@ class ReplayOrchestrator @Inject()(
       .getUndeliveredSubmissionIds(replayStartTime, limit)
       .grouped(appConfig.replayBatchSize)
       .mapAsync(parallelism = 1) { submissionIds =>
-        submissionReplayService.replaySubmissions(submissionIds)
+        for {
+          batchResult <- submissionReplayService.replaySubmissions(submissionIds)
+          _           <- replayLock.renew(replayId)
+        } yield batchResult
       }
       .mapAsync(parallelism = 1) {
         case Right(counts) =>

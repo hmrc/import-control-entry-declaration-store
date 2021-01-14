@@ -110,6 +110,7 @@ class ReplayOrchestratorSpec
     MockSubmissionReplayService
       .replaySubmissions(submissionIds)
       .returns(Right(BatchReplayResult(successCount = succeessIncrement, failureCount = failureIncrement)))
+    MockReplayLock.renew(replayId) returns Future.unit
     MockReplayStateRepo
       .incrementCounts(replayId, successesToAdd = succeessIncrement, failuresToAdd = failureIncrement)
       .returns(true)
@@ -306,6 +307,7 @@ class ReplayOrchestratorSpec
           // Fails with next batch
           MockSubmissionReplayService.replaySubmissions(submissionIds.slice(2, 4)) returns Right(
             BatchReplayResult(successCount = 123, failureCount = 321))
+          MockReplayLock.renew(replayId) returns Future.unit
 
           MockReplayStateRepo.incrementCounts(replayId, successesToAdd = 123, failuresToAdd = 321) returns false
 
