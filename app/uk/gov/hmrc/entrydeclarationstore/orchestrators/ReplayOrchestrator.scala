@@ -109,15 +109,27 @@ class ReplayOrchestrator @Inject()(
       }
       .map { numBatches =>
         Logger.info(s"Completed replay of $numBatches batches")
-        replayStateRepo.setCompleted(replayId, clock.instant)
+        setCompleteAndUnlock(replayId)
         ReplayResult.Completed(numBatches)
       }
       .recover {
         case NonFatal(e) =>
           Logger.error("Replay aborted", e)
-          replayStateRepo.setCompleted(replayId, clock.instant)
+          setCompleteAndUnlock(replayId)
           ReplayResult.Aborted
       }
       .runWith(Sink.last)
+  }
+
+  private def setCompleteAndUnlock(replayId: String): Unit = {
+    replayStateRepo
+      .setCompleted(replayId, clock.instant)
+      .failed
+      .foreach(e => Logger.warn(s"Unable to set replay $replayId as complete", e))
+
+    replayLock
+      .unlock(replayId)
+      .failed
+      .foreach(e => Logger.warn(s"Unable to unlock replay $replayId", e))
   }
 }
