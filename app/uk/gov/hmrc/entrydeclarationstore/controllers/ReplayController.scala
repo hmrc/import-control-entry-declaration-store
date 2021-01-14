@@ -37,13 +37,10 @@ class ReplayController @Inject()(
   val startReplay: Action[JsValue] = Action.async(parse.json) { implicit request =>
     request.body.validate[ReplayLimit] match {
       case JsSuccess(replayLimit, _) =>
-        val (futureReplayStartResult, _) = replayOrchestrator
-          .startReplay(replayLimit.value)
+        val (futureReplayInitResult, _) =
+          replayOrchestrator.startReplay(replayLimit.value)
 
-        futureReplayStartResult.map {
-          case started: ReplayInitializationResult.Started        => Accepted(Json.toJson(started))
-          case already: ReplayInitializationResult.AlreadyRunning => Accepted(Json.toJson(already))
-        }
+        futureReplayInitResult.map(result => Accepted(Json.toJson(result)))
 
       case JsError(_) =>
         Future.successful(BadRequest)

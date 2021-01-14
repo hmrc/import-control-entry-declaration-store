@@ -15,8 +15,8 @@
  */
 
 package uk.gov.hmrc.entrydeclarationstore.models
-import play.api.libs.json._
 import play.api.libs.functional.syntax._
+import play.api.libs.json._
 
 sealed trait ReplayInitializationResult
 
@@ -24,21 +24,14 @@ object ReplayInitializationResult {
   case class Started(replayId: String) extends ReplayInitializationResult
   case class AlreadyRunning(replayId: Option[String]) extends ReplayInitializationResult
 
-  object Started {
-    implicit val writes: Writes[Started] = addDiscriminator(Json.writes[Started])
-  }
+  implicit val writes: OWrites[ReplayInitializationResult] = {
 
-  object AlreadyRunning {
-    implicit val writes: Writes[AlreadyRunning] = addDiscriminator(Json.writes[AlreadyRunning])
-  }
-
-  private def addDiscriminator[A](writes: OWrites[A]): OWrites[A] =
-    (writes ~ (__ \ "alreadyStarted").write[Boolean]) { (a: A) =>
-      val alreadyStarted = a match {
-        case _: Started        => false
-        case _: AlreadyRunning => true
-      }
-
-      (a, alreadyStarted)
+    val fieldMap: ReplayInitializationResult => (Option[String], Boolean) = {
+      case Started(replayId)        => (Some(replayId), false)
+      case AlreadyRunning(replayId) => (replayId, true)
     }
+
+    ((__ \ "replayId").writeNullable[String] and
+      (__ \ "alreadyStarted").write[Boolean])(fieldMap)
+  }
 }
