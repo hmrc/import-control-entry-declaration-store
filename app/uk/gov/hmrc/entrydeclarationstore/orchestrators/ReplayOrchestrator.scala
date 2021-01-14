@@ -29,7 +29,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import java.time.{Clock, Instant}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.control.{NoStackTrace, NonFatal}
+import scala.util.control.NonFatal
 
 @Singleton
 class ReplayOrchestrator @Inject()(
@@ -44,7 +44,7 @@ class ReplayOrchestrator @Inject()(
   /**
     * Starts a replay
     * @param limit an optional limit on the number of submissions to replay
-    * @return a tuple consisting of the unique replay id and (mainly for testing) the overall final result of the replay
+    * @return a tuple consisting of the initialization result and (mainly for testing) the overall final result of the replay
     */
   def startReplay(limit: Option[Int])(
     implicit hc: HeaderCarrier): (Future[ReplayInitializationResult], Future[ReplayResult]) = {
@@ -59,7 +59,7 @@ class ReplayOrchestrator @Inject()(
 
       case ReplayInitializationResult.AlreadyRunning(_) =>
         // It's a coding error if this is used...
-        Future.failed(new RuntimeException("Replay already running") with NoStackTrace)
+        Future.failed(new RuntimeException("Replay already running"))
     }
 
     (initResult, futureReplayResult)
@@ -78,7 +78,7 @@ class ReplayOrchestrator @Inject()(
             _ <- insertState(replayId, numToReplay, replayStartTime)
           } yield ReplayInitializationResult.Started(replayId)
         } else {
-          replayStateRepo.lookupIdOfLatest.map(ReplayInitializationResult.AlreadyRunning(_))
+          replayStateRepo.lookupIdOfLatest.map(ReplayInitializationResult.AlreadyRunning)
         }
       }
   }
