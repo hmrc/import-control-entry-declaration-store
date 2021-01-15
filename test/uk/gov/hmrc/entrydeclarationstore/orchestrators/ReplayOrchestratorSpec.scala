@@ -25,7 +25,7 @@ import play.api.test.Injecting
 import play.api.{Application, Environment, Mode}
 import reactivemongo.core.errors.ConnectionException
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
-import uk.gov.hmrc.entrydeclarationstore.models.{BatchReplayError, BatchReplayResult, ReplayResult}
+import uk.gov.hmrc.entrydeclarationstore.models.{BatchReplayError, BatchReplayResult, ReplayInitializationResult, ReplayResult}
 import uk.gov.hmrc.entrydeclarationstore.repositories.{MockEntryDeclarationRepo, MockReplayStateRepo}
 import uk.gov.hmrc.entrydeclarationstore.services.MockSubmissionReplayService
 import uk.gov.hmrc.entrydeclarationstore.utils.MockIdGenerator
@@ -44,6 +44,7 @@ class ReplayOrchestratorSpec
     with MockReplayStateRepo
     with MockSubmissionReplayService
     with MockAppConfig
+    with MockReplayLock
     with ScalaFutures
     with GuiceOneAppPerSuite
     with Injecting {
@@ -65,19 +66,28 @@ class ReplayOrchestratorSpec
     mockEntryDeclarationRepo,
     mockReplayStateRepo,
     mockSubmissionReplayService,
+    mockReplayLock,
     mockAppConfig,
     clock)
 
-  private def willSetCompleted: Future[Unit] = {
+  private def willSetCompletedAndUnlock: Future[Unit] = {
     val completePromise = Promise[Unit]
     MockReplayStateRepo.setCompleted(replayId, time).onCall { _ =>
       completePromise.trySuccess(())
       Future.successful(true)
     }
-    completePromise.future
+
+    val unlockPromise = Promise[Unit]
+    MockReplayLock.unlock(replayId).onCall { _ =>
+      unlockPromise.trySuccess(())
+      Future.successful(true)
+    }
+
+    Future.sequence(Seq(completePromise.future, unlockPromise.future)).map(_ => ())
   }
 
   private def willGetUndeliverablesAndInitState(replayLimit: Option[Int], submissionIds: String*) = {
+    MockReplayLock.lock(replayId) returns true
     MockIdGenerator.generateUuid() returns replayId
 
     // totalToReplay should always be the same as the number of ids in the source
@@ -100,6 +110,7 @@ class ReplayOrchestratorSpec
     MockSubmissionReplayService
       .replaySubmissions(submissionIds)
       .returns(Right(BatchReplayResult(successCount = succeessIncrement, failureCount = failureIncrement)))
+    MockReplayLock.renew(replayId) returns Future.unit
     MockReplayStateRepo
       .incrementCounts(replayId, successesToAdd = succeessIncrement, failuresToAdd = failureIncrement)
       .returns(true)
@@ -119,10 +130,10 @@ class ReplayOrchestratorSpec
 
           willReplayBatchAndUpdateState(submissionId)
 
-          val completeFuture = willSetCompleted
+          val completeFuture = willSetCompletedAndUnlock
 
           val (fReplayId, result) = replayOrchestrator.startReplay(None)
-          fReplayId.futureValue shouldBe replayId
+          fReplayId.futureValue shouldBe ReplayInitializationResult.Started(replayId)
           result.futureValue    shouldBe ReplayResult.Completed(numBatches = 1)
 
           await(completeFuture)
@@ -142,11 +153,11 @@ class ReplayOrchestratorSpec
 
         willReplayBatchAndUpdateState(submissionId)
 
-        val completeFuture = willSetCompleted
+        val completeFuture = willSetCompletedAndUnlock
 
-        val (fReplayId, result) = replayOrchestrator.startReplay(replayLimit)
-        fReplayId.futureValue shouldBe replayId
-        result.futureValue    shouldBe ReplayResult.Completed(numBatches = 1)
+        val (initResult, result) = replayOrchestrator.startReplay(replayLimit)
+        initResult.futureValue shouldBe ReplayInitializationResult.Started(replayId)
+        result.futureValue     shouldBe ReplayResult.Completed(numBatches = 1)
 
         await(completeFuture)
       }
@@ -164,26 +175,29 @@ class ReplayOrchestratorSpec
 
         willReplayBatchAndUpdateState(submissionId)
 
-        val completeFuture = willSetCompleted
+        val completeFuture = willSetCompletedAndUnlock
 
-        val (fReplayId, result) = replayOrchestrator.startReplay(replayLimit)
-        fReplayId.futureValue shouldBe replayId
-        result.futureValue    shouldBe ReplayResult.Completed(numBatches = 1)
+        val (initResult, result) = replayOrchestrator.startReplay(replayLimit)
+        initResult.futureValue shouldBe ReplayInitializationResult.Started(replayId)
+        result.futureValue     shouldBe ReplayResult.Completed(numBatches = 1)
 
         await(completeFuture)
       }
     }
 
-    "fails to determine the number of submissions to replay" must {
-      "return None" in {
+    "determining the number of undelivered messages during initialization fails with a database exception" must {
+      "return a failed future with the exception" in {
+        MockReplayLock.lock(replayId) returns true
+        MockIdGenerator.generateUuid() returns replayId
         MockEntryDeclarationRepo.totalUndeliveredMessages(time) returns Future.failed(databaseException)
 
         replayOrchestrator.startReplay(None)._1.failed.futureValue shouldBe databaseException
       }
     }
 
-    "fails to insert a replay state with a replay id" must {
-      "fail" in {
+    "inserting a replay state document during initialization fails with a database exception" must {
+      "return a failed future with the exception" in {
+        MockReplayLock.lock(replayId) returns true
         MockIdGenerator.generateUuid() returns replayId
 
         MockEntryDeclarationRepo.totalUndeliveredMessages(time) returns 1
@@ -193,11 +207,12 @@ class ReplayOrchestratorSpec
       }
     }
 
-    "replay starts but the incoming stream of submissionIds terminates with an error" must {
+    "replay initializes but the incoming stream of submissionIds terminates with an error" must {
       "return the replay id and abort the replay and (attempt to) update the state" in {
         val totalUndelivered = 1
         MockAppConfig.replayBatchSize returns 1
 
+        MockReplayLock.lock(replayId) returns true
         MockIdGenerator.generateUuid() returns replayId
 
         MockEntryDeclarationRepo.totalUndeliveredMessages(time) returns totalUndelivered
@@ -205,11 +220,11 @@ class ReplayOrchestratorSpec
         MockReplayStateRepo.insert(replayId, totalUndelivered, time) returns Future.unit
         MockEntryDeclarationRepo.getUndeliveredSubmissionIds(time, None) returns Source.failed(databaseException)
 
-        val completeFuture = willSetCompleted
+        val completeFuture = willSetCompletedAndUnlock
 
-        val (fReplayId, result) = replayOrchestrator.startReplay(None)
-        fReplayId.futureValue shouldBe replayId
-        result.futureValue    shouldBe ReplayResult.Aborted
+        val (initResult, result) = replayOrchestrator.startReplay(None)
+        initResult.futureValue shouldBe ReplayInitializationResult.Started(replayId)
+        result.futureValue     shouldBe ReplayResult.Aborted
 
         await(completeFuture)
       }
@@ -226,11 +241,11 @@ class ReplayOrchestratorSpec
 
           for (submissionId <- submissionIds) willReplayBatchAndUpdateState(submissionId)
 
-          val completeFuture = willSetCompleted
+          val completeFuture = willSetCompletedAndUnlock
 
-          val (fReplayId, result) = replayOrchestrator.startReplay(None)
-          fReplayId.futureValue shouldBe replayId
-          result.futureValue    shouldBe ReplayResult.Completed(numBatches = 3)
+          val (initResult, result) = replayOrchestrator.startReplay(None)
+          initResult.futureValue shouldBe ReplayInitializationResult.Started(replayId)
+          result.futureValue     shouldBe ReplayResult.Completed(numBatches = 3)
 
           await(completeFuture)
         }
@@ -248,11 +263,11 @@ class ReplayOrchestratorSpec
           willReplayBatchAndUpdateState(submissionIds.slice(2, 4): _*)
           willReplayBatchAndUpdateState(submissionIds.slice(4, 6): _*)
 
-          val completeFuture = willSetCompleted
+          val completeFuture = willSetCompletedAndUnlock
 
-          val (fReplayId, result) = replayOrchestrator.startReplay(None)
-          fReplayId.futureValue shouldBe replayId
-          result.futureValue    shouldBe ReplayResult.Completed(numBatches = 3)
+          val (initResult, result) = replayOrchestrator.startReplay(None)
+          initResult.futureValue shouldBe ReplayInitializationResult.Started(replayId)
+          result.futureValue     shouldBe ReplayResult.Completed(numBatches = 3)
 
           await(completeFuture)
         }
@@ -269,11 +284,11 @@ class ReplayOrchestratorSpec
           willReplayBatchAndUpdateState(submissionIds.slice(0, 3): _*)
           willReplayBatchAndUpdateState(submissionIds.slice(3, 5): _*)
 
-          val completeFuture = willSetCompleted
+          val completeFuture = willSetCompletedAndUnlock
 
-          val (fReplayId, result) = replayOrchestrator.startReplay(None)
-          fReplayId.futureValue shouldBe replayId
-          result.futureValue    shouldBe ReplayResult.Completed(numBatches = 2)
+          val (initResult, result) = replayOrchestrator.startReplay(None)
+          initResult.futureValue shouldBe ReplayInitializationResult.Started(replayId)
+          result.futureValue     shouldBe ReplayResult.Completed(numBatches = 2)
 
           await(completeFuture)
         }
@@ -292,14 +307,15 @@ class ReplayOrchestratorSpec
           // Fails with next batch
           MockSubmissionReplayService.replaySubmissions(submissionIds.slice(2, 4)) returns Right(
             BatchReplayResult(successCount = 123, failureCount = 321))
+          MockReplayLock.renew(replayId) returns Future.unit
 
           MockReplayStateRepo.incrementCounts(replayId, successesToAdd = 123, failuresToAdd = 321) returns false
 
-          val completeFuture = willSetCompleted
+          val completeFuture = willSetCompletedAndUnlock
 
-          val (fReplayId, result) = replayOrchestrator.startReplay(None)
-          fReplayId.futureValue shouldBe replayId
-          result.futureValue    shouldBe ReplayResult.Aborted
+          val (initResult, result) = replayOrchestrator.startReplay(None)
+          initResult.futureValue shouldBe ReplayInitializationResult.Started(replayId)
+          result.futureValue     shouldBe ReplayResult.Aborted
 
           await(completeFuture)
         }
@@ -322,11 +338,11 @@ class ReplayOrchestratorSpec
             // Fails with next batch
             MockSubmissionReplayService.replaySubmissions(submissionIds.slice(2, 4)) returns Left(error)
 
-            val completeFuture = willSetCompleted
+            val completeFuture = willSetCompletedAndUnlock
 
-            val (fReplayId, result) = replayOrchestrator.startReplay(None)
-            fReplayId.futureValue shouldBe replayId
-            result.futureValue    shouldBe ReplayResult.Aborted
+            val (initResult, result) = replayOrchestrator.startReplay(None)
+            initResult.futureValue shouldBe ReplayInitializationResult.Started(replayId)
+            result.futureValue     shouldBe ReplayResult.Aborted
 
             await(completeFuture)
           }
@@ -348,12 +364,33 @@ class ReplayOrchestratorSpec
               Promise[Either[BatchReplayError, BatchReplayResult]].future
             }
 
-          val (fReplayId, _) = replayOrchestrator.startReplay(None)
-          fReplayId.futureValue shouldBe replayId
+          val (initResult, _) = replayOrchestrator.startReplay(None)
+          initResult.futureValue shouldBe ReplayInitializationResult.Started(replayId)
 
           await(replayBatchCalled.future)
         }
       }
     }
+
+    "a replay is already in progress" must {
+      "return AlreadyRunning with the latest replayId" in {
+        MockIdGenerator.generateUuid() returns replayId
+        MockReplayLock.lock(replayId) returns false
+        MockReplayStateRepo.lookupIdOfLatest returns Some("otherId")
+
+        val (initResult, _) = replayOrchestrator.startReplay(None)
+        initResult.futureValue shouldBe ReplayInitializationResult.AlreadyRunning(Some("otherId"))
+      }
+
+      "return AlreadyRunning without the latest replayId if it cannot be determined" in {
+        MockIdGenerator.generateUuid() returns replayId
+        MockReplayLock.lock(replayId) returns false
+        MockReplayStateRepo.lookupIdOfLatest returns None
+
+        val (initResult, _) = replayOrchestrator.startReplay(None)
+        initResult.futureValue shouldBe ReplayInitializationResult.AlreadyRunning(None)
+      }
+    }
+
   }
 }

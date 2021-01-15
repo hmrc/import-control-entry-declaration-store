@@ -23,6 +23,7 @@ import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EisConnector, EisConnectorImpl}
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.{Housekeeper, HousekeepingScheduler}
 import uk.gov.hmrc.entrydeclarationstore.nrs.{NRSConnector, NRSConnectorImpl}
+import uk.gov.hmrc.entrydeclarationstore.orchestrators.{ReplayLock, ReplayLockImpl}
 import uk.gov.hmrc.entrydeclarationstore.reporting.events.{EventConnector, EventConnectorImpl}
 import uk.gov.hmrc.entrydeclarationstore.repositories._
 import uk.gov.hmrc.entrydeclarationstore.services.{EntryDeclarationStore, EntryDeclarationStoreImpl, HousekeepingService}
@@ -53,6 +54,7 @@ class DIModule extends AbstractModule {
     bind(classOf[NRSConnector]).to(classOf[NRSConnectorImpl])
     bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
     bind(classOf[TrafficSwitchActor.Factory]).to(classOf[TrafficSwitchActor.FactoryImpl])
+    bind(classOf[ReplayLock]).to(classOf[ReplayLockImpl])
   }
 
   @Provides

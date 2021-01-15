@@ -18,7 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.entrydeclarationstore.models.ReplayLimit
+import uk.gov.hmrc.entrydeclarationstore.models.{ReplayInitializationResult, ReplayLimit}
 import uk.gov.hmrc.entrydeclarationstore.orchestrators.ReplayOrchestrator
 import uk.gov.hmrc.entrydeclarationstore.services.SubmissionReplayService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -37,12 +37,10 @@ class ReplayController @Inject()(
   val startReplay: Action[JsValue] = Action.async(parse.json) { implicit request =>
     request.body.validate[ReplayLimit] match {
       case JsSuccess(replayLimit, _) =>
-        val (futureReplayId, _) = replayOrchestrator
-          .startReplay(replayLimit.value)
+        val (futureReplayInitResult, _) =
+          replayOrchestrator.startReplay(replayLimit.value)
 
-        futureReplayId.map { replayId =>
-          Accepted(Json.parse(s"""{"replayId": "$replayId"}"""))
-        }
+        futureReplayInitResult.map(result => Accepted(Json.toJson(result)))
 
       case JsError(_) =>
         Future.successful(BadRequest)

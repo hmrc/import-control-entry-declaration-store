@@ -21,14 +21,14 @@ import akka.testkit.{TestKit, TestProbe}
 import com.miguno.akka.testing.VirtualTime
 import org.scalatest.concurrent.Eventually
 import org.scalatest.time.{Milliseconds, Span}
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.test.{DefaultAwaitTimeout, Injecting}
+import play.api.test.{DefaultAwaitTimeout, FutureAwaits, Injecting}
 import play.api.{Application, Environment, Mode}
-import play.modules.reactivemongo.ReactiveMongoComponent
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
+import uk.gov.hmrc.entrydeclarationstore.repositories.LockRepositoryProvider
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -38,8 +38,10 @@ class HousekeepingSchedulerISpec
     extends TestKit(ActorSystem("TrafficSwitchStateActorSpec"))
     with WordSpecLike
     with Matchers
+    with FutureAwaits
     with DefaultAwaitTimeout
     with GuiceOneAppPerSuite
+    with BeforeAndAfterAll
     with Injecting
     with Eventually {
 
@@ -49,8 +51,11 @@ class HousekeepingSchedulerISpec
   private case object HousekeepCalled
   private val housekeeperProbe = TestProbe()
 
-  val virtualTime                                             = new VirtualTime
-  implicit val reactiveMongoComponent: ReactiveMongoComponent = inject[ReactiveMongoComponent]
+  val virtualTime                                    = new VirtualTime
+  val lockRepositoryProvider: LockRepositoryProvider = inject[LockRepositoryProvider]
+
+  override def beforeAll(): Unit =
+    await(lockRepositoryProvider.lockRepository.removeAll())
 
   private def newHousekeeper: Housekeeper = () => {
     housekeeperProbe.ref ! HousekeepCalled
@@ -85,7 +90,7 @@ class HousekeepingSchedulerISpec
     "prevent other instances from running until lock released" in {
       val virtualTime2 = new VirtualTime
 
-      new HousekeepingScheduler(virtualTime2.scheduler, newHousekeeper, inject[AppConfig])
+      new HousekeepingScheduler(virtualTime2.scheduler, newHousekeeper, lockRepositoryProvider, inject[AppConfig])
 
       virtualTime.advance(runInterval)
       housekeeperProbe.expectMsg(HousekeepCalled)

@@ -102,6 +102,8 @@ trait AppConfig {
   def newSSEnrolmentEnabled: Boolean
 
   def replayBatchSize: Int
+
+  def replayLockDuration: FiniteDuration
 }
 
 @Singleton
@@ -201,7 +203,6 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
 
   lazy val housekeepingRunLimit: Int = config.get[Configuration](s"mongodb").get[Int]("housekeepingRunLimit")
 
-
   lazy val logSubmissionPayloads: Boolean = config.get[Boolean]("logSubmissionPayloads")
 
   lazy val nrsBaseUrl: String = servicesConfig.baseUrl("non-repudiation")
@@ -214,7 +215,9 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
 
   lazy val newSSEnrolmentEnabled: Boolean = config.get[Boolean]("feature-switch.new-ss-enrolment")
 
-  val replayBatchSize: Int = config.getOptional[Int]("replay.batchSize").getOrElse(10)
+  lazy val replayBatchSize: Int = config.getOptional[Int]("replay.batchSize").getOrElse(10)
+
+  lazy val replayLockDuration: FiniteDuration = getFiniteDuration(config, "replay.lockDuration")
 
   private def fibonacciRetryDelays(conf: Configuration): List[FiniteDuration] =
     Retrying.fibonacciDelays(getFiniteDuration(conf, "initialDelay"), conf.get[Int]("numberOfRetries"))

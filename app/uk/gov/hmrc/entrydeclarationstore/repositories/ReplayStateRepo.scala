@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{JsObject, JsValue, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
@@ -33,6 +33,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait ReplayStateRepo {
   def lookupState(replayId: String): Future[Option[ReplayState]]
+
+  def lookupIdOfLatest: Future[Option[String]]
 
   def setState(replayId: String, replayState: ReplayState): Future[Unit]
 
@@ -62,6 +64,13 @@ class ReplayStateRepoImpl @Inject()(
       .find(Json.obj("replayId" -> replayId), Option.empty[JsObject])
       .one[ReplayStatePersisted](ReadPreference.primaryPreferred)
       .map(_.map(_.toDomain))
+
+  override def lookupIdOfLatest: Future[Option[String]] =
+    collection
+      .find(JsObject.empty, Some(Json.obj("replayId" -> 1)))
+      .sort(Json.obj("startTime" -> -1))
+      .one[JsObject](ReadPreference.primaryPreferred)
+      .map(_.map(doc => (doc \ "replayId").as[String]))
 
   override def setState(replayId: String, replayState: ReplayState): Future[Unit] =
     collection
