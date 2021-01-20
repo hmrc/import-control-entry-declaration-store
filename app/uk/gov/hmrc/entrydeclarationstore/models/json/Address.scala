@@ -20,13 +20,16 @@ import cats.syntax.all._
 import com.lucidchart.open.xtract.XmlReader._
 import com.lucidchart.open.xtract.{XmlReader, __}
 import play.api.libs.json.{Json, Writes}
+import uk.gov.hmrc.entrydeclarationstore.utils.{HasEmpty, ReaderUtils}
 
 case class Address(
-  streetAndNumber: String,
-  city: String,
-  postalCode: String,
-  countryCode: String
-)
+  streetAndNumber: Option[String],
+  city: Option[String],
+  postalCode: Option[String],
+  countryCode: Option[String]
+) extends HasEmpty {
+  override def isEmpty: Boolean = streetAndNumber.isEmpty && city.isEmpty && postalCode.isEmpty && countryCode.isEmpty
+}
 
 object Address {
   def reader(
@@ -36,10 +39,11 @@ object Address {
     countryCodePath: String
   ): XmlReader[Address] =
     (
-      (__ \ streetAndNumberPath).read[String],
-      (__ \ cityPath).read[String],
-      (__ \ postalCodePath).read[String],
-      (__ \ countryCodePath).read[String]
+      (__ \ streetAndNumberPath).read[String].optional,
+      (__ \ cityPath).read[String].optional,
+      (__ \ postalCodePath).read[String].optional,
+      (__ \ countryCodePath).read[String].optional
     ).mapN(apply)
+
   implicit val writes: Writes[Address] = Json.writes[Address]
 }

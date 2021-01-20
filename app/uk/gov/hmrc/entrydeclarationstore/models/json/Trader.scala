@@ -20,9 +20,8 @@ import cats.syntax.all._
 import com.lucidchart.open.xtract.XmlReader._
 import com.lucidchart.open.xtract.{XmlReader, __}
 import play.api.libs.json.{Json, Writes}
-import uk.gov.hmrc.entrydeclarationstore.utils.HasEmpty
+import uk.gov.hmrc.entrydeclarationstore.utils.{HasEmpty, ReaderUtils}
 
-// Note: amalgamation of two types: #/definitions/traderContactDetails and #/definitions/tin
 case class Trader(
   name: Option[String],
   address: Option[Address],
@@ -33,7 +32,7 @@ case class Trader(
     name.isEmpty && address.isEmpty && language.isEmpty && eori.isEmpty
 }
 
-object Trader {
+object Trader extends ReaderUtils {
   def reader(
     namePath: String,
     addressReader: XmlReader[Address],
@@ -42,7 +41,7 @@ object Trader {
   ): XmlReader[Trader] =
     (
       (__ \ namePath).read[String].optional,
-      addressReader.optional,
+      addressReader.mapToNoneIfEmpty,
       (__ \ languagePath).read[String].optional,
       (__ \ eoriPath).read[String].optional
     ).mapN(apply)

@@ -1,0 +1,194 @@
+{
+  "submissionId": "1234567890-1234567890-1234567890-123",
+  "specificCircumstancesIndicator": "A",
+  "metadata": {
+    "senderEORI": "myeori",
+    "senderBranch": "mybranch",
+    "preparationDateTime": "2003-02-11T01:23:00.000Z",
+    "messageType": "IE315",
+    "receivedDateTime": "1234-12-10T00:34:17.000Z",
+    "messageIdentification": "messIde",
+    "correlationId": "correlationID1"
+  },
+  "declaration": {
+    "localReferenceNumber": "refnum",
+    "dateTime": "2003-02-11T12:34:00.000Z",
+    "place": "declarationplace",
+    "language": "en",
+    "officeOfLodgement": "offOfLog"
+  },
+  "parties": {
+    "consignor": {
+      "name": "consignor name",
+      "address": {
+        "streetAndNumber": "consignor street"
+      },
+      "language": "en"
+    },
+    "consignee": {
+      "name": "consignee name",
+      "address": {
+        "streetAndNumber": "consignee street"
+      },
+      "language": "en"
+    },
+    "declarant": {
+      "name": "declarant name",
+      "address": {
+        "streetAndNumber": "declarant street"
+      },
+      "language": "en"
+    },
+    "representative": {
+      "name": "representative name",
+      "address": {
+        "streetAndNumber": "representative street"
+      },
+      "language": "en"
+    },
+    "notifyParty": {
+      "name": "notify party name",
+      "address": {
+        "streetAndNumber": "notify party street"
+      },
+      "language": "en"
+    },
+    "carrier": {
+      "name": "carrier name",
+      "address": {
+        "streetAndNumber": "carrier street"
+      },
+      "language": "en"
+    }
+  },
+  "goods": {
+    "numberOfItems": 1,
+    "numberOfPackages": 2,
+    "grossMass": "3",
+    "seals": [
+      {
+        "identity": "Seals identity",
+        "identityLanguage": "en"
+      },
+      {
+        "identity": "Seals identity2",
+        "identityLanguage": "es"
+      }
+    ],
+    "goodsItems": [
+      {
+        "itemNumber": "42",
+        "description": "Goods description",
+        "descriptionLanguage": "es",
+        "grossMass": "123.456",
+        "transportChargesMethodOfPayment": "A",
+        "commercialReferenceNumber": "Commercial Reference Number",
+        "unDangerousGoodsCode": "undg",
+        "loading": {
+          "placeOfLoading": "Place of loading",
+          "loadingLanguage": "en",
+          "placeOfUnloading": "Place of unloading",
+          "unloadingLanguage": "es"
+        },
+        "documents": [
+          {
+            "type": "type",
+            "reference": "Document reference",
+            "language": "es"
+          },
+          {
+            "type": "typ2",
+            "reference": "Document reference2",
+            "language": "en"
+          }
+        ],
+        "specialMentions": [
+          "123",
+          "1234"
+        ],
+        "consignor": {
+          "name": "consignor goods name",
+          "address": {
+            "streetAndNumber": "consignor goods street"
+          },
+          "language": "en"
+        },
+        "commodityCode": "comco",
+        "consignee": {
+          "name": "consignee goods name",
+          "address": {
+            "streetAndNumber": "consignee goods street"
+          },
+          "language": "en"
+        },
+        "containers": [
+          {
+            "containerNumber": "Container 1"
+          },
+          {
+            "containerNumber": "Container 2"
+          }
+        ],
+        "identityOfMeansOfCrossingBorder": [
+          {
+            "nationality": "gb",
+            "identity": "Identity of motcb",
+            "language": "en"
+          }
+        ],
+        "packages": [
+          {
+            "kindOfPackages": "ab",
+            "numberOfPackages": "100",
+            "numberOfPieces": "100",
+            "marks": "Marks numbers of packages (long)",
+            "marksLanguage": "en"
+          },
+          {
+            "kindOfPackages": "ab",
+            "numberOfPackages": "1002",
+            "numberOfPieces": "1002",
+            "marks": "Marks numbers of packages (long)2",
+            "marksLanguage": "es"
+          }
+        ],
+        "notifyParty": {
+          "name": "notify party goods name",
+          "address": {
+            "streetAndNumber": "notify party goods street"
+          },
+          "language": "en"
+        }
+      }
+    ]
+  },
+  "itinerary": {
+    "modeOfTransportAtBorder": "2",
+    "identityOfMeansOfCrossingBorder": {
+      "nationality": "GB",
+      "identity": "Identity",
+      "language": "EN"
+    },
+    "transportChargesMethodOfPayment": "C",
+    "commercialReferenceNumber": "commercialRefNum",
+    "conveyanceReference": "conveyanceRefNum",
+    "loading": {
+      "placeOfLoading": "Place of loading",
+      "loadingLanguage": "en",
+      "placeOfUnloading": "Place of unloading",
+      "unloadingLanguage": "EN"
+    },
+    "countriesOfRouting": [
+      "AA",
+      "BB"
+    ],
+    "officeOfFirstEntry": {
+      "reference": "AB3C4D5E",
+      "expectedDateTimeOfArrival": "2003-02-11T12:34:00.000Z"
+    },
+    "officesOfSubsequentEntry": [
+      "office01",
+      "office02"
+    ]
+  }
+}
