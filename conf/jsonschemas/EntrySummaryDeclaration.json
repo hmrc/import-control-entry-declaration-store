@@ -168,16 +168,22 @@
     "trader": {
       "type": "object",
       "minProperties": 1,
-      "name": {
-        "description": "The name of the trader.",
-        "$ref": "#/definitions/name"
+      "properties": {
+        "name": {
+          "description": "The name of the trader.",
+          "$ref": "#/definitions/name"
+        },
+        "address": {
+          "description": "address of the trader",
+          "$ref": "#/definitions/address"
+        },
+        "language": {
+          "$ref": "#/definitions/languageCode"
+        },
+        "eori": {
+          "$ref": "#/definitions/eori"
+        }
       },
-      "address": {
-        "description": "address of the trader",
-        "$ref": "#/definitions/address"
-      },
-      "language":{"$ref": "#/definitions/languageCode"},
-      "eori": {"$ref": "#/definitions/eori"},
       "additionalProperties": false
     },
     "eori": {
