@@ -167,21 +167,8 @@
     },
     "trader": {
       "type": "object",
-      "oneOf": [
-        {"$ref": "#/definitions/traderContactDetails"},
-        {
-          "properties":{
-            "eori": {"$ref": "#/definitions/eori"}
-          },
-          "required" :["eori"],
-          "additionalProperties": false
-        },
-        {"$ref": "#/definitions/traderContactDetailsAndEORI"}
-      ]
-    },
-    "traderContactDetails": {
-      "type": "object",
-      "properties":{
+      "minProperties": 1,
+      "properties": {
         "name": {
           "description": "The name of the trader.",
           "$ref": "#/definitions/name"
@@ -190,33 +177,13 @@
           "description": "address of the trader",
           "$ref": "#/definitions/address"
         },
-        "language":{"$ref": "#/definitions/languageCode"}
-      },
-      "required": [
-        "name",
-        "address"
-      ],
-      "additionalProperties": false
-    },
-    "traderContactDetailsAndEORI": {
-      "type": "object",
-      "properties":{
-        "name": {
-          "description": "The name of the trader.",
-          "$ref": "#/definitions/name"
+        "language": {
+          "$ref": "#/definitions/languageCode"
         },
-        "address": {
-          "description": "address of the trader",
-          "$ref": "#/definitions/address"
-        },
-        "language":{"$ref": "#/definitions/languageCode"},
-        "eori": {"$ref": "#/definitions/eori"}
+        "eori": {
+          "$ref": "#/definitions/eori"
+        }
       },
-      "required": [
-        "name",
-        "address",
-        "eori"
-      ],
       "additionalProperties": false
     },
     "eori": {
@@ -233,6 +200,7 @@
     "address": {
       "description": "address format",
       "type": "object",
+      "minProperties": 1,
       "properties":{
         "streetAndNumber": {
           "type": "string",
@@ -248,12 +216,6 @@
         },
         "countryCode" : {"$ref" : "#/definitions/countryCode"}
       },
-      "required": [
-        "streetAndNumber",
-        "city",
-        "postalCode",
-        "countryCode"
-      ],
       "additionalProperties": false
     },
     "goods": {
