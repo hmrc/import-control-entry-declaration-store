@@ -1,0 +1,150 @@
+<ie:CC315A xmlns:ie="http://ics.dgtaxud.ec/CC315A">
+    <MesSenMES3>myeori/mybranch</MesSenMES3>
+    <MesRecMES6>receiver</MesRecMES6>
+    <DatOfPreMES9>030211</DatOfPreMES9>
+    <TimOfPreMES10>0123</TimOfPreMES10>
+    <MesIdeMES19>messIde</MesIdeMES19>
+    <MesTypMES20>CC315A</MesTypMES20>
+    <CorIdeMES25>NOTUSED</CorIdeMES25>
+    <HEAHEA>
+        <RefNumHEA4>refnum</RefNumHEA4>
+        <TraModAtBorHEA76>2</TraModAtBorHEA76>
+        <IdeOfMeaOfTraCroHEA85>Identity</IdeOfMeaOfTraCroHEA85>
+        <IdeOfMeaOfTraCroHEA85LNG>EN</IdeOfMeaOfTraCroHEA85LNG>
+        <NatOfMeaOfTraCroHEA87>GB</NatOfMeaOfTraCroHEA87>
+        <TotNumOfIteHEA305>1</TotNumOfIteHEA305>
+        <TotNumOfPacHEA306>2</TotNumOfPacHEA306>
+        <TotGroMasHEA307>3</TotGroMasHEA307>
+        <DecPlaHEA394>declarationplace</DecPlaHEA394>
+        <DecPlaHEA394LNG>en</DecPlaHEA394LNG>
+        <SpeCirIndHEA1>A</SpeCirIndHEA1>
+        <TraChaMetOfPayHEA1>C</TraChaMetOfPayHEA1>
+        <ComRefNumHEA>commercialRefNum</ComRefNumHEA>
+        <ConRefNumHEA>conveyanceRefNum</ConRefNumHEA>
+        <PlaLoaGOOITE334>Place of loading</PlaLoaGOOITE334>
+        <PlaLoaGOOITE334LNG>en</PlaLoaGOOITE334LNG>
+        <PlaUnlGOOITE334>Place of unloading</PlaUnlGOOITE334>
+        <CodPlUnHEA357LNG>EN</CodPlUnHEA357LNG>
+        <DecDatTimHEA114>200302111234</DecDatTimHEA114>
+    </HEAHEA>
+    <TRACONCO1>
+        <NamCO17>consignor name</NamCO17>
+        <NADLNGCO>en</NADLNGCO>
+    </TRACONCO1>
+    <TRACONCE1>
+        <NamCE17>consignee name</NamCE17>
+        <NADLNGCE>en</NADLNGCE>
+    </TRACONCE1>
+    <NOTPAR670>
+        <NamNOTPAR672>notify party name</NamNOTPAR672>
+        <NOTPAR670LNG>en</NOTPAR670LNG>
+    </NOTPAR670>
+    <GOOITEGDS>
+        <IteNumGDS7>42</IteNumGDS7>
+        <GooDesGDS23>Goods description</GooDesGDS23>
+        <GooDesGDS23LNG>es</GooDesGDS23LNG>
+        <GroMasGDS46>123.456</GroMasGDS46>
+        <MetOfPayGDI12>A</MetOfPayGDI12>
+        <ComRefNumGIM1>Commercial Reference Number</ComRefNumGIM1>
+        <UNDanGooCodGDI1>undg</UNDanGooCodGDI1>
+        <PlaLoaGOOITE333>Place of loading</PlaLoaGOOITE333>
+        <PlaLoaGOOITE333LNG>en</PlaLoaGOOITE333LNG>
+        <PlaUnlGOOITE333>Place of unloading</PlaUnlGOOITE333>
+        <PlaUnlGOOITE333LNG>es</PlaUnlGOOITE333LNG>
+        <PRODOCDC2>
+            <DocTypDC21>type</DocTypDC21>
+            <DocRefDC23>Document reference</DocRefDC23>
+            <DocRefDCLNG>es</DocRefDCLNG>
+        </PRODOCDC2>
+        <PRODOCDC2>
+            <DocTypDC21>typ2</DocTypDC21>
+            <DocRefDC23>Document reference2</DocRefDC23>
+            <DocRefDCLNG>en</DocRefDCLNG>
+        </PRODOCDC2>
+        <SPEMENMT2>
+            <AddInfCodMT23>123</AddInfCodMT23>
+        </SPEMENMT2>
+        <SPEMENMT2>
+            <AddInfCodMT23>1234</AddInfCodMT23>
+        </SPEMENMT2>
+        <TRACONCO2>
+            <NamCO27>consignor goods name</NamCO27>
+            <NADLNGGTCO>en</NADLNGGTCO>
+        </TRACONCO2>
+        <COMCODGODITM>
+            <ComNomCMD1>comco</ComNomCMD1>
+        </COMCODGODITM>
+        <TRACONCE2>
+            <NamCE27>consignee goods name</NamCE27>
+            <NADLNGGICE>en</NADLNGGICE>
+        </TRACONCE2>
+        <CONNR2>
+            <ConNumNR21>Container 1</ConNumNR21>
+        </CONNR2>
+        <CONNR2>
+            <ConNumNR21>Container 2</ConNumNR21>
+        </CONNR2>
+        <IDEMEATRAGI970>
+            <NatIDEMEATRAGI973>gb</NatIDEMEATRAGI973>
+            <IdeMeaTraGIMEATRA971>Identity of motcb</IdeMeaTraGIMEATRA971>
+            <IdeMeaTraGIMEATRA972LNG>en</IdeMeaTraGIMEATRA972LNG>
+        </IDEMEATRAGI970>
+        <PACGS2>
+            <KinOfPacGS23>ab</KinOfPacGS23>
+            <NumOfPacGS24>100</NumOfPacGS24>
+            <NumOfPieGS25>100</NumOfPieGS25>
+            <MarNumOfPacGSL21>Marks numbers of packages (long)</MarNumOfPacGSL21>
+            <MarNumOfPacGSL21LNG>en</MarNumOfPacGSL21LNG>
+        </PACGS2>
+        <PACGS2>
+            <KinOfPacGS23>ab</KinOfPacGS23>
+            <NumOfPacGS24>1002</NumOfPacGS24>
+            <NumOfPieGS25>1002</NumOfPieGS25>
+            <MarNumOfPacGSL21>Marks numbers of packages (long)2</MarNumOfPacGSL21>
+            <MarNumOfPacGSL21LNG>es</MarNumOfPacGSL21LNG>
+        </PACGS2>
+        <PRTNOT640>
+            <NamPRTNOT642>notify party goods name</NamPRTNOT642>
+            <PRTNOT640LNG>en</PRTNOT640LNG>
+        </PRTNOT640>
+    </GOOITEGDS>
+    <ITI>
+        <CouOfRouCodITI1>AA</CouOfRouCodITI1>
+    </ITI>
+    <ITI>
+        <CouOfRouCodITI1>BB</CouOfRouCodITI1>
+    </ITI>
+    <CUSOFFLON>
+        <RefNumCOL1>offOfLog</RefNumCOL1>
+    </CUSOFFLON>
+    <TRAREP>
+        <NamTRE1>representative name</NamTRE1>
+        <TRAREPLNG>en</TRAREPLNG>
+    </TRAREP>
+    <PERLODSUMDEC>
+        <NamPLD1>declarant name</NamPLD1>
+        <PERLODSUMDECLNG>en</PERLODSUMDECLNG>
+    </PERLODSUMDEC>
+    <SEAID529>
+        <SeaIdSEAID530>Seals identity</SeaIdSEAID530>
+        <SeaIdSEAID530LNG>en</SeaIdSEAID530LNG>
+    </SEAID529>
+    <SEAID529>
+        <SeaIdSEAID530>Seals identity2</SeaIdSEAID530>
+        <SeaIdSEAID530LNG>es</SeaIdSEAID530LNG>
+    </SEAID529>
+    <CUSOFFFENT730>
+        <RefNumCUSOFFFENT731>AB3C4D5E</RefNumCUSOFFFENT731>
+        <ExpDatOfArrFIRENT733>200302111234</ExpDatOfArrFIRENT733>
+    </CUSOFFFENT730>
+    <CUSOFFSENT740>
+        <RefNumSUBENR909>office01</RefNumSUBENR909>
+    </CUSOFFSENT740>
+    <CUSOFFSENT740>
+        <RefNumSUBENR909>office02</RefNumSUBENR909>
+    </CUSOFFSENT740>
+    <TRACARENT601>
+        <NamTRACARENT604>carrier name</NamTRACARENT604>
+        <TRACARENT601LNG>en</TRACARENT601LNG>
+    </TRACARENT601>
+</ie:CC315A>

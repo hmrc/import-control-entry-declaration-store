@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.models.json
 
-import org.scalatest.Inside
+import org.scalatest.{Assertion, Inside}
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.ErrorWrapper
@@ -32,6 +32,14 @@ class DeclarationToJsonConverterSpec extends UnitSpec with Inside {
 
   implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
 
+  def convertAndValidate(xml: Elem, input: InputParameters, expectedJson: JsValue): Assertion =
+    inside(declarationToJsonConverter.convertToJson(xml, input)) {
+      case Right(json) =>
+        json                                          shouldBe expectedJson
+        declarationToJsonConverter.validateJson(json) shouldBe true
+      case Left(err) => fail(err.toString)
+    }
+
   "EntrySummaryDeclaration toJson " should {
     "for submission" should {
       val input: InputParameters = InputParameters(
@@ -39,25 +47,40 @@ class DeclarationToJsonConverterSpec extends UnitSpec with Inside {
         "1234567890-1234567890-1234567890-123",
         "correlationID1",
         Instant.parse("1234-12-10T00:34:17Z"))
+
       "work for xml with no optional fields" in {
         val xml: Elem     = ResourceUtils.withInputStreamFor("xmls/315NoOptional.xml")(XML.load)
         val json: JsValue = ResourceUtils.withInputStreamFor("jsons/315NoOptional.json")(Json.parse)
-        inside(declarationToJsonConverter.convertToJson(xml, input)) {
-          case Right(ie315) =>
-            ie315                                          shouldBe json
-            declarationToJsonConverter.validateJson(ie315) shouldBe true
-          case Left(_) => fail
-        }
+
+        convertAndValidate(xml, input, expectedJson = json)
       }
+
+      "work for xml with only street and number address fields" in {
+        val xml: Elem     = ResourceUtils.withInputStreamFor("xmls/315EmptyAddresses1.xml")(XML.load)
+        val json: JsValue = ResourceUtils.withInputStreamFor("jsons/315EmptyAddresses1.json")(Json.parse)
+
+        convertAndValidate(xml, input, json)
+      }
+
+      "work for xml with all but street and number address fields" in {
+        val xml: Elem     = ResourceUtils.withInputStreamFor("xmls/315EmptyAddresses2.xml")(XML.load)
+        val json: JsValue = ResourceUtils.withInputStreamFor("jsons/315EmptyAddresses2.json")(Json.parse)
+
+        convertAndValidate(xml, input, json)
+      }
+
+      "work for xml with no address fields" in {
+        val xml: Elem     = ResourceUtils.withInputStreamFor("xmls/315NoAddresses.xml")(XML.load)
+        val json: JsValue = ResourceUtils.withInputStreamFor("jsons/315NoAddresses.json")(Json.parse)
+
+        convertAndValidate(xml, input, json)
+      }
+
       "work for xml with all optional fields" in {
         val xml: Elem     = ResourceUtils.withInputStreamFor("xmls/315AllOptional.xml")(XML.load)
         val json: JsValue = ResourceUtils.withInputStreamFor("jsons/315AllOptional.json")(Json.parse)
-        inside(declarationToJsonConverter.convertToJson(xml, input)) {
-          case Right(ie315) =>
-            ie315                                          shouldBe json
-            declarationToJsonConverter.validateJson(ie315) shouldBe true
-          case Left(_) => fail
-        }
+
+        convertAndValidate(xml, input, json)
       }
     }
     "for amendment" should {
@@ -69,12 +92,8 @@ class DeclarationToJsonConverterSpec extends UnitSpec with Inside {
       "work for xml with all amendment specific fields" in {
         val xml: Elem     = ResourceUtils.withInputStreamFor("xmls/313SpecificFields.xml")(XML.load)
         val json: JsValue = ResourceUtils.withInputStreamFor("jsons/313SpecificFields.json")(Json.parse)
-        inside(declarationToJsonConverter.convertToJson(xml, input)) {
-          case Right(ie313) =>
-            ie313                                          shouldBe json
-            declarationToJsonConverter.validateJson(ie313) shouldBe true
-          case Left(_) => fail
-        }
+
+        convertAndValidate(xml, input, json)
       }
     }
     "for bad xml" should {
