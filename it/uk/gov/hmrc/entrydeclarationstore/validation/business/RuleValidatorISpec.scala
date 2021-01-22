@@ -49,6 +49,20 @@ class RuleValidatorISpec extends UnitSpec with GuiceOneAppPerSuite {
     validateAll(ruleValidator, "xmls/ruleTestCases313/")
   }
 
+  "Old rule validator for 315s" must {
+    val ruleValidator: RuleValidator =
+      app.injector.instanceOf(BindingKey(classOf[RuleValidator]).qualifiedWith("ruleValidator315"))
+
+    validateValidXML(ruleValidator, "xmls/oldRuleTestCases315/")
+  }
+
+  "Old rule validator for 313s" must {
+    val ruleValidator: RuleValidator =
+      app.injector.instanceOf(BindingKey(classOf[RuleValidator]).qualifiedWith("ruleValidator313"))
+
+    validateValidXML(ruleValidator, "xmls/oldRuleTestCases313/")
+  }
+
   def validateAll(ruleValidator: RuleValidator, directoryName: String): Unit = {
     val xmlFiles: Seq[String] = ResourceUtils.resourceList(directoryName).filter(_.endsWith(".xml"))
 
@@ -73,6 +87,27 @@ class RuleValidatorISpec extends UnitSpec with GuiceOneAppPerSuite {
         // Check codes and locations first as they are easier to read should there be a problem...
         errorCodesAndLocations(errors) shouldBe errorCodesAndLocations(expectedErrors)
         messages(errors)               shouldBe messages(expectedErrors)
+      }
+    }
+  }
+
+  def validateValidXML(ruleValidator: RuleValidator, directoryName: String): Unit = {
+    val xmlFiles: Seq[String] = ResourceUtils.resourceList(directoryName).filter(_.endsWith(".xml"))
+
+    xmlFiles.foreach { testCase =>
+      s"not produce an error for $testCase" in {
+        val testCaseLocation     = directoryName + testCase
+        val resource             = ResourceUtils.url(testCaseLocation)
+        val xml                  = XML.load(resource)
+
+        val errors = ruleValidator.validate(xml) match {
+          case Left(failure) => failure.errors.sorted
+          case Right(_)      => Nil
+        }
+
+        // Check codes and locations first as they are easier to read should there be a problem...
+        errorCodesAndLocations(errors) should have size 0
+        messages(errors)               should have size 0
       }
     }
   }
