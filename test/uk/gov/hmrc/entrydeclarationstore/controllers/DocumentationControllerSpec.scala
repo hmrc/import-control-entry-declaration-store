@@ -138,15 +138,15 @@ class DocumentationControllerSpec extends UnitSpec with MockAppConfig with Injec
 
     "be in error code order" in {
       // rules files have error codes out of order here...
-      MockAppConfig.businessRules313 returns Seq("rules/p6_p75.json", "rules/p2_p71.json")
+      MockAppConfig.businessRules313 returns Seq("rules/p24_p93.json", "rules/p2_p71.json")
 
       val result: Future[Result] = documentationController.rules313("anyVersion")(FakeRequest())
 
       val docs = contentAsString(result)
 
       docs                 should include("4065")
-      docs                 should include("8626")
-      docs.indexOf("4065") should be < docs.indexOf("8626")
+      docs                 should include("8678")
+      docs.indexOf("4065") should be < docs.indexOf("8678")
     }
 
     "render regex escape characters verbatim (i.e. as \\n etc)" in {
