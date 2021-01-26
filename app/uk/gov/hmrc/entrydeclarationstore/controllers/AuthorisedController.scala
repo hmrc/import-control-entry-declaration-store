@@ -18,6 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import play.api.mvc._
 import uk.gov.hmrc.entrydeclarationstore.models.StandardError
+import uk.gov.hmrc.entrydeclarationstore.reporting.ClientInfo
 import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, UserDetails}
 import uk.gov.hmrc.entrydeclarationstore.utils.Timer
 import uk.gov.hmrc.entrydeclarationstore.utils.XmlFormats._
@@ -46,6 +47,7 @@ abstract class AuthorisedController(cc: ControllerComponents) extends BackendCon
       override def invokeBlock[A](request: Request[A], block: UserRequest[A] => Future[Result]): Future[Result] =
         timeFuture("Handle authentication", "handleSubmissionController.authentication") {
           implicit val headerCarrier: HeaderCarrier = hc(request)
+          implicit val headers: Headers             = request.headers
 
           authService.authenticate.flatMap {
             case Some(userDetails) =>

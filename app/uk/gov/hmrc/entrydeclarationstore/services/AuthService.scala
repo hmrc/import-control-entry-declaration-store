@@ -20,19 +20,20 @@ import cats.data.EitherT
 import cats.implicits._
 import org.joda.time.LocalDate
 import play.api.Logger
+import play.api.mvc.Headers
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve._
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{allEnrolments, _}
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.ApiSubscriptionFieldsConnector
 import uk.gov.hmrc.entrydeclarationstore.nrs.IdentityData
-import uk.gov.hmrc.entrydeclarationstore.reporting.ClientType
+import uk.gov.hmrc.entrydeclarationstore.reporting.{ClientInfo, ClientType}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-case class UserDetails(eori: String, clientType: ClientType, identityData: Option[IdentityData])
+case class UserDetails(eori: String, clientInfo: ClientInfo, identityData: Option[IdentityData])
 
 @Singleton
 class AuthService @Inject()(
@@ -42,7 +43,8 @@ class AuthService @Inject()(
 )(implicit ec: ExecutionContext)
     extends AuthorisedFunctions {
 
-  private val X_CLIENT_ID = "X-Client-Id"
+  private val X_CLIENT_ID      = "X-Client-Id"
+  private val X_APPLICATION_ID = "X-Application-Id"
 
   sealed trait AuthError
 
@@ -52,7 +54,7 @@ class AuthService @Inject()(
 
   case object AuthFail extends AuthError
 
-  def authenticate(implicit hc: HeaderCarrier): Future[Option[UserDetails]] =
+  def authenticate(implicit hc: HeaderCarrier, headers: Headers): Future[Option[UserDetails]] =
     if (appConfig.nrsEnabled) {
       doAuthenticate(nrsRetrievals, identityDataBuilder)
     } else {
@@ -60,7 +62,8 @@ class AuthService @Inject()(
     }
 
   private def doAuthenticate[A](retrieval: Retrieval[A], identityBuilder: A => Option[IdentityData])(
-    implicit hc: HeaderCarrier): Future[Option[UserDetails]] =
+    implicit hc: HeaderCarrier,
+    headers: Headers): Future[Option[UserDetails]] =
     authCSP(retrieval, identityBuilder)
       .recoverWith {
         case AuthFail | NoClientId => authNonCSP(retrieval, identityBuilder)
@@ -69,7 +72,8 @@ class AuthService @Inject()(
       .value
 
   private def authCSP[A](retrieval: Retrieval[A], identityBuilder: A => Option[IdentityData])(
-    implicit hc: HeaderCarrier): EitherT[Future, AuthError, UserDetails] = {
+    implicit hc: HeaderCarrier,
+    headers: Headers): EitherT[Future, AuthError, UserDetails] = {
     def auth: Future[Option[Option[IdentityData]]] =
       authorised(AuthProviders(AuthProvider.PrivilegedApplication))
         .retrieve(retrieval) { identityParts =>
@@ -83,14 +87,15 @@ class AuthService @Inject()(
         }
 
     for {
-      clientId     <- EitherT.fromOption[Future](hc.headers.find(_._1.equalsIgnoreCase(X_CLIENT_ID)).map(_._2), NoClientId)
+      clientId     <- EitherT.fromOption[Future](headers.get(X_CLIENT_ID), NoClientId)
       identityData <- EitherT.fromOptionF(auth, AuthFail)
       eori         <- EitherT.fromOptionF(apiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId), NoEori: AuthError)
-    } yield UserDetails(eori, ClientType.CSP, identityData)
+    } yield UserDetails(eori, clientInfo(ClientType.CSP), identityData)
   }
 
   private def authNonCSP[A](retrieval: Retrieval[A], identityBuilder: A => Option[IdentityData])(
-    implicit hc: HeaderCarrier): EitherT[Future, AuthError, UserDetails] =
+    implicit hc: HeaderCarrier,
+    headers: Headers): EitherT[Future, AuthError, UserDetails] =
     EitherT(authorised(AuthProviders(AuthProvider.GovernmentGateway))
       .retrieve(retrieval and allEnrolments) {
         case identityParts ~ usersEnrolments =>
@@ -108,7 +113,7 @@ class AuthService @Inject()(
           val eori = eoris.headOption
 
           val result = eori match {
-            case Some(eori) => UserDetails(eori, ClientType.GGW, identityBuilder(identityParts)).asRight
+            case Some(eori) => UserDetails(eori, clientInfo(ClientType.GGW), identityBuilder(identityParts)).asRight
             case None       => NoEori.asLeft
           }
 
@@ -122,6 +127,10 @@ class AuthService @Inject()(
           AuthFail.asLeft
       })
 
+  private def clientInfo(clientType: ClientType)(implicit headers: Headers) = {
+    println(headers.toMap)
+    ClientInfo(clientType, clientId = headers.get(X_CLIENT_ID), applicationId = headers.get(X_APPLICATION_ID))
+  }
   private lazy val nrsRetrievals =
     (affinityGroup and
       internalId and externalId and agentCode and credentials and confidenceLevel and nino and saUtr and name and dateOfBirth

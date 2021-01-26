@@ -22,6 +22,7 @@ import uk.gov.hmrc.entrydeclarationstore.reporting.audit.AuditEvent
 import uk.gov.hmrc.entrydeclarationstore.reporting.events.{Event, EventCode}
 
 import java.time.Instant
+import scala.collection.Seq
 
 case class SubmissionReceived(
   eori: String,
@@ -31,7 +32,7 @@ case class SubmissionReceived(
   body: JsValue,
   bodyLength: Int,
   transportMode: String,
-  clientType: ClientType
+  clientInfo: ClientInfo
 ) extends Report
 
 object SubmissionReceived {
@@ -39,6 +40,7 @@ object SubmissionReceived {
 
     override def eventFor(timestamp: Instant, report: SubmissionReceived): Option[Event] = {
       import report._
+
       val event = Event(
         eventCode      = EventCode.ENS_REC,
         eventTimestamp = timestamp,
@@ -47,11 +49,13 @@ object SubmissionReceived {
         correlationId  = correlationId,
         messageType    = messageType,
         detail = Some(
-          Json.obj(
-            "clientType"    -> Json.toJson(clientType),
-            "transportMode" -> transportMode,
-            "bodyLength"    -> bodyLength
-          ))
+          JsObject(
+            Seq(
+              "clientType"                                 -> Json.toJson(clientInfo.clientType),
+              "transportMode"                              -> JsString(transportMode),
+              "bodyLength"                                 -> JsNumber(bodyLength)) ++
+              clientInfo.applicationId.map("applicationId" -> JsString(_)) ++
+              clientInfo.clientId.map("clientId"           -> JsString(_))))
       )
 
       Some(event)
