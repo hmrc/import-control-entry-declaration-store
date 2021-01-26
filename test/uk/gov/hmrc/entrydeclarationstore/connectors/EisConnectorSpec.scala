@@ -89,7 +89,7 @@ class EisConnectorSpec
 
   val maxCallFailures                    = 5
   val defaultCallTimeout: FiniteDuration = 1.second
-  val eisRetryStatusCodes: Set[Int]      = Set(BAD_GATEWAY, 499)
+  val eisRetryStatusCodes: Set[Int]      = Set(BAD_GATEWAY, GATEWAY_TIMEOUT, 499)
 
   var port: Int = _
 
