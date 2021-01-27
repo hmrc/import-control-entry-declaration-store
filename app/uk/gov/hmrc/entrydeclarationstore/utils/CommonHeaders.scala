@@ -14,18 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.entrydeclarationstore.reporting
+package uk.gov.hmrc.entrydeclarationstore.utils
 
-import play.api.mvc.Headers
-import uk.gov.hmrc.entrydeclarationstore.utils.CommonHeaders
-
-case class ClientInfo(
-  clientType: ClientType,
-  clientId: Option[String],
-  applicationId: Option[String]
-)
-
-object ClientInfo extends CommonHeaders {
-  def apply(clientType: ClientType)(implicit headers: Headers): ClientInfo =
-    ClientInfo(clientType, clientId = headers.get(X_CLIENT_ID), applicationId = headers.get(X_APPLICATION_ID))
+trait CommonHeaders {
+  val X_CLIENT_ID      = "X-Client-Id"
+  val X_APPLICATION_ID = "X-Application-Id"
 }
+
+object CommonHeaders extends CommonHeaders

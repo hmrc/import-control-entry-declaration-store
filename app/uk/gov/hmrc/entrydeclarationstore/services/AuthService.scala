@@ -28,6 +28,7 @@ import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.ApiSubscriptionFieldsConnector
 import uk.gov.hmrc.entrydeclarationstore.nrs.IdentityData
 import uk.gov.hmrc.entrydeclarationstore.reporting.{ClientInfo, ClientType}
+import uk.gov.hmrc.entrydeclarationstore.utils.CommonHeaders
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
@@ -41,10 +42,8 @@ class AuthService @Inject()(
   apiSubscriptionFieldsConnector: ApiSubscriptionFieldsConnector,
   appConfig: AppConfig
 )(implicit ec: ExecutionContext)
-    extends AuthorisedFunctions {
-
-  private val X_CLIENT_ID      = "X-Client-Id"
-  private val X_APPLICATION_ID = "X-Application-Id"
+    extends AuthorisedFunctions
+    with CommonHeaders {
 
   sealed trait AuthError
 
@@ -90,7 +89,7 @@ class AuthService @Inject()(
       clientId     <- EitherT.fromOption[Future](headers.get(X_CLIENT_ID), NoClientId)
       identityData <- EitherT.fromOptionF(auth, AuthFail)
       eori         <- EitherT.fromOptionF(apiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId), NoEori: AuthError)
-    } yield UserDetails(eori, clientInfo(ClientType.CSP), identityData)
+    } yield UserDetails(eori, ClientInfo(ClientType.CSP), identityData)
   }
 
   private def authNonCSP[A](retrieval: Retrieval[A], identityBuilder: A => Option[IdentityData])(
@@ -113,7 +112,7 @@ class AuthService @Inject()(
           val eori = eoris.headOption
 
           val result = eori match {
-            case Some(eori) => UserDetails(eori, clientInfo(ClientType.GGW), identityBuilder(identityParts)).asRight
+            case Some(eori) => UserDetails(eori, ClientInfo(ClientType.GGW), identityBuilder(identityParts)).asRight
             case None       => NoEori.asLeft
           }
 
@@ -127,10 +126,6 @@ class AuthService @Inject()(
           AuthFail.asLeft
       })
 
-  private def clientInfo(clientType: ClientType)(implicit headers: Headers) = {
-    println(headers.toMap)
-    ClientInfo(clientType, clientId = headers.get(X_CLIENT_ID), applicationId = headers.get(X_APPLICATION_ID))
-  }
   private lazy val nrsRetrievals =
     (affinityGroup and
       internalId and externalId and agentCode and credentials and confidenceLevel and nino and saUtr and name and dateOfBirth
