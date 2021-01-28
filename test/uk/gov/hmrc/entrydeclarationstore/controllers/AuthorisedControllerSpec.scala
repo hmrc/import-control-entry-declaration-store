@@ -26,7 +26,7 @@ import play.api.test.Helpers._
 import play.api.test.{FakeRequest, ResultExtractors}
 import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.entrydeclarationstore.nrs.NRSMetadataTestData
-import uk.gov.hmrc.entrydeclarationstore.reporting.ClientType
+import uk.gov.hmrc.entrydeclarationstore.reporting.{ClientInfo, ClientType}
 import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, MockAuthService, UserDetails}
 import uk.gov.hmrc.entrydeclarationstore.utils.{EventLogger, MockMetrics, Timer}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -51,13 +51,13 @@ class AuthorisedControllerSpec
     FakeRequest().withHeaders(HeaderNames.AUTHORIZATION -> bearerToken).withBody(body)
 
   val eori                   = "GB123"
-  val clientType: ClientType = ClientType.CSP
+  val clientInfo: ClientInfo = ClientInfo(ClientType.CSP, None, None)
 
   val bodyContainingEori      = s"<someXml>$eori</someXml>"
   val bodyContainingOtherEori = s"<someXml>otherEori</someXml>"
 
   // WLOG - whatever the service returns should be passed to the custom controller code block...
-  val userDetails: UserDetails = UserDetails(eori, clientType, None)
+  val userDetails: UserDetails = UserDetails(eori, clientInfo, None)
 
   trait Test {
     val hc: HeaderCarrier   = HeaderCarrier()

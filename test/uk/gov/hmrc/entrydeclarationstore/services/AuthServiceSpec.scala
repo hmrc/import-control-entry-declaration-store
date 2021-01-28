@@ -19,13 +19,15 @@ package uk.gov.hmrc.entrydeclarationstore.services
 import org.scalatest.Inside
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Span}
+import play.api.mvc.Headers
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve._
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.{MockApiSubscriptionFieldsConnector, MockAuthConnector}
 import uk.gov.hmrc.entrydeclarationstore.nrs.NRSMetadataTestData
-import uk.gov.hmrc.entrydeclarationstore.reporting.ClientType
+import uk.gov.hmrc.entrydeclarationstore.reporting.{ClientInfo, ClientType}
+import uk.gov.hmrc.entrydeclarationstore.utils.CommonHeaders
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -39,15 +41,17 @@ class AuthServiceSpec
     with ScalaFutures
     with Inside
     with MockAppConfig
-    with NRSMetadataTestData {
+    with NRSMetadataTestData
+    with CommonHeaders {
 
   implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = Span(500, Millis))
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.global
 
-  val service  = new AuthService(mockAuthConnector, mockApiSubscriptionFieldsConnector, mockAppConfig)
-  val eori     = "GB123"
-  val clientId = "someClientId"
+  val service       = new AuthService(mockAuthConnector, mockApiSubscriptionFieldsConnector, mockAppConfig)
+  val eori          = "GB123"
+  val clientId      = "someClientId"
+  val applicationId = "someAppId"
 
   // WLOG - any AuthorisationException will do
   val authException = new InsufficientEnrolments with NoStackTrace
@@ -141,9 +145,12 @@ class AuthServiceSpec
    )
   // @formatter:on
 
+  implicit val hc: HeaderCarrier = HeaderCarrier()
+
   "AuthService.authenticate" when {
+
     "X-Client-Id header present" when {
-      implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders("X-Client-Id" -> clientId)
+      implicit val headers: Headers = Headers(X_CLIENT_ID -> clientId, X_APPLICATION_ID -> applicationId)
 
       "NRS enabled" when {
         "CSP authentication succeeds" when {
@@ -154,7 +161,11 @@ class AuthServiceSpec
               stubCSPAuth(cspRetrievalsNRSEnabled) returns Future.successful(cspIdentityDataRetrievalNRSEnabled)
 
               MockApiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId) returns Some(eori)
-              service.authenticate.futureValue shouldBe Some(UserDetails(eori, ClientType.CSP, Some(identityData)))
+              service.authenticate.futureValue shouldBe Some(
+                UserDetails(
+                  eori,
+                  ClientInfo(ClientType.CSP, clientId = Some(clientId), applicationId = Some(applicationId)),
+                  Some(identityData)))
             }
           }
 
@@ -179,7 +190,7 @@ class AuthServiceSpec
         }
 
         "no X-Client-Id header present" should {
-          implicit val hc: HeaderCarrier = HeaderCarrier()
+          implicit val headers: Headers = Headers(X_APPLICATION_ID -> applicationId)
           authenticateBasedOnICSEnrolmentNrsEnabled { () =>
             MockAppConfig.nrsEnabled returns true
             MockAppConfig.newSSEnrolmentEnabled
@@ -195,7 +206,11 @@ class AuthServiceSpec
               stubCSPAuth(EmptyRetrieval) returns Future.successful(())
 
               MockApiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId) returns Some(eori)
-              service.authenticate.futureValue shouldBe Some(UserDetails(eori, ClientType.CSP, None))
+              service.authenticate.futureValue shouldBe Some(
+                UserDetails(
+                  eori,
+                  ClientInfo(ClientType.CSP, clientId = Some(clientId), applicationId = Some(applicationId)),
+                  None))
             }
           }
 
@@ -220,7 +235,7 @@ class AuthServiceSpec
         }
 
         "no X-Client-Id header present" should {
-          implicit val hc: HeaderCarrier = HeaderCarrier()
+          implicit val headers: Headers = Headers(X_APPLICATION_ID -> applicationId)
           authenticateBasedOnICSEnrolmentNrsDisabled { () =>
             MockAppConfig.nrsEnabled returns false
             MockAppConfig.newSSEnrolmentEnabled
@@ -230,24 +245,26 @@ class AuthServiceSpec
     }
 
     "X-Client-Id header present with different case" must {
-      implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders("x-client-id" -> clientId)
+      implicit val headers: Headers = Headers(X_CLIENT_ID -> clientId)
 
       "Attempt CSP auth" in {
         MockAppConfig.nrsEnabled returns false
         stubCSPAuth(EmptyRetrieval) returns Future.successful(())
 
         MockApiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId) returns Some(eori)
-        service.authenticate.futureValue shouldBe Some(UserDetails(eori, ClientType.CSP, None))
+        service.authenticate.futureValue shouldBe Some(
+          UserDetails(eori, ClientInfo(ClientType.CSP, clientId = Some(clientId), applicationId = None), None))
       }
     }
 
-    def authenticateBasedOnICSEnrolmentNrsDisabled(stubScenario: () => Unit)(implicit hc: HeaderCarrier): Unit = {
+    def authenticateBasedOnICSEnrolmentNrsDisabled(
+      stubScenario: () => Unit)(implicit hc: HeaderCarrier, headers: Headers): Unit = {
       "return Some(eori)" when {
         "ICS enrolment with an eori" in {
           stubScenario()
           stubNonCSPAuth(nonCSPRetrievalNRSDisabled) returns nonCSPRetrievalResultsNRSDisabled(
             Enrolments(Set(validICSEnrolment(eori))))
-          service.authenticate.futureValue shouldBe Some(UserDetails(eori, ClientType.GGW, None))
+          service.authenticate.futureValue shouldBe Some(UserDetails(eori, ClientInfo(ClientType.GGW), None))
         }
       }
 
@@ -293,13 +310,15 @@ class AuthServiceSpec
       }
     }
 
-    def authenticateBasedOnICSEnrolmentNrsEnabled(stubScenario: () => Unit)(implicit hc: HeaderCarrier): Unit = {
+    def authenticateBasedOnICSEnrolmentNrsEnabled(
+      stubScenario: () => Unit)(implicit hc: HeaderCarrier, headers: Headers): Unit = {
       "return Some(eori)" when {
         "ICS enrolment with an eori" in {
           stubScenario()
           stubNonCSPAuth(nonCSPRetrievalNRSEnabled) returns nonCSPRetrievalResultsNRSEnabled(
             Enrolments(Set(validICSEnrolment(eori))))
-          service.authenticate.futureValue shouldBe Some(UserDetails(eori, ClientType.GGW, Some(identityData)))
+          service.authenticate.futureValue shouldBe Some(
+            UserDetails(eori, ClientInfo(ClientType.GGW), Some(identityData)))
         }
       }
 

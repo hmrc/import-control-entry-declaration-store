@@ -19,6 +19,7 @@ package uk.gov.hmrc.entrydeclarationstore.services
 import org.scalamock.handlers.CallHandler
 import org.scalamock.matchers.ArgCapture.CaptureOne
 import org.scalamock.scalatest.MockFactory
+import play.api.mvc.Headers
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -28,10 +29,10 @@ trait MockAuthService extends MockFactory {
 
   object MockAuthService {
     def authenticate: CallHandler[Future[Option[UserDetails]]] =
-      (mockAuthService.authenticate(_: HeaderCarrier)).expects(*)
+      (mockAuthService.authenticate(_: HeaderCarrier, _: Headers)).expects(*, *)
 
     def authenticateCapture(headerCarrier: CaptureOne[HeaderCarrier]): CallHandler[Future[Option[UserDetails]]] =
-      (mockAuthService.authenticate(_: HeaderCarrier)).expects(capture(headerCarrier))
+      (mockAuthService.authenticate(_: HeaderCarrier, _: Headers)).expects(capture(headerCarrier), *)
   }
 
 }

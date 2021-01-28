@@ -53,7 +53,8 @@ class EntryDeclarationSubmissionController @Inject()(
           if (EoriUtils.eoriFromXmlString(payload) == eori) { true } else {
             implicit val lc: LoggingContext           = LoggingContext()
             implicit val headerCarrier: HeaderCarrier = hc(request)
-            reportSender.sendReport(SubmissionHandled.Failure(mrn.isDefined, FailureType.EORIMismatchError): SubmissionHandled)
+            reportSender.sendReport(
+              SubmissionHandled.Failure(mrn.isDefined, FailureType.EORIMismatchError): SubmissionHandled)
             false
           }
         case _ => false
@@ -83,18 +84,21 @@ class EntryDeclarationSubmissionController @Inject()(
       implicit val lc: LoggingContext = LoggingContext()
 
       service
-        .handleSubmission(request.userDetails.eori, request.body, mrn, receivedDateTime, request.userDetails.clientType)
+        .handleSubmission(request.userDetails.eori, request.body, mrn, receivedDateTime, request.userDetails.clientInfo)
         .map {
           case Left(failure) =>
             failure.error match {
               case _: ValidationErrors =>
-                reportSender.sendReport(SubmissionHandled.Failure(mrn.isDefined, FailureType.ValidationErrors): SubmissionHandled)
+                reportSender.sendReport(
+                  SubmissionHandled.Failure(mrn.isDefined, FailureType.ValidationErrors): SubmissionHandled)
                 BadRequest(failure.toXml)
-              case MRNMismatchError    =>
-                reportSender.sendReport(SubmissionHandled.Failure(mrn.isDefined, FailureType.MRNMismatchError): SubmissionHandled)
+              case MRNMismatchError =>
+                reportSender.sendReport(
+                  SubmissionHandled.Failure(mrn.isDefined, FailureType.MRNMismatchError): SubmissionHandled)
                 BadRequest(failure.toXml)
-              case _                   =>
-                reportSender.sendReport(SubmissionHandled.Failure(mrn.isDefined, FailureType.InternalServerError): SubmissionHandled)
+              case _ =>
+                reportSender.sendReport(
+                  SubmissionHandled.Failure(mrn.isDefined, FailureType.InternalServerError): SubmissionHandled)
                 InternalServerError(failure.toXml)
             }
           case Right(success) =>

@@ -25,7 +25,7 @@ import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, EisConnecto
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationstore.models._
 import uk.gov.hmrc.entrydeclarationstore.models.json.{DeclarationToJsonConverter, InputParameters}
-import uk.gov.hmrc.entrydeclarationstore.reporting.{ClientType, ReportSender, SubmissionReceived, SubmissionSentToEIS}
+import uk.gov.hmrc.entrydeclarationstore.reporting.{ClientInfo, ReportSender, SubmissionReceived, SubmissionSentToEIS}
 import uk.gov.hmrc.entrydeclarationstore.repositories.EntryDeclarationRepo
 import uk.gov.hmrc.entrydeclarationstore.utils._
 import uk.gov.hmrc.entrydeclarationstore.validation.ValidationHandler
@@ -44,7 +44,7 @@ trait EntryDeclarationStore {
     payload: String,
     mrn: Option[String],
     receivedDateTime: Instant,
-    clientType: ClientType)(implicit hc: HeaderCarrier): Future[Either[ErrorWrapper[_], SuccessResponse]]
+    clientInfo: ClientInfo)(implicit hc: HeaderCarrier): Future[Either[ErrorWrapper[_], SuccessResponse]]
 }
 
 @Singleton
@@ -69,7 +69,7 @@ class EntryDeclarationStoreImpl @Inject()(
     payload: String,
     mrn: Option[String],
     receivedDateTime: Instant,
-    clientType: ClientType)(implicit hc: HeaderCarrier): Future[Either[ErrorWrapper[_], SuccessResponse]] =
+    clientInfo: ClientInfo)(implicit hc: HeaderCarrier): Future[Either[ErrorWrapper[_], SuccessResponse]] =
     timeFuture("Service handleSubmission", "handleSubmission.total") {
 
       val correlationId          = idGenerator.generateCorrelationId
@@ -81,9 +81,9 @@ class EntryDeclarationStoreImpl @Inject()(
           .withMessageType(eori = eori, correlationId = correlationId, submissionId = submissionId, mrn = mrn)
 
       if (appConfig.logSubmissionPayloads) {
-        ContextLogger.info(s"Handling submission for $clientType client. Payload:\n$payload")
+        ContextLogger.info(s"Handling submission for ${clientInfo.clientType} client. Payload:\n$payload")
       } else {
-        ContextLogger.info(s"Handling submission for $clientType client.")
+        ContextLogger.info(s"Handling submission for ${clientInfo.clientType} client.")
       }
 
       val result = for {
@@ -101,10 +101,10 @@ class EntryDeclarationStoreImpl @Inject()(
         _ <- EitherT(saveToDatabase(entryDeclaration))
         transportMode = (xmlPayload \\ "TraModAtBorHEA76").head.text
         _ <- EitherT(
-              sendSubmissionReceivedReport(input, eori, entryDeclarationAsJson, payload, transportMode, clientType))
+              sendSubmissionReceivedReport(input, eori, entryDeclarationAsJson, payload, transportMode, clientInfo))
       } yield {
         submitToEIS(input, eori, transportMode, receivedDateTime)
-        reportMetrics(MessageType(amendment = mrn.isDefined), clientType, transportMode, payload.length)
+        reportMetrics(MessageType(amendment = mrn.isDefined), clientInfo.clientType, transportMode, payload.length)
         SuccessResponse(entryDeclaration.correlationId)
       }
 
@@ -164,9 +164,10 @@ class EntryDeclarationStoreImpl @Inject()(
     body: JsValue,
     xmlPayload: String,
     transportMode: String,
-    clientType: ClientType
+    clientInfo: ClientInfo
   )(implicit hc: HeaderCarrier, lc: LoggingContext): Future[Either[ErrorWrapper[_], Unit]] = {
     import input._
+
     reportSender
       .sendReport(
         receivedDateTime,
@@ -177,7 +178,7 @@ class EntryDeclarationStoreImpl @Inject()(
           MessageType.apply(mrn.isDefined),
           body          = body,
           transportMode = transportMode,
-          clientType    = clientType,
+          clientInfo    = clientInfo,
           bodyLength    = xmlPayload.length
         )
       )

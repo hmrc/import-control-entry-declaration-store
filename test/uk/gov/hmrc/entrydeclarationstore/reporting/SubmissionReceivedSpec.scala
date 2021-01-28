@@ -26,41 +26,115 @@ class SubmissionReceivedSpec extends UnitSpec {
 
   val now: Instant = Instant.now
 
-  val report: SubmissionReceived = SubmissionReceived(
-    eori          = "eori",
-    correlationId = "correlationId",
-    submissionId  = "submissionId",
-    messageType   = MessageType.IE313,
-    body          = JsObject(Seq("body1" -> JsString("value"))),
-    bodyLength    = 123,
-    clientType    = ClientType.GGW,
-    transportMode = "10"
-  )
+  def report(clientId: Option[String] = None, applicationId: Option[String] = None): SubmissionReceived =
+    SubmissionReceived(
+      eori          = "eori",
+      correlationId = "correlationId",
+      submissionId  = "submissionId",
+      messageType   = MessageType.IE313,
+      body          = JsObject(Seq("body1" -> JsString("value"))),
+      bodyLength    = 123,
+      clientInfo    = ClientInfo(ClientType.GGW, clientId, applicationId),
+      transportMode = "10"
+    )
 
   "SubmissionReceived" must {
-    "have the correct associated JSON event" in {
-      val event = implicitly[EventSources[SubmissionReceived]].eventFor(now, report).get
+    "have the correct associated JSON event" when {
+      "no applicationId or clientId headers provided" in {
+        val event = implicitly[EventSources[SubmissionReceived]].eventFor(now, report()).get
 
-      Json.toJson(event) shouldBe
-        Json.parse(s"""
-                      |{
-                      |    "eventCode" : "ENS_REC",
-                      |    "eventTimestamp" : "${now.toString}",
-                      |    "submissionId" : "submissionId",
-                      |    "eori" : "eori",
-                      |    "correlationId" : "correlationId",
-                      |    "messageType" : "IE313",
-                      |    "detail" : {
-                      |        "bodyLength" : 123,
-                      |        "transportMode": "10",
-                      |        "clientType": "GGW"
-                      |    }
-                      |}
-                      |""".stripMargin)
+        Json.toJson(event) shouldBe
+          Json.parse(s"""
+                        |{
+                        |    "eventCode" : "ENS_REC",
+                        |    "eventTimestamp" : "${now.toString}",
+                        |    "submissionId" : "submissionId",
+                        |    "eori" : "eori",
+                        |    "correlationId" : "correlationId",
+                        |    "messageType" : "IE313",
+                        |    "detail" : {
+                        |        "bodyLength" : 123,
+                        |        "transportMode": "10",
+                        |        "clientType": "GGW"
+                        |    }
+                        |}
+                        |""".stripMargin)
+      }
+      "applcationId header provided" in {
+        val event =
+          implicitly[EventSources[SubmissionReceived]].eventFor(now, report(applicationId = Some("someAppId"))).get
+
+        Json.toJson(event) shouldBe
+          Json.parse(s"""
+                        |{
+                        |    "eventCode" : "ENS_REC",
+                        |    "eventTimestamp" : "${now.toString}",
+                        |    "submissionId" : "submissionId",
+                        |    "eori" : "eori",
+                        |    "correlationId" : "correlationId",
+                        |    "messageType" : "IE313",
+                        |    "detail" : {
+                        |        "bodyLength" : 123,
+                        |        "transportMode": "10",
+                        |        "clientType": "GGW",
+                        |        "applicationId": "someAppId"
+                        |    }
+                        |}
+                        |""".stripMargin)
+      }
+
+      "clientId header provided" in {
+        val event =
+          implicitly[EventSources[SubmissionReceived]].eventFor(now, report(clientId = Some("someClientId"))).get
+
+        Json.toJson(event) shouldBe
+          Json.parse(s"""
+                        |{
+                        |    "eventCode" : "ENS_REC",
+                        |    "eventTimestamp" : "${now.toString}",
+                        |    "submissionId" : "submissionId",
+                        |    "eori" : "eori",
+                        |    "correlationId" : "correlationId",
+                        |    "messageType" : "IE313",
+                        |    "detail" : {
+                        |        "bodyLength" : 123,
+                        |        "transportMode": "10",
+                        |        "clientType": "GGW",
+                        |        "clientId": "someClientId"
+                        |    }
+                        |}
+                        |""".stripMargin)
+      }
+
+      "applicationId and clientId headers provided" in {
+        val event =
+          implicitly[EventSources[SubmissionReceived]]
+            .eventFor(now, report(clientId = Some("someClientId"), applicationId = Some("someAppId")))
+            .get
+
+        Json.toJson(event) shouldBe
+          Json.parse(s"""
+                        |{
+                        |    "eventCode" : "ENS_REC",
+                        |    "eventTimestamp" : "${now.toString}",
+                        |    "submissionId" : "submissionId",
+                        |    "eori" : "eori",
+                        |    "correlationId" : "correlationId",
+                        |    "messageType" : "IE313",
+                        |    "detail" : {
+                        |        "bodyLength" : 123,
+                        |        "transportMode": "10",
+                        |        "clientType": "GGW",
+                        |        "clientId": "someClientId",
+                        |        "applicationId": "someAppId"
+                        |    }
+                        |}
+                        |""".stripMargin)
+      }
     }
 
     "have the correct associated audit event" in {
-      val event = implicitly[EventSources[SubmissionReceived]].auditEventFor(report).get
+      val event = implicitly[EventSources[SubmissionReceived]].auditEventFor(report()).get
 
       event.auditType       shouldBe "SubmissionReceived"
       event.transactionName shouldBe "ENS submission received"
