@@ -18,7 +18,6 @@ package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import play.api.mvc._
 import uk.gov.hmrc.entrydeclarationstore.models.StandardError
-import uk.gov.hmrc.entrydeclarationstore.reporting.ClientInfo
 import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, UserDetails}
 import uk.gov.hmrc.entrydeclarationstore.utils.Timer
 import uk.gov.hmrc.entrydeclarationstore.utils.XmlFormats._
