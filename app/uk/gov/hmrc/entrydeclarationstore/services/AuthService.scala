@@ -98,11 +98,11 @@ class AuthService @Inject()(
     EitherT(authorised(AuthProviders(AuthProvider.GovernmentGateway))
       .retrieve(retrieval and allEnrolments) {
         case identityParts ~ usersEnrolments =>
-          val icsEnrolments =
+          val enrolments =
             usersEnrolments.enrolments.filter(enrolment => enrolment.isActivated && enrolment.key == "HMRC-SS-ORG")
 
           val eoris = for {
-            enrolment <- icsEnrolments
+            enrolment <- enrolments
             eoriId    <- enrolment.getIdentifier("EORINumber")
           } yield eoriId.value
 
