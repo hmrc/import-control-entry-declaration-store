@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.models
 
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.Json
 import uk.gov.hmrc.play.test.UnitSpec
 
 class ReplayInitializationResultSpec extends UnitSpec {

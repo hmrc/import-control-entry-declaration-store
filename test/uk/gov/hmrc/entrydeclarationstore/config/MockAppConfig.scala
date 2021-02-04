@@ -84,8 +84,6 @@ trait MockAppConfig extends MockFactory {
 
     def nrsEnabled: CallHandler[Boolean] = mockAppConfig.nrsEnabled _ expects ()
 
-    def newSSEnrolmentEnabled: CallHandler[Boolean] = mockAppConfig.newSSEnrolmentEnabled _ stubs () returns true
-
     def replayBatchSize: CallHandler[Int] = (mockAppConfig.replayBatchSize _).expects
   }
 
