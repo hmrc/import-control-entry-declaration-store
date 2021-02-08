@@ -99,8 +99,6 @@ trait AppConfig {
 
   def nrsEnabled: Boolean
 
-  def newSSEnrolmentEnabled: Boolean
-
   def replayBatchSize: Int
 
   def replayLockDuration: FiniteDuration
@@ -212,8 +210,6 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
   lazy val nrsRetries: List[FiniteDuration] = fibonacciRetryDelays(nrsConfig)
 
   lazy val nrsEnabled: Boolean = nrsConfig.getOptional[Boolean]("enabled").getOrElse(true)
-
-  lazy val newSSEnrolmentEnabled: Boolean = config.get[Boolean]("feature-switch.new-ss-enrolment")
 
   lazy val replayBatchSize: Int = config.getOptional[Int]("replay.batchSize").getOrElse(10)
 

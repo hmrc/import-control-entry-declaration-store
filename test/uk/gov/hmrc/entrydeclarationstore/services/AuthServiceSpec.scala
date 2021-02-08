@@ -59,7 +59,7 @@ class AuthServiceSpec
   val enrolmentKey = "HMRC-SS-ORG"
   val identifier   = "EORINumber"
 
-  def validICSEnrolment(eori: String): Enrolment =
+  def validSSEnrolment(eori: String): Enrolment =
     Enrolment(
       key               = enrolmentKey,
       identifiers       = Seq(EnrolmentIdentifier(identifier, eori)),
@@ -181,9 +181,8 @@ class AuthServiceSpec
         }
 
         "CSP authentication fails" should {
-          authenticateBasedOnICSEnrolmentNrsEnabled { () =>
+          authenticateBasedOnSSEnrolmentNrsEnabled { () =>
             MockAppConfig.nrsEnabled returns true
-            MockAppConfig.newSSEnrolmentEnabled
 
             stubCSPAuth(cspRetrievalsNRSEnabled) returns Future.failed(authException)
           }
@@ -191,9 +190,8 @@ class AuthServiceSpec
 
         "no X-Client-Id header present" should {
           implicit val headers: Headers = Headers(X_APPLICATION_ID -> applicationId)
-          authenticateBasedOnICSEnrolmentNrsEnabled { () =>
+          authenticateBasedOnSSEnrolmentNrsEnabled { () =>
             MockAppConfig.nrsEnabled returns true
-            MockAppConfig.newSSEnrolmentEnabled
           }
         }
       }
@@ -226,9 +224,8 @@ class AuthServiceSpec
         }
 
         "CSP authentication fails" should {
-          authenticateBasedOnICSEnrolmentNrsDisabled { () =>
+          authenticateBasedOnSSEnrolmentNrsDisabled { () =>
             MockAppConfig.nrsEnabled returns false
-            MockAppConfig.newSSEnrolmentEnabled
 
             stubCSPAuth(EmptyRetrieval) returns Future.failed(authException)
           }
@@ -236,9 +233,8 @@ class AuthServiceSpec
 
         "no X-Client-Id header present" should {
           implicit val headers: Headers = Headers(X_APPLICATION_ID -> applicationId)
-          authenticateBasedOnICSEnrolmentNrsDisabled { () =>
+          authenticateBasedOnSSEnrolmentNrsDisabled { () =>
             MockAppConfig.nrsEnabled returns false
-            MockAppConfig.newSSEnrolmentEnabled
           }
         }
       }
@@ -257,26 +253,26 @@ class AuthServiceSpec
       }
     }
 
-    def authenticateBasedOnICSEnrolmentNrsDisabled(
+    def authenticateBasedOnSSEnrolmentNrsDisabled(
       stubScenario: () => Unit)(implicit hc: HeaderCarrier, headers: Headers): Unit = {
       "return Some(eori)" when {
-        "ICS enrolment with an eori" in {
+        "S&S enrolment with an eori" in {
           stubScenario()
           stubNonCSPAuth(nonCSPRetrievalNRSDisabled) returns nonCSPRetrievalResultsNRSDisabled(
-            Enrolments(Set(validICSEnrolment(eori))))
+            Enrolments(Set(validSSEnrolment(eori))))
           service.authenticate.futureValue shouldBe Some(UserDetails(eori, ClientInfo(ClientType.GGW), None))
         }
       }
 
       "return None" when {
-        "ICS enrolment with no identifiers" in {
+        "S&S enrolment with no identifiers" in {
           stubScenario()
           stubNonCSPAuth(nonCSPRetrievalNRSDisabled) returns nonCSPRetrievalResultsNRSDisabled(
-            Enrolments(Set(validICSEnrolment(eori).copy(identifiers = Nil))))
+            Enrolments(Set(validSSEnrolment(eori).copy(identifiers = Nil))))
           service.authenticate.futureValue shouldBe None
         }
 
-        "no ICS enrolment in authorization header" in {
+        "no S&S enrolment in authorization header" in {
           stubScenario()
           stubNonCSPAuth(nonCSPRetrievalNRSDisabled) returns nonCSPRetrievalResultsNRSDisabled(
             Enrolments(
@@ -295,10 +291,10 @@ class AuthServiceSpec
           service.authenticate.futureValue shouldBe None
         }
 
-        "ICS enrolment not activated" in {
+        "S&S enrolment not activated" in {
           stubScenario()
           stubNonCSPAuth(nonCSPRetrievalNRSDisabled) returns nonCSPRetrievalResultsNRSDisabled(
-            Enrolments(Set(validICSEnrolment(eori).copy(state = "inactive"))))
+            Enrolments(Set(validSSEnrolment(eori).copy(state = "inactive"))))
           service.authenticate.futureValue shouldBe None
         }
 
@@ -310,27 +306,27 @@ class AuthServiceSpec
       }
     }
 
-    def authenticateBasedOnICSEnrolmentNrsEnabled(
+    def authenticateBasedOnSSEnrolmentNrsEnabled(
       stubScenario: () => Unit)(implicit hc: HeaderCarrier, headers: Headers): Unit = {
       "return Some(eori)" when {
-        "ICS enrolment with an eori" in {
+        "S&S enrolment with an eori" in {
           stubScenario()
           stubNonCSPAuth(nonCSPRetrievalNRSEnabled) returns nonCSPRetrievalResultsNRSEnabled(
-            Enrolments(Set(validICSEnrolment(eori))))
+            Enrolments(Set(validSSEnrolment(eori))))
           service.authenticate.futureValue shouldBe Some(
             UserDetails(eori, ClientInfo(ClientType.GGW), Some(identityData)))
         }
       }
 
       "return None" when {
-        "ICS enrolment with no identifiers" in {
+        "S&S enrolment with no identifiers" in {
           stubScenario()
           stubNonCSPAuth(nonCSPRetrievalNRSEnabled) returns nonCSPRetrievalResultsNRSEnabled(
-            Enrolments(Set(validICSEnrolment(eori).copy(identifiers = Nil))))
+            Enrolments(Set(validSSEnrolment(eori).copy(identifiers = Nil))))
           service.authenticate.futureValue shouldBe None
         }
 
-        "no ICS enrolment in authorization header" in {
+        "no S&S enrolment in authorization header" in {
           stubScenario()
           stubNonCSPAuth(nonCSPRetrievalNRSEnabled) returns nonCSPRetrievalResultsNRSEnabled(
             Enrolments(
@@ -348,10 +344,10 @@ class AuthServiceSpec
           service.authenticate.futureValue shouldBe None
         }
 
-        "ICS enrolment not activated" in {
+        "S&S enrolment not activated" in {
           stubScenario()
           stubNonCSPAuth(nonCSPRetrievalNRSEnabled) returns nonCSPRetrievalResultsNRSEnabled(
-            Enrolments(Set(validICSEnrolment(eori).copy(state = "inactive"))))
+            Enrolments(Set(validSSEnrolment(eori).copy(state = "inactive"))))
           service.authenticate.futureValue shouldBe None
         }
 
