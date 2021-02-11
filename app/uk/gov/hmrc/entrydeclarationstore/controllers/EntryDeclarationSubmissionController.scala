@@ -19,6 +19,7 @@ package uk.gov.hmrc.entrydeclarationstore.controllers
 import com.kenshoo.play.metrics.Metrics
 import play.api.mvc.{Action, ControllerComponents, Request}
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
+import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
 import uk.gov.hmrc.entrydeclarationstore.nrs.{NRSMetadata, NRSService, NRSSubmission}
 import uk.gov.hmrc.entrydeclarationstore.reporting.{FailureType, ReportSender, SubmissionHandled}
 import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, EntryDeclarationStore, MRNMismatchError}
@@ -84,7 +85,12 @@ class EntryDeclarationSubmissionController @Inject()(
       implicit val lc: LoggingContext = LoggingContext()
 
       service
-        .handleSubmission(request.userDetails.eori, request.body, mrn, receivedDateTime, request.userDetails.clientInfo)
+        .handleSubmission(
+          request.userDetails.eori,
+          RawPayload(request.body),
+          mrn,
+          receivedDateTime,
+          request.userDetails.clientInfo)
         .map {
           case Left(failure) =>
             failure.error match {
