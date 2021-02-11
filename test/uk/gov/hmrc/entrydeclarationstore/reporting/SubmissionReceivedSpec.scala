@@ -26,7 +26,7 @@ class SubmissionReceivedSpec extends UnitSpec {
 
   val now: Instant = Instant.now
 
-  def report(clientId: Option[String] = None, applicationId: Option[String] = None): SubmissionReceived =
+  def report(clientId: Option[String] = None, applicationId: Option[String] = None, mrn: Option[String] = None): SubmissionReceived =
     SubmissionReceived(
       eori          = "eori",
       correlationId = "correlationId",
@@ -35,7 +35,8 @@ class SubmissionReceivedSpec extends UnitSpec {
       body          = JsObject(Seq("body1" -> JsString("value"))),
       bodyLength    = 123,
       clientInfo    = ClientInfo(ClientType.GGW, clientId, applicationId),
-      transportMode = "10"
+      transportMode = "10",
+      amendmentMrn = mrn
     )
 
   "SubmissionReceived" must {
@@ -127,6 +128,29 @@ class SubmissionReceivedSpec extends UnitSpec {
                         |        "clientType": "GGW",
                         |        "clientId": "someClientId",
                         |        "applicationId": "someAppId"
+                        |    }
+                        |}
+                        |""".stripMargin)
+      }
+
+      "mrn provided" in {
+        val event =
+          implicitly[EventSources[SubmissionReceived]].eventFor(now, report(mrn = Some("00GB12345678912340"))).get
+
+        Json.toJson(event) shouldBe
+          Json.parse(s"""
+                        |{
+                        |    "eventCode" : "ENS_REC",
+                        |    "eventTimestamp" : "${now.toString}",
+                        |    "submissionId" : "submissionId",
+                        |    "eori" : "eori",
+                        |    "correlationId" : "correlationId",
+                        |    "messageType" : "IE313",
+                        |    "detail" : {
+                        |        "bodyLength" : 123,
+                        |        "transportMode": "10",
+                        |        "clientType": "GGW",
+                        |        "amendmentMrn": "00GB12345678912340"
                         |    }
                         |}
                         |""".stripMargin)

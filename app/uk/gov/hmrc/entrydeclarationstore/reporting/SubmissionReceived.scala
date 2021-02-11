@@ -32,7 +32,8 @@ case class SubmissionReceived(
   body: JsValue,
   bodyLength: Int,
   transportMode: String,
-  clientInfo: ClientInfo
+  clientInfo: ClientInfo,
+  amendmentMrn: Option[String]
 ) extends Report
 
 object SubmissionReceived {
@@ -55,7 +56,8 @@ object SubmissionReceived {
               "transportMode"                              -> JsString(transportMode),
               "bodyLength"                                 -> JsNumber(bodyLength)) ++
               clientInfo.applicationId.map("applicationId" -> JsString(_)) ++
-              clientInfo.clientId.map("clientId"           -> JsString(_))))
+              clientInfo.clientId.map("clientId"           -> JsString(_)) ++
+              amendmentMrn.map("amendmentMrn"              -> JsString(_))))
       )
 
       Some(event)
