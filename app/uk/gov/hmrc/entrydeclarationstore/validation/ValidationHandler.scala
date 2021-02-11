@@ -20,7 +20,7 @@ import cats.implicits._
 import com.kenshoo.play.metrics.Metrics
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
-import uk.gov.hmrc.entrydeclarationstore.models.ErrorWrapper
+import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, RawPayload}
 import uk.gov.hmrc.entrydeclarationstore.services.MRNMismatchError
 import uk.gov.hmrc.entrydeclarationstore.utils.{EventLogger, Timer, XmlFormatConfig}
 import uk.gov.hmrc.entrydeclarationstore.validation.business.RuleValidator
@@ -30,7 +30,7 @@ import javax.inject.{Inject, Named}
 import scala.xml.NodeSeq
 
 trait ValidationHandler {
-  def handleValidation(payload: String, mrn: Option[String])(
+  def handleValidation(rawPayload: RawPayload, mrn: Option[String])(
     implicit lc: LoggingContext): Either[ErrorWrapper[_], NodeSeq]
 }
 
@@ -46,10 +46,10 @@ class ValidationHandlerImpl @Inject()(
 
   implicit val xmlFormatConfig: XmlFormatConfig = appConfig.xmlFormatConfig
 
-  def handleValidation(payload: String, mrn: Option[String])(
+  def handleValidation(rawPayload: RawPayload, mrn: Option[String])(
     implicit lc: LoggingContext): Either[ErrorWrapper[_], NodeSeq] =
     for {
-      xmlPayload <- validateSchema(payload, mrn)
+      xmlPayload <- validateSchema(rawPayload, mrn)
       _          <- checkMrn(xmlPayload, mrn)
       _          <- validateRules(xmlPayload, mrn)
     } yield xmlPayload
@@ -62,11 +62,11 @@ class ValidationHandlerImpl @Inject()(
       case None => Right(())
     }
 
-  private def validateSchema(payload: String, mrn: Option[String])(implicit lc: LoggingContext) =
+  private def validateSchema(rawPayload: RawPayload, mrn: Option[String])(implicit lc: LoggingContext) =
     time("Schema validation", "handleSubmission.validateSchema") {
       val schemaType =
         if (mrn.isDefined) SchemaTypeE313 else SchemaTypeE315
-      val validationResult = schemaValidator.validate(schemaType, payload)
+      val validationResult = schemaValidator.validate(schemaType, rawPayload)
 
       validationResult.leftMap { errs =>
         ContextLogger.info(s"Schema validation errors found. Num errs=${errs.errors.length}")

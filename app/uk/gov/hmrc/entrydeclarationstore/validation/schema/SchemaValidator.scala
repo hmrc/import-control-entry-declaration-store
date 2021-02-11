@@ -16,10 +16,12 @@
 
 package uk.gov.hmrc.entrydeclarationstore.validation.schema
 
+import akka.util.ByteString
 import org.xml.sax._
+import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
 import uk.gov.hmrc.entrydeclarationstore.validation.{ValidationError, ValidationErrors}
 
-import java.io.StringReader
+import java.io.{ByteArrayInputStream, InputStream, StringReader}
 import javax.xml.parsers.{SAXParser, SAXParserFactory}
 import scala.xml.factory.XMLLoader
 import scala.xml.parsing.{FactoryAdapter, NoBindingFactoryAdapter}
@@ -85,7 +87,23 @@ class SchemaValidator {
       errors :+= ValidationError(exception, locationAsString)
   }
 
-  def validate(schemaType: SchemaType, payload: String): Either[ValidationErrors, NodeSeq] = {
+  def validate(schemaType: SchemaType, rawPayload: RawPayload): Either[ValidationErrors, NodeSeq] =
+    validate(schemaType, rawPayload.valueAsUTF8String)
+
+  def validate(schemaType: SchemaType, payload: String): Either[ValidationErrors, NodeSeq] =
+    validate(schemaType, new InputSource(new StringReader(payload)))
+
+  def validateStream(
+    schemaType: SchemaType,
+    payload: InputStream,
+    encoding: Option[String]): Either[ValidationErrors, NodeSeq] = {
+    val inputSource = new InputSource(payload)
+    encoding.foreach(inputSource.setEncoding)
+
+    validate(schemaType, inputSource)
+  }
+
+  def validate(schemaType: SchemaType, payloadSource: InputSource): Either[ValidationErrors, NodeSeq] = {
     val factory = SAXParserFactory.newInstance()
 
     factory.setNamespaceAware(true)
@@ -102,7 +120,7 @@ class SchemaValidator {
 
         override def adapter: FactoryAdapter = handler
 
-      }.load(new InputSource(new StringReader(payload)))
+      }.load(payloadSource)
 
       if (handler.errors.isEmpty) {
         Right(elem)

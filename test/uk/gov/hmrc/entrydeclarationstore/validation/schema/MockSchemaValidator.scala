@@ -18,6 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.validation.schema
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
+import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
 import uk.gov.hmrc.entrydeclarationstore.validation.ValidationErrors
 
 import scala.xml.NodeSeq
@@ -26,8 +27,8 @@ trait MockSchemaValidator extends MockFactory {
   val mockSchemaValidator: SchemaValidator = mock[SchemaValidator]
 
   object MockSchemaValidator {
-    def validate(schemaType: SchemaType, payload: String): CallHandler[Either[ValidationErrors, NodeSeq]] =
-      mockSchemaValidator.validate _ expects (schemaType, payload)
+    def validate(schemaType: SchemaType, rawPayload: RawPayload): CallHandler[Either[ValidationErrors, NodeSeq]] =
+      (mockSchemaValidator.validate(_: SchemaType, _: RawPayload)) expects (schemaType, rawPayload)
   }
 
 }

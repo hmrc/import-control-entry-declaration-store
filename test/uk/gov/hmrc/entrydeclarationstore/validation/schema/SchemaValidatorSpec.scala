@@ -194,4 +194,17 @@ class SchemaValidatorSpec extends UnitSpec {
       }
     }
   }
+
+  "Schema validator" when {
+    "an character encoding present with the payload" must {
+      "use that encoding" in {
+        fail
+      }
+    }
+    "no character encoding is present with the payload" must {
+      "infer the encoding" in {
+        fail
+      }
+    }
+  }
 }
