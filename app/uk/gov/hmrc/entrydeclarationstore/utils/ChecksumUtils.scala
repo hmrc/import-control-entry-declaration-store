@@ -20,11 +20,10 @@ import java.security.MessageDigest
 
 object ChecksumUtils {
 
-  def calculateSha256(input: Array[Byte]): String = {
+  def calculateSha256(input: Array[Byte]): String =
     MessageDigest.getInstance("SHA-256").digest(input).map("%02x".format(_)).mkString
-  }
 
-  implicit class StringWithSha256(s: String) {
-    def calculateSha256 = ChecksumUtils.calculateSha256(s.getBytes("UTF-8"))
+  implicit class ByteArrayWithSha256(bytes: Array[Byte]) {
+    def calculateSha256: String = ChecksumUtils.calculateSha256(bytes)
   }
 }

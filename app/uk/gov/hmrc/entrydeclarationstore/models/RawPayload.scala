@@ -22,11 +22,11 @@ import java.io.{ByteArrayInputStream, InputStream}
 import scala.xml.NodeSeq
 
 case class RawPayload(byteString: ByteString, encoding: Option[String]) {
-  @deprecated
-  def valueAsUTF8String: String = byteString.decodeString("UTF-8")
-  def length: Int               = byteString.length
+  lazy val byteArray: Array[Byte] = byteString.toArray
 
-  def inputStream: InputStream = new ByteArrayInputStream(byteString.toArray)
+  def length: Int = byteString.length
+
+  def inputStream: InputStream = new ByteArrayInputStream(byteArray)
 }
 
 object RawPayload {

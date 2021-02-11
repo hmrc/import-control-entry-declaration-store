@@ -16,15 +16,15 @@
 
 package uk.gov.hmrc.entrydeclarationstore.nrs
 
-import akka.util.ByteString
 import play.api.libs.json.Json
+import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
 import uk.gov.hmrc.play.test.UnitSpec
 
 class NRSSubmissionSpec extends UnitSpec with NRSMetadataTestData {
 
   "NRSSubmission" must {
     "format to the correct JSON with base64 encoded payload" in {
-      val nrsSubmission = NRSSubmission(ByteString.fromString("somePayload"), nrsMetadata)
+      val nrsSubmission = NRSSubmission(RawPayload("somePayload"), nrsMetadata)
 
       val nrsSubmissionJson =
         Json.parse(s"""{

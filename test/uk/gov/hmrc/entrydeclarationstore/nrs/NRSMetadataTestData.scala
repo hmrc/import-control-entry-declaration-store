@@ -22,73 +22,78 @@ import play.api.mvc.Headers
 import play.api.test.FakeRequest
 import uk.gov.hmrc.auth.core.retrieve._
 import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, User}
-import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils.StringWithSha256
+import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
+import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils._
 
 import java.time.Instant
 
 trait NRSMetadataTestData {
 
-  val nrsMetadataJson: JsValue = Json.parse("""
-                                              |{
-                                              |    "businessId": "iceds",
-                                              |    "notableEvent": "entry-declaration",
-                                              |    "payloadContentType": "application/xml",
-                                              |    "payloadSha256Checksum":"d6f0c835e8a559832d4a831de9ca84a96cfd42a4c968e7aa09c1fd56c934393a",
-                                              |    "userSubmissionTimestamp": "2018-04-07T12:13:25.000Z",
-                                              |    "identityData": {
-                                              |      "internalId": "int-id",
-                                              |      "externalId": "ext-id",
-                                              |      "credentials": {
-                                              |        "providerId": "12345-credId",
-                                              |        "providerType": "GovernmmentGateway"
-                                              |      },
-                                              |      "confidenceLevel": 200,
-                                              |      "name": {
-                                              |        "name": "mickey",
-                                              |        "lastName": "mouse"
-                                              |      },
-                                              |      "dateOfBirth": "1985-01-01",
-                                              |      "email": "test@test.com",
-                                              |      "agentInformation": {
-                                              |        "agentCode": "TZRXXV",
-                                              |        "agentFriendlyName": "Bodgitt & Legget LLP",
-                                              |        "agentId": "BDGL"
-                                              |      },
-                                              |      "groupIdentifier": "GroupId",
-                                              |      "credentialRole": "User",
-                                              |      "mdtpInformation": {
-                                              |        "deviceId": "DeviceId",
-                                              |        "sessionId": "SessionId"
-                                              |      },
-                                              |      "itmpName": {
-                                              |        "givenName": "michael",
-                                              |        "middleName": "h",
-                                              |        "familyName": "mouse"
-                                              |      },
-                                              |      "itmpDateOfBirth": "1985-01-01",
-                                              |      "itmpAddress": {
-                                              |        "line1": "Line 1",
-                                              |        "postCode": "NW94HD",
-                                              |        "countryName": "United Kingdom",
-                                              |        "countryCode": "UK"
-                                              |      },
-                                              |      "affinityGroup": "Individual",
-                                              |      "credentialStrength": "strong",
-                                              |      "loginTimes": {
-                                              |        "currentLogin": "2016-11-27T09:00:00.000Z",
-                                              |        "previousLogin": "2016-11-01T12:00:00.000Z"
-                                              |      }
-                                              |    },
-                                              |    "userAuthToken": "Bearer AbCdEf123456",
-                                              |    "headerData": {
-                                              |      "Authorization": "Bearer AbCdEf123456",
-                                              |      "Gov-Client-Public-IP": "198.51.100.0",
-                                              |      "Gov-Client-Public-Port": "12345"
-                                              |    },
-                                              |    "searchKeys": {
-                                              |      "eori": "GB123456789"
-                                              |    }
-                                              |}""".stripMargin)
+  val nrsMetadataBody: Array[Byte]      = "payload".getBytes("UTF-8")
+  val nrsMetadataRawPayload: RawPayload = RawPayload(nrsMetadataBody)
+
+  val nrsMetadataJson: JsValue =
+    Json.parse(s"""
+                  |{
+                  |    "businessId": "iceds",
+                  |    "notableEvent": "entry-declaration",
+                  |    "payloadContentType": "application/xml",
+                  |    "payloadSha256Checksum":"${nrsMetadataBody.calculateSha256}",
+                  |    "userSubmissionTimestamp": "2018-04-07T12:13:25.000Z",
+                  |    "identityData": {
+                  |      "internalId": "int-id",
+                  |      "externalId": "ext-id",
+                  |      "credentials": {
+                  |        "providerId": "12345-credId",
+                  |        "providerType": "GovernmmentGateway"
+                  |      },
+                  |      "confidenceLevel": 200,
+                  |      "name": {
+                  |        "name": "mickey",
+                  |        "lastName": "mouse"
+                  |      },
+                  |      "dateOfBirth": "1985-01-01",
+                  |      "email": "test@test.com",
+                  |      "agentInformation": {
+                  |        "agentCode": "TZRXXV",
+                  |        "agentFriendlyName": "Bodgitt & Legget LLP",
+                  |        "agentId": "BDGL"
+                  |      },
+                  |      "groupIdentifier": "GroupId",
+                  |      "credentialRole": "User",
+                  |      "mdtpInformation": {
+                  |        "deviceId": "DeviceId",
+                  |        "sessionId": "SessionId"
+                  |      },
+                  |      "itmpName": {
+                  |        "givenName": "michael",
+                  |        "middleName": "h",
+                  |        "familyName": "mouse"
+                  |      },
+                  |      "itmpDateOfBirth": "1985-01-01",
+                  |      "itmpAddress": {
+                  |        "line1": "Line 1",
+                  |        "postCode": "NW94HD",
+                  |        "countryName": "United Kingdom",
+                  |        "countryCode": "UK"
+                  |      },
+                  |      "affinityGroup": "Individual",
+                  |      "credentialStrength": "strong",
+                  |      "loginTimes": {
+                  |        "currentLogin": "2016-11-27T09:00:00.000Z",
+                  |        "previousLogin": "2016-11-01T12:00:00.000Z"
+                  |      }
+                  |    },
+                  |    "userAuthToken": "Bearer AbCdEf123456",
+                  |    "headerData": {
+                  |      "Authorization": "Bearer AbCdEf123456",
+                  |      "Gov-Client-Public-IP": "198.51.100.0",
+                  |      "Gov-Client-Public-Port": "12345"
+                  |    },
+                  |    "searchKeys": {
+                  |      "eori": "GB123456789"
+                  |    }
+                  |}""".stripMargin)
 
   val identityData: IdentityData = IdentityData(
     internalId      = Some("int-id"),
@@ -137,14 +142,21 @@ trait NRSMetadataTestData {
 
   val nrsMetadata: NRSMetadata = {
     val request =
-      FakeRequest().withHeaders(
-        Headers(
-          "Gov-Client-Public-IP"   -> "198.51.100.0",
-          "Gov-Client-Public-Port" -> "12345",
-          "Authorization"          -> "Bearer AbCdEf123456"
-        ))
+      FakeRequest()
+        .withHeaders(
+          Headers(
+            "Gov-Client-Public-IP"   -> "198.51.100.0",
+            "Gov-Client-Public-Port" -> "12345",
+            "Authorization"          -> "Bearer AbCdEf123456"
+          ))
+        .withBody(nrsMetadataBody)
 
-    NRSMetadata(Instant.parse("2018-04-07T12:13:25.000Z"), "GB123456789", identityData, request, request.body.toString.calculateSha256)
+    NRSMetadata(
+      Instant.parse("2018-04-07T12:13:25.000Z"),
+      "GB123456789",
+      identityData,
+      request,
+      request.body.calculateSha256)
   }
 
 }

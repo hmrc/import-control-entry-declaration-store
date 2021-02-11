@@ -24,7 +24,7 @@ import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
 import uk.gov.hmrc.entrydeclarationstore.nrs.{NRSMetadata, NRSService, NRSSubmission}
 import uk.gov.hmrc.entrydeclarationstore.reporting.{FailureType, ReportSender, SubmissionHandled}
 import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, EntryDeclarationStore, MRNMismatchError}
-import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils.StringWithSha256
+import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils._
 import uk.gov.hmrc.entrydeclarationstore.utils.{EoriUtils, EventLogger, Timer}
 import uk.gov.hmrc.entrydeclarationstore.validation.ValidationErrors
 import uk.gov.hmrc.http.HeaderCarrier
@@ -86,13 +86,10 @@ class EntryDeclarationSubmissionController @Inject()(
 
       implicit val lc: LoggingContext = LoggingContext()
 
+      val rawPayload = RawPayload(request.body, request.charset)
+
       service
-        .handleSubmission(
-          request.userDetails.eori,
-          RawPayload(request.body, request.charset),
-          mrn,
-          receivedDateTime,
-          request.userDetails.clientInfo)
+        .handleSubmission(request.userDetails.eori, rawPayload, mrn, receivedDateTime, request.userDetails.clientInfo)
         .map {
           case Left(failure) =>
             failure.error match {
@@ -110,22 +107,25 @@ class EntryDeclarationSubmissionController @Inject()(
                 InternalServerError(failure.toXml)
             }
           case Right(success) =>
-            submitToNRSIfReqd(request, receivedDateTime)
+            submitToNRSIfReqd(rawPayload, request, receivedDateTime)
             reportSender.sendReport(SubmissionHandled.Success(mrn.isDefined): SubmissionHandled)
             Ok(xmlSuccessResponse(success.correlationId))
         }
     }
 
-  private def submitToNRSIfReqd(request: UserRequest[ByteString], receivedDateTime: Instant)(
+  private def submitToNRSIfReqd(rawPayload: RawPayload, request: UserRequest[_], receivedDateTime: Instant)(
     implicit hc: HeaderCarrier): Unit =
     request.userDetails.identityData.foreach { identityData =>
       implicit val lc: LoggingContext = LoggingContext(eori = Some(request.userDetails.eori))
 
-      val stringBody = RawPayload(request.body, None).valueAsUTF8String
-
       val submission = NRSSubmission(
-        request.body,
-        NRSMetadata(receivedDateTime, request.userDetails.eori, identityData, request, stringBody.calculateSha256))
+        rawPayload,
+        NRSMetadata(
+          receivedDateTime,
+          request.userDetails.eori,
+          identityData,
+          request,
+          rawPayload.byteArray.calculateSha256))
 
       nrsService.submit(submission)
     }

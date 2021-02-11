@@ -27,7 +27,7 @@ import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, RawPayload, Succe
 import uk.gov.hmrc.entrydeclarationstore.nrs._
 import uk.gov.hmrc.entrydeclarationstore.reporting.{ClientInfo, ClientType, FailureType, MockReportSender, SubmissionHandled}
 import uk.gov.hmrc.entrydeclarationstore.services._
-import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils.StringWithSha256
+import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils._
 import uk.gov.hmrc.entrydeclarationstore.utils.{MockMetrics, XmlFormatConfig, XmlFormats}
 import uk.gov.hmrc.entrydeclarationstore.validation.{ValidationError, ValidationErrors}
 import uk.gov.hmrc.play.test.UnitSpec
@@ -77,8 +77,8 @@ class EntryDeclarationSubmissionControllerSpec
   val clock: Clock = Clock.fixed(now, ZoneOffset.UTC)
   val nrsSubmission: NRSSubmission =
     NRSSubmission(
-      rawPayload.byteString,
-      NRSMetadata(now, eori, identityData, fakeRequest(xmlPayload), rawPayload.valueAsUTF8String.calculateSha256))
+      rawPayload,
+      NRSMetadata(now, eori, identityData, fakeRequest(xmlPayload), rawPayload.byteArray.calculateSha256))
 
   private val controller = new EntryDeclarationSubmissionController(
     Helpers.stubControllerComponents(),
