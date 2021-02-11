@@ -24,7 +24,7 @@ import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, MockEisConnector}
 import uk.gov.hmrc.entrydeclarationstore.models._
 import uk.gov.hmrc.entrydeclarationstore.models.json.MockDeclarationToJsonConverter
-import uk.gov.hmrc.entrydeclarationstore.reporting.{ClientInfo, ClientType, MockReportSender, SubmissionReceived, SubmissionSentToEIS}
+import uk.gov.hmrc.entrydeclarationstore.reporting._
 import uk.gov.hmrc.entrydeclarationstore.repositories.MockEntryDeclarationRepo
 import uk.gov.hmrc.entrydeclarationstore.utils.{MockIdGenerator, MockMetrics, XmlFormatConfig}
 import uk.gov.hmrc.entrydeclarationstore.validation._
@@ -32,7 +32,6 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
 
 import java.io.IOException
-import java.nio.charset.StandardCharsets
 import java.time.{Clock, Instant, ZoneOffset}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, Promise}

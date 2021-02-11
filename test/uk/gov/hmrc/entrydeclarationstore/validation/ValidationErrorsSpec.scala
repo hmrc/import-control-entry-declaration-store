@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.validation
 
+import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
 import uk.gov.hmrc.entrydeclarationstore.utils.{XmlFormatConfig, XmlFormats}
 import uk.gov.hmrc.entrydeclarationstore.validation.schema.{SchemaType, SchemaValidator}
 import uk.gov.hmrc.play.test.UnitSpec
@@ -58,7 +59,7 @@ class ValidationErrorsSpec extends UnitSpec {
       "validate against the error response schema" in {
 
         val responseXml = format.toXml(errors)
-        validator.validate(errorResponseSchemaType, responseXml.toString()) shouldBe a[Right[_, _]]
+        validator.validate(errorResponseSchemaType, RawPayload(responseXml)) shouldBe a[Right[_, _]]
       }
 
       "include the number of messages" in {

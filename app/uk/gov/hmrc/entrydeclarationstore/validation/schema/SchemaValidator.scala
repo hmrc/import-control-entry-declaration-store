@@ -16,12 +16,10 @@
 
 package uk.gov.hmrc.entrydeclarationstore.validation.schema
 
-import akka.util.ByteString
 import org.xml.sax._
 import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
 import uk.gov.hmrc.entrydeclarationstore.validation.{ValidationError, ValidationErrors}
 
-import java.io.{ByteArrayInputStream, InputStream, StringReader}
 import javax.xml.parsers.{SAXParser, SAXParserFactory}
 import scala.xml.factory.XMLLoader
 import scala.xml.parsing.{FactoryAdapter, NoBindingFactoryAdapter}
@@ -87,23 +85,14 @@ class SchemaValidator {
       errors :+= ValidationError(exception, locationAsString)
   }
 
-  def validate(schemaType: SchemaType, rawPayload: RawPayload): Either[ValidationErrors, NodeSeq] =
-    validate(schemaType, rawPayload.valueAsUTF8String)
+  def validate(schemaType: SchemaType, rawPayload: RawPayload): Either[ValidationErrors, NodeSeq] = {
+    val inputSource = new InputSource(rawPayload.inputStream)
+    rawPayload.encoding.foreach(inputSource.setEncoding)
 
-  def validate(schemaType: SchemaType, payload: String): Either[ValidationErrors, NodeSeq] =
-    validate(schemaType, new InputSource(new StringReader(payload)))
-
-  def validateStream(
-    schemaType: SchemaType,
-    payload: InputStream,
-    encoding: Option[String]): Either[ValidationErrors, NodeSeq] = {
-    val inputSource = new InputSource(payload)
-    encoding.foreach(inputSource.setEncoding)
-
-    validate(schemaType, inputSource)
+    doValidate(schemaType, inputSource)
   }
 
-  def validate(schemaType: SchemaType, payloadSource: InputSource): Either[ValidationErrors, NodeSeq] = {
+  private def doValidate(schemaType: SchemaType, payloadSource: InputSource): Either[ValidationErrors, NodeSeq] = {
     val factory = SAXParserFactory.newInstance()
 
     factory.setNamespaceAware(true)
@@ -128,7 +117,7 @@ class SchemaValidator {
         Left(ValidationErrors(handler.errors))
       }
     } catch {
-      case se: SAXParseException =>
+      case _: SAXParseException =>
         //Error handler already has the fault
         Left(ValidationErrors(handler.errors))
     }

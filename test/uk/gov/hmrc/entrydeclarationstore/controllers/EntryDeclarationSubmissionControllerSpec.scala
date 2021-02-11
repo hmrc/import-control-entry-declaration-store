@@ -237,6 +237,35 @@ class EntryDeclarationSubmissionControllerSpec
     }
   }
 
+  // Payload encoding behaviour that both put & post should have...
+  def encodingEndpoint(mrn: Option[String], handler: Request[ByteString] => Future[Result]): Unit = {
+    "pass to the service with a character encoding if one is present in the request" in {
+      MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, None))
+      mockReportSuccessfulSubmission(mrn.isDefined)
+      MockEntryDeclarationStore
+        .handleSubmission(eori, rawPayload.copy(encoding = Some("US-ASCII")), mrn, now, clientInfo)
+        .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
+
+      val result: Future[Result] = handler(
+        fakeRequest(xmlPayload)
+          .withHeaders("Content-Type" -> "application/xml;charset=US-ASCII"))
+
+      status(result) shouldBe OK
+    }
+
+    "pass to the service without a character encoding if none is present in the request" in {
+      MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, None))
+      mockReportSuccessfulSubmission(mrn.isDefined)
+      MockEntryDeclarationStore
+        .handleSubmission(eori, rawPayload.copy(encoding = None), mrn, now, clientInfo)
+        .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
+
+      val result: Future[Result] = handler(fakeRequest(xmlPayload))
+
+      status(result) shouldBe OK
+    }
+  }
+
   def nrsSubmittingEndpoint(mrn: Option[String], handler: Request[ByteString] => Future[Result]): Unit =
     "submission is successful" when {
       "nrs is enabled" must {
@@ -290,6 +319,8 @@ class EntryDeclarationSubmissionControllerSpec
         contentType(result)                           shouldBe Some("application/xml")
       }
     }
+
+    behave like encodingEndpoint(mrn = None, controller.postSubmission(_))
 
     behave like validatingEndpoint(mrn = None, controller.postSubmission(_))
 
@@ -347,6 +378,8 @@ class EntryDeclarationSubmissionControllerSpec
         await(controller.putAmendment(mrn)(fakeRequest(xmlPayload)))
       }
     }
+
+    behave like encodingEndpoint(mrn = Some(mrn), controller.putAmendment(mrn)(_))
 
     behave like validatingEndpoint(mrn = Some(mrn), controller.putAmendment(mrn)(_))
 

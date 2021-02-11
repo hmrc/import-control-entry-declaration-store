@@ -89,7 +89,7 @@ class EntryDeclarationSubmissionController @Inject()(
       service
         .handleSubmission(
           request.userDetails.eori,
-          RawPayload(request.body),
+          RawPayload(request.body, request.charset),
           mrn,
           receivedDateTime,
           request.userDetails.clientInfo)
@@ -121,7 +121,7 @@ class EntryDeclarationSubmissionController @Inject()(
     request.userDetails.identityData.foreach { identityData =>
       implicit val lc: LoggingContext = LoggingContext(eori = Some(request.userDetails.eori))
 
-      val stringBody = RawPayload(request.body).valueAsUTF8String
+      val stringBody = RawPayload(request.body, None).valueAsUTF8String
 
       val submission = NRSSubmission(
         request.body,

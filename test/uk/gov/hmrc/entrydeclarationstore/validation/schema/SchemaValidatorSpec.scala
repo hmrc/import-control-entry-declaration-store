@@ -16,194 +16,221 @@
 
 package uk.gov.hmrc.entrydeclarationstore.validation.schema
 
+import org.scalatest.Inside
+import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
 import uk.gov.hmrc.entrydeclarationstore.validation.{ValidationError, ValidationErrors}
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.xml.XML
 
-class SchemaValidatorSpec extends UnitSpec {
+class SchemaValidatorSpec extends UnitSpec with Inside {
 
   val validator = new SchemaValidator()
 
-  "E313Validator" when {
+  "Schema validator" when {
+    "Validating a E313" when {
 
-    "passed valid sample" must {
-      "return Right containing the parsed xml" in {
-        val xml = XML.load(ResourceUtils.url("xmls/CC313A-schemaValidSample-v11-1.xml"))
+      "passed valid sample" must {
+        "return Right containing the parsed xml" in {
+          val resourceName       = "xmls/CC313A-schemaValidSample-v11-1.xml"
+          val xml                = XML.load(ResourceUtils.url(resourceName))
+          val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
-        validator.validate(SchemaTypeE313, xml.toString()) shouldBe Right(xml)
+          validator.validate(SchemaTypeE313, rawXml) shouldBe Right(xml)
+        }
       }
-    }
 
-    "passed invalid sample" must {
-      "return Left(ValidationErrors)" in {
-        val xml = XML.load(ResourceUtils.url("xmls/CC313A-schemaInvalidSample-v11-1.xml"))
+      "passed invalid sample" must {
+        "return Left(ValidationErrors)" in {
+          val resourceName       = "xmls/CC313A-schemaInvalidSample-v11-1.xml"
+          val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
-        validator.validate(SchemaTypeE313, xml.toString()) shouldBe Left(
-          ValidationErrors(Seq(
-            ValidationError(
-              errorText     = "Value 'XXX' is not facet-valid with respect to pattern '[0-9]{1,5}' for type 'Numeric_Max5'.",
-              errorType     = "schema",
-              errorNumber   = "4085",
-              errorLocation = "/ie:CC313A[1]/HEAHEA[1]/TotNumOfIteHEA305[1]"
-            ),
-            ValidationError(
-              errorText     = "The value 'XXX' of element 'TotNumOfIteHEA305' is not valid.",
-              errorType     = "schema",
-              errorNumber   = "4065",
-              errorLocation = "/ie:CC313A[1]/HEAHEA[1]/TotNumOfIteHEA305[1]"
-            ),
-            ValidationError(
-              errorText     = "Value 'XXX' is not facet-valid with respect to pattern '[0-9]{1,5}' for type 'Numeric_Max5'.",
-              errorType     = "schema",
-              errorNumber   = "4085",
-              errorLocation = "/ie:CC313A[1]/GOOITEGDS[2]/PACGS2[1]/NumOfPacGS24[1]"
-            ),
-            ValidationError(
-              errorText     = "The value 'XXX' of element 'NumOfPacGS24' is not valid.",
-              errorType     = "schema",
-              errorNumber   = "4065",
-              errorLocation = "/ie:CC313A[1]/GOOITEGDS[2]/PACGS2[1]/NumOfPacGS24[1]"
-            )
-          )))
-      }
-    }
-
-    "passed valid E315" must {
-      "return a Left" in {
-        val xml = XML.load(ResourceUtils.url("xmls/CC315A-schemaValidSample-v11-1.xml"))
-
-        validator.validate(SchemaTypeE313, xml.toString()) shouldBe Left(
-          ValidationErrors(
-            Seq(
+          validator.validate(SchemaTypeE313, rawXml) shouldBe Left(
+            ValidationErrors(Seq(
               ValidationError(
-                errorText     = "Cannot find the declaration of element 'ie:CC315A'.",
+                errorText =
+                  "Value 'XXX' is not facet-valid with respect to pattern '[0-9]{1,5}' for type 'Numeric_Max5'.",
                 errorType     = "schema",
-                errorNumber   = "4057",
-                errorLocation = "/"
+                errorNumber   = "4085",
+                errorLocation = "/ie:CC313A[1]/HEAHEA[1]/TotNumOfIteHEA305[1]"
+              ),
+              ValidationError(
+                errorText     = "The value 'XXX' of element 'TotNumOfIteHEA305' is not valid.",
+                errorType     = "schema",
+                errorNumber   = "4065",
+                errorLocation = "/ie:CC313A[1]/HEAHEA[1]/TotNumOfIteHEA305[1]"
+              ),
+              ValidationError(
+                errorText =
+                  "Value 'XXX' is not facet-valid with respect to pattern '[0-9]{1,5}' for type 'Numeric_Max5'.",
+                errorType     = "schema",
+                errorNumber   = "4085",
+                errorLocation = "/ie:CC313A[1]/GOOITEGDS[2]/PACGS2[1]/NumOfPacGS24[1]"
+              ),
+              ValidationError(
+                errorText     = "The value 'XXX' of element 'NumOfPacGS24' is not valid.",
+                errorType     = "schema",
+                errorNumber   = "4065",
+                errorLocation = "/ie:CC313A[1]/GOOITEGDS[2]/PACGS2[1]/NumOfPacGS24[1]"
               )
             )))
+        }
       }
-    }
 
-    "passed a declaration with an envelope and body" must {
-      "return Left(ValidationErrors)" in {
-        val xml = XML.load(ResourceUtils.url("xmls/CC313A-schemaValidSampleWithEnvelope-v11-1.xml"))
+      "passed valid E315" must {
+        "return a Left" in {
+          val resourceName       = "xmls/CC315A-schemaValidSample-v11-1.xml"
+          val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
-        validator.validate(SchemaTypeE315, xml.toString()) shouldBe
-          Left(
+          validator.validate(SchemaTypeE313, rawXml) shouldBe Left(
             ValidationErrors(
               Seq(
                 ValidationError(
-                  errorText     = "Cannot find the declaration of element 'tns:Envelope'.",
+                  errorText     = "Cannot find the declaration of element 'ie:CC315A'.",
                   errorType     = "schema",
                   errorNumber   = "4057",
                   errorLocation = "/"
                 )
               )))
+        }
       }
-    }
-  }
 
-  "E315Validator" when {
-    "passed valid sample" must {
-      "return Right containing the parsed xml" in {
-        val xml = XML.load(ResourceUtils.url("xmls/CC315A-schemaValidSample-v11-1.xml"))
+      "passed a declaration with an envelope and body" must {
+        "return Left(ValidationErrors)" in {
+          val resourceName       = "xmls/CC313A-schemaValidSampleWithEnvelope-v11-1.xml"
+          val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
-        validator.validate(SchemaTypeE315, xml.toString()) shouldBe Right(xml)
-      }
-    }
-
-    "passed invalid sample" must {
-      "return Left(ValidationErrors)" in {
-        val xml = XML.load(ResourceUtils.url("xmls/CC315A-schemaInvalidSample-v11-1.xml"))
-
-        validator.validate(SchemaTypeE315, xml.toString()) shouldBe Left(
-          ValidationErrors(Seq(
-            ValidationError(
-              errorText     = "Value 'XXX' is not facet-valid with respect to pattern '[0-9]{1,5}' for type 'Numeric_Max5'.",
-              errorType     = "schema",
-              errorNumber   = "4085",
-              errorLocation = "/ie:CC315A[1]/HEAHEA[1]/TotNumOfIteHEA305[1]"
-            ),
-            ValidationError(
-              errorText     = "The value 'XXX' of element 'TotNumOfIteHEA305' is not valid.",
-              errorType     = "schema",
-              errorNumber   = "4065",
-              errorLocation = "/ie:CC315A[1]/HEAHEA[1]/TotNumOfIteHEA305[1]"
-            ),
-            ValidationError(
-              errorText     = "Value 'XXX' is not facet-valid with respect to pattern '[0-9]{1,5}' for type 'Numeric_Max5'.",
-              errorType     = "schema",
-              errorNumber   = "4085",
-              errorLocation = "/ie:CC315A[1]/GOOITEGDS[2]/PACGS2[1]/NumOfPacGS24[1]"
-            ),
-            ValidationError(
-              errorText     = "The value 'XXX' of element 'NumOfPacGS24' is not valid.",
-              errorType     = "schema",
-              errorNumber   = "4065",
-              errorLocation = "/ie:CC315A[1]/GOOITEGDS[2]/PACGS2[1]/NumOfPacGS24[1]"
-            )
-          )))
+          validator.validate(SchemaTypeE313, rawXml) shouldBe
+            Left(
+              ValidationErrors(
+                Seq(
+                  ValidationError(
+                    errorText     = "Cannot find the declaration of element 'tns:Envelope'.",
+                    errorType     = "schema",
+                    errorNumber   = "4057",
+                    errorLocation = "/"
+                  )
+                )))
+        }
       }
     }
 
-    "passed valid E313" must {
-      "return a Left" in {
-        val xml = XML.load(ResourceUtils.url("xmls/CC313A-schemaValidSample-v11-1.xml"))
+    "Validating a E315" when {
+      "passed valid sample" must {
+        "return Right containing the parsed xml" in {
+          val resourceName       = "xmls/CC315A-schemaValidSample-v11-1.xml"
+          val xml                = XML.load(ResourceUtils.url(resourceName))
+          val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
-        validator.validate(SchemaTypeE315, xml.toString()) shouldBe
-          Left(
-            ValidationErrors(
-              Seq(
-                ValidationError(
-                  errorText     = "Cannot find the declaration of element 'ie:CC313A'.",
-                  errorType     = "schema",
-                  errorNumber   = "4057",
-                  errorLocation = "/"
-                )
-              )))
+          validator.validate(SchemaTypeE315, rawXml) shouldBe Right(xml)
+        }
+      }
+
+      "passed invalid sample" must {
+        "return Left(ValidationErrors)" in {
+          val resourceName       = "xmls/CC315A-schemaInvalidSample-v11-1.xml"
+          val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
+
+          validator.validate(SchemaTypeE315, rawXml) shouldBe Left(
+            ValidationErrors(Seq(
+              ValidationError(
+                errorText =
+                  "Value 'XXX' is not facet-valid with respect to pattern '[0-9]{1,5}' for type 'Numeric_Max5'.",
+                errorType     = "schema",
+                errorNumber   = "4085",
+                errorLocation = "/ie:CC315A[1]/HEAHEA[1]/TotNumOfIteHEA305[1]"
+              ),
+              ValidationError(
+                errorText     = "The value 'XXX' of element 'TotNumOfIteHEA305' is not valid.",
+                errorType     = "schema",
+                errorNumber   = "4065",
+                errorLocation = "/ie:CC315A[1]/HEAHEA[1]/TotNumOfIteHEA305[1]"
+              ),
+              ValidationError(
+                errorText =
+                  "Value 'XXX' is not facet-valid with respect to pattern '[0-9]{1,5}' for type 'Numeric_Max5'.",
+                errorType     = "schema",
+                errorNumber   = "4085",
+                errorLocation = "/ie:CC315A[1]/GOOITEGDS[2]/PACGS2[1]/NumOfPacGS24[1]"
+              ),
+              ValidationError(
+                errorText     = "The value 'XXX' of element 'NumOfPacGS24' is not valid.",
+                errorType     = "schema",
+                errorNumber   = "4065",
+                errorLocation = "/ie:CC315A[1]/GOOITEGDS[2]/PACGS2[1]/NumOfPacGS24[1]"
+              )
+            )))
+        }
+      }
+
+      "passed valid E313" must {
+        "return a Left" in {
+          val resourceName       = "xmls/CC313A-schemaValidSample-v11-1.xml"
+          val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
+
+          validator.validate(SchemaTypeE315, rawXml) shouldBe
+            Left(
+              ValidationErrors(
+                Seq(
+                  ValidationError(
+                    errorText     = "Cannot find the declaration of element 'ie:CC313A'.",
+                    errorType     = "schema",
+                    errorNumber   = "4057",
+                    errorLocation = "/"
+                  )
+                )))
+        }
+      }
+
+      "passed a declaration with an envelope and body" must {
+        "return Left(ValidationErrors)" in {
+          val resourceName       = "xmls/CC315A-schemaValidSampleWithEnvelope-v11-1.xml"
+          val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
+
+          validator.validate(SchemaTypeE315, rawXml) shouldBe
+            Left(
+              ValidationErrors(
+                Seq(
+                  ValidationError(
+                    errorText     = "Cannot find the declaration of element 'tns:Envelope'.",
+                    errorType     = "schema",
+                    errorNumber   = "4057",
+                    errorLocation = "/"
+                  )
+                )))
+        }
+      }
+
+      "passed malformed xml sample" must {
+        "return Left(Validation`Errors)" in {
+          val xml = "<xml><hello"
+
+          validator.validate(SchemaTypeE315, RawPayload(xml)) shouldBe a[Left[_, _]]
+        }
       }
     }
 
-    "passed a declaration with an envelope and body" must {
-      "return Left(ValidationErrors)" in {
-        val xml = XML.load(ResourceUtils.url("xmls/CC315A-schemaValidSampleWithEnvelope-v11-1.xml"))
+    "decoding special characters" when {
+      val xmlBytes: Array[Byte] =
+        ResourceUtils.asByteArray("xmls/CC313A-schemaValidSampleWithSpecialChars-v11-1.xml")
 
-        validator.validate(SchemaTypeE315, xml.toString()) shouldBe
-          Left(
-            ValidationErrors(
-              Seq(
-                ValidationError(
-                  errorText     = "Cannot find the declaration of element 'tns:Envelope'.",
-                  errorType     = "schema",
-                  errorNumber   = "4057",
-                  errorLocation = "/"
-                )
-              )))
+      "no character encoding is present with the payload" must {
+        "infer the encoding" in {
+          inside(validator.validate(SchemaTypeE313, RawPayload(xmlBytes))) {
+            case Right(xml) => (xml \\ "StrAndNumPLD1").text shouldBe "1234 Avenue du Sacré-Cœur"
+          }
+        }
       }
-    }
 
-    "passed malformed xml sample" must {
-      "return Left(Validation`Errors)" in {
-        val resource = "<xml><hello"
-
-        validator.validate(SchemaTypeE315, resource) shouldBe a[Left[_, _]]
-
-      }
-    }
-  }
-
-  "Schema validator" when {
-    "an character encoding present with the payload" must {
-      "use that encoding" in {
-        fail
-      }
-    }
-    "no character encoding is present with the payload" must {
-      "infer the encoding" in {
-        fail
+      "an character encoding present with the payload" must {
+        "use that encoding" in {
+          // Deliberately use the wrong encoding (that used by default by BodyParsers.tolerantText)
+          // to prove that it has he correct effect...
+          inside(validator.validate(SchemaTypeE313, RawPayload(xmlBytes, Some("ISO-8859-1")))) {
+            case Right(xml) => (xml \\ "StrAndNumPLD1").text shouldBe "1234 Avenue du SacrÃ©-CÅ\u0093ur"
+          }
+        }
       }
     }
   }

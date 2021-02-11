@@ -18,17 +18,24 @@ package uk.gov.hmrc.entrydeclarationstore.models
 
 import akka.util.ByteString
 
+import java.io.{ByteArrayInputStream, InputStream}
 import scala.xml.NodeSeq
 
-case class RawPayload(byteString: ByteString) {
+case class RawPayload(byteString: ByteString, encoding: Option[String]) {
   @deprecated
   def valueAsUTF8String: String = byteString.decodeString("UTF-8")
   def length: Int               = byteString.length
+
+  def inputStream: InputStream = new ByteArrayInputStream(byteString.toArray)
 }
 
 object RawPayload {
   // For testing
-  def apply(string: String): RawPayload     = RawPayload(ByteString.fromString(string))
-  def apply(xml: NodeSeq): RawPayload       = RawPayload(ByteString.fromString(xml.toString))
-  def apply(bytes: Array[Byte]): RawPayload = RawPayload(ByteString(bytes))
+  def apply(string: String): RawPayload = RawPayload(ByteString.fromString(string), Some("UTF-8"))
+
+  // For testing
+  def apply(xml: NodeSeq): RawPayload = RawPayload(ByteString.fromString(xml.toString), None)
+
+  // For testing
+  def apply(bytes: Array[Byte], encoding: Option[String] = None): RawPayload = RawPayload(ByteString(bytes), encoding)
 }
