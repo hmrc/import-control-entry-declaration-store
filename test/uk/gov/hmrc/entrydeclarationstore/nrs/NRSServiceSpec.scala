@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.nrs
 
+import akka.util.ByteString
 import com.kenshoo.play.metrics.Metrics
 import org.scalatest.concurrent.ScalaFutures
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
@@ -31,7 +32,7 @@ class NRSServiceSpec extends UnitSpec with MockNRSConnector with NRSMetadataTest
 
   val service = new NRSService(mockNRSConnector, metrics)
 
-  val nrsSubmission: NRSSubmission = NRSSubmission("payload", nrsMetadata)
+  val nrsSubmission: NRSSubmission = NRSSubmission(ByteString.fromString("payload"), nrsMetadata)
 
   implicit val hc: HeaderCarrier  = HeaderCarrier()
   implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")

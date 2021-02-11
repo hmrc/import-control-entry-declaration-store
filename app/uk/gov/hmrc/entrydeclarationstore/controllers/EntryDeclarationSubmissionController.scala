@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
+import akka.util.ByteString
 import com.kenshoo.play.metrics.Metrics
 import play.api.mvc.{Action, ControllerComponents, Request}
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
@@ -28,6 +29,7 @@ import uk.gov.hmrc.entrydeclarationstore.utils.{EoriUtils, EventLogger, Timer}
 import uk.gov.hmrc.entrydeclarationstore.validation.ValidationErrors
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.nio.charset.StandardCharsets
 import java.time.{Clock, Instant}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -50,8 +52,8 @@ class EntryDeclarationSubmissionController @Inject()(
   def eoriCorrectForRequest(mrn: Option[String]): (Request[_], String) => Boolean =
     (request, eori) =>
       request.body match {
-        case payload: String =>
-          if (EoriUtils.eoriFromXmlString(payload) == eori) { true } else {
+        case payload: ByteString =>
+          if (EoriUtils.eoriFromXmlString(payload.decodeString(StandardCharsets.UTF_8)) == eori) { true } else {
             implicit val lc: LoggingContext           = LoggingContext()
             implicit val headerCarrier: HeaderCarrier = hc(request)
             reportSender.sendReport(
@@ -72,14 +74,14 @@ class EntryDeclarationSubmissionController @Inject()(
     </ns:SuccessResponse>
   // @formatter:on
 
-  val postSubmission: Action[String] = handleSubmission(None)
+  val postSubmission: Action[ByteString] = handleSubmission(None)
 
-  val postSubmissionTestOnly: Action[String] = postSubmission
+  val postSubmissionTestOnly: Action[ByteString] = postSubmission
 
-  def putAmendment(mrn: String): Action[String] = handleSubmission(Some(mrn))
+  def putAmendment(mrn: String): Action[ByteString] = handleSubmission(Some(mrn))
 
   private def handleSubmission(mrn: Option[String]) =
-    authorisedAction(eoriCorrectForRequest(mrn)).async(parse.tolerantText) { implicit request =>
+    authorisedAction(eoriCorrectForRequest(mrn)).async(parse.byteString) { implicit request =>
       val receivedDateTime = Instant.now(clock)
 
       implicit val lc: LoggingContext = LoggingContext()
@@ -114,14 +116,16 @@ class EntryDeclarationSubmissionController @Inject()(
         }
     }
 
-  private def submitToNRSIfReqd(request: UserRequest[String], receivedDateTime: Instant)(
+  private def submitToNRSIfReqd(request: UserRequest[ByteString], receivedDateTime: Instant)(
     implicit hc: HeaderCarrier): Unit =
     request.userDetails.identityData.foreach { identityData =>
       implicit val lc: LoggingContext = LoggingContext(eori = Some(request.userDetails.eori))
 
+      val stringBody = RawPayload(request.body).valueAsUTF8String
+
       val submission = NRSSubmission(
         request.body,
-        NRSMetadata(receivedDateTime, request.userDetails.eori, identityData, request, request.body.calculateSha256))
+        NRSMetadata(receivedDateTime, request.userDetails.eori, identityData, request, stringBody.calculateSha256))
 
       nrsService.submit(submission)
     }

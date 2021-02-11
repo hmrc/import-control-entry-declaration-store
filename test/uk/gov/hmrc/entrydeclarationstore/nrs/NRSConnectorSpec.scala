@@ -17,6 +17,7 @@
 package uk.gov.hmrc.entrydeclarationstore.nrs
 
 import akka.actor.{ActorSystem, Scheduler}
+import akka.util.ByteString
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
@@ -74,7 +75,7 @@ class NRSConnectorSpec
                  |   "nrSubmissionId": "submissionId"
                  |}""".stripMargin)
 
-  val nrsSubmission: NRSSubmission = NRSSubmission("payload", nrsMetadata)
+  val nrsSubmission: NRSSubmission = NRSSubmission(ByteString.fromString("payload"), nrsMetadata)
 
   override def beforeAll(): Unit = {
     wireMockServer.start()

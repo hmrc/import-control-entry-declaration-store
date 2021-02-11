@@ -16,6 +16,19 @@
 
 package uk.gov.hmrc.entrydeclarationstore.models
 
-case class RawPayload(value: String) {
-  def length: Int = value.length
+import akka.util.ByteString
+
+import scala.xml.NodeSeq
+
+case class RawPayload(byteString: ByteString) {
+  @deprecated
+  def valueAsUTF8String: String = byteString.decodeString("UTF-8")
+  def length: Int               = byteString.length
+}
+
+object RawPayload {
+  // For testing
+  def apply(string: String): RawPayload     = RawPayload(ByteString.fromString(string))
+  def apply(xml: NodeSeq): RawPayload       = RawPayload(ByteString.fromString(xml.toString))
+  def apply(bytes: Array[Byte]): RawPayload = RawPayload(ByteString(bytes))
 }

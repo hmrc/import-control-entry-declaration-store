@@ -16,19 +16,20 @@
 
 package uk.gov.hmrc.entrydeclarationstore.nrs
 
+import akka.util.ByteString
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{JsPath, OWrites}
 
 import java.nio.charset.StandardCharsets
 import java.util.Base64
 
-case class NRSSubmission(payload: String, metadata: NRSMetadata)
+case class NRSSubmission(payload: ByteString, metadata: NRSMetadata)
 
 object NRSSubmission {
 
   private val encoder = Base64.getEncoder
 
-  private def encodeBase64(payload: String) = encoder.encodeToString(payload.getBytes(StandardCharsets.UTF_8))
+  private def encodeBase64(payload: ByteString) = encoder.encodeToString(payload.toArray)
 
   implicit val writes: OWrites[NRSSubmission] = (
     (JsPath \ "payload").write[String].contramap(encodeBase64) and
