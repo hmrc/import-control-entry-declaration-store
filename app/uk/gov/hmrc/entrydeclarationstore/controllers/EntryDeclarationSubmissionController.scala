@@ -20,7 +20,7 @@ import akka.util.ByteString
 import com.kenshoo.play.metrics.Metrics
 import play.api.mvc.{Action, ControllerComponents, Request}
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
-import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
+import uk.gov.hmrc.entrydeclarationstore.models.{RawPayload, StandardError}
 import uk.gov.hmrc.entrydeclarationstore.nrs.{NRSMetadata, NRSService, NRSSubmission}
 import uk.gov.hmrc.entrydeclarationstore.reporting.{FailureType, ReportSender, SubmissionHandled}
 import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, EntryDeclarationStore, MRNMismatchError}
@@ -101,6 +101,10 @@ class EntryDeclarationSubmissionController @Inject()(
                 reportSender.sendReport(
                   SubmissionHandled.Failure(mrn.isDefined, FailureType.MRNMismatchError): SubmissionHandled)
                 BadRequest(failure.toXml)
+              case StandardError.EORIMismatch =>
+                reportSender.sendReport(
+                  SubmissionHandled.Failure(mrn.isDefined, FailureType.EORIMismatchError): SubmissionHandled)
+                Forbidden(failure.toXml)
               case _ =>
                 reportSender.sendReport(
                   SubmissionHandled.Failure(mrn.isDefined, FailureType.InternalServerError): SubmissionHandled)

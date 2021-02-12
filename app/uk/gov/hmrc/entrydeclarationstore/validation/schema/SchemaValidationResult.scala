@@ -16,16 +16,14 @@
 
 package uk.gov.hmrc.entrydeclarationstore.validation.schema
 
-import org.scalamock.handlers.CallHandler
-import org.scalamock.scalatest.MockFactory
-import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
+import uk.gov.hmrc.entrydeclarationstore.validation.ValidationErrors
 
-trait MockSchemaValidator extends MockFactory {
-  val mockSchemaValidator: SchemaValidator = mock[SchemaValidator]
+import scala.xml.NodeSeq
 
-  object MockSchemaValidator {
-    def validate(schemaType: SchemaType, rawPayload: RawPayload): CallHandler[SchemaValidationResult] =
-      (mockSchemaValidator.validate(_: SchemaType, _: RawPayload)) expects (schemaType, rawPayload)
-  }
+sealed trait SchemaValidationResult
 
+object SchemaValidationResult {
+  case class Valid(xml: NodeSeq) extends SchemaValidationResult
+  case class Invalid(xml: NodeSeq, validationErrors: ValidationErrors) extends SchemaValidationResult
+  case class Malformed(validationErrors: ValidationErrors) extends SchemaValidationResult
 }

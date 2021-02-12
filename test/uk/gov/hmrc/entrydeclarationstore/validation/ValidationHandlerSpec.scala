@@ -23,7 +23,8 @@ import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, RawPayload}
 import uk.gov.hmrc.entrydeclarationstore.services.MRNMismatchError
 import uk.gov.hmrc.entrydeclarationstore.utils.{MockMetrics, XmlFormatConfig}
 import uk.gov.hmrc.entrydeclarationstore.validation.business.MockRuleValidator
-import uk.gov.hmrc.entrydeclarationstore.validation.schema.{MockSchemaValidator, SchemaTypeE313, SchemaTypeE315}
+import uk.gov.hmrc.entrydeclarationstore.validation.schema.SchemaValidationResult._
+import uk.gov.hmrc.entrydeclarationstore.validation.schema._
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.xml.NodeSeq
@@ -43,7 +44,7 @@ class ValidationHandlerSpec extends UnitSpec with MockSchemaValidator with MockR
     mockedMetrics,
     mockAppConfig
   )
-  val mrn: Some[String]     = Some("MRN")
+  val mrn: String           = "MRN"
   val IE315payload: NodeSeq =
     // @formatter:off
       <tns:Header/>
@@ -62,7 +63,7 @@ class ValidationHandlerSpec extends UnitSpec with MockSchemaValidator with MockR
       <tns:Body>
         <ie:CC313A>
           <HEAHEA>
-            <DocNumHEA5>{mrn.get}</DocNumHEA5>
+            <DocNumHEA5>{mrn}</DocNumHEA5>
             <TraModAtBorHEA76>42</TraModAtBorHEA76>
           </HEAHEA>
           <MesSenMES3>ABCDEF1234/1234567890</MesSenMES3>
@@ -73,71 +74,63 @@ class ValidationHandlerSpec extends UnitSpec with MockSchemaValidator with MockR
 
   val errors: ValidationErrors = ValidationErrors(Seq(ValidationError("errText", "errType", "123", "errLocation")))
 
-  "ValidationHandler" when {
-    "passed a 315" when {
+  def validationHandlerFor(schemaType: SchemaType, payload: NodeSeq, mrn: Option[String]): Unit = {
+    val ruleValidator = mrn.map(_ => MockRuleValidator313).getOrElse(MockRuleValidator315)
+
+    s"passed xml for $schemaType" when {
       "all valid" must {
         "return the payload" in {
-          MockSchemaValidator.validate(SchemaTypeE315, RawPayload(IE315payload)).returns(Right(IE315payload))
-          MockRuleValidator315.validate(IE315payload).returns(Right(()))
 
-          validationHandler.handleValidation(RawPayload(IE315payload), None) shouldBe Right(IE315payload)
+          MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Valid(payload)
+          ruleValidator.validate(payload) returns Right(())
+
+          validationHandler.handleValidation(RawPayload(payload), mrn) shouldBe Right(payload)
         }
       }
 
       "xml is not schema valid" must {
         "return an error" in {
-          MockSchemaValidator.validate(SchemaTypeE315, RawPayload(IE315payload)).returns(Left(errors))
+          MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Invalid(payload, errors)
 
-          validationHandler.handleValidation(RawPayload(IE315payload), None) shouldBe Left(ErrorWrapper(errors))
+          validationHandler.handleValidation(RawPayload(payload), mrn) shouldBe Left(ErrorWrapper(errors))
+        }
+      }
+
+      "xml is malformed" must {
+        "return an error" in {
+          MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Malformed(errors)
+
+          validationHandler.handleValidation(RawPayload(payload), mrn) shouldBe Left(ErrorWrapper(errors))
         }
       }
 
       "xml has business rule errors" must {
         "return an error" in {
-          MockSchemaValidator.validate(SchemaTypeE315, RawPayload(IE315payload)).returns(Right(IE315payload))
-          MockRuleValidator315.validate(IE315payload).returns(Left(errors))
+          MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Valid(payload)
+          ruleValidator.validate(payload) returns Left(errors)
 
-          validationHandler.handleValidation(RawPayload(IE315payload), None) shouldBe Left(ErrorWrapper(errors))
-        }
-      }
-    }
-
-    "passed a 313" when {
-      "all valid" must {
-        "return the payload" in {
-          MockSchemaValidator.validate(SchemaTypeE313, RawPayload(IE313payload)).returns(Right(IE313payload))
-          MockRuleValidator313.validate(IE313payload).returns(Right(()))
-
-          validationHandler.handleValidation(RawPayload(IE313payload), mrn) shouldBe Right(IE313payload)
-        }
-      }
-
-      "xml is not schema valid" must {
-        "return an error" in {
-          MockSchemaValidator.validate(SchemaTypeE313, RawPayload(IE313payload)).returns(Left(errors))
-
-          validationHandler.handleValidation(RawPayload(IE313payload), mrn) shouldBe Left(ErrorWrapper(errors))
-        }
-      }
-
-      "mrn does not match that in payload" must {
-        "return an error" in {
-          MockSchemaValidator.validate(SchemaTypeE313, RawPayload(IE313payload)).returns(Right(IE313payload))
-
-          validationHandler.handleValidation(RawPayload(IE313payload), Some("otherMrn")) shouldBe Left(
-            ErrorWrapper(MRNMismatchError))
-        }
-      }
-
-      "xml has business rule errors" must {
-        "return an error" in {
-          MockSchemaValidator.validate(SchemaTypeE313, RawPayload(IE313payload)).returns(Right(IE313payload))
-          MockRuleValidator313.validate(IE313payload).returns(Left(errors))
-
-          validationHandler.handleValidation(RawPayload(IE313payload), mrn) shouldBe Left(ErrorWrapper(errors))
+          validationHandler.handleValidation(RawPayload(payload), mrn) shouldBe Left(ErrorWrapper(errors))
         }
       }
     }
   }
 
+  "ValidationHandler" when {
+    "passed a 315" when {
+      behave like validationHandlerFor(SchemaTypeE315, IE315payload, None)
+    }
+
+    "passed a 313" when {
+      behave like validationHandlerFor(SchemaTypeE313, IE313payload, Some(mrn))
+
+      "mrn does not match that in payload" must {
+        "return an error" in {
+          MockSchemaValidator.validate(SchemaTypeE313, RawPayload(IE313payload)) returns Valid(IE313payload)
+
+          validationHandler.handleValidation(RawPayload(IE313payload), Some("otherMrn")) shouldBe Left(
+            ErrorWrapper(MRNMismatchError))
+        }
+      }
+    }
+  }
 }

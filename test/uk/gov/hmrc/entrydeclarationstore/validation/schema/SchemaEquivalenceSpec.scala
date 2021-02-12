@@ -79,7 +79,7 @@ class SchemaEquivalenceSpec extends UnitSpec {
       val result2 = schemaValidator.validate(schemaLegacy, RawPayload(xml))
 
       result1 shouldBe result2
-      result1 shouldBe a[Right[_, _]]
+      result1 shouldBe a[SchemaValidationResult.Valid]
     }
 
     "validate equivalently for both schemas" when {

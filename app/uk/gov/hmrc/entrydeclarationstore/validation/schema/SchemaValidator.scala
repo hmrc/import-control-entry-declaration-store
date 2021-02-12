@@ -85,14 +85,14 @@ class SchemaValidator {
       errors :+= ValidationError(exception, locationAsString)
   }
 
-  def validate(schemaType: SchemaType, rawPayload: RawPayload): Either[ValidationErrors, NodeSeq] = {
+  def validate(schemaType: SchemaType, rawPayload: RawPayload): SchemaValidationResult = {
     val inputSource = new InputSource(rawPayload.inputStream)
     rawPayload.encoding.foreach(inputSource.setEncoding)
 
     doValidate(schemaType, inputSource)
   }
 
-  private def doValidate(schemaType: SchemaType, payloadSource: InputSource): Either[ValidationErrors, NodeSeq] = {
+  private def doValidate(schemaType: SchemaType, payloadSource: InputSource): SchemaValidationResult = {
     val factory = SAXParserFactory.newInstance()
 
     factory.setNamespaceAware(true)
@@ -112,14 +112,14 @@ class SchemaValidator {
       }.load(payloadSource)
 
       if (handler.errors.isEmpty) {
-        Right(elem)
+        SchemaValidationResult.Valid(elem)
       } else {
-        Left(ValidationErrors(handler.errors))
+        SchemaValidationResult.Invalid(elem, ValidationErrors(handler.errors))
       }
     } catch {
       case _: SAXParseException =>
         //Error handler already has the fault
-        Left(ValidationErrors(handler.errors))
+        SchemaValidationResult.Malformed(ValidationErrors(handler.errors))
     }
   }
 }

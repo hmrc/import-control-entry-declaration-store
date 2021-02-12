@@ -56,8 +56,9 @@ class SchemaValidatorISpec extends UnitSpec with GuiceOneAppPerSuite {
         val expectedErrorTexts = (xmlResponse \ "Error" \ "Text").map(_.text)
 
         val errorTexts = schemaValidator.validate(schemeType, RawPayload(resource)) match {
-          case Left(failure) => failure.errors.map(_.errorText)
-          case Right(_)      => Nil
+          case SchemaValidationResult.Invalid(_, failure) => failure.errors.map(_.errorText)
+          case SchemaValidationResult.Malformed(failure)  => failure.errors.map(_.errorText)
+          case SchemaValidationResult.Valid(_)            => Nil
         }
 
         // Error texts in test packs do not match those in the SchemaErrorMessages-v11-1.pdf file

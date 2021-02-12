@@ -24,7 +24,7 @@ import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, RawPayload}
 import uk.gov.hmrc.entrydeclarationstore.services.MRNMismatchError
 import uk.gov.hmrc.entrydeclarationstore.utils.{EventLogger, Timer, XmlFormatConfig}
 import uk.gov.hmrc.entrydeclarationstore.validation.business.RuleValidator
-import uk.gov.hmrc.entrydeclarationstore.validation.schema.{SchemaTypeE313, SchemaTypeE315, SchemaValidator}
+import uk.gov.hmrc.entrydeclarationstore.validation.schema.{SchemaTypeE313, SchemaTypeE315, SchemaValidationResult, SchemaValidator}
 
 import javax.inject.{Inject, Named}
 import scala.xml.NodeSeq
@@ -62,15 +62,21 @@ class ValidationHandlerImpl @Inject()(
       case None => Right(())
     }
 
-  private def validateSchema(rawPayload: RawPayload, mrn: Option[String])(implicit lc: LoggingContext) =
+  private def validateSchema(rawPayload: RawPayload, mrn: Option[String])(
+    implicit lc: LoggingContext): Either[ErrorWrapper[_], NodeSeq] =
     time("Schema validation", "handleSubmission.validateSchema") {
       val schemaType =
         if (mrn.isDefined) SchemaTypeE313 else SchemaTypeE315
       val validationResult = schemaValidator.validate(schemaType, rawPayload)
 
-      validationResult.leftMap { errs =>
-        ContextLogger.info(s"Schema validation errors found. Num errs=${errs.errors.length}")
-        ErrorWrapper(errs)
+      validationResult match {
+        case SchemaValidationResult.Valid(xml) => Right(xml)
+        case SchemaValidationResult.Invalid(xml, errs) =>
+          ContextLogger.info(s"Schema validation errors found. Num errs=${errs.errors.length}")
+          Left(ErrorWrapper(errs))
+        case SchemaValidationResult.Malformed(errs) =>
+          ContextLogger.info(s"Schema validation errors found. Num errs=${errs.errors.length}")
+          Left(ErrorWrapper(errs))
       }
     }
 

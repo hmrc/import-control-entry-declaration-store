@@ -23,9 +23,9 @@ import play.api.mvc.{Request, Result}
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
-import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, RawPayload, SuccessResponse}
+import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, RawPayload, StandardError, SuccessResponse}
 import uk.gov.hmrc.entrydeclarationstore.nrs._
-import uk.gov.hmrc.entrydeclarationstore.reporting.{ClientInfo, ClientType, FailureType, MockReportSender, SubmissionHandled}
+import uk.gov.hmrc.entrydeclarationstore.reporting._
 import uk.gov.hmrc.entrydeclarationstore.services._
 import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils._
 import uk.gov.hmrc.entrydeclarationstore.utils.{MockMetrics, XmlFormatConfig, XmlFormats}
@@ -146,6 +146,16 @@ class EntryDeclarationSubmissionControllerSpec
   private def mockReportSuccessfulSubmission(isAmendment: Boolean) =
     MockReportSender.sendReport(SubmissionHandled.Success(isAmendment)) returns Future.successful((): Unit)
 
+  def mockServiceFailWithError[E: XmlFormats](
+    e: E,
+    mrn: Option[String],
+    optIdentityData: Option[IdentityData]): Unit = {
+    MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, optIdentityData))
+    MockEntryDeclarationStore
+      .handleSubmission(eori, rawPayload, mrn, now, clientInfo)
+      .returns(Future.successful(Left(ErrorWrapper(e))))
+  }
+
   // Authenticating behaviour that both put & post should have...
   def authenticatingEndpoint(mrn: Option[String], handler: Request[ByteString] => Future[Result]): Unit = {
 
@@ -182,21 +192,27 @@ class EntryDeclarationSubmissionControllerSpec
         check(fakeRequest(xmlPayload), UNAUTHORIZED, "UNAUTHORIZED")
       }
     }
+
+    "The submission fails with EORI mismatch" should {
+      "return 403 with platform standard xml error body" in {
+        MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, None))
+        MockEntryDeclarationStore
+          .handleSubmission(eori, rawPayload, mrn, now, clientInfo)
+          .returns(Future.successful(Left(ErrorWrapper(StandardError.EORIMismatch))))
+
+        mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.EORIMismatchError)
+
+        check(fakeRequest(xmlPayload), FORBIDDEN, "FORBIDDEN")
+      }
+    }
   }
 
   // Validating behaviour that both put & post should have...
   def validatingEndpoint(mrn: Option[String], handler: Request[ByteString] => Future[Result]): Unit = {
 
-    def mockFailWithError[E: XmlFormats](e: E, optIdentityData: Option[IdentityData]) = {
-      MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, optIdentityData))
-      MockEntryDeclarationStore
-        .handleSubmission(eori, rawPayload, mrn, now, clientInfo)
-        .returns(Future.successful(Left(ErrorWrapper(e))))
-    }
-
     "The submission fails with ValidationErrors" should {
       "Return BAD_REQUEST" in {
-        mockFailWithError(validationErrors, None)
+        mockServiceFailWithError(validationErrors, mrn, None)
         mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.ValidationErrors)
 
         val result: Future[Result] = handler(fakeRequest(xmlPayload))
@@ -207,7 +223,7 @@ class EntryDeclarationSubmissionControllerSpec
         contentType(result) shouldBe Some("application/xml")
       }
       "Not submit to nrs even if enabled" in {
-        mockFailWithError(validationErrors, Some(identityData))
+        mockServiceFailWithError(validationErrors, mrn, Some(identityData))
         mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.ValidationErrors)
         MockNRSService.submit(nrsSubmission).never()
 
@@ -217,7 +233,7 @@ class EntryDeclarationSubmissionControllerSpec
 
     "The submission fails with a ServerError (e.g. database problem)" should {
       "Return INTERNAL_SERVER_ERROR" in {
-        mockFailWithError(ServerError, None)
+        mockServiceFailWithError(ServerError, mrn, None)
         mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.InternalServerError)
 
         val result: Future[Result] = handler(fakeRequest(xmlPayload))
@@ -228,7 +244,7 @@ class EntryDeclarationSubmissionControllerSpec
         contentType(result) shouldBe Some("application/xml")
       }
       "Not submit to nrs even if enabled" in {
-        mockFailWithError(ServerError, Some(identityData))
+        mockServiceFailWithError(ServerError, mrn, Some(identityData))
         mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.InternalServerError)
         MockNRSService.submit(nrsSubmission).never()
 
