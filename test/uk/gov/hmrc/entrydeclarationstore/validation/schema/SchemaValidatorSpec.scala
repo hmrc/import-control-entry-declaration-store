@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.validation.schema
 
-import org.scalatest.Inside
+import org.scalatest.{Assertion, Inside}
 import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
 import uk.gov.hmrc.entrydeclarationstore.validation.{ValidationError, ValidationErrors}
@@ -212,22 +212,48 @@ class SchemaValidatorSpec extends UnitSpec with Inside {
     }
 
     "decoding special characters" when {
-      val xmlBytes: Array[Byte] =
+      val rawFileXmlBytes: Array[Byte] =
         ResourceUtils.asByteArray("xmls/CC313A-schemaValidSampleWithSpecialChars-v11-1.xml")
 
-      "no character encoding is present with the payload" must {
-        "infer the encoding" in {
+      val xmlString = ResourceUtils.asString("xmls/CC313A-schemaValidSampleWithSpecialChars-v11-1.xml")
+
+      val byteOrderMark = '\uFEFF'
+      val addressLine   = "1234 Avenue du Sacré-Cœur"
+
+      "no explicit character encoding provided (from HTTP header)" must {
+        def inferTheEncodingFrom(xmlBytes: Array[Byte]): Assertion =
           inside(validator.validate(SchemaTypeE313, RawPayload(xmlBytes))) {
-            case Right(xml) => (xml \\ "StrAndNumPLD1").text shouldBe "1234 Avenue du Sacré-Cœur"
+            case Right(xml) => (xml \\ "StrAndNumPLD1").text shouldBe addressLine
           }
+
+        "infer the encoding" in {
+          inferTheEncodingFrom(rawFileXmlBytes)
+        }
+
+        "infer the encoding when encoded in UTF-16BE with byte order marking" in {
+          inferTheEncodingFrom((byteOrderMark + xmlString).getBytes("UTF-16BE"))
+        }
+
+        "infer the encoding when encoded in UTF-16LE with byte order marking" in {
+          inferTheEncodingFrom((byteOrderMark + xmlString).getBytes("UTF-16LE"))
         }
       }
 
-      "an character encoding present with the payload" must {
-        "use that encoding" in {
-          // Deliberately use the wrong encoding (that used by default by BodyParsers.tolerantText)
-          // to prove that it has he correct effect...
-          inside(validator.validate(SchemaTypeE313, RawPayload(xmlBytes, Some("ISO-8859-1")))) {
+      "an explicit character encoding provided (from HTTP header)" must {
+        "work" in {
+          val charset  = "UTF-16BE"
+          val xmlBytes = xmlString.getBytes(charset)
+
+          inside(validator.validate(SchemaTypeE313, RawPayload(xmlBytes, Some(charset)))) {
+            case Right(xml) => (xml \\ "StrAndNumPLD1").text shouldBe addressLine
+          }
+        }
+
+        "use in preference (as per RFC-3023) to what would be inferred" in {
+          // The xml parser seems pretty good at getting the right character encoding on its own,
+          // so one way to prove that it is using the encoding we are providing
+          // deliberately give it the wrong one...
+          inside(validator.validate(SchemaTypeE313, RawPayload(rawFileXmlBytes, Some("ISO-8859-1")))) {
             case Right(xml) => (xml \\ "StrAndNumPLD1").text shouldBe "1234 Avenue du SacrÃ©-CÅ\u0093ur"
           }
         }
