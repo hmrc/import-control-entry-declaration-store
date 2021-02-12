@@ -39,9 +39,6 @@ object StandardError {
 
   val unauthorized: StandardError = StandardError(UNAUTHORIZED, "UNAUTHORIZED", "Permission denied")
 
-  @deprecated
-  val forbidden: StandardError = StandardError(FORBIDDEN, "FORBIDDEN", "Permission denied")
-
   object EORIMismatch extends StandardError(FORBIDDEN, "FORBIDDEN", "Permission denied") {
     implicit val xmlFormats: XmlFormats[EORIMismatch.type] = new XmlFormats[EORIMismatch.type] {
       override def toXml(a: EORIMismatch.type): Node = StandardError.xmlFormats.toXml(a)

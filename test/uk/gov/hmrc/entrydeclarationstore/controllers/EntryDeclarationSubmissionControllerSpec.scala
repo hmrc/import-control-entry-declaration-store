@@ -166,26 +166,6 @@ class EntryDeclarationSubmissionControllerSpec
       (xml.XML.loadString(contentAsString(result)) \\ "code").map(_.text).headOption should contain(errorCode)
     }
 
-    "return 403" when {
-      "eori does not match that from auth service" in {
-        MockAuthService.authenticate returns Some(UserDetails("OTHEREORI", clientInfo, None))
-        mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.EORIMismatchError)
-        check(fakeRequest(xmlPayload), FORBIDDEN, "FORBIDDEN")
-      }
-
-      "empty eori element (MesSenMES3) in xml (so that level 2 validation for this is not preempted)" in {
-        MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, None))
-        mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.EORIMismatchError)
-        check(fakeRequest(xmlPayloadNoEori), FORBIDDEN, "FORBIDDEN")
-      }
-
-      "no eori element (MesSenMES3) in xml (so that level 2 validation for this is not preempted)" in {
-        MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, None))
-        mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.EORIMismatchError)
-        check(fakeRequest(xmlPayloadBlankEori), FORBIDDEN, "FORBIDDEN")
-      }
-    }
-
     "return 401" when {
       "no eori is available from auth service" in {
         MockAuthService.authenticate returns None
@@ -193,7 +173,7 @@ class EntryDeclarationSubmissionControllerSpec
       }
     }
 
-    "The submission fails with EORI mismatch" should {
+    "The submission fails with EORIMismatch" should {
       "return 403 with platform standard xml error body" in {
         MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, None))
         MockEntryDeclarationStore

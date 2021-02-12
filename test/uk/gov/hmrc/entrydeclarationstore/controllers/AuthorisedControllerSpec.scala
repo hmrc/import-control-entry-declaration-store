@@ -47,14 +47,11 @@ class AuthorisedControllerSpec
 
   lazy val cc: ControllerComponents = stubControllerComponents()
   lazy val bearerToken              = "Bearer Token"
-  def request(body: String): Request[String] =
-    FakeRequest().withHeaders(HeaderNames.AUTHORIZATION -> bearerToken).withBody(body)
+  val request: FakeRequest[AnyContentAsEmpty.type] =
+    FakeRequest().withHeaders(HeaderNames.AUTHORIZATION -> bearerToken)
 
   val eori                   = "GB123"
   val clientInfo: ClientInfo = ClientInfo(ClientType.CSP, None, None)
-
-  val bodyContainingEori      = s"<someXml>$eori</someXml>"
-  val bodyContainingOtherEori = s"<someXml>otherEori</someXml>"
 
   // WLOG - whatever the service returns should be passed to the custom controller code block...
   val userDetails: UserDetails = UserDetails(eori, clientInfo, None)
@@ -66,13 +63,7 @@ class AuthorisedControllerSpec
     class TestController extends AuthorisedController(cc) with Timer with EventLogger {
       override val authService: AuthService = mockAuthService
 
-      def eoriCorrectForRequest(request: Request[_], eori: String): Boolean =
-        request.body match {
-          case b: String => b.contains(eori)
-          case _         => false
-        }
-
-      def action(): Action[String] = authorisedAction(eoriCorrectForRequest).async(parse.tolerantText) { userRequest =>
+      def action(): Action[AnyContent] = authorisedAction().async { userRequest =>
         userRequest.userDetails shouldBe userDetails
         Future.successful(Ok(Json.obj()))
       }
@@ -88,18 +79,13 @@ class AuthorisedControllerSpec
       <message>Permission denied</message>
     </error>)
 
-  val forbiddenXml: Node = Utility.trim(<error>
-      <code>FORBIDDEN</code>
-      <message>Permission denied</message>
-    </error>)
-
   "calling an action" when {
 
     "the user is authorised" should {
       "return a 200" in new Test {
         MockAuthService.authenticate returns Future.successful(Some(userDetails))
 
-        private val result: Future[Result] = controller.action()(request(bodyContainingEori))
+        private val result: Future[Result] = controller.action()(request)
         status(await(result)) shouldBe OK
       }
     }
@@ -108,20 +94,9 @@ class AuthorisedControllerSpec
       "return a 401" in new Test {
         MockAuthService.authenticate returns Future.successful(None)
 
-        private val result: Future[Result] = controller.action()(request(bodyContainingEori))
+        private val result: Future[Result] = controller.action()(request)
         status(await(result))                                     shouldBe UNAUTHORIZED
         Utility.trim(xml.XML.loadString(contentAsString(result))) shouldBe unauthorisedXml
-        contentType(result)                                       shouldBe Some(MimeTypes.XML)
-      }
-    }
-
-    "auth eori does not match that in the request payload" should {
-      "return a 403" in new Test {
-        MockAuthService.authenticate returns Future.successful(Some(userDetails))
-
-        private val result: Future[Result] = controller.action()(request(bodyContainingOtherEori))
-        status(await(result))                                     shouldBe FORBIDDEN
-        Utility.trim(xml.XML.loadString(contentAsString(result))) shouldBe forbiddenXml
         contentType(result)                                       shouldBe Some(MimeTypes.XML)
       }
     }
@@ -131,7 +106,7 @@ class AuthorisedControllerSpec
     "use the authorization header to send to auth service" in new Test {
       val hcCapture: CaptureOne[HeaderCarrier] = CaptureOne[HeaderCarrier]()
       MockAuthService.authenticateCapture(hcCapture) returns Future.successful(Some(userDetails))
-      controller.action()(request(bodyContainingEori))
+      controller.action()(request)
 
       hcCapture.value.authorization shouldBe Some(Authorization(bearerToken))
     }

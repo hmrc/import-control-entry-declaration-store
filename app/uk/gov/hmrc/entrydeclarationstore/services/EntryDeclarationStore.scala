@@ -81,7 +81,8 @@ class EntryDeclarationStoreImpl @Inject()(
           .withMessageType(eori = eori, correlationId = correlationId, submissionId = submissionId, mrn = mrn)
 
       if (appConfig.logSubmissionPayloads) {
-        ContextLogger.info(s"Handling submission for ${clientInfo.clientType} client. Payload:\n$rawPayload")
+        ContextLogger.info(
+          s"Handling submission for ${clientInfo.clientType} client. Payload:\n${rawPayload.byteString.utf8String}")
       } else {
         ContextLogger.info(s"Handling submission for ${clientInfo.clientType} client.")
       }

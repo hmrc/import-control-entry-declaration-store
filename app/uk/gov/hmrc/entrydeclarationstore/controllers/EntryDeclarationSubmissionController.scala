@@ -18,18 +18,17 @@ package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import akka.util.ByteString
 import com.kenshoo.play.metrics.Metrics
-import play.api.mvc.{Action, ControllerComponents, Request}
+import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.{RawPayload, StandardError}
 import uk.gov.hmrc.entrydeclarationstore.nrs.{NRSMetadata, NRSService, NRSSubmission}
 import uk.gov.hmrc.entrydeclarationstore.reporting.{FailureType, ReportSender, SubmissionHandled}
 import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, EntryDeclarationStore, MRNMismatchError}
 import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils._
-import uk.gov.hmrc.entrydeclarationstore.utils.{EoriUtils, EventLogger, Timer}
+import uk.gov.hmrc.entrydeclarationstore.utils.{EventLogger, Timer}
 import uk.gov.hmrc.entrydeclarationstore.validation.ValidationErrors
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.nio.charset.StandardCharsets
 import java.time.{Clock, Instant}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -49,20 +48,6 @@ class EntryDeclarationSubmissionController @Inject()(
     with Timer
     with EventLogger {
 
-  def eoriCorrectForRequest(mrn: Option[String]): (Request[_], String) => Boolean =
-    (request, eori) =>
-      request.body match {
-        case payload: ByteString =>
-          if (EoriUtils.eoriFromXmlString(payload.decodeString(StandardCharsets.UTF_8)) == eori) { true } else {
-            implicit val lc: LoggingContext           = LoggingContext()
-            implicit val headerCarrier: HeaderCarrier = hc(request)
-            reportSender.sendReport(
-              SubmissionHandled.Failure(mrn.isDefined, FailureType.EORIMismatchError): SubmissionHandled)
-            false
-          }
-        case _ => false
-    }
-
   def xmlSuccessResponse(correlationId: String): Elem =
     // @formatter:off
     <ns:SuccessResponse TestInLive="false"
@@ -81,7 +66,7 @@ class EntryDeclarationSubmissionController @Inject()(
   def putAmendment(mrn: String): Action[ByteString] = handleSubmission(Some(mrn))
 
   private def handleSubmission(mrn: Option[String]) =
-    authorisedAction(eoriCorrectForRequest(mrn)).async(parse.byteString) { implicit request =>
+    authorisedAction().async(parse.byteString) { implicit request =>
       val receivedDateTime = Instant.now(clock)
 
       implicit val lc: LoggingContext = LoggingContext()
