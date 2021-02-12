@@ -27,9 +27,12 @@ trait MockValidationHandler extends MockFactory {
   val mockValidationHandler: ValidationHandler = mock[ValidationHandler]
 
   object MockValidationHandler {
-    def handleValidation(payload: RawPayload, mrn: Option[String]): CallHandler[Either[ErrorWrapper[_], NodeSeq]] =
+    def handleValidation(
+      payload: RawPayload,
+      eori: String,
+      mrn: Option[String]): CallHandler[Either[ErrorWrapper[_], NodeSeq]] =
       (mockValidationHandler
-        .handleValidation(_: RawPayload, _: Option[String])(_: LoggingContext)) expects (payload, mrn, *)
+        .handleValidation(_: RawPayload, _: String, _: Option[String])(_: LoggingContext)) expects (payload, eori, mrn, *)
   }
 
 }

@@ -87,7 +87,7 @@ class EntryDeclarationStoreImpl @Inject()(
       }
 
       val result = for {
-        xmlPayload             <- EitherT.fromEither[Future](validationHandler.handleValidation(rawPayload, mrn))
+        xmlPayload             <- EitherT.fromEither[Future](validationHandler.handleValidation(rawPayload, eori, mrn))
         entryDeclarationAsJson <- EitherT.fromEither[Future](convertToJson(xmlPayload, input))
         _ = validateJson(entryDeclarationAsJson)
         entryDeclaration = EntryDeclarationModel(

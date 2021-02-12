@@ -19,7 +19,7 @@ package uk.gov.hmrc.entrydeclarationstore.validation
 import com.kenshoo.play.metrics.Metrics
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
-import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, RawPayload}
+import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, RawPayload, StandardError}
 import uk.gov.hmrc.entrydeclarationstore.services.MRNMismatchError
 import uk.gov.hmrc.entrydeclarationstore.utils.{MockMetrics, XmlFormatConfig}
 import uk.gov.hmrc.entrydeclarationstore.validation.business.MockRuleValidator
@@ -44,30 +44,33 @@ class ValidationHandlerSpec extends UnitSpec with MockSchemaValidator with MockR
     mockedMetrics,
     mockAppConfig
   )
-  val mrn: String           = "MRN"
-  val IE315payload: NodeSeq =
+
+  val mrn: String = "MRN"
+  val eori        = "GB12345"
+
+  def ie315payload(messageSender: Option[String] = Some(s"$eori/1234567890")): NodeSeq =
     // @formatter:off
       <tns:Header/>
       <tns:Body>
         <ie:CC315A>
-          <MesSenMES3>ABCDEF1234/1234567890</MesSenMES3>
+          {for (value <- messageSender.toSeq) yield <MesSenMES3>{ value }</MesSenMES3>}
           <MesRecMES6>messageRecipient</MesRecMES6>
           <TraModAtBorHEA76>42</TraModAtBorHEA76>
         </ie:CC315A>
       </tns:Body>
   // @formatter:on
 
-  val IE313payload: NodeSeq =
+  def ie313payload(messageSender: Option[String] = Some(s"$eori/1234567890")): NodeSeq =
     // @formatter:off
       <tns:Header/>
       <tns:Body>
         <ie:CC313A>
+          {for (value <- messageSender.toSeq) yield <MesSenMES3>{ value }</MesSenMES3>}
+          <MesRecMES6>messageRecipient</MesRecMES6>
           <HEAHEA>
             <DocNumHEA5>{mrn}</DocNumHEA5>
             <TraModAtBorHEA76>42</TraModAtBorHEA76>
           </HEAHEA>
-          <MesSenMES3>ABCDEF1234/1234567890</MesSenMES3>
-          <MesRecMES6>messageRecipient</MesRecMES6>
         </ie:CC313A>
       </tns:Body>
   // @formatter:on
@@ -80,11 +83,10 @@ class ValidationHandlerSpec extends UnitSpec with MockSchemaValidator with MockR
     s"passed xml for $schemaType" when {
       "all valid" must {
         "return the payload" in {
-
           MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Valid(payload)
           ruleValidator.validate(payload) returns Right(())
 
-          validationHandler.handleValidation(RawPayload(payload), mrn) shouldBe Right(payload)
+          validationHandler.handleValidation(RawPayload(payload), eori, mrn) shouldBe Right(payload)
         }
       }
 
@@ -92,7 +94,7 @@ class ValidationHandlerSpec extends UnitSpec with MockSchemaValidator with MockR
         "return an error" in {
           MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Invalid(payload, errors)
 
-          validationHandler.handleValidation(RawPayload(payload), mrn) shouldBe Left(ErrorWrapper(errors))
+          validationHandler.handleValidation(RawPayload(payload), eori, mrn) shouldBe Left(ErrorWrapper(errors))
         }
       }
 
@@ -100,7 +102,7 @@ class ValidationHandlerSpec extends UnitSpec with MockSchemaValidator with MockR
         "return an error" in {
           MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Malformed(errors)
 
-          validationHandler.handleValidation(RawPayload(payload), mrn) shouldBe Left(ErrorWrapper(errors))
+          validationHandler.handleValidation(RawPayload(payload), eori, mrn) shouldBe Left(ErrorWrapper(errors))
         }
       }
 
@@ -109,7 +111,79 @@ class ValidationHandlerSpec extends UnitSpec with MockSchemaValidator with MockR
           MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Valid(payload)
           ruleValidator.validate(payload) returns Left(errors)
 
-          validationHandler.handleValidation(RawPayload(payload), mrn) shouldBe Left(ErrorWrapper(errors))
+          validationHandler.handleValidation(RawPayload(payload), eori, mrn) shouldBe Left(ErrorWrapper(errors))
+        }
+      }
+    }
+  }
+
+  def eoriCheckerSchemaValid(
+    schemaType: SchemaType,
+    payloadBuilder: Option[String] => NodeSeq,
+    mrn: Option[String]): Unit = {
+    def validate(payload: NodeSeq) = {
+      MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Valid(payload)
+
+      validationHandler.handleValidation(RawPayload(payload), eori, mrn)
+    }
+
+    s"passed xml for $schemaType" when {
+      "xml is valid" when {
+        "value is missing from the MesSenMES3 element" must {
+          "return EORIMismatchError" in {
+            validate(payloadBuilder(Some(""))) shouldBe Left(ErrorWrapper(StandardError.EORIMismatch))
+          }
+        }
+
+        "eori part is missing from the MesSenMES3 element" must {
+          "return EORIMismatchError" in {
+            validate(payloadBuilder(Some("/abcde"))) shouldBe Left(ErrorWrapper(StandardError.EORIMismatch))
+          }
+        }
+
+        "eori does not match specified eori" must {
+          "return EORIMismatchError" in {
+            validate(payloadBuilder(Some("otherEori"))) shouldBe Left(ErrorWrapper(StandardError.EORIMismatch))
+          }
+        }
+      }
+    }
+  }
+
+  def eoriCheckerSchemaInvalid(
+    schemaType: SchemaType,
+    payloadBuilder: Option[String] => NodeSeq,
+    mrn: Option[String]): Unit = {
+    def validate(payload: NodeSeq) = {
+      MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Invalid(payload, errors)
+
+      validationHandler.handleValidation(RawPayload(payload), eori, mrn)
+    }
+
+    s"passed xml for $schemaType" when {
+      "xml is invalid" when {
+        "value is missing from the MesSenMES3 element" must {
+          "return EORIMismatchError" in {
+            validate(payloadBuilder(Some(""))) shouldBe Left(ErrorWrapper(StandardError.EORIMismatch))
+          }
+        }
+
+        "eori part is missing from the MesSenMES3 element" must {
+          "return EORIMismatchError" in {
+            validate(payloadBuilder(Some("/abcde"))) shouldBe Left(ErrorWrapper(StandardError.EORIMismatch))
+          }
+        }
+
+        "MesSenMES3 element is missing" must {
+          "return EORIMismatchError" in {
+            validate(payloadBuilder(None))
+          }
+        }
+
+        "eori does not match specified eori" must {
+          "return EORIMismatchError" in {
+            validate(payloadBuilder(Some("otherEori"))) shouldBe Left(ErrorWrapper(StandardError.EORIMismatch))
+          }
         }
       }
     }
@@ -117,17 +191,21 @@ class ValidationHandlerSpec extends UnitSpec with MockSchemaValidator with MockR
 
   "ValidationHandler" when {
     "passed a 315" when {
-      behave like validationHandlerFor(SchemaTypeE315, IE315payload, None)
+      behave like validationHandlerFor(SchemaTypeE315, ie315payload(), None)
+      behave like eoriCheckerSchemaValid(SchemaTypeE315, ie315payload, None)
+      behave like eoriCheckerSchemaInvalid(SchemaTypeE315, ie315payload, None)
     }
 
     "passed a 313" when {
-      behave like validationHandlerFor(SchemaTypeE313, IE313payload, Some(mrn))
+      behave like validationHandlerFor(SchemaTypeE313, ie313payload(), Some(mrn))
+      behave like eoriCheckerSchemaValid(SchemaTypeE313, ie313payload, Some(mrn))
+      behave like eoriCheckerSchemaInvalid(SchemaTypeE313, ie313payload, Some(mrn))
 
       "mrn does not match that in payload" must {
         "return an error" in {
-          MockSchemaValidator.validate(SchemaTypeE313, RawPayload(IE313payload)) returns Valid(IE313payload)
+          MockSchemaValidator.validate(SchemaTypeE313, RawPayload(ie313payload())) returns Valid(ie313payload())
 
-          validationHandler.handleValidation(RawPayload(IE313payload), Some("otherMrn")) shouldBe Left(
+          validationHandler.handleValidation(RawPayload(ie313payload()), eori, Some("otherMrn")) shouldBe Left(
             ErrorWrapper(MRNMismatchError))
         }
       }
