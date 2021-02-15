@@ -19,8 +19,7 @@ package uk.gov.hmrc.entrydeclarationstore.models.json
 import org.scalatest.Inside
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
-import uk.gov.hmrc.entrydeclarationstore.models.ErrorWrapper
-import uk.gov.hmrc.entrydeclarationstore.services.ServerError
+import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, ServerError}
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
 import uk.gov.hmrc.play.test.UnitSpec
 

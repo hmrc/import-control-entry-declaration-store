@@ -50,7 +50,7 @@ abstract class AuthorisedController(cc: ControllerComponents) extends BackendCon
 
           authService.authenticate.flatMap {
             case Some(userDetails) => block(UserRequest(request, userDetails))
-            case None              => error(StandardError.unauthorized)
+            case None              => error(StandardError.Unauthorized)
           }
         }
     }

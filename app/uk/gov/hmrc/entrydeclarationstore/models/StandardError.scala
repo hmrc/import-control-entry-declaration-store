@@ -19,29 +19,20 @@ package uk.gov.hmrc.entrydeclarationstore.models
 import play.api.http.Status._
 import uk.gov.hmrc.entrydeclarationstore.utils.XmlFormats
 
-import scala.xml.Node
-
 /**
   * Error that conforms to the standard API platform error structure.
   */
 case class StandardError(status: Int, code: String, message: String)
 
 object StandardError {
-  implicit val xmlFormats: XmlFormats[StandardError] = new XmlFormats[StandardError] {
-    override def toXml(a: StandardError): Node =
+  implicit def xmlFormats[A <: StandardError]: XmlFormats[A] =
+    (a: A) =>
       // @formatter:off
-      <error>
-        <code>{a.code}</code>
-        <message>{a.message}</message>
-      </error>
-    // @formatter:on
-  }
+    <error>
+      <code>{a.code}</code>
+      <message>{a.message}</message>
+    </error>
+  // @formatter:on
 
-  val unauthorized: StandardError = StandardError(UNAUTHORIZED, "UNAUTHORIZED", "Permission denied")
-
-  object EORIMismatch extends StandardError(FORBIDDEN, "FORBIDDEN", "Permission denied") {
-    implicit val xmlFormats: XmlFormats[EORIMismatch.type] = new XmlFormats[EORIMismatch.type] {
-      override def toXml(a: EORIMismatch.type): Node = StandardError.xmlFormats.toXml(a)
-    }
-  }
+  object Unauthorized extends StandardError(UNAUTHORIZED, "UNAUTHORIZED", "Permission denied")
 }

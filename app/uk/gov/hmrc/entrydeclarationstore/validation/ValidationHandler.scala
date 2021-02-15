@@ -20,8 +20,7 @@ import cats.implicits._
 import com.kenshoo.play.metrics.Metrics
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
-import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, RawPayload, StandardError}
-import uk.gov.hmrc.entrydeclarationstore.services.MRNMismatchError
+import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, RawPayload}
 import uk.gov.hmrc.entrydeclarationstore.utils.{EventLogger, Timer, XmlFormatConfig}
 import uk.gov.hmrc.entrydeclarationstore.validation.business.RuleValidator
 import uk.gov.hmrc.entrydeclarationstore.validation.schema.{SchemaTypeE313, SchemaTypeE315, SchemaValidationResult, SchemaValidator}
@@ -93,7 +92,7 @@ class ValidationHandlerImpl @Inject()(
       eori      <- docSender.split('/').headOption.map(_.trim)
     } yield eori
 
-    if (docEori.contains(eori)) Right(()) else Left(ErrorWrapper(StandardError.EORIMismatch))
+    if (docEori.contains(eori)) Right(()) else Left(ErrorWrapper(EORIMismatchError))
   }
 
   private def validateRules(payload: NodeSeq, mrn: Option[String])(implicit lc: LoggingContext) =

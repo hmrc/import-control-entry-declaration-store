@@ -19,8 +19,7 @@ package uk.gov.hmrc.entrydeclarationstore.validation
 import com.kenshoo.play.metrics.Metrics
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
-import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, RawPayload, StandardError}
-import uk.gov.hmrc.entrydeclarationstore.services.MRNMismatchError
+import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, RawPayload}
 import uk.gov.hmrc.entrydeclarationstore.utils.{MockMetrics, XmlFormatConfig}
 import uk.gov.hmrc.entrydeclarationstore.validation.business.MockRuleValidator
 import uk.gov.hmrc.entrydeclarationstore.validation.schema.SchemaValidationResult._
@@ -131,19 +130,19 @@ class ValidationHandlerSpec extends UnitSpec with MockSchemaValidator with MockR
       "xml is valid" when {
         "value is missing from the MesSenMES3 element" must {
           "return EORIMismatchError" in {
-            validate(payloadBuilder(Some(""))) shouldBe Left(ErrorWrapper(StandardError.EORIMismatch))
+            validate(payloadBuilder(Some(""))) shouldBe Left(ErrorWrapper(EORIMismatchError))
           }
         }
 
         "eori part is missing from the MesSenMES3 element" must {
           "return EORIMismatchError" in {
-            validate(payloadBuilder(Some("/abcde"))) shouldBe Left(ErrorWrapper(StandardError.EORIMismatch))
+            validate(payloadBuilder(Some("/abcde"))) shouldBe Left(ErrorWrapper(EORIMismatchError))
           }
         }
 
         "eori does not match specified eori" must {
           "return EORIMismatchError" in {
-            validate(payloadBuilder(Some("otherEori"))) shouldBe Left(ErrorWrapper(StandardError.EORIMismatch))
+            validate(payloadBuilder(Some("otherEori"))) shouldBe Left(ErrorWrapper(EORIMismatchError))
           }
         }
       }
@@ -164,13 +163,13 @@ class ValidationHandlerSpec extends UnitSpec with MockSchemaValidator with MockR
       "xml is invalid" when {
         "value is missing from the MesSenMES3 element" must {
           "return EORIMismatchError" in {
-            validate(payloadBuilder(Some(""))) shouldBe Left(ErrorWrapper(StandardError.EORIMismatch))
+            validate(payloadBuilder(Some(""))) shouldBe Left(ErrorWrapper(EORIMismatchError))
           }
         }
 
         "eori part is missing from the MesSenMES3 element" must {
           "return EORIMismatchError" in {
-            validate(payloadBuilder(Some("/abcde"))) shouldBe Left(ErrorWrapper(StandardError.EORIMismatch))
+            validate(payloadBuilder(Some("/abcde"))) shouldBe Left(ErrorWrapper(EORIMismatchError))
           }
         }
 
@@ -182,7 +181,7 @@ class ValidationHandlerSpec extends UnitSpec with MockSchemaValidator with MockR
 
         "eori does not match specified eori" must {
           "return EORIMismatchError" in {
-            validate(payloadBuilder(Some("otherEori"))) shouldBe Left(ErrorWrapper(StandardError.EORIMismatch))
+            validate(payloadBuilder(Some("otherEori"))) shouldBe Left(ErrorWrapper(EORIMismatchError))
           }
         }
       }

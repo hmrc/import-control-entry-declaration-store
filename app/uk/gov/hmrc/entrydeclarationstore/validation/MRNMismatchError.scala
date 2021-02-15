@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.entrydeclarationstore.services
+package uk.gov.hmrc.entrydeclarationstore.validation
 
 import uk.gov.hmrc.entrydeclarationstore.utils.XmlFormats
 

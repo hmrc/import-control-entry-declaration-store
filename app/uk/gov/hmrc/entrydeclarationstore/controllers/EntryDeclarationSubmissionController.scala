@@ -20,13 +20,13 @@ import akka.util.ByteString
 import com.kenshoo.play.metrics.Metrics
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
-import uk.gov.hmrc.entrydeclarationstore.models.{RawPayload, StandardError}
+import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
 import uk.gov.hmrc.entrydeclarationstore.nrs.{NRSMetadata, NRSService, NRSSubmission}
 import uk.gov.hmrc.entrydeclarationstore.reporting.{FailureType, ReportSender, SubmissionHandled}
-import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, EntryDeclarationStore, MRNMismatchError}
+import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, EntryDeclarationStore}
 import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils._
 import uk.gov.hmrc.entrydeclarationstore.utils.{EventLogger, Timer}
-import uk.gov.hmrc.entrydeclarationstore.validation.ValidationErrors
+import uk.gov.hmrc.entrydeclarationstore.validation.{EORIMismatchError, MRNMismatchError, ValidationErrors}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.{Clock, Instant}
@@ -86,7 +86,7 @@ class EntryDeclarationSubmissionController @Inject()(
                 reportSender.sendReport(
                   SubmissionHandled.Failure(mrn.isDefined, FailureType.MRNMismatchError): SubmissionHandled)
                 BadRequest(failure.toXml)
-              case StandardError.EORIMismatch =>
+              case EORIMismatchError =>
                 reportSender.sendReport(
                   SubmissionHandled.Failure(mrn.isDefined, FailureType.EORIMismatchError): SubmissionHandled)
                 Forbidden(failure.toXml)

@@ -23,13 +23,13 @@ import play.api.mvc.{Request, Result}
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
-import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, RawPayload, StandardError, SuccessResponse}
+import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, RawPayload, ServerError, SuccessResponse}
 import uk.gov.hmrc.entrydeclarationstore.nrs._
 import uk.gov.hmrc.entrydeclarationstore.reporting._
 import uk.gov.hmrc.entrydeclarationstore.services._
 import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils._
 import uk.gov.hmrc.entrydeclarationstore.utils.{MockMetrics, XmlFormatConfig, XmlFormats}
-import uk.gov.hmrc.entrydeclarationstore.validation.{ValidationError, ValidationErrors}
+import uk.gov.hmrc.entrydeclarationstore.validation.{EORIMismatchError, MRNMismatchError, ValidationError, ValidationErrors}
 import uk.gov.hmrc.play.test.UnitSpec
 
 import java.time.{Clock, Instant, ZoneOffset}
@@ -178,7 +178,7 @@ class EntryDeclarationSubmissionControllerSpec
         MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, None))
         MockEntryDeclarationStore
           .handleSubmission(eori, rawPayload, mrn, now, clientInfo)
-          .returns(Future.successful(Left(ErrorWrapper(StandardError.EORIMismatch))))
+          .returns(Future.successful(Left(ErrorWrapper(EORIMismatchError))))
 
         mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.EORIMismatchError)
 
