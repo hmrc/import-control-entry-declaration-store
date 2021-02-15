@@ -21,9 +21,9 @@ import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
 import uk.gov.hmrc.entrydeclarationstore.validation.{ValidationError, ValidationErrors}
 
 import javax.xml.parsers.{SAXParser, SAXParserFactory}
+import scala.xml.Node
 import scala.xml.factory.XMLLoader
 import scala.xml.parsing.{FactoryAdapter, NoBindingFactoryAdapter}
-import scala.xml.{Node, NodeSeq}
 
 class SchemaValidator {
 
