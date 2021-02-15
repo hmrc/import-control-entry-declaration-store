@@ -113,7 +113,7 @@ class EntryDeclarationStoreSpec
   private def metadataWith(messageType: MessageType, mrn: Option[String]) =
     EntryDeclarationMetadata(submissionId, messageType, transportMode, receivedDateTime, mrn)
 
-  private def submissionReceivedReport(payload: NodeSeq, messageType: MessageType) =
+  private def submissionReceivedReport(payload: NodeSeq, messageType: MessageType, mrn: Option[String]) =
     SubmissionReceived(
       eori          = eori,
       correlationId = correlationId,
@@ -122,7 +122,8 @@ class EntryDeclarationStoreSpec
       body          = jsonPayload,
       bodyLength    = payload.toString().length,
       transportMode = transportMode,
-      clientInfo    = clientInfo
+      clientInfo    = clientInfo,
+      amendmentMrn = mrn
     )
 
   private def submissionSentToEISReport(messageType: MessageType, failure: Option[EISSendFailure]) =
@@ -156,7 +157,7 @@ class EntryDeclarationStoreSpec
         .returns(Future.successful(true))
 
       MockReportSender
-        .sendReport(receivedDateTime, submissionReceivedReport(xmlPayload, messageType))
+        .sendReport(receivedDateTime, submissionReceivedReport(xmlPayload, messageType, mrn))
         .returns(Future.successful(()))
       MockReportSender.sendReport(submissionSentToEISReport(messageType, None))
 
@@ -226,7 +227,7 @@ class EntryDeclarationStoreSpec
           .returns(Future.successful(true))
 
         MockReportSender
-          .sendReport(receivedDateTime, submissionReceivedReport(xmlPayload, messageType))
+          .sendReport(receivedDateTime, submissionReceivedReport(xmlPayload, messageType, mrn))
           .returns(Future.failed(new IOException))
 
         entryDeclarationStore.handleSubmission(eori, payload, mrn, receivedDateTime, clientInfo).futureValue shouldBe
@@ -248,7 +249,7 @@ class EntryDeclarationStoreSpec
         val eisSendFailure: EISSendFailure.ExceptionThrown.type = EISSendFailure.ExceptionThrown
 
         MockReportSender
-          .sendReport(receivedDateTime, submissionReceivedReport(xmlPayload, messageType))
+          .sendReport(receivedDateTime, submissionReceivedReport(xmlPayload, messageType, mrn))
           .returns(Future.successful(()))
         MockReportSender.sendReport(submissionSentToEISReport(messageType, Some(eisSendFailure)))
 
@@ -282,7 +283,7 @@ class EntryDeclarationStoreSpec
           .returns(Future.successful(true))
 
         MockReportSender
-          .sendReport(receivedDateTime, submissionReceivedReport(xmlPayload, messageType))
+          .sendReport(receivedDateTime, submissionReceivedReport(xmlPayload, messageType, mrn))
           .returns(Future.successful(()))
 
         MockEisConnector
@@ -306,7 +307,7 @@ class EntryDeclarationStoreSpec
           .returns(Future.successful(true))
 
         MockReportSender
-          .sendReport(receivedDateTime, submissionReceivedReport(xmlPayload, messageType))
+          .sendReport(receivedDateTime, submissionReceivedReport(xmlPayload, messageType, mrn))
           .returns(Future.successful(()))
         MockReportSender.sendReport(submissionSentToEISReport(messageType, Some(EISSendFailure.ExceptionThrown)))
 

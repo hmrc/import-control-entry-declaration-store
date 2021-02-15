@@ -180,7 +180,8 @@ class EntryDeclarationStoreImpl @Inject()(
           body          = body,
           transportMode = transportMode,
           clientInfo    = clientInfo,
-          bodyLength    = rawPayload.length
+          bodyLength    = rawPayload.length,
+          amendmentMrn  = mrn
         )
       )
       .map(_.asRight[ErrorWrapper[_]])
