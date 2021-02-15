@@ -19,11 +19,11 @@ package uk.gov.hmrc.entrydeclarationstore.validation
 import com.kenshoo.play.metrics.Metrics
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
-import uk.gov.hmrc.entrydeclarationstore.models.ErrorWrapper
-import uk.gov.hmrc.entrydeclarationstore.services.MRNMismatchError
+import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, RawPayload}
 import uk.gov.hmrc.entrydeclarationstore.utils.{MockMetrics, XmlFormatConfig}
 import uk.gov.hmrc.entrydeclarationstore.validation.business.MockRuleValidator
-import uk.gov.hmrc.entrydeclarationstore.validation.schema.{MockSchemaValidator, SchemaTypeE313, SchemaTypeE315}
+import uk.gov.hmrc.entrydeclarationstore.validation.schema.SchemaValidationResult._
+import uk.gov.hmrc.entrydeclarationstore.validation.schema._
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.xml.NodeSeq
@@ -43,101 +43,171 @@ class ValidationHandlerSpec extends UnitSpec with MockSchemaValidator with MockR
     mockedMetrics,
     mockAppConfig
   )
-  val mrn: Some[String]     = Some("MRN")
-  val IE315payload: NodeSeq =
+
+  val mrn: String = "MRN"
+  val eori        = "GB12345"
+
+  def ie315payload(messageSender: Option[String] = Some(s"$eori/1234567890")): NodeSeq =
     // @formatter:off
       <tns:Header/>
       <tns:Body>
         <ie:CC315A>
-          <MesSenMES3>ABCDEF1234/1234567890</MesSenMES3>
+          {for (value <- messageSender.toSeq) yield <MesSenMES3>{ value }</MesSenMES3>}
           <MesRecMES6>messageRecipient</MesRecMES6>
           <TraModAtBorHEA76>42</TraModAtBorHEA76>
         </ie:CC315A>
       </tns:Body>
   // @formatter:on
 
-  val IE313payload: NodeSeq =
+  def ie313payload(messageSender: Option[String] = Some(s"$eori/1234567890")): NodeSeq =
     // @formatter:off
       <tns:Header/>
       <tns:Body>
         <ie:CC313A>
+          {for (value <- messageSender.toSeq) yield <MesSenMES3>{ value }</MesSenMES3>}
+          <MesRecMES6>messageRecipient</MesRecMES6>
           <HEAHEA>
-            <DocNumHEA5>{mrn.get}</DocNumHEA5>
+            <DocNumHEA5>{mrn}</DocNumHEA5>
             <TraModAtBorHEA76>42</TraModAtBorHEA76>
           </HEAHEA>
-          <MesSenMES3>ABCDEF1234/1234567890</MesSenMES3>
-          <MesRecMES6>messageRecipient</MesRecMES6>
         </ie:CC313A>
       </tns:Body>
   // @formatter:on
 
   val errors: ValidationErrors = ValidationErrors(Seq(ValidationError("errText", "errType", "123", "errLocation")))
 
-  "ValidationHandler" when {
-    "passed a 315" when {
+  def validationHandlerFor(schemaType: SchemaType, payload: NodeSeq, mrn: Option[String]): Unit = {
+    val ruleValidator = mrn.map(_ => MockRuleValidator313).getOrElse(MockRuleValidator315)
+
+    s"passed xml for $schemaType" when {
       "all valid" must {
         "return the payload" in {
-          MockSchemaValidator.validate(SchemaTypeE315, IE315payload.toString()).returns(Right(IE315payload))
-          MockRuleValidator315.validate(IE315payload).returns(Right(()))
+          MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Valid(payload)
+          ruleValidator.validate(payload) returns Right(())
 
-          validationHandler.handleValidation(IE315payload.toString(), None) shouldBe Right(IE315payload)
+          validationHandler.handleValidation(RawPayload(payload), eori, mrn) shouldBe Right(payload)
         }
       }
 
       "xml is not schema valid" must {
         "return an error" in {
-          MockSchemaValidator.validate(SchemaTypeE315, IE315payload.toString()).returns(Left(errors))
+          MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Invalid(payload, errors)
 
-          validationHandler.handleValidation(IE315payload.toString(), None) shouldBe Left(ErrorWrapper(errors))
+          validationHandler.handleValidation(RawPayload(payload), eori, mrn) shouldBe Left(ErrorWrapper(errors))
+        }
+      }
+
+      "xml is malformed" must {
+        "return an error" in {
+          MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Malformed(errors)
+
+          validationHandler.handleValidation(RawPayload(payload), eori, mrn) shouldBe Left(ErrorWrapper(errors))
         }
       }
 
       "xml has business rule errors" must {
         "return an error" in {
-          MockSchemaValidator.validate(SchemaTypeE315, IE315payload.toString()).returns(Right(IE315payload))
-          MockRuleValidator315.validate(IE315payload).returns(Left(errors))
+          MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Valid(payload)
+          ruleValidator.validate(payload) returns Left(errors)
 
-          validationHandler.handleValidation(IE315payload.toString(), None) shouldBe Left(ErrorWrapper(errors))
-        }
-      }
-    }
-
-    "passed a 313" when {
-      "all valid" must {
-        "return the payload" in {
-          MockSchemaValidator.validate(SchemaTypeE313, IE313payload.toString()).returns(Right(IE313payload))
-          MockRuleValidator313.validate(IE313payload).returns(Right(()))
-
-          validationHandler.handleValidation(IE313payload.toString(), mrn) shouldBe Right(IE313payload)
-        }
-      }
-
-      "xml is not schema valid" must {
-        "return an error" in {
-          MockSchemaValidator.validate(SchemaTypeE313, IE313payload.toString()).returns(Left(errors))
-
-          validationHandler.handleValidation(IE313payload.toString(), mrn) shouldBe Left(ErrorWrapper(errors))
-        }
-      }
-
-      "mrn does not match that in payload" must {
-        "return an error" in {
-          MockSchemaValidator.validate(SchemaTypeE313, IE313payload.toString()).returns(Right(IE313payload))
-
-          validationHandler.handleValidation(IE313payload.toString(), Some("otherMrn")) shouldBe Left(
-            ErrorWrapper(MRNMismatchError))
-        }
-      }
-
-      "xml has business rule errors" must {
-        "return an error" in {
-          MockSchemaValidator.validate(SchemaTypeE313, IE313payload.toString()).returns(Right(IE313payload))
-          MockRuleValidator313.validate(IE313payload).returns(Left(errors))
-
-          validationHandler.handleValidation(IE313payload.toString(), mrn) shouldBe Left(ErrorWrapper(errors))
+          validationHandler.handleValidation(RawPayload(payload), eori, mrn) shouldBe Left(ErrorWrapper(errors))
         }
       }
     }
   }
 
+  def eoriCheckerSchemaValid(
+    schemaType: SchemaType,
+    payloadBuilder: Option[String] => NodeSeq,
+    mrn: Option[String]): Unit = {
+    def validate(payload: NodeSeq) = {
+      MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Valid(payload)
+
+      validationHandler.handleValidation(RawPayload(payload), eori, mrn)
+    }
+
+    s"passed xml for $schemaType" when {
+      "xml is valid" when {
+        "value is missing from the MesSenMES3 element" must {
+          "return EORIMismatchError" in {
+            validate(payloadBuilder(Some(""))) shouldBe Left(ErrorWrapper(EORIMismatchError))
+          }
+        }
+
+        "eori part is missing from the MesSenMES3 element" must {
+          "return EORIMismatchError" in {
+            validate(payloadBuilder(Some("/abcde"))) shouldBe Left(ErrorWrapper(EORIMismatchError))
+          }
+        }
+
+        "eori does not match specified eori" must {
+          "return EORIMismatchError" in {
+            validate(payloadBuilder(Some("otherEori"))) shouldBe Left(ErrorWrapper(EORIMismatchError))
+          }
+        }
+      }
+    }
+  }
+
+  def eoriCheckerSchemaInvalid(
+    schemaType: SchemaType,
+    payloadBuilder: Option[String] => NodeSeq,
+    mrn: Option[String]): Unit = {
+    def validate(payload: NodeSeq) = {
+      MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Invalid(payload, errors)
+
+      validationHandler.handleValidation(RawPayload(payload), eori, mrn)
+    }
+
+    s"passed xml for $schemaType" when {
+      "xml is invalid" when {
+        "value is missing from the MesSenMES3 element" must {
+          "return EORIMismatchError" in {
+            validate(payloadBuilder(Some(""))) shouldBe Left(ErrorWrapper(EORIMismatchError))
+          }
+        }
+
+        "eori part is missing from the MesSenMES3 element" must {
+          "return EORIMismatchError" in {
+            validate(payloadBuilder(Some("/abcde"))) shouldBe Left(ErrorWrapper(EORIMismatchError))
+          }
+        }
+
+        "MesSenMES3 element is missing" must {
+          "return EORIMismatchError" in {
+            validate(payloadBuilder(None))
+          }
+        }
+
+        "eori does not match specified eori" must {
+          "return EORIMismatchError" in {
+            validate(payloadBuilder(Some("otherEori"))) shouldBe Left(ErrorWrapper(EORIMismatchError))
+          }
+        }
+      }
+    }
+  }
+
+  "ValidationHandler" when {
+    "passed a 315" when {
+      behave like validationHandlerFor(SchemaTypeE315, ie315payload(), None)
+      behave like eoriCheckerSchemaValid(SchemaTypeE315, ie315payload, None)
+      behave like eoriCheckerSchemaInvalid(SchemaTypeE315, ie315payload, None)
+    }
+
+    "passed a 313" when {
+      behave like validationHandlerFor(SchemaTypeE313, ie313payload(), Some(mrn))
+      behave like eoriCheckerSchemaValid(SchemaTypeE313, ie313payload, Some(mrn))
+      behave like eoriCheckerSchemaInvalid(SchemaTypeE313, ie313payload, Some(mrn))
+
+      "mrn does not match that in payload" must {
+        "return an error" in {
+          MockSchemaValidator.validate(SchemaTypeE313, RawPayload(ie313payload())) returns Valid(ie313payload())
+
+          validationHandler.handleValidation(RawPayload(ie313payload()), eori, Some("otherMrn")) shouldBe Left(
+            ErrorWrapper(MRNMismatchError))
+        }
+      }
+    }
+  }
 }

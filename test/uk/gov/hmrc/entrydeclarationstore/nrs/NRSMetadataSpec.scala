@@ -19,7 +19,6 @@ package uk.gov.hmrc.entrydeclarationstore.nrs
 import play.api.libs.json.Json
 import play.api.mvc.Headers
 import play.api.test.FakeRequest
-import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils.StringWithSha256
 import uk.gov.hmrc.play.test.UnitSpec
 
 import java.time.Instant
@@ -29,17 +28,19 @@ class NRSMetadataSpec extends UnitSpec with NRSMetadataTestData {
     "contain the auth token from the request" in {
       val token = "someToken"
 
-      val request = FakeRequest().withHeaders("Authorization" -> token)
+      val request = FakeRequest()
+        .withHeaders("Authorization" -> token)
 
-      NRSMetadata(Instant.now, "eori", identityData, request, request.body.toString.calculateSha256).userAuthToken shouldBe token
+      NRSMetadata(Instant.now, "eori", identityData, request, "ignored").userAuthToken shouldBe token
     }
 
     "contain the headers from the request" in {
       val request =
-        FakeRequest().withHeaders(
-          Headers("Header" -> "value", "MultiValueHeader" -> "value1", "MultiValueHeader" -> "value2"))
+        FakeRequest()
+          .withHeaders(Headers("Header" -> "value", "MultiValueHeader" -> "value1", "MultiValueHeader" -> "value2"))
+          .withBody(nrsMetadataBody)
 
-      NRSMetadata(Instant.now, "eori", identityData, request, request.body.toString.calculateSha256).headerData shouldBe
+      NRSMetadata(Instant.now, "eori", identityData, request, "ignored").headerData shouldBe
         Json.parse("""{
                      |  "Header": "value",
                      |  "MultiValueHeader":"value1,value2"

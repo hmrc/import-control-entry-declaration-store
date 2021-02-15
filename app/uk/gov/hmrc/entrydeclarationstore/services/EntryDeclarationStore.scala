@@ -41,7 +41,7 @@ import scala.xml.NodeSeq
 trait EntryDeclarationStore {
   def handleSubmission(
     eori: String,
-    payload: String,
+    rawPayload: RawPayload,
     mrn: Option[String],
     receivedDateTime: Instant,
     clientInfo: ClientInfo)(implicit hc: HeaderCarrier): Future[Either[ErrorWrapper[_], SuccessResponse]]
@@ -66,7 +66,7 @@ class EntryDeclarationStoreImpl @Inject()(
 
   def handleSubmission(
     eori: String,
-    payload: String,
+    rawPayload: RawPayload,
     mrn: Option[String],
     receivedDateTime: Instant,
     clientInfo: ClientInfo)(implicit hc: HeaderCarrier): Future[Either[ErrorWrapper[_], SuccessResponse]] =
@@ -81,13 +81,14 @@ class EntryDeclarationStoreImpl @Inject()(
           .withMessageType(eori = eori, correlationId = correlationId, submissionId = submissionId, mrn = mrn)
 
       if (appConfig.logSubmissionPayloads) {
-        ContextLogger.info(s"Handling submission for ${clientInfo.clientType} client. Payload:\n$payload")
+        ContextLogger.info(
+          s"Handling submission for ${clientInfo.clientType} client. Payload:\n${rawPayload.byteString.utf8String}")
       } else {
         ContextLogger.info(s"Handling submission for ${clientInfo.clientType} client.")
       }
 
       val result = for {
-        xmlPayload             <- EitherT.fromEither[Future](validationHandler.handleValidation(payload, mrn))
+        xmlPayload             <- EitherT.fromEither[Future](validationHandler.handleValidation(rawPayload, eori, mrn))
         entryDeclarationAsJson <- EitherT.fromEither[Future](convertToJson(xmlPayload, input))
         _ = validateJson(entryDeclarationAsJson)
         entryDeclaration = EntryDeclarationModel(
@@ -101,10 +102,10 @@ class EntryDeclarationStoreImpl @Inject()(
         _ <- EitherT(saveToDatabase(entryDeclaration))
         transportMode = (xmlPayload \\ "TraModAtBorHEA76").head.text
         _ <- EitherT(
-              sendSubmissionReceivedReport(input, eori, entryDeclarationAsJson, payload, transportMode, clientInfo))
+              sendSubmissionReceivedReport(input, eori, entryDeclarationAsJson, rawPayload, transportMode, clientInfo))
       } yield {
         submitToEIS(input, eori, transportMode, receivedDateTime)
-        reportMetrics(MessageType(amendment = mrn.isDefined), clientInfo.clientType, transportMode, payload.length)
+        reportMetrics(MessageType(amendment = mrn.isDefined), clientInfo.clientType, transportMode, rawPayload.length)
         SuccessResponse(entryDeclaration.correlationId)
       }
 
@@ -162,7 +163,7 @@ class EntryDeclarationStoreImpl @Inject()(
     input: InputParameters,
     eori: String,
     body: JsValue,
-    xmlPayload: String,
+    rawPayload: RawPayload,
     transportMode: String,
     clientInfo: ClientInfo
   )(implicit hc: HeaderCarrier, lc: LoggingContext): Future[Either[ErrorWrapper[_], Unit]] = {
@@ -179,8 +180,8 @@ class EntryDeclarationStoreImpl @Inject()(
           body          = body,
           transportMode = transportMode,
           clientInfo    = clientInfo,
-          bodyLength    = xmlPayload.length,
-          amendmentMrn =  mrn
+          bodyLength    = rawPayload.length,
+          amendmentMrn  = mrn
         )
       )
       .map(_.asRight[ErrorWrapper[_]])

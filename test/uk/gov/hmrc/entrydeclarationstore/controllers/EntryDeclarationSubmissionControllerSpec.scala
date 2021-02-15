@@ -16,19 +16,20 @@
 
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
+import akka.util.ByteString
 import com.kenshoo.play.metrics.Metrics
 import play.api.http.MimeTypes
 import play.api.mvc.{Request, Result}
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
-import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, SuccessResponse}
+import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, RawPayload, ServerError, SuccessResponse}
 import uk.gov.hmrc.entrydeclarationstore.nrs._
-import uk.gov.hmrc.entrydeclarationstore.reporting.{ClientInfo, ClientType, FailureType, MockReportSender, SubmissionHandled}
+import uk.gov.hmrc.entrydeclarationstore.reporting._
 import uk.gov.hmrc.entrydeclarationstore.services._
-import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils.StringWithSha256
+import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils._
 import uk.gov.hmrc.entrydeclarationstore.utils.{MockMetrics, XmlFormatConfig, XmlFormats}
-import uk.gov.hmrc.entrydeclarationstore.validation.{ValidationError, ValidationErrors}
+import uk.gov.hmrc.entrydeclarationstore.validation.{EORIMismatchError, MRNMismatchError, ValidationError, ValidationErrors}
 import uk.gov.hmrc.play.test.UnitSpec
 
 import java.time.{Clock, Instant, ZoneOffset}
@@ -51,31 +52,33 @@ class EntryDeclarationSubmissionControllerSpec
 
   implicit val xmlFormatConfig: XmlFormatConfig = XmlFormatConfig(responseMaxErrors = 100)
 
-  val payload: NodeSeq =
+  val xmlPayload: NodeSeq =
     // @formatter:off
     <AnyXml>><MesSenMES3>{eori}</MesSenMES3></AnyXml>
   // @formatter:on
 
-  private val payloadString: String = payload.toString
-
-  val payloadNoEori: NodeSeq =
+  val xmlPayloadNoEori: NodeSeq =
     // @formatter:off
     <AnyXml><MesSenMES3/></AnyXml>
   // @formatter:on
 
-  val payloadBlankEori: NodeSeq =
+  val xmlPayloadBlankEori: NodeSeq =
     // @formatter:off
     <AnyXml></AnyXml>
   // @formatter:on
 
-  private val fakeRequest = FakeRequest().withBody(payloadString)
+  private val rawPayload = RawPayload(xmlPayload)
+
+  private def fakeRequest(xml: NodeSeq) = FakeRequest().withBody(ByteString.fromString(xml.toString))
 
   val mockedMetrics: Metrics = new MockMetrics
 
   val now: Instant = Instant.now
   val clock: Clock = Clock.fixed(now, ZoneOffset.UTC)
   val nrsSubmission: NRSSubmission =
-    NRSSubmission(payloadString, NRSMetadata(now, eori, identityData, fakeRequest, payloadString.calculateSha256))
+    NRSSubmission(
+      rawPayload,
+      NRSMetadata(now, eori, identityData, fakeRequest(xmlPayload), rawPayload.byteArray.calculateSha256))
 
   private val controller = new EntryDeclarationSubmissionController(
     Helpers.stubControllerComponents(),
@@ -143,60 +146,56 @@ class EntryDeclarationSubmissionControllerSpec
   private def mockReportSuccessfulSubmission(isAmendment: Boolean) =
     MockReportSender.sendReport(SubmissionHandled.Success(isAmendment)) returns Future.successful((): Unit)
 
-  // Authenticating behaviour that both put & post should have...
-  def authenticatingEndpoint(mrn: Option[String], handler: Request[String] => Future[Result]): Unit = {
+  def mockServiceFailWithError[E: XmlFormats](
+    e: E,
+    mrn: Option[String],
+    optIdentityData: Option[IdentityData]): Unit = {
+    MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, optIdentityData))
+    MockEntryDeclarationStore
+      .handleSubmission(eori, rawPayload, mrn, now, clientInfo)
+      .returns(Future.successful(Left(ErrorWrapper(e))))
+  }
 
-    def check(request: FakeRequest[String], statusCode: Int, errorCode: String) = {
+  // Authenticating behaviour that both put & post should have...
+  def authenticatingEndpoint(mrn: Option[String], handler: Request[ByteString] => Future[Result]): Unit = {
+
+    def check(request: FakeRequest[ByteString], statusCode: Int, errorCode: String) = {
       val result = handler(request)
       status(result)                                                                 shouldBe statusCode
       contentType(result)                                                            shouldBe Some(MimeTypes.XML)
       (xml.XML.loadString(contentAsString(result)) \\ "code").map(_.text).headOption should contain(errorCode)
     }
 
-    "return 403" when {
-      "eori does not match that from auth service" in {
-        MockAuthService.authenticate returns Some(UserDetails("OTHEREORI", clientInfo, None))
-        mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.EORIMismatchError)
-        check(fakeRequest, FORBIDDEN, "FORBIDDEN")
-      }
-
-      "empty eori element (MesSenMES3) in xml (so that level 2 validation for this is not preempted)" in {
-        MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, None))
-        mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.EORIMismatchError)
-        check(FakeRequest().withBody(payloadNoEori.toString), FORBIDDEN, "FORBIDDEN")
-      }
-
-      "no eori element (MesSenMES3) in xml (so that level 2 validation for this is not preempted)" in {
-        MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, None))
-        mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.EORIMismatchError)
-        check(FakeRequest().withBody(payloadBlankEori.toString), FORBIDDEN, "FORBIDDEN")
-      }
-    }
-
     "return 401" when {
       "no eori is available from auth service" in {
         MockAuthService.authenticate returns None
-        check(fakeRequest, UNAUTHORIZED, "UNAUTHORIZED")
+        check(fakeRequest(xmlPayload), UNAUTHORIZED, "UNAUTHORIZED")
+      }
+    }
+
+    "The submission fails with EORIMismatch" should {
+      "return 403 with platform standard xml error body" in {
+        MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, None))
+        MockEntryDeclarationStore
+          .handleSubmission(eori, rawPayload, mrn, now, clientInfo)
+          .returns(Future.successful(Left(ErrorWrapper(EORIMismatchError))))
+
+        mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.EORIMismatchError)
+
+        check(fakeRequest(xmlPayload), FORBIDDEN, "FORBIDDEN")
       }
     }
   }
 
   // Validating behaviour that both put & post should have...
-  def validatingEndpoint(mrn: Option[String], handler: Request[String] => Future[Result]): Unit = {
-
-    def mockFailWithError[E: XmlFormats](e: E, optIdentityData: Option[IdentityData]) = {
-      MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, optIdentityData))
-      MockEntryDeclarationStore
-        .handleSubmission(eori, payloadString, mrn, now, clientInfo)
-        .returns(Future.successful(Left(ErrorWrapper(e))))
-    }
+  def validatingEndpoint(mrn: Option[String], handler: Request[ByteString] => Future[Result]): Unit = {
 
     "The submission fails with ValidationErrors" should {
       "Return BAD_REQUEST" in {
-        mockFailWithError(validationErrors, None)
+        mockServiceFailWithError(validationErrors, mrn, None)
         mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.ValidationErrors)
 
-        val result: Future[Result] = handler(fakeRequest)
+        val result: Future[Result] = handler(fakeRequest(xmlPayload))
         status(result) shouldBe BAD_REQUEST
         val xmlBody: Elem = xml.XML.loadString(contentAsString(result))
 
@@ -204,20 +203,20 @@ class EntryDeclarationSubmissionControllerSpec
         contentType(result) shouldBe Some("application/xml")
       }
       "Not submit to nrs even if enabled" in {
-        mockFailWithError(validationErrors, Some(identityData))
+        mockServiceFailWithError(validationErrors, mrn, Some(identityData))
         mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.ValidationErrors)
         MockNRSService.submit(nrsSubmission).never()
 
-        await(handler(fakeRequest))
+        await(handler(fakeRequest(xmlPayload)))
       }
     }
 
     "The submission fails with a ServerError (e.g. database problem)" should {
       "Return INTERNAL_SERVER_ERROR" in {
-        mockFailWithError(ServerError, None)
+        mockServiceFailWithError(ServerError, mrn, None)
         mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.InternalServerError)
 
-        val result: Future[Result] = handler(fakeRequest)
+        val result: Future[Result] = handler(fakeRequest(xmlPayload))
         status(result) shouldBe INTERNAL_SERVER_ERROR
 
         val xmlBody: Elem = xml.XML.loadString(contentAsString(result))
@@ -225,29 +224,58 @@ class EntryDeclarationSubmissionControllerSpec
         contentType(result) shouldBe Some("application/xml")
       }
       "Not submit to nrs even if enabled" in {
-        mockFailWithError(ServerError, Some(identityData))
+        mockServiceFailWithError(ServerError, mrn, Some(identityData))
         mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.InternalServerError)
         MockNRSService.submit(nrsSubmission).never()
 
-        await(handler(fakeRequest))
+        await(handler(fakeRequest(xmlPayload)))
       }
     }
   }
 
-  def nrsSubmittingEndpoint(mrn: Option[String], handler: Request[String] => Future[Result]): Unit =
+  // Payload encoding behaviour that both put & post should have...
+  def encodingEndpoint(mrn: Option[String], handler: Request[ByteString] => Future[Result]): Unit = {
+    "pass to the service with a character encoding if one is present in the request" in {
+      MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, None))
+      mockReportSuccessfulSubmission(mrn.isDefined)
+      MockEntryDeclarationStore
+        .handleSubmission(eori, rawPayload.copy(encoding = Some("US-ASCII")), mrn, now, clientInfo)
+        .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
+
+      val result: Future[Result] = handler(
+        fakeRequest(xmlPayload)
+          .withHeaders("Content-Type" -> "application/xml;charset=US-ASCII"))
+
+      status(result) shouldBe OK
+    }
+
+    "pass to the service without a character encoding if none is present in the request" in {
+      MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, None))
+      mockReportSuccessfulSubmission(mrn.isDefined)
+      MockEntryDeclarationStore
+        .handleSubmission(eori, rawPayload.copy(encoding = None), mrn, now, clientInfo)
+        .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
+
+      val result: Future[Result] = handler(fakeRequest(xmlPayload))
+
+      status(result) shouldBe OK
+    }
+  }
+
+  def nrsSubmittingEndpoint(mrn: Option[String], handler: Request[ByteString] => Future[Result]): Unit =
     "submission is successful" when {
       "nrs is enabled" must {
         "submit to NRS and not wait until NRS submission completes" in {
           MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, Some(identityData)))
           mockReportSuccessfulSubmission(mrn.isDefined)
           MockEntryDeclarationStore
-            .handleSubmission(eori, payloadString, mrn, now, clientInfo)
+            .handleSubmission(eori, rawPayload, mrn, now, clientInfo)
             .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
 
           val nrsPromise = Promise[Option[NRSResponse]]
           MockNRSService.submit(nrsSubmission) returns nrsPromise.future
 
-          val result: Future[Result] = handler(fakeRequest)
+          val result: Future[Result] = handler(fakeRequest(xmlPayload))
 
           status(result) shouldBe OK
         }
@@ -258,12 +286,12 @@ class EntryDeclarationSubmissionControllerSpec
           MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, None))
           mockReportSuccessfulSubmission(mrn.isDefined)
           MockEntryDeclarationStore
-            .handleSubmission(eori, payloadString, mrn, now, clientInfo)
+            .handleSubmission(eori, rawPayload, mrn, now, clientInfo)
             .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
 
           MockNRSService.submit(nrsSubmission).never()
 
-          val result: Future[Result] = handler(fakeRequest)
+          val result: Future[Result] = handler(fakeRequest(xmlPayload))
 
           status(result) shouldBe OK
         }
@@ -276,10 +304,10 @@ class EntryDeclarationSubmissionControllerSpec
         MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, None))
         mockReportSuccessfulSubmission(false)
         MockEntryDeclarationStore
-          .handleSubmission(eori, payloadString, None, now, clientInfo)
+          .handleSubmission(eori, rawPayload, None, now, clientInfo)
           .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
 
-        val result: Future[Result] = controller.postSubmission(fakeRequest)
+        val result: Future[Result] = controller.postSubmission(fakeRequest(xmlPayload))
 
         status(result) shouldBe OK
         val xmlBody: Elem = xml.XML.loadString(contentAsString(result))
@@ -287,6 +315,8 @@ class EntryDeclarationSubmissionControllerSpec
         contentType(result)                           shouldBe Some("application/xml")
       }
     }
+
+    behave like encodingEndpoint(mrn = None, controller.postSubmission(_))
 
     behave like validatingEndpoint(mrn = None, controller.postSubmission(_))
 
@@ -301,10 +331,10 @@ class EntryDeclarationSubmissionControllerSpec
         MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, None))
         mockReportSuccessfulSubmission(true)
         MockEntryDeclarationStore
-          .handleSubmission(eori, payloadString, Some(mrn), now, clientInfo)
+          .handleSubmission(eori, rawPayload, Some(mrn), now, clientInfo)
           .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
 
-        val result = controller.putAmendment(mrn)(fakeRequest)
+        val result = controller.putAmendment(mrn)(fakeRequest(xmlPayload))
 
         status(result) shouldBe OK
         val xmlBody: Elem = xml.XML.loadString(contentAsString(result))
@@ -319,10 +349,10 @@ class EntryDeclarationSubmissionControllerSpec
         MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, None))
         mockReportUnsuccessfulSubmission(isAmendment = true, FailureType.MRNMismatchError)
         MockEntryDeclarationStore
-          .handleSubmission(eori, payloadString, Some(mrn), now, clientInfo)
+          .handleSubmission(eori, rawPayload, Some(mrn), now, clientInfo)
           .returns(Future.successful(Left(ErrorWrapper(MRNMismatchError))))
 
-        val result = controller.putAmendment(mrn)(fakeRequest)
+        val result = controller.putAmendment(mrn)(fakeRequest(xmlPayload))
 
         status(result) shouldBe BAD_REQUEST
         val xmlBody: Elem = xml.XML.loadString(contentAsString(result))
@@ -336,14 +366,16 @@ class EntryDeclarationSubmissionControllerSpec
         MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, Some(identityData)))
         mockReportUnsuccessfulSubmission(isAmendment = true, FailureType.MRNMismatchError)
         MockEntryDeclarationStore
-          .handleSubmission(eori, payloadString, Some(mrn), now, clientInfo)
+          .handleSubmission(eori, rawPayload, Some(mrn), now, clientInfo)
           .returns(Future.successful(Left(ErrorWrapper(MRNMismatchError))))
 
         MockNRSService.submit(nrsSubmission).never()
 
-        await(controller.putAmendment(mrn)(fakeRequest))
+        await(controller.putAmendment(mrn)(fakeRequest(xmlPayload)))
       }
     }
+
+    behave like encodingEndpoint(mrn = Some(mrn), controller.putAmendment(mrn)(_))
 
     behave like validatingEndpoint(mrn = Some(mrn), controller.putAmendment(mrn)(_))
 

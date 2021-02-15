@@ -19,6 +19,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
+import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -48,15 +49,16 @@ class SchemaValidatorISpec extends UnitSpec with GuiceOneAppPerSuite {
     xmlFiles.foreach { testCase =>
       s"produce the error for $testCase" in {
         val testCaseLocation     = directoryName + testCase
-        val resource             = ResourceUtils.asString(testCaseLocation)
+        val resource             = ResourceUtils.asByteArray(testCaseLocation)
         val expectedResponse     = ResourceUtils.url(testCaseLocation.dropRight(3).concat("ctl"))
         val xmlResponse: NodeSeq = XML.load(expectedResponse)
 
         val expectedErrorTexts = (xmlResponse \ "Error" \ "Text").map(_.text)
 
-        val errorTexts = schemaValidator.validate(schemeType, resource) match {
-          case Left(failure) => failure.errors.map(_.errorText)
-          case Right(_)      => Nil
+        val errorTexts = schemaValidator.validate(schemeType, RawPayload(resource)) match {
+          case SchemaValidationResult.Invalid(_, failure) => failure.errors.map(_.errorText)
+          case SchemaValidationResult.Malformed(failure)  => failure.errors.map(_.errorText)
+          case SchemaValidationResult.Valid(_)            => Nil
         }
 
         // Error texts in test packs do not match those in the SchemaErrorMessages-v11-1.pdf file

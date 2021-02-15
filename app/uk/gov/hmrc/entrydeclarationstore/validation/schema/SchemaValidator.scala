@@ -17,13 +17,13 @@
 package uk.gov.hmrc.entrydeclarationstore.validation.schema
 
 import org.xml.sax._
+import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
 import uk.gov.hmrc.entrydeclarationstore.validation.{ValidationError, ValidationErrors}
 
-import java.io.StringReader
 import javax.xml.parsers.{SAXParser, SAXParserFactory}
+import scala.xml.Node
 import scala.xml.factory.XMLLoader
 import scala.xml.parsing.{FactoryAdapter, NoBindingFactoryAdapter}
-import scala.xml.{Node, NodeSeq}
 
 class SchemaValidator {
 
@@ -85,7 +85,14 @@ class SchemaValidator {
       errors :+= ValidationError(exception, locationAsString)
   }
 
-  def validate(schemaType: SchemaType, payload: String): Either[ValidationErrors, NodeSeq] = {
+  def validate(schemaType: SchemaType, rawPayload: RawPayload): SchemaValidationResult = {
+    val inputSource = new InputSource(rawPayload.inputStream)
+    rawPayload.encoding.foreach(inputSource.setEncoding)
+
+    doValidate(schemaType, inputSource)
+  }
+
+  private def doValidate(schemaType: SchemaType, payloadSource: InputSource): SchemaValidationResult = {
     val factory = SAXParserFactory.newInstance()
 
     factory.setNamespaceAware(true)
@@ -102,17 +109,17 @@ class SchemaValidator {
 
         override def adapter: FactoryAdapter = handler
 
-      }.load(new InputSource(new StringReader(payload)))
+      }.load(payloadSource)
 
       if (handler.errors.isEmpty) {
-        Right(elem)
+        SchemaValidationResult.Valid(elem)
       } else {
-        Left(ValidationErrors(handler.errors))
+        SchemaValidationResult.Invalid(elem, ValidationErrors(handler.errors))
       }
     } catch {
-      case se: SAXParseException =>
+      case _: SAXParseException =>
         //Error handler already has the fault
-        Left(ValidationErrors(handler.errors))
+        SchemaValidationResult.Malformed(ValidationErrors(handler.errors))
     }
   }
 }

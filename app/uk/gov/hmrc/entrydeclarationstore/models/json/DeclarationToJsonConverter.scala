@@ -19,8 +19,7 @@ package uk.gov.hmrc.entrydeclarationstore.models.json
 import com.lucidchart.open.xtract.{ParseFailure, ParseSuccess, PartialParseSuccess, XmlReader}
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
-import uk.gov.hmrc.entrydeclarationstore.models.ErrorWrapper
-import uk.gov.hmrc.entrydeclarationstore.services.ServerError
+import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, ServerError}
 import uk.gov.hmrc.entrydeclarationstore.utils.JsonSchemaValidator
 
 import scala.xml.NodeSeq

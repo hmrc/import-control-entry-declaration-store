@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.entrydeclarationstore.utils
+package uk.gov.hmrc.entrydeclarationstore.validation.schema
 
-object EoriUtils {
+import uk.gov.hmrc.entrydeclarationstore.validation.ValidationErrors
 
-  private val eoriRegex = raw"(?s)<MesSenMES3>(.*)</MesSenMES3>".r.unanchored
+import scala.xml.NodeSeq
 
-  def eoriFromXmlString(xml: String): String =
-    xml match {
-      case eoriRegex(eori) => eori.split("/").head.trim
-      case _               => ""
-    }
+sealed trait SchemaValidationResult
+
+object SchemaValidationResult {
+  case class Valid(xml: NodeSeq) extends SchemaValidationResult
+  case class Invalid(xml: NodeSeq, validationErrors: ValidationErrors) extends SchemaValidationResult
+  case class Malformed(validationErrors: ValidationErrors) extends SchemaValidationResult
 }

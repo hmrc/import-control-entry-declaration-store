@@ -20,17 +20,16 @@ import cats.implicits._
 import com.kenshoo.play.metrics.Metrics
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
-import uk.gov.hmrc.entrydeclarationstore.models.ErrorWrapper
-import uk.gov.hmrc.entrydeclarationstore.services.MRNMismatchError
+import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, RawPayload}
 import uk.gov.hmrc.entrydeclarationstore.utils.{EventLogger, Timer, XmlFormatConfig}
 import uk.gov.hmrc.entrydeclarationstore.validation.business.RuleValidator
-import uk.gov.hmrc.entrydeclarationstore.validation.schema.{SchemaTypeE313, SchemaTypeE315, SchemaValidator}
+import uk.gov.hmrc.entrydeclarationstore.validation.schema.{SchemaTypeE313, SchemaTypeE315, SchemaValidationResult, SchemaValidator}
 
 import javax.inject.{Inject, Named}
 import scala.xml.NodeSeq
 
 trait ValidationHandler {
-  def handleValidation(payload: String, mrn: Option[String])(
+  def handleValidation(rawPayload: RawPayload, eori: String, mrn: Option[String])(
     implicit lc: LoggingContext): Either[ErrorWrapper[_], NodeSeq]
 }
 
@@ -46,10 +45,10 @@ class ValidationHandlerImpl @Inject()(
 
   implicit val xmlFormatConfig: XmlFormatConfig = appConfig.xmlFormatConfig
 
-  def handleValidation(payload: String, mrn: Option[String])(
+  def handleValidation(rawPayload: RawPayload, eori: String, mrn: Option[String])(
     implicit lc: LoggingContext): Either[ErrorWrapper[_], NodeSeq] =
     for {
-      xmlPayload <- validateSchema(payload, mrn)
+      xmlPayload <- validateSchema(rawPayload, eori, mrn)
       _          <- checkMrn(xmlPayload, mrn)
       _          <- validateRules(xmlPayload, mrn)
     } yield xmlPayload
@@ -62,17 +61,39 @@ class ValidationHandlerImpl @Inject()(
       case None => Right(())
     }
 
-  private def validateSchema(payload: String, mrn: Option[String])(implicit lc: LoggingContext) =
+  private def validateSchema(rawPayload: RawPayload, eori: String, mrn: Option[String])(implicit lc: LoggingContext) =
     time("Schema validation", "handleSubmission.validateSchema") {
+      def logSchemaErrors(errs: ValidationErrors): Unit =
+        ContextLogger.info(s"Schema validation errors found. Num errs=${errs.errors.length}")
+
       val schemaType =
         if (mrn.isDefined) SchemaTypeE313 else SchemaTypeE315
-      val validationResult = schemaValidator.validate(schemaType, payload)
+      val validationResult = schemaValidator.validate(schemaType, rawPayload)
 
-      validationResult.leftMap { errs =>
-        ContextLogger.info(s"Schema validation errors found. Num errs=${errs.errors.length}")
-        ErrorWrapper(errs)
+      validationResult match {
+        case SchemaValidationResult.Valid(xml) =>
+          checkEori(eori, xml).flatMap(_ => Right(xml))
+
+        case SchemaValidationResult.Invalid(xml, errs) =>
+          checkEori(eori, xml).flatMap { _ =>
+            logSchemaErrors(errs)
+            Left(ErrorWrapper(errs))
+          }
+
+        case SchemaValidationResult.Malformed(errs) =>
+          logSchemaErrors(errs)
+          Left(ErrorWrapper(errs))
       }
     }
+
+  private def checkEori(eori: String, xml: NodeSeq) = {
+    val docEori = for {
+      docSender <- (xml \\ "MesSenMES3").headOption.map(_.text)
+      eori      <- docSender.split('/').headOption.map(_.trim)
+    } yield eori
+
+    if (docEori.contains(eori)) Right(()) else Left(ErrorWrapper(EORIMismatchError))
+  }
 
   private def validateRules(payload: NodeSeq, mrn: Option[String])(implicit lc: LoggingContext) =
     time("Rule validation", "handleSubmission.validateRules") {

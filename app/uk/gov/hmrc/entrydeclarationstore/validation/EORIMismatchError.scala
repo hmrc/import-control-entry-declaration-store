@@ -14,18 +14,9 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.entrydeclarationstore.validation.schema
+package uk.gov.hmrc.entrydeclarationstore.validation
 
-import org.scalamock.handlers.CallHandler
-import org.scalamock.scalatest.MockFactory
-import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
+import play.api.http.Status.FORBIDDEN
+import uk.gov.hmrc.entrydeclarationstore.models.StandardError
 
-trait MockSchemaValidator extends MockFactory {
-  val mockSchemaValidator: SchemaValidator = mock[SchemaValidator]
-
-  object MockSchemaValidator {
-    def validate(schemaType: SchemaType, rawPayload: RawPayload): CallHandler[SchemaValidationResult] =
-      (mockSchemaValidator.validate(_: SchemaType, _: RawPayload)) expects (schemaType, rawPayload)
-  }
-
-}
+object EORIMismatchError extends StandardError(FORBIDDEN, "FORBIDDEN", "Permission denied")

@@ -16,17 +16,26 @@
 
 package uk.gov.hmrc.entrydeclarationstore.validation.schema
 
+import org.scalatest.Inside
+import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
 import uk.gov.hmrc.entrydeclarationstore.validation.{ValidationError, ValidationErrors}
 import uk.gov.hmrc.play.test.UnitSpec
 
-class ValidatorVulnerabilitiesSpec extends UnitSpec {
+class ValidatorVulnerabilitiesSpec extends UnitSpec with Inside {
 
   val validator                       = new SchemaValidator()
   val schemaType: SchemaTypeE313.type = SchemaTypeE313
 
-  val error = Left(
+  val error: Option[ValidationErrors] = Some(
     ValidationErrors(
       Seq(ValidationError("""//apache.org/xml/features/disallow-doctype-decl" set to true.""", "schema", "4999", "/"))))
+
+  private def validate(xml: String): Option[ValidationErrors] =
+    validator.validate(schemaType, RawPayload(xml)) match {
+      case SchemaValidationResult.Invalid(_, errs) => Some(errs)
+      case SchemaValidationResult.Malformed(errs)  => Some(errs)
+      case SchemaValidationResult.Valid(_)         => None
+    }
 
   "Prevent DTD attacks" when {
     "I have an XXE XML payload" in {
@@ -35,7 +44,7 @@ class ValidatorVulnerabilitiesSpec extends UnitSpec {
         "<!ELEMENT foo ANY >" +
         "<!ENTITY xxe SYSTEM \"file:///etc/passwd\" >]><foo>&xxe;</foo>"
 
-      validator.validate(schemaType, xml) shouldBe error
+      validate(xml) shouldBe error
     }
     "I have a Classic XXE Attack XML payload" in {
       val xml =
@@ -46,7 +55,7 @@ class ValidatorVulnerabilitiesSpec extends UnitSpec {
           "]>" +
           "<data>&file;</data>"
 
-      validator.validate(schemaType, xml) shouldBe error
+      validate(xml) shouldBe error
     }
     "I have a XXE Attack using netdoc XML payload" in {
       val xml =
@@ -57,7 +66,7 @@ class ValidatorVulnerabilitiesSpec extends UnitSpec {
           "]>" +
           "<data>&file;</data>"
 
-      validator.validate(schemaType, xml) shouldBe error
+      validate(xml) shouldBe error
     }
     "I have a XXE Attack using UTF-16 XML payload" in {
       val xml =
@@ -68,7 +77,7 @@ class ValidatorVulnerabilitiesSpec extends UnitSpec {
           "]>" +
           "<data>&file;</data>"
 
-      validator.validate(schemaType, xml) shouldBe error
+      validate(xml) shouldBe error
     }
     "I have a XXE Attack using UTF-7 XML payload" in {
       val xml =
@@ -79,7 +88,7 @@ class ValidatorVulnerabilitiesSpec extends UnitSpec {
           "]>" +
           "<data>&file;</data>"
 
-      validator.validate(schemaType, xml) shouldBe error
+      validate(xml) shouldBe error
     }
     "I have a testing for entity support XML payload" in {
       val xml =
@@ -91,7 +100,7 @@ class ValidatorVulnerabilitiesSpec extends UnitSpec {
           "]>" +
           "<data>&a2;</data>"
 
-      validator.validate(schemaType, xml) shouldBe error
+      validate(xml) shouldBe error
     }
     "I have a billion laughs attack XML payload" in {
       val xml =
@@ -104,7 +113,7 @@ class ValidatorVulnerabilitiesSpec extends UnitSpec {
           "]>" +
           "<data>&a4;</data>"
 
-      validator.validate(schemaType, xml) shouldBe error
+      validate(xml) shouldBe error
     }
     "I have a billion laughs parameter entities attack XML payload" in {
       val xml =
@@ -113,7 +122,7 @@ class ValidatorVulnerabilitiesSpec extends UnitSpec {
           "]>" +
           "<data>&g;</data>"
 
-      validator.validate(schemaType, xml) shouldBe error
+      validate(xml) shouldBe error
     }
     "I have a quadratic blowup attack XML payload" in {
       val xml =
@@ -122,7 +131,7 @@ class ValidatorVulnerabilitiesSpec extends UnitSpec {
           "]>" +
           "<data>&a0;&a0;...&a0;</data>"
 
-      validator.validate(schemaType, xml) shouldBe error
+      validate(xml) shouldBe error
     }
     "I have a recursive general entities attack XML payload" in {
       val xml =
@@ -132,7 +141,7 @@ class ValidatorVulnerabilitiesSpec extends UnitSpec {
           "]>" +
           "<data>&a;</data>"
 
-      validator.validate(schemaType, xml) shouldBe error
+      validate(xml) shouldBe error
     }
     "I have a external general entities attack XML payload" in {
       val xml =
@@ -142,7 +151,7 @@ class ValidatorVulnerabilitiesSpec extends UnitSpec {
           "]>" +
           "<data>&dos;</data>"
 
-      validator.validate(schemaType, xml) shouldBe error
+      validate(xml) shouldBe error
     }
   }
 }

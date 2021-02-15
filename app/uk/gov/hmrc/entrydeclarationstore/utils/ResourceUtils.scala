@@ -59,4 +59,9 @@ object ResourceUtils {
 
   def asString(resourceName: String): String =
     withInputStreamFor(resourceName)(scala.io.Source.fromInputStream(_).mkString)
+
+  def asByteArray(resourceName: String): Array[Byte] =
+    withInputStreamFor(resourceName) { is =>
+      Stream.continually(is.read).takeWhile(_ != -1).map(_.toByte).toArray
+    }
 }

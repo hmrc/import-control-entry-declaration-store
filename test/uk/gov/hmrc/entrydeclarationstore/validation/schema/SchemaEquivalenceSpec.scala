@@ -17,6 +17,7 @@
 package uk.gov.hmrc.entrydeclarationstore.validation.schema
 
 import org.scalatest.Assertion
+import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -60,8 +61,8 @@ class SchemaEquivalenceSpec extends UnitSpec {
     val labels = allLabels(xml)
 
     def assertSameFor(message: String)(xml: NodeSeq): Assertion = {
-      val result1 = schemaValidator.validate(schema, xml.toString)
-      val result2 = schemaValidator.validate(schemaLegacy, xml.toString)
+      val result1 = schemaValidator.validate(schema, RawPayload(xml))
+      val result2 = schemaValidator.validate(schemaLegacy, RawPayload(xml))
       withClue(s"Scenario: $message:\n")(result1 shouldBe result2)
     }
 
@@ -74,11 +75,11 @@ class SchemaEquivalenceSpec extends UnitSpec {
       }
 
     "be valid for both schemas" in {
-      val result1 = schemaValidator.validate(schema, xml.toString)
-      val result2 = schemaValidator.validate(schemaLegacy, xml.toString)
+      val result1 = schemaValidator.validate(schema, RawPayload(xml))
+      val result2 = schemaValidator.validate(schemaLegacy, RawPayload(xml))
 
       result1 shouldBe result2
-      result1 shouldBe a[Right[_, _]]
+      result1 shouldBe a[SchemaValidationResult.Valid]
     }
 
     "validate equivalently for both schemas" when {

@@ -74,7 +74,7 @@ class NRSConnectorSpec
                  |   "nrSubmissionId": "submissionId"
                  |}""".stripMargin)
 
-  val nrsSubmission: NRSSubmission = NRSSubmission("payload", nrsMetadata)
+  val nrsSubmission: NRSSubmission = NRSSubmission(nrsMetadataRawPayload, nrsMetadata)
 
   override def beforeAll(): Unit = {
     wireMockServer.start()

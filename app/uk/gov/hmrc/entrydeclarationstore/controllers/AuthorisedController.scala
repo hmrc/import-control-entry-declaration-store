@@ -33,7 +33,7 @@ abstract class AuthorisedController(cc: ControllerComponents) extends BackendCon
 
   val authService: AuthService
 
-  def authorisedAction(eoriCorrectForRequest: (Request[_], String) => Boolean): ActionBuilder[UserRequest, AnyContent] =
+  def authorisedAction(): ActionBuilder[UserRequest, AnyContent] =
     new ActionBuilder[UserRequest, AnyContent] {
 
       override def parser: BodyParser[AnyContent] = cc.parsers.defaultBodyParser
@@ -49,14 +49,8 @@ abstract class AuthorisedController(cc: ControllerComponents) extends BackendCon
           implicit val headers: Headers             = request.headers
 
           authService.authenticate.flatMap {
-            case Some(userDetails) =>
-              if (eoriCorrectForRequest(request, userDetails.eori)) {
-                block(UserRequest(request, userDetails))
-              } else {
-                error(StandardError.forbidden)
-              }
-
-            case None => error(StandardError.unauthorized)
+            case Some(userDetails) => block(UserRequest(request, userDetails))
+            case None              => error(StandardError.Unauthorized)
           }
         }
     }
