@@ -18,12 +18,14 @@ package uk.gov.hmrc.entrydeclarationstore.housekeeping
 
 import akka.actor.Scheduler
 import org.joda.time.{Duration => JodaDuration}
+import play.api.Logger
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.repositories.LockRepositoryProvider
 import uk.gov.hmrc.lock.{ExclusiveTimePeriodLock, LockRepository}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
+import scala.util.Failure
 
 @Singleton
 class HousekeepingScheduler @Inject()(
@@ -45,6 +47,9 @@ class HousekeepingScheduler @Inject()(
     exclusiveTimePeriodLock
       .tryToAcquireOrRenewLock {
         housekeeper.housekeep()
+      }
+      .andThen {
+        case Failure(e) => Logger.error("Failed housekeeping", e)
       }
   }
 }
