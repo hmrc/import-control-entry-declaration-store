@@ -63,13 +63,17 @@ class SubmissionReplayService @Inject()(
 
   private def replaySubmissionId(submissionId: String, state: Counts)(
     implicit hc: HeaderCarrier): Future[Either[Abort, Counts]] = {
+    implicit val lc: LoggingContext = LoggingContext(submissionId = Some(submissionId))
+
     val result = for {
       replayMetadata <- EitherT(doMetadataLookup(submissionId))
       sendSuccess    <- EitherT(doEisSubmit(replayMetadata, submissionId))
     } yield {
       if (sendSuccess) {
+        ContextLogger.info("Replay submission Success")
         Counts(state.successCount + 1, state.failureCount)
       } else {
+        ContextLogger.info("Replay submission Failed")
         Counts(state.successCount, state.failureCount + 1)
       }
     }
