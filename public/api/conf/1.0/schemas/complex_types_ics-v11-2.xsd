@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:complex_ics="http://ics.dgtaxud.ec/complex_ics" targetNamespace="http://ics.dgtaxud.ec/complex_ics" xmlns:doc="http://ics.dgtaxud.ec/doc" xmlns:simple="http://ics.dgtaxud.ec/simple" xmlns:tcl="http://ics.dgtaxud.ec/tcl" version="11.1" id="complex_types_ics" elementFormDefault="unqualified" attributeFormDefault="unqualified">
-  <xs:import namespace="http://ics.dgtaxud.ec/doc" schemaLocation="doc-v11-1.xsd"/>
-  <xs:import namespace="http://ics.dgtaxud.ec/simple" schemaLocation="simple_types-v11-1.xsd"/>
-  <xs:import namespace="http://ics.dgtaxud.ec/tcl" schemaLocation="tcl-v11-1.xsd"/>
+  <xs:import namespace="http://ics.dgtaxud.ec/doc" schemaLocation="doc-v11-2.xsd"/>
+  <xs:import namespace="http://ics.dgtaxud.ec/simple" schemaLocation="simple_types-v11-2.xsd"/>
+  <xs:import namespace="http://ics.dgtaxud.ec/tcl" schemaLocation="tcl-v11-2.xsd"/>
   <xs:complexType name="COICOSNType">
     <xs:annotation>
       <xs:documentation>

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ie="http://ics.dgtaxud.ec/CC313A"
            targetNamespace="http://ics.dgtaxud.ec/CC313A" xmlns:doc="http://ics.dgtaxud.ec/doc" xmlns:complex_ics="http://ics.dgtaxud.ec/complex_ics" xmlns:simple="http://ics.dgtaxud.ec/simple" xmlns:tcl="http://ics.dgtaxud.ec/tcl" version="11.1" id="CC313A" elementFormDefault="unqualified" attributeFormDefault="unqualified">
-  <xs:import namespace="http://ics.dgtaxud.ec/doc" schemaLocation="doc-v11-1.xsd"/>
-  <xs:import namespace="http://ics.dgtaxud.ec/complex_ics" schemaLocation="complex_types_ics-v11-1.xsd"/>
-  <xs:import namespace="http://ics.dgtaxud.ec/simple" schemaLocation="simple_types-v11-1.xsd"/>
-  <xs:import namespace="http://ics.dgtaxud.ec/tcl" schemaLocation="tcl-v11-1.xsd"/>
+  <xs:import namespace="http://ics.dgtaxud.ec/doc" schemaLocation="doc-v11-2.xsd"/>
+  <xs:import namespace="http://ics.dgtaxud.ec/complex_ics" schemaLocation="complex_types_ics-v11-2.xsd"/>
+  <xs:import namespace="http://ics.dgtaxud.ec/simple" schemaLocation="simple_types-v11-2.xsd"/>
+  <xs:import namespace="http://ics.dgtaxud.ec/tcl" schemaLocation="tcl-v11-2.xsd"/>
   <xs:element name="CC313A" type="ie:CC313AType"/>
   <xs:complexType name="CC313AType">
     <xs:sequence>

@@ -33,7 +33,7 @@ class SchemaValidatorSpec extends UnitSpec with Inside {
 
       "passed valid sample" must {
         "return Valid containing the parsed xml" in {
-          val resourceName       = "xmls/CC313A-schemaValidSample-v11-1.xml"
+          val resourceName       = "xmls/CC313A-schemaValidSample-v11-2.xml"
           val xml                = XML.load(ResourceUtils.url(resourceName))
           val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
@@ -43,7 +43,7 @@ class SchemaValidatorSpec extends UnitSpec with Inside {
 
       "passed invalid sample" must {
         "return Invalid containing the xml and the ValidationErrors" in {
-          val resourceName       = "xmls/CC313A-schemaInvalidSample-v11-1.xml"
+          val resourceName       = "xmls/CC313A-schemaInvalidSample-v11-2.xml"
           val xml                = XML.load(ResourceUtils.url(resourceName))
           val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
@@ -83,7 +83,7 @@ class SchemaValidatorSpec extends UnitSpec with Inside {
 
       "passed valid E315" must {
         "return Invalid containing the xml and the ValidationErrors" in {
-          val resourceName       = "xmls/CC315A-schemaValidSample-v11-1.xml"
+          val resourceName       = "xmls/CC315A-schemaValidSample-v11-2.xml"
           val xml                = XML.load(ResourceUtils.url(resourceName))
           val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
@@ -104,7 +104,7 @@ class SchemaValidatorSpec extends UnitSpec with Inside {
 
       "passed a declaration with an envelope and body" must {
         "return Invalid containing the xml and the ValidationErrors" in {
-          val resourceName       = "xmls/CC313A-schemaValidSampleWithEnvelope-v11-1.xml"
+          val resourceName       = "xmls/CC313A-schemaValidSampleWithEnvelope-v11-2.xml"
           val xml                = XML.load(ResourceUtils.url(resourceName))
           val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
@@ -127,7 +127,7 @@ class SchemaValidatorSpec extends UnitSpec with Inside {
     "Validating a E315" when {
       "passed valid sample" must {
         "return Valid containing the parsed xml" in {
-          val resourceName       = "xmls/CC315A-schemaValidSample-v11-1.xml"
+          val resourceName       = "xmls/CC315A-schemaValidSample-v11-2.xml"
           val xml                = XML.load(ResourceUtils.url(resourceName))
           val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
@@ -137,7 +137,7 @@ class SchemaValidatorSpec extends UnitSpec with Inside {
 
       "passed invalid sample" must {
         "return Invalid containing the xml and the ValidationErrors" in {
-          val resourceName       = "xmls/CC315A-schemaInvalidSample-v11-1.xml"
+          val resourceName       = "xmls/CC315A-schemaInvalidSample-v11-2.xml"
           val xml                = XML.load(ResourceUtils.url(resourceName))
           val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
@@ -177,7 +177,7 @@ class SchemaValidatorSpec extends UnitSpec with Inside {
 
       "passed valid E313" must {
         "return Invalid containing the xml and the ValidationErrors" in {
-          val resourceName       = "xmls/CC313A-schemaValidSample-v11-1.xml"
+          val resourceName       = "xmls/CC313A-schemaValidSample-v11-2.xml"
           val xml                = XML.load(ResourceUtils.url(resourceName))
           val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
@@ -198,7 +198,7 @@ class SchemaValidatorSpec extends UnitSpec with Inside {
 
       "passed a declaration with an envelope and body" must {
         "return Invalid containing the xml and the ValidationErrors" in {
-          val resourceName       = "xmls/CC315A-schemaValidSampleWithEnvelope-v11-1.xml"
+          val resourceName       = "xmls/CC315A-schemaValidSampleWithEnvelope-v11-2.xml"
           val xml                = XML.load(ResourceUtils.url(resourceName))
           val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
@@ -228,9 +228,9 @@ class SchemaValidatorSpec extends UnitSpec with Inside {
 
     "decoding special characters" when {
       val rawFileXmlBytes: Array[Byte] =
-        ResourceUtils.asByteArray("xmls/CC313A-schemaValidSampleWithSpecialChars-v11-1.xml")
+        ResourceUtils.asByteArray("xmls/CC313A-schemaValidSampleWithSpecialChars-v11-2.xml")
 
-      val xmlString = ResourceUtils.asString("xmls/CC313A-schemaValidSampleWithSpecialChars-v11-1.xml")
+      val xmlString = ResourceUtils.asString("xmls/CC313A-schemaValidSampleWithSpecialChars-v11-2.xml")
 
       val byteOrderMark = '\uFEFF'
       val addressLine   = "1234 Avenue du Sacré-Cœur"

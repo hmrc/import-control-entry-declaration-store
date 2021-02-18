@@ -32,26 +32,26 @@ class SchemaEquivalenceSpec extends UnitSpec {
   val schemaValidator = new SchemaValidator
 
   "E315" must {
-    val resource = ResourceUtils.url("xmls/CC315A-schemaValidSample-v11-1.xml")
+    val resource = ResourceUtils.url("xmls/CC315A-schemaValidSample-v11-2.xml")
 
     val xml = XML.load(resource)
 
     val schema = SchemaTypeE315
     val schemaLegacy: SchemaType = new SchemaType {
-      private[validation] val schema = schemaFor("xsds/CC315A-v11-1.xsd") // <-- FIXME change to old schema resource
+      private[validation] val schema = schemaFor("xsds/CC315A-v11-2.xsd") // <-- FIXME change to old schema resource
     }
 
     testEquivalenceWith(xml, schema, schemaLegacy)
   }
 
   "E313" must {
-    val resource = ResourceUtils.url("xmls/CC313A-schemaValidSample-v11-1.xml")
+    val resource = ResourceUtils.url("xmls/CC313A-schemaValidSample-v11-2.xml")
 
     val xml = XML.load(resource)
 
     val schema = SchemaTypeE313
     val schemaLegacy: SchemaType = new SchemaType {
-      private[validation] val schema = schemaFor("xsds/CC313A-v11-1.xsd") // <-- FIXME change to old schema resource
+      private[validation] val schema = schemaFor("xsds/CC313A-v11-2.xsd") // <-- FIXME change to old schema resource
     }
 
     testEquivalenceWith(xml, schema, schemaLegacy)
