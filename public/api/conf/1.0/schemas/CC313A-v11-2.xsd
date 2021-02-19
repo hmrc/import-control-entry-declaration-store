@@ -112,7 +112,7 @@
           </xs:documentation>
         </xs:annotation>
       </xs:element>
-      <xs:element name="MesRecMES6" type="simple:Alphanumeric_Max35">
+      <xs:element minOccurs="0" name="MesRecMES6" type="simple:Alphanumeric_Max35">
         <xs:annotation>
           <xs:documentation>
             <doc:description value="Message recipient"/>
