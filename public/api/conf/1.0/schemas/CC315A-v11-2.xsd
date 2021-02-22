@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ie="http://ics.dgtaxud.ec/CC313A"
-           targetNamespace="http://ics.dgtaxud.ec/CC313A" xmlns:doc="http://ics.dgtaxud.ec/doc" xmlns:complex_ics="http://ics.dgtaxud.ec/complex_ics" xmlns:simple="http://ics.dgtaxud.ec/simple" xmlns:tcl="http://ics.dgtaxud.ec/tcl" version="11.1" id="CC313A" elementFormDefault="unqualified" attributeFormDefault="unqualified">
-  <xs:import namespace="http://ics.dgtaxud.ec/doc" schemaLocation="doc-v11-1.xsd"/>
-  <xs:import namespace="http://ics.dgtaxud.ec/complex_ics" schemaLocation="complex_types_ics-v11-1.xsd"/>
-  <xs:import namespace="http://ics.dgtaxud.ec/simple" schemaLocation="simple_types-v11-1.xsd"/>
-  <xs:import namespace="http://ics.dgtaxud.ec/tcl" schemaLocation="tcl-v11-1.xsd"/>
-  <xs:element name="CC313A" type="ie:CC313AType"/>
-  <xs:complexType name="CC313AType">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ie="http://ics.dgtaxud.ec/CC315A"
+           targetNamespace="http://ics.dgtaxud.ec/CC315A" xmlns:doc="http://ics.dgtaxud.ec/doc" xmlns:complex_ics="http://ics.dgtaxud.ec/complex_ics" xmlns:simple="http://ics.dgtaxud.ec/simple" xmlns:tcl="http://ics.dgtaxud.ec/tcl" version="11.1" id="CC315A" elementFormDefault="unqualified" attributeFormDefault="unqualified">
+  <xs:import namespace="http://ics.dgtaxud.ec/doc" schemaLocation="doc-v11-2.xsd"/>
+  <xs:import namespace="http://ics.dgtaxud.ec/complex_ics" schemaLocation="complex_types_ics-v11-2.xsd"/>
+  <xs:import namespace="http://ics.dgtaxud.ec/simple" schemaLocation="simple_types-v11-2.xsd"/>
+  <xs:import namespace="http://ics.dgtaxud.ec/tcl" schemaLocation="tcl-v11-2.xsd"/>
+  <xs:element name="CC315A" type="ie:CC315AType"/>
+  <xs:complexType name="CC315AType">
     <xs:sequence>
       <xs:group ref="ie:MESSAGE"/>
       <xs:element name="HEAHEA" type="ie:HEAHEAType">
@@ -53,6 +53,14 @@
             <doc:description value="ITINERARY"/>
             <doc:rule name="R879"/>
             <doc:condition name="C570"/>
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element minOccurs="0" name="CUSOFFLON" type="ie:CUSOFFLONType">
+        <xs:annotation>
+          <xs:documentation>
+            <doc:description value="(LODGEMENT) CUSTOMS OFFICE"/>
+            <doc:rule name="R827"/>
           </xs:documentation>
         </xs:annotation>
       </xs:element>
@@ -112,7 +120,7 @@
           </xs:documentation>
         </xs:annotation>
       </xs:element>
-      <xs:element name="MesRecMES6" type="simple:Alphanumeric_Max35">
+      <xs:element minOccurs="0" name="MesRecMES6" type="simple:Alphanumeric_Max35">
         <xs:annotation>
           <xs:documentation>
             <doc:description value="Message recipient"/>
@@ -172,10 +180,11 @@
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element name="DocNumHEA5" type="simple:MRNType">
+      <xs:element name="RefNumHEA4" type="simple:Alphanumeric_Max22">
         <xs:annotation>
           <xs:documentation>
-            <doc:description value="Document/reference number"/>
+            <doc:description value="Reference number"/>
+            <doc:rule name="R891"/>
           </xs:documentation>
         </xs:annotation>
       </xs:element>
@@ -240,17 +249,17 @@
           </xs:documentation>
         </xs:annotation>
       </xs:element>
-      <xs:element name="AmdPlaHEA598" type="simple:Alphanumeric_Max35">
+      <xs:element name="DecPlaHEA394" type="simple:Alphanumeric_Max35">
         <xs:annotation>
           <xs:documentation>
-            <doc:description value="Amendment place"/>
+            <doc:description value="Declaration place"/>
           </xs:documentation>
         </xs:annotation>
       </xs:element>
-      <xs:element minOccurs="0" name="AmdPlaHEA598LNG" type="simple:LanguageCodeType">
+      <xs:element minOccurs="0" name="DecPlaHEA394LNG" type="simple:LanguageCodeType">
         <xs:annotation>
           <xs:documentation>
-            <doc:description value="Amendment place LNG"/>
+            <doc:description value="Declaration place LNG"/>
             <doc:rule name="TR0099"/>
             <doc:codeList name="LanguageCodes" type="business"/>
           </xs:documentation>
@@ -325,10 +334,10 @@
           </xs:documentation>
         </xs:annotation>
       </xs:element>
-      <xs:element name="DatTimAmeHEA113" type="simple:DateTimeType">
+      <xs:element name="DecDatTimHEA114" type="simple:DateTimeType">
         <xs:annotation>
           <xs:documentation>
-            <doc:description value="Date and Time of amendment"/>
+            <doc:description value="Declaration date and time"/>
             <doc:rule name="R660"/>
           </xs:documentation>
         </xs:annotation>
@@ -995,6 +1004,24 @@
           <xs:documentation>
             <doc:description value="TIN"/>
             <doc:rule name="R840"/>
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="CUSOFFLONType">
+    <xs:annotation>
+      <xs:documentation>
+        <doc:description value="(LODGEMENT) CUSTOMS OFFICE"/>
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="RefNumCOL1" type="simple:CORefNumType">
+        <xs:annotation>
+          <xs:documentation>
+            <doc:description value="Reference number"/>
+            <doc:rule name="R828"/>
+            <doc:rule name="R836"/>
           </xs:documentation>
         </xs:annotation>
       </xs:element>

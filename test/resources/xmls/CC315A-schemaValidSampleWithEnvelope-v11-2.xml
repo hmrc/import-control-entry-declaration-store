@@ -2,20 +2,20 @@
 <!--
 Schema Valid Sample document
 -->
-<tns:Envelope xmlns:tns="http://www.w3.org/2003/05/soap-envelope" xmlns:ie="http://ics.dgtaxud.ec/CC313A" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.w3.org/2003/05/soap-envelope SOAP-v1-2.xsd http://ics.dgtaxud.ec/CC313A CC313A-v11-1.xsd http://ics.dgtaxud.ec/complex_ics complex_types_ics-v11-1.xsd">
+<tns:Envelope xmlns:tns="http://www.w3.org/2003/05/soap-envelope" xmlns:ie="http://ics.dgtaxud.ec/CC315A" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.w3.org/2003/05/soap-envelope SOAP-v1-2.xsd http://ics.dgtaxud.ec/CC315A CC315A-v11-2.xsd http://ics.dgtaxud.ec/complex_ics complex_types_ics-v11-2.xsd">
     <tns:Header/>
     <tns:Body>
-        <ie:CC313A>
+        <ie:CC315A>
             <MesSenMES3>GBCD1234/1234567890</MesSenMES3>
             <MesRecMES6>GBC123</MesRecMES6>
             <DatOfPreMES9>030211</DatOfPreMES9>
             <TimOfPreMES10>0123</TimOfPreMES10>
             <PriMES15>A</PriMES15>
             <MesIdeMES19>ABC123</MesIdeMES19>
-            <MesTypMES20>CC313A</MesTypMES20>
+            <MesTypMES20>CC315A</MesTypMES20>
             <CorIdeMES25>ABC123</CorIdeMES25>
             <HEAHEA>
-                <DocNumHEA5>12AB3C4D5E6F7G8H90</DocNumHEA5>
+                <RefNumHEA4>ABC123</RefNumHEA4>
                 <TraModAtBorHEA76>42</TraModAtBorHEA76>
                 <IdeOfMeaOfTraCroHEA85>ABC123</IdeOfMeaOfTraCroHEA85>
                 <IdeOfMeaOfTraCroHEA85LNG>en</IdeOfMeaOfTraCroHEA85LNG>
@@ -23,8 +23,8 @@ Schema Valid Sample document
                 <TotNumOfIteHEA305>42</TotNumOfIteHEA305>
                 <TotNumOfPacHEA306>42</TotNumOfPacHEA306>
                 <TotGroMasHEA307>3.14</TotGroMasHEA307>
-                <AmdPlaHEA598>ABC123</AmdPlaHEA598>
-                <AmdPlaHEA598LNG>en</AmdPlaHEA598LNG>
+                <DecPlaHEA394>ABC123</DecPlaHEA394>
+                <DecPlaHEA394LNG>en</DecPlaHEA394LNG>
                 <SpeCirIndHEA1>A</SpeCirIndHEA1>
                 <TraChaMetOfPayHEA1>A</TraChaMetOfPayHEA1>
                 <ComRefNumHEA>ABC123</ComRefNumHEA>
@@ -33,7 +33,7 @@ Schema Valid Sample document
                 <PlaLoaGOOITE334LNG>en</PlaLoaGOOITE334LNG>
                 <PlaUnlGOOITE334>ABC123</PlaUnlGOOITE334>
                 <CodPlUnHEA357LNG>en</CodPlUnHEA357LNG>
-                <DatTimAmeHEA113>200302111234</DatTimAmeHEA113>
+                <DecDatTimHEA114>200302111234</DecDatTimHEA114>
             </HEAHEA>
             <TRACONCO1>
                 <NamCO17>ABC123</NamCO17>
@@ -131,6 +131,9 @@ Schema Valid Sample document
             <ITI>
                 <CouOfRouCodITI1>EN</CouOfRouCodITI1>
             </ITI>
+            <CUSOFFLON>
+                <RefNumCOL1>AB3C4D5E</RefNumCOL1>
+            </CUSOFFLON>
             <TRAREP>
                 <NamTRE1>ABC123</NamTRE1>
                 <StrAndNumTRE1>ABC123</StrAndNumTRE1>
@@ -169,7 +172,6 @@ Schema Valid Sample document
                 <TRACARENT601LNG>en</TRACARENT601LNG>
                 <TINTRACARENT602>GB^</TINTRACARENT602>
             </TRACARENT601>
-        </ie:CC313A>
+        </ie:CC315A>
     </tns:Body>
 </tns:Envelope>
-

@@ -1,6 +1,5 @@
 <ie:CC313A xmlns:ie="http://ics.dgtaxud.ec/CC313A">
   <MesSenMES3>GBCD1234/1234567890</MesSenMES3>
-  <MesRecMES6>ABC123</MesRecMES6>
   <DatOfPreMES9>030211</DatOfPreMES9>
   <TimOfPreMES10>0123</TimOfPreMES10>
   <MesIdeMES19>ABC123</MesIdeMES19>
