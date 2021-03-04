@@ -17,7 +17,6 @@
 package uk.gov.hmrc.entrydeclarationstore.orchestrators
 
 import org.joda.time.{Duration => JodaDuration}
-import play.modules.reactivemongo.ReactiveMongoComponent
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.repositories.LockRepositoryProvider
 
@@ -34,8 +33,7 @@ trait ReplayLock {
 
 @Singleton
 class ReplayLockImpl @Inject()(lockRepositoryProvider: LockRepositoryProvider, appConfig: AppConfig)(
-  implicit reactiveMongoComponent: ReactiveMongoComponent,
-  ec: ExecutionContext)
+  implicit ec: ExecutionContext)
     extends ReplayLock {
   private val forceReleaseAfter: JodaDuration = JodaDuration.millis(appConfig.replayLockDuration.toMillis)
 

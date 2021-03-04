@@ -46,13 +46,11 @@ class DocumentationControllerSpec extends UnitSpec with MockAppConfig with Injec
   val documentationController =
     new DocumentationController(Helpers.stubControllerComponents(), assets, mockAppConfig, errorHandler)
 
-  "api definition" when {
+  "api definition" must {
     def checkDefinition(apiStatus: String, enabled: Boolean): Assertion = {
       MockAppConfig.apiStatus returns apiStatus
       MockAppConfig.apiEndpointsEnabled returns enabled
       MockAppConfig.apiGatewayContext returns "customs/imports/declarations"
-
-      MockAppConfig.allowListEnabled returns false
 
       val result = documentationController.definition()(FakeRequest())
 
@@ -69,45 +67,12 @@ class DocumentationControllerSpec extends UnitSpec with MockAppConfig with Injec
       (version \ "access").toOption              shouldBe None
     }
 
-    "no allowlist" must {
-      "include the correct status and enabled flags disabled" in {
-        checkDefinition("ALPHA", enabled = false)
-      }
-
-      "include the correct status and enabled flags enabled" in {
-        checkDefinition("BETA", enabled = true)
-      }
+    "include the correct status and enabled flags disabled" in {
+      checkDefinition("ALPHA", enabled = false)
     }
 
-    "allowList defined" must {
-      "include the correct applicationIds if allowlists enabled" in {
-        val apiStatus = "BETA"
-        val enabled   = true
-
-        val applicationIds = Seq("app1", "app2")
-        MockAppConfig.apiStatus returns apiStatus
-        MockAppConfig.apiEndpointsEnabled returns enabled
-        MockAppConfig.apiGatewayContext returns "customs/imports/declarations"
-
-        MockAppConfig.allowListEnabled returns true
-        MockAppConfig.allowListApplicationIds returns applicationIds
-
-        val result = documentationController.definition()(FakeRequest())
-
-        status(result)      shouldBe OK
-        contentType(result) shouldBe Some(MimeTypes.JSON)
-        val definitionJson = contentAsJson(result)
-
-        val versions = (definitionJson \ "api" \ "versions").as[Seq[JsValue]]
-        versions should have size 1
-        val version = versions.head
-
-        (version \ "status").as[String]            shouldBe apiStatus
-        (version \ "endpointsEnabled").as[Boolean] shouldBe enabled
-
-        (version \ "access" \ "type").as[String]                           shouldBe "PRIVATE"
-        (version \ "access" \ "whitelistedApplicationIds").as[Seq[String]] shouldBe applicationIds
-      }
+    "include the correct status and enabled flags enabled" in {
+      checkDefinition("BETA", enabled = true)
     }
   }
 

@@ -1,5 +1,4 @@
 import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
-import uk.gov.hmrc.SbtArtifactory
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 
 val appName = "import-control-entry-declaration-store"
@@ -35,13 +34,7 @@ lazy val coverageSettings: Seq[Setting[_]] = {
 val silencerVersion = "1.7.1"
 
 lazy val microservice = Project(appName, file("."))
-  .enablePlugins(
-    play.sbt.PlayScala,
-    SbtAutoBuildPlugin,
-    SbtGitVersioning,
-    SbtDistributablesPlugin,
-    SbtArtifactory,
-    ScalafmtCorePlugin)
+  .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin, ScalafmtCorePlugin)
   .disablePlugins(JUnitXmlReportPlugin)
   .settings(
     scalaVersion := "2.12.12",
@@ -56,6 +49,7 @@ lazy val microservice = Project(appName, file("."))
   .configs(IntegrationTest)
   .settings(integrationTestSettings(): _*)
   .settings(resourceDirectory in IntegrationTest := baseDirectory.value / "test" / "resources")
+  .settings(scalacOptions += "-Xlint:_,-missing-interpolator")
   .settings(
     scalacOptions += "-P:silencer:pathFilters=views;routes",
     libraryDependencies ++= Seq(

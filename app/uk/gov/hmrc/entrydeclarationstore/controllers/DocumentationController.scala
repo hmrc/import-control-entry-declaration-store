@@ -40,16 +40,6 @@ class DocumentationController @Inject()(
 
   def definition(): Action[AnyContent] = Action {
 
-    val allowListAccess =
-      if (appConfig.allowListEnabled) {
-        s""""access": {
-           |  "type": "PRIVATE",
-           |  "whitelistedApplicationIds": ${Json.toJson(appConfig.allowListApplicationIds)}
-           |},""".stripMargin
-      } else {
-        ""
-      }
-
     Ok(Json.parse(s"""{
                      |  "scopes": [
                      |    {
@@ -70,7 +60,6 @@ class DocumentationController @Inject()(
                      |        "version": "1.0",
                      |        "status": "${appConfig.apiStatus}",
                      |        "endpointsEnabled": ${appConfig.apiEndpointsEnabled},
-                     |        $allowListAccess
                      |        "fieldDefinitions": [
                      |          {
                      |            "name": "authenticatedEori",

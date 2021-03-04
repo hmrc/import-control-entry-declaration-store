@@ -38,10 +38,6 @@ trait AppConfig {
 
   def apiStatus: String
 
-  def allowListEnabled: Boolean
-
-  def allowListApplicationIds: Seq[String]
-
   def auditingEnabled: Boolean
 
   def graphiteHost: String
@@ -132,10 +128,6 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
   lazy val apiEndpointsEnabled: Boolean = config.get[Boolean]("api.endpoints.enabled")
 
   lazy val apiStatus: String = config.get[String]("api.status")
-
-  lazy val allowListEnabled: Boolean = config.get[Boolean]("api.allowList.enabled")
-
-  lazy val allowListApplicationIds: Seq[String] = config.get[Seq[String]]("api.allowList.applicationIds")
 
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
 
