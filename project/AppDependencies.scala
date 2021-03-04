@@ -2,8 +2,7 @@ import play.core.PlayVersion.current
 import sbt._
 
 object AppDependencies {
-
-  val bootstrapVersion = "3.0.0"
+  val bootstrapVersion = "3.4.0"
 
   val compile: Seq[ModuleID] = Seq(
     "com.github.fge"         % "json-schema-validator"      % "2.2.6",
