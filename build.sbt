@@ -49,6 +49,7 @@ lazy val microservice = Project(appName, file("."))
   .configs(IntegrationTest)
   .settings(integrationTestSettings(): _*)
   .settings(resourceDirectory in IntegrationTest := baseDirectory.value / "test" / "resources")
+  .settings(scalacOptions += "-Xlint:_,-missing-interpolator")
   .settings(
     scalacOptions += "-P:silencer:pathFilters=views;routes",
     libraryDependencies ++= Seq(

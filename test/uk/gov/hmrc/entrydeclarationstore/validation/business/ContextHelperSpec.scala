@@ -168,6 +168,6 @@ class ContextHelperSpec extends UnitSpec {
   // Utility to convert a Scala function to a Groovy closure...
   def toClosure(f: (ContextHelper, ContextHelper) => Boolean): Closure[java.lang.Boolean] =
     new Closure[java.lang.Boolean](null) {
-      def doCall(args: Array[ContextHelper]): lang.Boolean = f(args(0), args(1))
+      protected def doCall(args: Array[ContextHelper]): lang.Boolean = f(args(0), args(1))
     }
 }

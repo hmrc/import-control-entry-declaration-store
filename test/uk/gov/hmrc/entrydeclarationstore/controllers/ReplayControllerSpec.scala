@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
-import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.{contentType, _}
 import play.api.test.{FakeRequest, Helpers}
 import play.mvc.Http.MimeTypes
