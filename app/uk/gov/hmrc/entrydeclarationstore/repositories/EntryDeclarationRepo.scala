@@ -33,6 +33,7 @@ import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationstore.models._
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
+import uk.gov.hmrc.play.http.logging.Mdc
 
 import java.time.Instant
 import javax.inject.{Inject, Singleton}
@@ -101,7 +102,8 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
 
   override def save(entryDeclaration: EntryDeclarationModel)(implicit lc: LoggingContext): Future[Boolean] = {
     val entryDeclarationPersisted = EntryDeclarationPersisted.from(entryDeclaration, appConfig.defaultTtl)
-    insert(entryDeclarationPersisted)
+    Mdc
+      .preservingMdc(insert(entryDeclarationPersisted))
       .map(result => result.ok)
       .recover {
         case e: DatabaseException =>
@@ -111,18 +113,20 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
   }
 
   override def lookupSubmissionId(eori: String, correlationId: String): Future[Option[SubmissionIdLookupResult]] =
-    collection
-      .find(
-        Json.obj("eori" -> eori, "correlationId" -> correlationId),
-        Some(
-          Json.obj(
-            "submissionId"          -> 1,
-            "receivedDateTime"      -> 1,
-            "housekeepingAt"        -> 1,
-            "eisSubmissionDateTime" -> 1,
-            "eisSubmissionState"    -> 1))
-      )
-      .one[JsObject](ReadPreference.primaryPreferred)
+    Mdc
+      .preservingMdc(
+        collection
+          .find(
+            Json.obj("eori" -> eori, "correlationId" -> correlationId),
+            Some(
+              Json.obj(
+                "submissionId"          -> 1,
+                "receivedDateTime"      -> 1,
+                "housekeepingAt"        -> 1,
+                "eisSubmissionDateTime" -> 1,
+                "eisSubmissionState"    -> 1))
+          )
+          .one[JsObject](ReadPreference.primaryPreferred))
       .map(_.map { doc =>
         SubmissionIdLookupResult(
           (doc \ "receivedDateTime").as[PersistableDateTime].toInstant.toString,
@@ -134,20 +138,27 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
       })
 
   override def lookupEntryDeclaration(submissionId: String): Future[Option[JsValue]] =
-    collection
-      .find(Json.obj("submissionId" -> submissionId), Some(Json.obj("payload" -> 1)))
-      .one[JsObject](ReadPreference.primaryPreferred)
+    Mdc
+      .preservingMdc(
+        collection
+          .find(Json.obj("submissionId" -> submissionId), Some(Json.obj("payload" -> 1)))
+          .one[JsObject](ReadPreference.primaryPreferred))
       .map(_.map(doc => (doc \ "payload").as[JsValue]))
 
   override def setEisSubmissionSuccess(submissionId: String, time: Instant)(
     implicit lc: LoggingContext): Future[Boolean] =
-    collection
-      .update(ordered = false, WriteConcern.Default)
-      .one(
-        Json.obj("submissionId" -> submissionId),
-        Json.obj("$set" -> Json
-          .obj("eisSubmissionDateTime" -> PersistableDateTime(time), "eisSubmissionState" -> EisSubmissionState.Sent))
-      )
+    Mdc
+      .preservingMdc(
+        collection
+          .update(ordered = false, WriteConcern.Default)
+          .one(
+            Json.obj("submissionId" -> submissionId),
+            Json.obj(
+              "$set" -> Json
+                .obj(
+                  "eisSubmissionDateTime" -> PersistableDateTime(time),
+                  "eisSubmissionState"    -> EisSubmissionState.Sent))
+          ))
       .map(result => result.nModified > 0)
       .recover {
         case e: DatabaseException =>
@@ -156,12 +167,14 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
       }
 
   override def setEisSubmissionFailure(submissionId: String)(implicit lc: LoggingContext): Future[Boolean] =
-    collection
-      .update(ordered = false, WriteConcern.Default)
-      .one(
-        Json.obj("submissionId" -> submissionId),
-        Json.obj("$set"         -> Json.obj("eisSubmissionState" -> EisSubmissionState.Error))
-      )
+    Mdc
+      .preservingMdc(
+        collection
+          .update(ordered = false, WriteConcern.Default)
+          .one(
+            Json.obj("submissionId" -> submissionId),
+            Json.obj("$set"         -> Json.obj("eisSubmissionState" -> EisSubmissionState.Error))
+          ))
       .map { result =>
         val success = result.nModified > 0
         if (success) {
@@ -176,9 +189,11 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
       }
 
   override def lookupAcceptanceEnrichment(submissionId: String): Future[Option[AcceptanceEnrichment]] =
-    collection
-      .find(Json.obj("submissionId" -> submissionId), Some(Json.obj("eisSubmissionDateTime" -> 1, "payload" -> 1)))
-      .one[JsObject](ReadPreference.primaryPreferred)
+    Mdc
+      .preservingMdc(
+        collection
+          .find(Json.obj("submissionId" -> submissionId), Some(Json.obj("eisSubmissionDateTime" -> 1, "payload" -> 1)))
+          .one[JsObject](ReadPreference.primaryPreferred))
       .map(_.map { doc =>
         AcceptanceEnrichment(
           (doc \ "eisSubmissionDateTime").asOpt[PersistableDateTime].map(_.toInstant),
@@ -187,20 +202,21 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
       })
 
   override def lookupAmendmentRejectionEnrichment(submissionId: String): Future[Option[AmendmentRejectionEnrichment]] =
-    collection
-      .find(
-        Json.obj("submissionId" -> submissionId),
-        Some(
-          Json.obj(
-            "eisSubmissionDateTime"                          -> 1,
-            "payload.parties.declarant"                      -> 1,
-            "payload.parties.representative"                 -> 1,
-            "payload.itinerary.officeOfFirstEntry.reference" -> 1,
-            "payload.amendment.movementReferenceNumber"      -> 1,
-            "payload.amendment.dateTime"                     -> 1
-          ))
-      )
-      .one[JsObject](ReadPreference.primaryPreferred)
+    Mdc
+      .preservingMdc(
+        collection
+          .find(
+            Json.obj("submissionId" -> submissionId),
+            Some(Json.obj(
+              "eisSubmissionDateTime"                          -> 1,
+              "payload.parties.declarant"                      -> 1,
+              "payload.parties.representative"                 -> 1,
+              "payload.itinerary.officeOfFirstEntry.reference" -> 1,
+              "payload.amendment.movementReferenceNumber"      -> 1,
+              "payload.amendment.dateTime"                     -> 1
+            ))
+          )
+          .one[JsObject](ReadPreference.primaryPreferred))
       .map(_.map { doc =>
         AmendmentRejectionEnrichment(
           (doc \ "eisSubmissionDateTime").asOpt[PersistableDateTime].map(_.toInstant),
@@ -210,30 +226,33 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
 
   override def lookupDeclarationRejectionEnrichment(
     submissionId: String): Future[Option[DeclarationRejectionEnrichment]] =
-    collection
-      .find(Json.obj("submissionId" -> submissionId), Some(Json.obj("eisSubmissionDateTime" -> 1)))
-      .one[JsObject](ReadPreference.primaryPreferred)
+    Mdc
+      .preservingMdc(
+        collection
+          .find(Json.obj("submissionId" -> submissionId), Some(Json.obj("eisSubmissionDateTime" -> 1)))
+          .one[JsObject](ReadPreference.primaryPreferred))
       .map(_.map { doc =>
         DeclarationRejectionEnrichment((doc \ "eisSubmissionDateTime").asOpt[PersistableDateTime].map(_.toInstant))
       })
 
   override def lookupMetadata(submissionId: String)(
     implicit lc: LoggingContext): Future[Either[MetadataLookupError, ReplayMetadata]] =
-    collection
-      .find(
-        Json.obj("submissionId" -> submissionId),
-        Some(
-          Json.obj(
-            "submissionId"                              -> 1,
-            "eori"                                      -> 1,
-            "correlationId"                             -> 1,
-            "payload.metadata.messageType"              -> 1,
-            "payload.itinerary.modeOfTransportAtBorder" -> 1,
-            "mrn"                                       -> 1,
-            "receivedDateTime"                          -> 1
-          ))
-      )
-      .one[JsValue](ReadPreference.primaryPreferred)
+    Mdc
+      .preservingMdc(
+        collection
+          .find(
+            Json.obj("submissionId" -> submissionId),
+            Some(Json.obj(
+              "submissionId"                              -> 1,
+              "eori"                                      -> 1,
+              "correlationId"                             -> 1,
+              "payload.metadata.messageType"              -> 1,
+              "payload.itinerary.modeOfTransportAtBorder" -> 1,
+              "mrn"                                       -> 1,
+              "receivedDateTime"                          -> 1
+            ))
+          )
+          .one[JsValue](ReadPreference.primaryPreferred))
       .map {
         case Some(json) =>
           json.validate[EntryDeclarationMetadataPersisted] match {
@@ -254,35 +273,38 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
     setHousekeepingAt(time, Json.obj("eori" -> eori, "correlationId" -> correlationId))
 
   private def setHousekeepingAt(time: Instant, query: JsObject): Future[Boolean] =
-    collection
-      .update(ordered = false, WriteConcern.Default)
-      .one(query, Json.obj("$set" -> Json.obj("housekeepingAt" -> PersistableDateTime(time))))
+    Mdc
+      .preservingMdc(
+        collection
+          .update(ordered = false, WriteConcern.Default)
+          .one(query, Json.obj("$set" -> Json.obj("housekeepingAt" -> PersistableDateTime(time)))))
       .map(result => result.n == 1)
 
   override def housekeep(now: Instant): Future[Int] = {
     val deleteBuilder = collection.delete(ordered = false)
 
-    collection
-      .find(
-        selector   = Json.obj("housekeepingAt" -> Json.obj("$lte" -> PersistableDateTime(now))),
-        projection = Some(Json.obj("_id" -> 1))
-      )
-      .sort(Json.obj("housekeepingAt" -> 1))
-      .cursor[JsObject]()
-      .documentSource(maxDocs = appConfig.housekeepingRunLimit)
-      .mapAsync(1) { idDoc =>
-        deleteBuilder.element(q = idDoc, limit = Some(1), collation = None)
-      }
-      .batch(appConfig.housekeepingBatchSize, List(_)) { (deletions, element) =>
-        element :: deletions
-      }
-      .mapAsync(1) { deletions =>
-        collection
-          .delete()
-          .many(deletions)
-          .map(_.n)
-      }
-      .runFold(0)(_ + _)
+    Mdc.preservingMdc(
+      collection
+        .find(
+          selector   = Json.obj("housekeepingAt" -> Json.obj("$lte" -> PersistableDateTime(now))),
+          projection = Some(Json.obj("_id" -> 1))
+        )
+        .sort(Json.obj("housekeepingAt" -> 1))
+        .cursor[JsObject]()
+        .documentSource(maxDocs = appConfig.housekeepingRunLimit)
+        .mapAsync(1) { idDoc =>
+          deleteBuilder.element(q = idDoc, limit = Some(1), collation = None)
+        }
+        .batch(appConfig.housekeepingBatchSize, List(_)) { (deletions, element) =>
+          element :: deletions
+        }
+        .mapAsync(1) { deletions =>
+          collection
+            .delete()
+            .many(deletions)
+            .map(_.n)
+        }
+        .runFold(0)(_ + _))
   }
 
   override def getUndeliveredCounts: Future[UndeliveredCounts] = {
@@ -304,16 +326,20 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
       )
     )
 
-    val aggregation = collection.aggregateWith[JsObject](explain = false)(_ =>
-      Match(undeliveredSubmissionsSelector(None)) -> List(groupTransportType, groupIntoArray))
-    aggregation.headOption.map {
-      case Some(results) => results.as[UndeliveredCounts].sorted
-      case None          => UndeliveredCounts(totalCount = 0, transportCounts = None)
-    }
+    Mdc
+      .preservingMdc(
+        collection
+          .aggregateWith[JsObject](explain = false)(_ =>
+            Match(undeliveredSubmissionsSelector(None)) -> List(groupTransportType, groupIntoArray))
+          .headOption)
+      .map {
+        case Some(results) => results.as[UndeliveredCounts].sorted
+        case None          => UndeliveredCounts(totalCount = 0, transportCounts = None)
+      }
   }
 
   override def totalUndeliveredMessages(receivedNoLaterThan: Instant): Future[Int] =
-    count(undeliveredSubmissionsSelector(Some(receivedNoLaterThan)))
+    Mdc.preservingMdc(count(undeliveredSubmissionsSelector(Some(receivedNoLaterThan))))
 
   override def getUndeliveredSubmissionIds(receivedNoLaterThan: Instant, limit: Option[Int]): Source[String, NotUsed] =
     collection
