@@ -25,6 +25,7 @@ import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.entrydeclarationstore.models.HousekeepingStatus
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
+import uk.gov.hmrc.play.http.logging.Mdc
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -54,26 +55,30 @@ class HousekeepingRepoImpl @Inject()(
     if (value) turnOn() else turnOff()
 
   private def turnOn() =
-    remove("_id" -> singletonId)
+    Mdc
+      .preservingMdc(remove("_id" -> singletonId))
       .andThen {
         case Success(_) => Logger.warn("Housekeeping turned on")
       }
       .map(_ => ())
 
   private def turnOff() =
-    collection
-      .update(ordered = false, WriteConcern.Default)
-      .one(
-        q      = Json.obj("_id" -> singletonId),
-        u      = JsObject.empty,
-        upsert = true
-      )
+    Mdc
+      .preservingMdc(
+        collection
+          .update(ordered = false, WriteConcern.Default)
+          .one(
+            q      = Json.obj("_id" -> singletonId),
+            u      = JsObject.empty,
+            upsert = true
+          ))
       .andThen {
         case Success(_) => Logger.warn("Housekeeping turned off")
       }
       .map(_ => ())
 
   override def getHousekeepingStatus: Future[HousekeepingStatus] =
-    count(Json.obj("_id" -> singletonId))
+    Mdc
+      .preservingMdc(count(Json.obj("_id" -> singletonId)))
       .map(n => HousekeepingStatus(n == 0))
 }
