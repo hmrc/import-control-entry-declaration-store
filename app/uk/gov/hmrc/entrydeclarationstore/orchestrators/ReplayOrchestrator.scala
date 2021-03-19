@@ -119,7 +119,7 @@ class ReplayOrchestrator @Inject()(
         case NonFatal(e) =>
           Logger.error("Replay aborted", e)
           setCompleteAndUnlock(replayId)
-          ReplayResult.Aborted
+          ReplayResult.Aborted(e)
       }
       .runWith(Sink.last)
   }

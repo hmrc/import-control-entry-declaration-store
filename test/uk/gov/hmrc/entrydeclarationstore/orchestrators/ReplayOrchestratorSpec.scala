@@ -18,6 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.orchestrators
 
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
+import org.scalatest.Inside
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -46,6 +47,7 @@ class ReplayOrchestratorSpec
     with MockAppConfig
     with MockReplayLock
     with ScalaFutures
+    with Inside
     with GuiceOneAppPerSuite
     with Injecting {
 
@@ -224,7 +226,7 @@ class ReplayOrchestratorSpec
 
         val (initResult, result) = replayOrchestrator.startReplay(None)
         initResult.futureValue shouldBe ReplayInitializationResult.Started(replayId)
-        result.futureValue     shouldBe ReplayResult.Aborted
+        result.futureValue     shouldBe ReplayResult.Aborted(databaseException)
 
         await(completeFuture)
       }
@@ -309,13 +311,14 @@ class ReplayOrchestratorSpec
             BatchReplayResult(successCount = 123, failureCount = 321))
           MockReplayLock.renew(replayId) returns Future.unit
 
-          MockReplayStateRepo.incrementCounts(replayId, successesToAdd = 123, failuresToAdd = 321) returns false
+          MockReplayStateRepo.incrementCounts(replayId, successesToAdd = 123, failuresToAdd = 321) returns Future
+            .failed(databaseException)
 
           val completeFuture = willSetCompletedAndUnlock
 
           val (initResult, result) = replayOrchestrator.startReplay(None)
           initResult.futureValue shouldBe ReplayInitializationResult.Started(replayId)
-          result.futureValue     shouldBe ReplayResult.Aborted
+          result.futureValue     shouldBe ReplayResult.Aborted(databaseException)
 
           await(completeFuture)
         }
@@ -329,6 +332,7 @@ class ReplayOrchestratorSpec
           "return the replay id and abort the replay and update the state" in {
             val submissionIds = (1 to 10).map(i => s"subId$i")
             MockAppConfig.replayBatchSize returns 2
+            MockReplayLock.renew(replayId) returns Future.unit
 
             MockEntryDeclarationRepo.totalUndeliveredMessages(time) returns submissionIds.length
             willGetUndeliverablesAndInitState(None, submissionIds: _*)
@@ -342,7 +346,9 @@ class ReplayOrchestratorSpec
 
             val (initResult, result) = replayOrchestrator.startReplay(None)
             initResult.futureValue shouldBe ReplayInitializationResult.Started(replayId)
-            result.futureValue     shouldBe ReplayResult.Aborted
+            inside(result.futureValue) {
+              case ReplayResult.Aborted(e) => e.getMessage should include("Unable to replay batch")
+            }
 
             await(completeFuture)
           }
