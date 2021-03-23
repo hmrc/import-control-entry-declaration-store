@@ -20,5 +20,5 @@ sealed trait ReplayResult
 
 object ReplayResult {
   case class Completed(numBatches: Int) extends ReplayResult
-  case object Aborted extends ReplayResult
+  case class Aborted(t: Throwable) extends ReplayResult
 }
