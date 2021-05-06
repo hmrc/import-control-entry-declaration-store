@@ -6,15 +6,15 @@ object AppDependencies {
 
   val compile: Seq[ModuleID] = Seq(
     "com.github.fge"         % "json-schema-validator"      % "2.2.6",
-    "uk.gov.hmrc"            %% "simple-reactivemongo"      % "7.30.0-play-26",
-    "org.reactivemongo"      %% "reactivemongo-akkastream"  % "0.20.1",
+    "uk.gov.hmrc"            %% "simple-reactivemongo"      % "7.31.0-play-26",
+    "org.reactivemongo"      %% "reactivemongo-akkastream"  % "0.20.13",
     "uk.gov.hmrc"            %% "bootstrap-backend-play-26" % bootstrapVersion,
-    "uk.gov.hmrc"            %% "mongo-lock"                % "6.23.0-play-26",
-    "org.typelevel"          %% "cats-core"                 % "2.2.0",
+    "uk.gov.hmrc"            %% "mongo-lock"                % "6.24.0-play-26",
+    "org.typelevel"          %% "cats-core"                 % "2.6.0",
     "org.scala-lang.modules" %% "scala-xml"                 % "1.3.0",
     "com.lucidchart"         %% "xtract"                    % "2.2.1",
-    "org.codehaus.groovy"    % "groovy-all"                 % "3.0.6",
-    "com.chuusai"            %% "shapeless"                 % "2.3.3"
+    "org.codehaus.groovy"    % "groovy-all"                 % "3.0.8",
+    "com.chuusai"            %% "shapeless"                 % "2.3.4"
   )
 
   val test: Seq[ModuleID] = Seq(
@@ -24,8 +24,8 @@ object AppDependencies {
     "org.pegdown"            % "pegdown"                    % "1.6.0"          % "test, it",
     "org.scalatestplus.play" %% "scalatestplus-play"        % "3.1.3"          % "test, it",
     "org.scalamock"          %% "scalamock"                 % "5.0.0"          % "test, it",
-    "org.scalacheck"         %% "scalacheck"                % "1.15.1"         % "test, it",
-    "uk.gov.hmrc"            %% "hmrctest"                  % "3.9.0-play-26"  % "test, it",
+    "org.scalacheck"         %% "scalacheck"                % "1.15.4"         % "test, it",
+    "uk.gov.hmrc"            %% "hmrctest"                  % "3.10.0-play-26"  % "test, it",
     "com.github.tomakehurst" % "wiremock"                   % "2.27.2"         % "test, it",
     "org.mockito"            % "mockito-all"                % "1.10.19"        % "test, it",
     "com.miguno.akka"        %% "akka-mock-scheduler"       % "0.5.5"          % "test, it",
