@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.http
 
+import org.scalatest.Matchers.convertToAnyShouldWrapper
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.MimeTypes
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -23,11 +24,11 @@ import play.api.test.Helpers.{GET, _}
 import play.api.test.{FakeRequest, Injecting}
 import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
 
 import java.io.IOException
 
-class XmlOrJsonErrorHandlerSpec extends UnitSpec with GuiceOneAppPerSuite with Injecting {
+class XmlOrJsonErrorHandlerSpec extends WordSpec with GuiceOneAppPerSuite with Injecting {
 
   override lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))

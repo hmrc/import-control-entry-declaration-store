@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.entrydeclarationstore.logging
 
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 
-class LoggingContextSpec extends UnitSpec {
+class LoggingContextSpec extends WordSpec {
   "LoggingContext" when {
     "not including message type" must {
       "include mandatory properties" in {

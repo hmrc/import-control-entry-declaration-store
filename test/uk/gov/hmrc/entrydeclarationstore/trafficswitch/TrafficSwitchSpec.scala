@@ -18,6 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.trafficswitch
 
 import akka.actor.ActorSystem
 import akka.pattern.{AskTimeoutException, CircuitBreakerOpenException}
+import org.scalatest.Matchers.{a, all, an, convertToAnyShouldWrapper}
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -26,7 +27,8 @@ import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.entrydeclarationstore.models.TrafficSwitchState
 import uk.gov.hmrc.entrydeclarationstore.services.MockTrafficSwitchService
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 
 import java.util.concurrent.atomic.AtomicBoolean
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -36,7 +38,7 @@ import scala.util.Try
 import scala.util.control.NoStackTrace
 
 class TrafficSwitchSpec
-    extends UnitSpec
+    extends WordSpec
     with ScalaFutures
     with Eventually
     with MockTrafficSwitchService
@@ -72,7 +74,7 @@ class TrafficSwitchSpec
     def throwException: Future[Nothing] = Future.failed(e)
 
     def trafficSwitch(trafficSwitchConfig: TrafficSwitchConfig = defaultConfig): TrafficSwitch = {
-      MockTrafficSwitchService.getTrafficSwitchState returns TrafficSwitchState.Flowing noMoreThanOnce ()
+      MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(TrafficSwitchState.Flowing) noMoreThanOnce ()
       new TrafficSwitch(trafficSwitchActorFactory(trafficSwitchConfig), trafficSwitchConfig)
     }
 
@@ -81,7 +83,7 @@ class TrafficSwitchSpec
 
     def trafficSwitchNotFlowing(trafficSwitchConfig: TrafficSwitchConfig = defaultConfig): TrafficSwitch = {
       val ts: TrafficSwitch = trafficSwitch(trafficSwitchConfig)
-      MockTrafficSwitchService.stopTrafficFlow returns unit
+      MockTrafficSwitchService.stopTrafficFlow returns Future.successful(unit)
 
       for (_ <- 1 to maxFailures) {
         ts.withTrafficSwitch(throwException, exceptionAsFailure).failed.futureValue shouldBe e
@@ -118,7 +120,7 @@ class TrafficSwitchSpec
       "set state to not flowing after max failures" in new Test {
         val ts: TrafficSwitch = trafficSwitch()
 
-        MockTrafficSwitchService.stopTrafficFlow returns unit
+        MockTrafficSwitchService.stopTrafficFlow returns Future.successful(unit)
 
         for (_ <- 1 to maxFailures)
           ts.withTrafficSwitch(throwException, exceptionAsFailure).failed.futureValue shouldBe e
@@ -131,7 +133,7 @@ class TrafficSwitchSpec
 
         val promise: Promise[String] = Promise[String]
 
-        MockTrafficSwitchService.stopTrafficFlow returns unit
+        MockTrafficSwitchService.stopTrafficFlow returns Future.successful(unit)
 
         val results: Seq[Throwable] = Future
           .sequence((1 to maxFailures)
@@ -153,7 +155,7 @@ class TrafficSwitchSpec
       }
 
       "continue to work when exception actually thrown by call" in new Test {
-        MockTrafficSwitchService.getTrafficSwitchState returns TrafficSwitchState.Flowing anyNumberOfTimes ()
+        MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(TrafficSwitchState.Flowing) anyNumberOfTimes ()
         val ts = new TrafficSwitch(trafficSwitchActorFactory(shortTimeoutConfig), shortTimeoutConfig)
 
         // Will probably fail with a timeout - the crucial thing is that CB will continue to accept calls
@@ -169,7 +171,7 @@ class TrafficSwitchSpec
 
         val b = new AtomicBoolean(false)
 
-        ts.withTrafficSwitch(b.set(true), exceptionAsFailure)
+        ts.withTrafficSwitch(Future.successful(b.set(true)), exceptionAsFailure)
           .failed
           .futureValue shouldBe a[CircuitBreakerOpenException]
 
@@ -179,7 +181,7 @@ class TrafficSwitchSpec
       "start flowing when the state is manually changed to flowing" in new Test {
         val ts: TrafficSwitch = trafficSwitchNotFlowing(defaultConfig.copy(notFlowingStateRefreshPeriod = 50.millis))
 
-        MockTrafficSwitchService.getTrafficSwitchState returns TrafficSwitchState.Flowing anyNumberOfTimes ()
+        MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(TrafficSwitchState.Flowing) anyNumberOfTimes ()
 
         eventually {
           ts.withTrafficSwitch(sayHi, exceptionAsFailure).futureValue shouldBe "hi"

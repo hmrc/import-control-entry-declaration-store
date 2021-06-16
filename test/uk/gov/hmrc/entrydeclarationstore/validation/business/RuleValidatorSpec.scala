@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.entrydeclarationstore.validation.business
 
+import org.scalatest.Matchers.convertToAnyShouldWrapper
 import uk.gov.hmrc.entrydeclarationstore.validation.{ValidationError, ValidationErrors}
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
 
 import scala.xml.Elem
 
-class RuleValidatorSpec extends UnitSpec {
+class RuleValidatorSpec extends WordSpec {
 
   val xml: Elem =
     <a>

@@ -18,12 +18,13 @@ package uk.gov.hmrc.entrydeclarationstore.utils
 
 import akka.actor.Scheduler
 import com.miguno.akka.testing.VirtualTime
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
-class DelayerSpec extends UnitSpec {
+class DelayerSpec extends WordSpec {
 
   val virtualTime                       = new VirtualTime
   implicit val mockScheduler: Scheduler = virtualTime.scheduler

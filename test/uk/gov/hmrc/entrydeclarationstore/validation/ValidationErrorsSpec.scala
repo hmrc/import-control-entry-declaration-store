@@ -16,14 +16,16 @@
 
 package uk.gov.hmrc.entrydeclarationstore.validation
 
+import org.scalatest.Matchers.{a, contain, convertToAnyShouldWrapper}
+import org.scalatest.WordSpec
 import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
 import uk.gov.hmrc.entrydeclarationstore.utils.{XmlFormatConfig, XmlFormats}
 import uk.gov.hmrc.entrydeclarationstore.validation.schema.{SchemaType, SchemaValidationResult, SchemaValidator}
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
 
 import scala.xml.Node
 
-class ValidationErrorsSpec extends UnitSpec {
+class ValidationErrorsSpec extends WordSpec {
 
   val validator = new SchemaValidator
 

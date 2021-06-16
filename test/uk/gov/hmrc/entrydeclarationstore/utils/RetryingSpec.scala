@@ -18,13 +18,15 @@ package uk.gov.hmrc.entrydeclarationstore.utils
 
 import akka.actor.{ActorSystem, Scheduler}
 import com.google.common.base.Stopwatch
+import org.scalatest.Matchers.convertToAnyShouldWrapper
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Injecting
 import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
+import play.api.test.Helpers.await
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration._
@@ -32,7 +34,7 @@ import scala.concurrent.{ExecutionContext, Future, TimeoutException}
 import scala.util.control.NoStackTrace
 import scala.util.{Failure, Success, Try}
 
-class RetryingSpec extends UnitSpec with ScalaFutures with GuiceOneAppPerSuite with Injecting {
+class RetryingSpec extends WordSpec with ScalaFutures with GuiceOneAppPerSuite with Injecting {
 
   override lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
@@ -137,7 +139,7 @@ class RetryingSpec extends UnitSpec with ScalaFutures with GuiceOneAppPerSuite w
             .retry[String](List(delay), !_.isSuccess)(succeedAfter(1)))(delay * 2) shouldBe s"Attempt 1"
 
         stopwatch.stop()
-        stopwatch.elapsed(TimeUnit.MILLISECONDS) shouldBe >(delay.toMillis)
+        stopwatch.elapsed(TimeUnit.MILLISECONDS) > delay.toMillis shouldBe true
       }
 
       "not delay when no retry is necessary" in {
@@ -149,7 +151,7 @@ class RetryingSpec extends UnitSpec with ScalaFutures with GuiceOneAppPerSuite w
             .retry[String](List(delay), !_.isSuccess)(succeedAfter(0)))(delay * 2) shouldBe s"Attempt 0"
 
         stopwatch.stop()
-        stopwatch.elapsed(TimeUnit.MILLISECONDS) shouldBe <(delay.toMillis)
+        stopwatch.elapsed(TimeUnit.MILLISECONDS) < delay.toMillis shouldBe true
       }
     }
 

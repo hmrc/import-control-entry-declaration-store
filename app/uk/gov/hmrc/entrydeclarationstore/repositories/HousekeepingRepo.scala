@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
-import play.api.Logger
 import play.api.libs.json.{JsObject, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.WriteConcern
@@ -58,7 +57,7 @@ class HousekeepingRepoImpl @Inject()(
     Mdc
       .preservingMdc(remove("_id" -> singletonId))
       .andThen {
-        case Success(_) => Logger.warn("Housekeeping turned on")
+        case Success(_) => logger.warn("Housekeeping turned on")
       }
       .map(_ => ())
 
@@ -73,7 +72,7 @@ class HousekeepingRepoImpl @Inject()(
             upsert = true
           ))
       .andThen {
-        case Success(_) => Logger.warn("Housekeeping turned off")
+        case Success(_) => logger.warn("Housekeeping turned off")
       }
       .map(_ => ())
 

@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.entrydeclarationstore.validation.schema
 
-import org.scalatest.Assertion
+import org.scalatest.Matchers.{a, convertToAnyShouldWrapper}
+import org.scalatest.{Assertion, WordSpec}
 import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.util.Random
 import scala.xml._
@@ -28,7 +28,7 @@ import scala.xml.transform.{RewriteRule, RuleTransformer}
 /**
   * Tests that re-written schemas for E315 & E313 are equivalent to the originals
   */
-class SchemaEquivalenceSpec extends UnitSpec {
+class SchemaEquivalenceSpec extends WordSpec {
   val schemaValidator = new SchemaValidator
 
   "E315" must {

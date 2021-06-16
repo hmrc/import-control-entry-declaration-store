@@ -16,18 +16,19 @@
 
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
+import org.scalatest.Matchers.convertToAnyShouldWrapper
 import play.api.http.MimeTypes
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.entrydeclarationstore.models.HousekeepingStatus
 import uk.gov.hmrc.entrydeclarationstore.services.MockHousekeepingService
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class HousekeepingControllerSpec extends UnitSpec with MockHousekeepingService {
+class HousekeepingControllerSpec extends WordSpec with MockHousekeepingService {
 
   val controller = new HousekeepingController(Helpers.stubControllerComponents(), mockHousekeepingService)
 
@@ -38,7 +39,7 @@ class HousekeepingControllerSpec extends UnitSpec with MockHousekeepingService {
     "getting housekeeping state" when {
       "housekeeping is on" must {
         "return 200 with housekeeping as true" in {
-          MockHousekeepingService.getHousekeepingStatus returns HousekeepingStatus(on = true)
+          MockHousekeepingService.getHousekeepingStatus returns Future.successful(HousekeepingStatus(on = true))
 
           val result = controller.getStatus()(FakeRequest())
 
@@ -51,7 +52,7 @@ class HousekeepingControllerSpec extends UnitSpec with MockHousekeepingService {
 
     "housekeeping is off" must {
       "return 200 with housekeeping as false" in {
-        MockHousekeepingService.getHousekeepingStatus returns HousekeepingStatus(on = false)
+        MockHousekeepingService.getHousekeepingStatus returns Future.successful(HousekeepingStatus(on = false))
 
         val result = controller.getStatus()(FakeRequest())
 
@@ -98,14 +99,14 @@ class HousekeepingControllerSpec extends UnitSpec with MockHousekeepingService {
       val submissionId = "submissionId"
       "setting is successful" must {
         "return 204" in {
-          MockHousekeepingService.setShortTtl(submissionId) returns true
+          MockHousekeepingService.setShortTtl(submissionId) returns Future.successful(true)
 
           status(controller.setShortTtlBySubmissionId(submissionId = submissionId)(FakeRequest())) shouldBe NO_CONTENT
         }
       }
       "setting fails" must {
         "return 404" in {
-          MockHousekeepingService.setShortTtl(submissionId) returns false
+          MockHousekeepingService.setShortTtl(submissionId) returns Future.successful(false)
 
           status(controller.setShortTtlBySubmissionId(submissionId = submissionId)(FakeRequest())) shouldBe NOT_FOUND
         }
@@ -117,7 +118,7 @@ class HousekeepingControllerSpec extends UnitSpec with MockHousekeepingService {
       val correlationId = "correlationId"
       "setting is successful" must {
         "return 204" in {
-          MockHousekeepingService.setShortTtl(eori, correlationId) returns true
+          MockHousekeepingService.setShortTtl(eori, correlationId) returns Future.successful(true)
 
           status(controller.setShortTtlByEoriAndCorrelationId(eori = eori, correlationId = correlationId)(
             FakeRequest())) shouldBe NO_CONTENT
@@ -125,7 +126,7 @@ class HousekeepingControllerSpec extends UnitSpec with MockHousekeepingService {
       }
       "setting fails" must {
         "return 404" in {
-          MockHousekeepingService.setShortTtl(eori, correlationId) returns false
+          MockHousekeepingService.setShortTtl(eori, correlationId) returns Future.successful(false)
 
           status(controller.setShortTtlByEoriAndCorrelationId(eori = eori, correlationId = correlationId)(
             FakeRequest())) shouldBe NOT_FOUND

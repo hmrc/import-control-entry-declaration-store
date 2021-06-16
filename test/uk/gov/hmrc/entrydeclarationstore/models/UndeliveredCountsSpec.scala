@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.entrydeclarationstore.models
 
+import org.scalatest.Matchers.convertToAnyShouldWrapper
 import play.api.libs.json.Json
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
 
-class UndeliveredCountsSpec extends UnitSpec {
+class UndeliveredCountsSpec extends WordSpec {
 
   "UndeliveredCounts" when {
     "there are undelivered submissions" must {

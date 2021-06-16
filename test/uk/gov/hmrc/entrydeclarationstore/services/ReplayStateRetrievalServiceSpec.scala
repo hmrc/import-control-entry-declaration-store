@@ -16,14 +16,16 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
+import org.scalatest.Matchers.convertToAnyShouldWrapper
 import org.scalatest.concurrent.ScalaFutures
 import uk.gov.hmrc.entrydeclarationstore.models.ReplayState
 import uk.gov.hmrc.entrydeclarationstore.repositories.MockReplayStateRepo
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
 
 import java.time.Instant
+import scala.concurrent.Future
 
-class ReplayStateRetrievalServiceSpec extends UnitSpec with MockReplayStateRepo with ScalaFutures {
+class ReplayStateRetrievalServiceSpec extends WordSpec with MockReplayStateRepo with ScalaFutures {
 
   val service  = new ReplayStateRetrievalService(mockReplayStateRepo)
   val replayId = "replayId"
@@ -33,7 +35,7 @@ class ReplayStateRetrievalServiceSpec extends UnitSpec with MockReplayStateRepo 
       "return it" in {
         val state = ReplayState(Instant.now, None, completed = false, 0, 1, 2)
 
-        MockReplayStateRepo.lookupState(replayId) returns Some(state)
+        MockReplayStateRepo.lookupState(replayId) returns Future.successful(Some(state))
 
         service.retrieveReplayState(replayId).futureValue shouldBe Some(state)
       }
@@ -41,7 +43,7 @@ class ReplayStateRetrievalServiceSpec extends UnitSpec with MockReplayStateRepo 
 
     "no submission exists for a submissionId" must {
       "return None" in {
-        MockReplayStateRepo.lookupState(replayId) returns None
+        MockReplayStateRepo.lookupState(replayId) returns Future.successful(None)
 
         service.retrieveReplayState(replayId).futureValue shouldBe None
       }

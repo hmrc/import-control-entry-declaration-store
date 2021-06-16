@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
+import org.scalatest.Matchers.convertToAnyShouldWrapper
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.{contentType, _}
 import play.api.test.{FakeRequest, Helpers}
@@ -23,12 +24,12 @@ import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.entrydeclarationstore.models.{ReplayInitializationResult, ReplayResult, TransportCount, UndeliveredCounts}
 import uk.gov.hmrc.entrydeclarationstore.orchestrators.MockReplayOrchestrator
 import uk.gov.hmrc.entrydeclarationstore.services.MockSubmissionReplayService
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, Promise}
 
-class ReplayControllerSpec extends UnitSpec with MockReplayOrchestrator with MockSubmissionReplayService {
+class ReplayControllerSpec extends WordSpec with MockReplayOrchestrator with MockSubmissionReplayService {
   val controller =
     new ReplayController(Helpers.stubControllerComponents(), mockReplayOrchestrator, mockSubmissionReplayService)
   val limit    = 100
@@ -44,7 +45,7 @@ class ReplayControllerSpec extends UnitSpec with MockReplayOrchestrator with Moc
 
   val ignoredReplayResultFuture: Future[ReplayResult] = Promise[ReplayResult].future
 
-  "ReplayController startReplay" should {
+  "ReplayController startReplay" must {
     "return Accepted with Started" when {
       "request with limit defined is handled successfully" in {
         MockReplayOrchestrator.startReplay(Some(limit)) returns
@@ -111,7 +112,7 @@ class ReplayControllerSpec extends UnitSpec with MockReplayOrchestrator with Moc
     }
   }
 
-  "ReplayController getUndeliveredCounts" should {
+  "ReplayController getUndeliveredCounts" must {
     "work" in {
       val undeliveredCounts = UndeliveredCounts(totalCount = 2, Some(Seq(TransportCount("11", 2))))
       MockSubmissionReplayService.getUndeliveredCounts returns Future.successful(undeliveredCounts)

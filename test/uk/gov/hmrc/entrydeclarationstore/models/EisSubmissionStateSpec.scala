@@ -17,10 +17,11 @@
 package uk.gov.hmrc.entrydeclarationstore.models
 
 import org.scalatest.Inspectors
+import org.scalatest.Matchers.convertToAnyShouldWrapper
 import play.api.libs.json.{JsString, Json}
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
 
-class EisSubmissionStateSpec extends UnitSpec with Inspectors {
+class EisSubmissionStateSpec extends WordSpec with Inspectors {
   import EisSubmissionState._
   "EisSubmissionState" must {
     "serialize to JSON correctly" in {

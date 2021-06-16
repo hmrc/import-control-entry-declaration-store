@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.entrydeclarationstore.models
 
+import org.scalatest.Matchers.convertToAnyShouldWrapper
 import play.api.libs.json.Json
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
 
 import java.time.Instant
 
-class EntryDeclarationMetadataSpec extends UnitSpec {
+class EntryDeclarationMetadataSpec extends WordSpec {
 
   "EntryDeclarationMetadata" must {
     "serialize to the correct JSON for a declaration" in {

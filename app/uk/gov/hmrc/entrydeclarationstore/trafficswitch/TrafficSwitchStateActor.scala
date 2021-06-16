@@ -19,7 +19,7 @@ package uk.gov.hmrc.entrydeclarationstore.trafficswitch
 import akka.actor.{Actor, ActorRef, ActorRefFactory, Props, Status, Timers}
 import akka.event.LoggingReceive
 import akka.pattern.pipe
-import play.api.Logger
+import play.api.Logging
 import uk.gov.hmrc.entrydeclarationstore.models.TrafficSwitchState
 import uk.gov.hmrc.entrydeclarationstore.services.TrafficSwitchService
 import uk.gov.hmrc.entrydeclarationstore.trafficswitch.TrafficSwitchStateActor._
@@ -50,7 +50,7 @@ object TrafficSwitchStateActor {
 
 class TrafficSwitchStateActor(trafficSwitchService: TrafficSwitchService, trafficSwitchConfig: TrafficSwitchConfig)
     extends Actor
-    with Timers {
+    with Timers with Logging {
 
   implicit val ec: ExecutionContext = context.dispatcher
 
@@ -80,7 +80,7 @@ class TrafficSwitchStateActor(trafficSwitchService: TrafficSwitchService, traffi
     case GetStateResult(Success(state)) =>
       notifyState(state)
     case GetStateResult(Failure(e)) =>
-      Logger.warn("Unable to get mongo traffic switch state", e)
+      logger.warn("Unable to get mongo traffic switch state", e)
 
       // Only update the state when parent is awaiting its initial state
       // otherwise try again
@@ -96,7 +96,7 @@ class TrafficSwitchStateActor(trafficSwitchService: TrafficSwitchService, traffi
       context.become(running)
 
     case Status.Failure(e) =>
-      Logger.warn("Unable to update mongo traffic switch state to not flowing", e)
+      logger.warn("Unable to update mongo traffic switch state to not flowing", e)
       refreshAndNotifyStateAfter(refreshPeriodFor(TrafficSwitchState.NotFlowing))
       context.become(running)
   }

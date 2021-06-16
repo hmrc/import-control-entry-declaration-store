@@ -18,6 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import controllers.Assets
 import org.scalatest.Assertion
+import org.scalatest.Matchers.{be, convertToAnyShouldWrapper, have, include, not}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.HttpErrorHandler
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -29,11 +30,11 @@ import play.api.{Application, Environment, Mode}
 import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
 
 import scala.concurrent.Future
 
-class DocumentationControllerSpec extends UnitSpec with MockAppConfig with Injecting with GuiceOneAppPerSuite {
+class DocumentationControllerSpec extends WordSpec with MockAppConfig with Injecting with GuiceOneAppPerSuite {
   override lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
     .disable[HousekeepingScheduler]

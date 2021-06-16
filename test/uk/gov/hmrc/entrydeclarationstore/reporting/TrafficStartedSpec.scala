@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.entrydeclarationstore.reporting
 
+import org.scalatest.Matchers.convertToAnyShouldWrapper
 import play.api.libs.json.Json
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
 
 import java.time.{Duration, Instant}
 
-class TrafficStartedSpec extends UnitSpec {
+class TrafficStartedSpec extends WordSpec {
 
   val now: Instant = Instant.now
   val timeTaken    = 100

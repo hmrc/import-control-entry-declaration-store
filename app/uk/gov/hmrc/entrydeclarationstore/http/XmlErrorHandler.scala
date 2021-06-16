@@ -20,7 +20,7 @@ import play.api.http.HttpErrorHandler
 import play.api.http.Status._
 import play.api.mvc.Results._
 import play.api.mvc.{RequestHeader, Result}
-import play.api.{Configuration, Logger}
+import play.api.{Configuration, Logging}
 import uk.gov.hmrc.auth.core.AuthorisationException
 import uk.gov.hmrc.entrydeclarationstore.utils.XmlFormats._
 import uk.gov.hmrc.http._
@@ -37,7 +37,7 @@ class XmlErrorHandler @Inject()(
   configuration: Configuration
 )(implicit ec: ExecutionContext)
     extends HttpErrorHandler
-    with BackendHeaderCarrierProvider {
+    with BackendHeaderCarrierProvider with Logging {
 
   import httpAuditEvent.dataEvent
 
@@ -105,7 +105,7 @@ class XmlErrorHandler @Inject()(
 
     val errorResponse = ex match {
       case e: AuthorisationException =>
-        Logger.error(message, e)
+        logger.error(message, e)
         ErrorResponse(UNAUTHORIZED, e.getMessage)
       case e: HttpException =>
         logException(e, e.responseCode)
@@ -114,7 +114,7 @@ class XmlErrorHandler @Inject()(
         logException(e, e.statusCode)
         ErrorResponse(e.reportAs, e.getMessage)
       case e: Throwable =>
-        Logger.error(message, e)
+        logger.error(message, e)
         ErrorResponse(INTERNAL_SERVER_ERROR, e.getMessage)
     }
 
@@ -131,8 +131,8 @@ class XmlErrorHandler @Inject()(
 
   private def logException(exception: Exception, responseCode: Int): Unit =
     if (upstreamWarnStatuses contains responseCode) {
-      Logger.warn(exception.getMessage, exception)
+      logger.warn(exception.getMessage, exception)
     } else {
-      Logger.error(exception.getMessage, exception)
+      logger.error(exception.getMessage, exception)
     }
 }

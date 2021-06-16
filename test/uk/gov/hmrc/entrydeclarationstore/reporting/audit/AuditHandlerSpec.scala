@@ -19,17 +19,18 @@ package uk.gov.hmrc.entrydeclarationstore.reporting.audit
 import org.scalamock.matchers.ArgCapture.CaptureOne
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.Inside
+import org.scalatest.Matchers.{be, convertToAnyShouldWrapper, not}
 import play.api.libs.json.{JsObject, JsString}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
 import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuditHandlerSpec extends UnitSpec with MockFactory with MockAppConfig with Inside {
+class AuditHandlerSpec extends WordSpec with MockFactory with MockAppConfig with Inside {
 
   val appName         = "appname"
   val auditType       = "type"
@@ -67,7 +68,7 @@ class AuditHandlerSpec extends UnitSpec with MockFactory with MockAppConfig with
       e.detail      shouldBe detail
 
       e.tags("transactionName") shouldBe transactionName
-      e.tags.get("clientIP")    should not be empty
+      e.tags.get("clientIP")    should not be None
     }
   }
 }

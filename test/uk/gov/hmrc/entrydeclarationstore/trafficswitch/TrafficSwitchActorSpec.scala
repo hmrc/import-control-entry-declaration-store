@@ -19,9 +19,9 @@ package uk.gov.hmrc.entrydeclarationstore.trafficswitch
 import akka.actor.{ActorRef, ActorRefFactory, ActorSystem, Status}
 import akka.pattern.CircuitBreakerOpenException
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
-import org.scalatest.{BeforeAndAfterAll, Inside}
+import org.scalatest.Matchers.{a, convertToAnyShouldWrapper}
+import org.scalatest.{BeforeAndAfterAll, Inside, WordSpecLike}
 import uk.gov.hmrc.entrydeclarationstore.models.TrafficSwitchState
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.duration._
 import scala.concurrent.{Future, Promise, TimeoutException}
@@ -30,7 +30,7 @@ import scala.util.control.NoStackTrace
 
 class TrafficSwitchActorSpec
     extends TestKit(ActorSystem("TrafficSwitchActorSpec"))
-    with UnitSpec
+    with WordSpecLike
     with BeforeAndAfterAll
     with ImplicitSender
     with Inside {

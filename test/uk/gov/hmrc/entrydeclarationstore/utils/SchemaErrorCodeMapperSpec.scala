@@ -17,13 +17,14 @@
 package uk.gov.hmrc.entrydeclarationstore.utils
 
 import org.scalatest.Inside
+import org.scalatest.Matchers.convertToAnyShouldWrapper
 import org.scalatest.concurrent.ScalaFutures
 import uk.gov.hmrc.entrydeclarationstore.repositories.MockEntryDeclarationRepo
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
 
-class SchemaErrorCodeMapperSpec extends UnitSpec with MockEntryDeclarationRepo with Inside with ScalaFutures {
+class SchemaErrorCodeMapperSpec extends WordSpec with MockEntryDeclarationRepo with Inside with ScalaFutures {
 
-  "Error Mapper" should {
+  "Error Mapper" must {
     "return 4000" when {
       "cvc-attribute.3 is supplied as the validator error code" in {
         SchemaErrorCodeMapper.getErrorCodeFromParserFailure("cvc-attribute.3") shouldBe 4000

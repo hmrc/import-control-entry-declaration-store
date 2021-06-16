@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.connectors
 
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.JsObject
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.http.HttpReads.Implicits._
@@ -28,12 +28,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ApiSubscriptionFieldsConnector @Inject()(client: HttpClient, appConfig: AppConfig)(
-  implicit ec: ExecutionContext) {
+  implicit ec: ExecutionContext) extends Logging {
 
   def getAuthenticatedEoriField(clientId: String): Future[Option[String]] = {
     val url: String =
       s"${appConfig.apiSubscriptionFieldsHost}/field/application/$clientId/context/${URLEncoder.encode(appConfig.apiGatewayContext, "UTF-8")}/version/1.0"
-    Logger.info(s"sending GET request to $url")
+    logger.info(s"sending GET request to $url")
 
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -43,7 +43,7 @@ class ApiSubscriptionFieldsConnector @Inject()(client: HttpClient, appConfig: Ap
         case Some(response) =>
           val eori = (response \\ "authenticatedEori").headOption.map(_.as[String])
 
-          Logger.debug(s"Got eori $eori for client Id $clientId")
+          logger.debug(s"Got eori $eori for client Id $clientId")
           eori
         case None => None
       }

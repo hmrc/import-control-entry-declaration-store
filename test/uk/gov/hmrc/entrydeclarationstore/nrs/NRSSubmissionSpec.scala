@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.entrydeclarationstore.nrs
 
+import org.scalatest.Matchers.convertToAnyShouldWrapper
 import play.api.libs.json.Json
 import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
 
-class NRSSubmissionSpec extends UnitSpec with NRSMetadataTestData {
+class NRSSubmissionSpec extends WordSpec with NRSMetadataTestData {
 
   "NRSSubmission" must {
     "format to the correct JSON with base64 encoded payload" in {

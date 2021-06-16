@@ -16,19 +16,21 @@
 
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
+import org.scalatest.Matchers.convertToAnyShouldWrapper
 import play.api.http.MimeTypes
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.entrydeclarationstore.models.{TrafficSwitchState, TrafficSwitchStatus}
 import uk.gov.hmrc.entrydeclarationstore.services.MockTrafficSwitchService
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
 
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-class TrafficSwitchControllerSpec extends UnitSpec with MockTrafficSwitchService {
+class TrafficSwitchControllerSpec extends WordSpec with MockTrafficSwitchService {
 
   val controller = new TrafficSwitchController(Helpers.stubControllerComponents(), mockTrafficSwitchService)
 
@@ -45,7 +47,7 @@ class TrafficSwitchControllerSpec extends UnitSpec with MockTrafficSwitchService
       "return 200 with the value" when {
         "the traffic switch is not flowing" in {
           MockTrafficSwitchService.getTrafficSwitchStatus
-            .returns(TrafficSwitchStatus(TrafficSwitchState.NotFlowing, Some(timeTrafficStopped), Some(timeTrafficStart)))
+            .returns(Future.successful(TrafficSwitchStatus(TrafficSwitchState.NotFlowing, Some(timeTrafficStopped), Some(timeTrafficStart))))
 
           val result = controller.getStatus()(FakeRequest())
 
@@ -55,7 +57,7 @@ class TrafficSwitchControllerSpec extends UnitSpec with MockTrafficSwitchService
         }
         "the traffic switch is flowing" in {
           MockTrafficSwitchService.getTrafficSwitchStatus
-            .returns(TrafficSwitchStatus(TrafficSwitchState.Flowing, Some(timeTrafficStopped), Some(timeTrafficStart)))
+            .returns(Future.successful(TrafficSwitchStatus(TrafficSwitchState.Flowing, Some(timeTrafficStopped), Some(timeTrafficStart))))
 
           val result = controller.getStatus()(FakeRequest())
 
@@ -68,7 +70,7 @@ class TrafficSwitchControllerSpec extends UnitSpec with MockTrafficSwitchService
     "start the traffic flow" must {
       "return 204" when {
         "successful" in {
-          MockTrafficSwitchService.startTrafficFlow returns ((): Unit)
+          MockTrafficSwitchService.startTrafficFlow returns Future.successful((): Unit)
 
           val result = controller.startTrafficFlow()(FakeRequest())
 

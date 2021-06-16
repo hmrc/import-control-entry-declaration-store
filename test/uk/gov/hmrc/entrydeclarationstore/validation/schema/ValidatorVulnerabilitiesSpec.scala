@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.entrydeclarationstore.validation.schema
 
-import org.scalatest.Inside
+import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.{Inside, WordSpec}
 import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
 import uk.gov.hmrc.entrydeclarationstore.validation.{ValidationError, ValidationErrors}
-import uk.gov.hmrc.play.test.UnitSpec
 
-class ValidatorVulnerabilitiesSpec extends UnitSpec with Inside {
+class ValidatorVulnerabilitiesSpec extends WordSpec with Inside {
 
   val validator                       = new SchemaValidator()
   val schemaType: SchemaTypeE313.type = SchemaTypeE313

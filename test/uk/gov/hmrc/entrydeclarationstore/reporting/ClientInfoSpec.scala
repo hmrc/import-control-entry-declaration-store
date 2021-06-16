@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.entrydeclarationstore.reporting
 
+import org.scalatest.Matchers.convertToAnyShouldWrapper
 import play.api.mvc.Headers
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
 
-class ClientInfoSpec extends UnitSpec {
+class ClientInfoSpec extends WordSpec {
   "ClientInfo" when {
     "creating from implicit headers" must {
       val applicationId = "someAppId"

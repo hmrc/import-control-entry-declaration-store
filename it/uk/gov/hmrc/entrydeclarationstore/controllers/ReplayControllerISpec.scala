@@ -18,12 +18,12 @@ package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import java.time.Instant
 import java.util.UUID
-
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import com.github.tomakehurst.wiremock.http.Fault
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
+import org.scalatest.Matchers.convertToAnyShouldWrapper
 import org.scalatest.concurrent.{Eventually, IntegrationPatience}
 import org.scalatest.{Assertion, BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
@@ -37,12 +37,13 @@ import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.{EisSubmissionState, EntryDeclarationModel, ReplayState}
 import uk.gov.hmrc.entrydeclarationstore.repositories.EntryDeclarationRepoImpl
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ReplayControllerISpec
-    extends UnitSpec
+    extends WordSpec
     with BeforeAndAfterAll
     with BeforeAndAfterEach
     with GuiceOneServerPerSuite

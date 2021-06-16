@@ -19,7 +19,7 @@ package uk.gov.hmrc.entrydeclarationstore.services
 import cats.data.EitherT
 import cats.implicits._
 import org.joda.time.LocalDate
-import play.api.Logger
+import play.api.Logging
 import play.api.mvc.Headers
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve._
@@ -43,7 +43,7 @@ class AuthService @Inject()(
   appConfig: AppConfig
 )(implicit ec: ExecutionContext)
     extends AuthorisedFunctions
-    with CommonHeaders {
+    with CommonHeaders with Logging {
 
   sealed trait AuthError
 
@@ -76,12 +76,12 @@ class AuthService @Inject()(
     def auth: Future[Option[Option[IdentityData]]] =
       authorised(AuthProviders(AuthProvider.PrivilegedApplication))
         .retrieve(retrieval) { identityParts =>
-          Logger.debug(s"Successfully authorised CSP PrivilegedApplication")
+          logger.debug(s"Successfully authorised CSP PrivilegedApplication")
           Future.successful(Some(identityBuilder(identityParts)))
         }
         .recover {
           case ae: AuthorisationException =>
-            Logger.debug(s"No authorisation for CSP PrivilegedApplication", ae)
+            logger.debug(s"No authorisation for CSP PrivilegedApplication", ae)
             None
         }
 
@@ -113,13 +113,13 @@ class AuthService @Inject()(
             case None       => NoEori.asLeft
           }
 
-          Logger.debug(
+          logger.debug(
             s"Successfully authorised non-CSP GovernmentGateway with enrolments ${usersEnrolments.enrolments} and eori $eori")
           Future.successful(result)
       }
       .recover {
         case ae: AuthorisationException =>
-          Logger.debug(s"No authorisation for non-CSP GovernmentGateway", ae)
+          logger.debug(s"No authorisation for non-CSP GovernmentGateway", ae)
           AuthFail.asLeft
       })
 

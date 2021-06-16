@@ -16,14 +16,16 @@
 
 package uk.gov.hmrc.entrydeclarationstore.controllers.testOnly
 
+import org.scalatest.Matchers.convertToAnyShouldWrapper
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.entrydeclarationstore.services.MockTrafficSwitchService
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-class TestTrafficSwitchControllerSpec extends UnitSpec with MockTrafficSwitchService {
+class TestTrafficSwitchControllerSpec extends WordSpec with MockTrafficSwitchService {
 
   val controller = new TestTrafficSwitchController(Helpers.stubControllerComponents(), mockTrafficSwitchService)
 
@@ -31,7 +33,7 @@ class TestTrafficSwitchControllerSpec extends UnitSpec with MockTrafficSwitchSer
     "stopping the EIS traffic switch" must {
       "return 204" when {
         "successful" in {
-          MockTrafficSwitchService.stopTrafficFlow returns ((): Unit)
+          MockTrafficSwitchService.stopTrafficFlow returns Future.successful((): Unit)
 
           val result = controller.stopTrafficFlow()(FakeRequest())
 
@@ -43,7 +45,7 @@ class TestTrafficSwitchControllerSpec extends UnitSpec with MockTrafficSwitchSer
   "resetting the traffic switch" must {
     "return 204" when {
       "successful" in {
-        MockTrafficSwitchService.resetTrafficSwitch returns ((): Unit)
+        MockTrafficSwitchService.resetTrafficSwitch returns Future.successful((): Unit)
 
         val result = controller.resetTrafficSwitch()(FakeRequest())
 
