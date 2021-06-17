@@ -17,20 +17,21 @@
 package uk.gov.hmrc.entrydeclarationstore.services
 
 import org.scalamock.handlers.CallHandler
+import org.scalatest.Matchers.convertToAnyShouldWrapper
 import org.scalatest.concurrent.ScalaFutures
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.{TrafficSwitchState, TrafficSwitchStatus}
 import uk.gov.hmrc.entrydeclarationstore.reporting.{MockReportSender, TrafficStarted}
 import uk.gov.hmrc.entrydeclarationstore.repositories.MockTrafficSwitchRepo
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
 
 import java.time.temporal.ChronoUnit
 import java.time.{Duration, Instant}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, Promise}
 
-class TrafficSwitchServiceSpec extends UnitSpec with ScalaFutures with MockReportSender with MockTrafficSwitchRepo {
+class TrafficSwitchServiceSpec extends WordSpec with ScalaFutures with MockReportSender with MockTrafficSwitchRepo {
 
   class Setup {
     val trafficSwitchService: TrafficSwitchService = new TrafficSwitchService(mockTrafficSwitchRepo, mockReportSender)
@@ -59,7 +60,7 @@ class TrafficSwitchServiceSpec extends UnitSpec with ScalaFutures with MockRepor
 
   "TrafficSwitchService" when {
 
-    "resetting the Traffic Switch" should {
+    "resetting the Traffic Switch" must {
       "call the Traffic Switch Repo" in new Setup {
         mockResetTrafficSwitch()
         val result: Future[Unit] = trafficSwitchService.resetTrafficSwitch
@@ -68,7 +69,7 @@ class TrafficSwitchServiceSpec extends UnitSpec with ScalaFutures with MockRepor
       }
     }
 
-    "stopping the flow on the Traffic Switch" should {
+    "stopping the flow on the Traffic Switch" must {
       "call the Traffic Switch Repo" in new Setup {
         val state: TrafficSwitchState = TrafficSwitchState.NotFlowing
         mockSetTrafficSwitch(state, Some(trafficSwitchStatus(state)))
@@ -78,7 +79,7 @@ class TrafficSwitchServiceSpec extends UnitSpec with ScalaFutures with MockRepor
       }
     }
 
-    "starting the flow on the Traffic Switch" should {
+    "starting the flow on the Traffic Switch" must {
       "call the Traffic Switch Repo" in new Setup {
         val state: TrafficSwitchState = TrafficSwitchState.Flowing
         mockSetTrafficSwitch(state, Some(trafficSwitchStatus(state)))

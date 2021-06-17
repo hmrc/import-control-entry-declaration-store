@@ -16,18 +16,20 @@
 
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
+import org.scalatest.Matchers.convertToAnyShouldWrapper
 import play.api.http.MimeTypes
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.entrydeclarationstore.models.ReplayState
 import uk.gov.hmrc.entrydeclarationstore.services.MockReplayStateRetrievalService
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-class ReplayStateRetrievalControllerSpec extends UnitSpec with MockReplayStateRetrievalService {
+class ReplayStateRetrievalControllerSpec extends WordSpec with MockReplayStateRetrievalService {
   val controller =
     new ReplayStateRetrievalController(Helpers.stubControllerComponents(), mockReplayStateRetrievalService)
 
@@ -38,7 +40,7 @@ class ReplayStateRetrievalControllerSpec extends UnitSpec with MockReplayStateRe
       "return it" in {
         val state = ReplayState(Instant.now, None, completed = false, 0, 1, 2)
 
-        MockReplayStateRetrievalService.retrieveReplayState(replayId) returns Some(state)
+        MockReplayStateRetrievalService.retrieveReplayState(replayId) returns Future.successful(Some(state))
 
         val result = controller.retrieveReplayState(replayId)(FakeRequest())
 
@@ -49,7 +51,7 @@ class ReplayStateRetrievalControllerSpec extends UnitSpec with MockReplayStateRe
     }
     "state does not exist for a replayId" must {
       "return a 404" in {
-        MockReplayStateRetrievalService.retrieveReplayState(replayId) returns None
+        MockReplayStateRetrievalService.retrieveReplayState(replayId) returns Future.successful(None)
 
         val result = controller.retrieveReplayState(replayId)(FakeRequest())
 

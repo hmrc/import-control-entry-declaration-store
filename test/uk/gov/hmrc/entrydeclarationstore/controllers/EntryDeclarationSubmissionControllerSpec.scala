@@ -18,6 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import akka.util.ByteString
 import com.kenshoo.play.metrics.Metrics
+import org.scalatest.Matchers.{contain, convertToAnyShouldWrapper}
 import play.api.http.MimeTypes
 import play.api.mvc.{Request, Result}
 import play.api.test.Helpers._
@@ -30,7 +31,7 @@ import uk.gov.hmrc.entrydeclarationstore.services._
 import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils._
 import uk.gov.hmrc.entrydeclarationstore.utils.{MockMetrics, XmlFormatConfig, XmlFormats}
 import uk.gov.hmrc.entrydeclarationstore.validation.{EORIMismatchError, MRNMismatchError, ValidationError, ValidationErrors}
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
 
 import java.time.{Clock, Instant, ZoneOffset}
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -38,7 +39,7 @@ import scala.concurrent.{Future, Promise}
 import scala.xml.{XML => _, _}
 
 class EntryDeclarationSubmissionControllerSpec
-    extends UnitSpec
+    extends WordSpec
     with MockEntryDeclarationStore
     with MockAuthService
     with MockNRSService
@@ -150,7 +151,7 @@ class EntryDeclarationSubmissionControllerSpec
     e: E,
     mrn: Option[String],
     optIdentityData: Option[IdentityData]): Unit = {
-    MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, optIdentityData))
+    MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, optIdentityData)))
     MockEntryDeclarationStore
       .handleSubmission(eori, rawPayload, mrn, now, clientInfo)
       .returns(Future.successful(Left(ErrorWrapper(e))))
@@ -168,14 +169,14 @@ class EntryDeclarationSubmissionControllerSpec
 
     "return 401" when {
       "no eori is available from auth service" in {
-        MockAuthService.authenticate returns None
+        MockAuthService.authenticate returns Future.successful(None)
         check(fakeRequest(xmlPayload), UNAUTHORIZED, "UNAUTHORIZED")
       }
     }
 
-    "The submission fails with EORIMismatch" should {
+    "The submission fails with EORIMismatch" must {
       "return 403 with platform standard xml error body" in {
-        MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, None))
+        MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, None)))
         MockEntryDeclarationStore
           .handleSubmission(eori, rawPayload, mrn, now, clientInfo)
           .returns(Future.successful(Left(ErrorWrapper(EORIMismatchError))))
@@ -190,7 +191,7 @@ class EntryDeclarationSubmissionControllerSpec
   // Validating behaviour that both put & post should have...
   def validatingEndpoint(mrn: Option[String], handler: Request[ByteString] => Future[Result]): Unit = {
 
-    "The submission fails with ValidationErrors" should {
+    "The submission fails with ValidationErrors" must {
       "Return BAD_REQUEST" in {
         mockServiceFailWithError(validationErrors, mrn, None)
         mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.ValidationErrors)
@@ -211,7 +212,7 @@ class EntryDeclarationSubmissionControllerSpec
       }
     }
 
-    "The submission fails with a ServerError (e.g. database problem)" should {
+    "The submission fails with a ServerError (e.g. database problem)" must {
       "Return INTERNAL_SERVER_ERROR" in {
         mockServiceFailWithError(ServerError, mrn, None)
         mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.InternalServerError)
@@ -236,7 +237,7 @@ class EntryDeclarationSubmissionControllerSpec
   // Payload encoding behaviour that both put & post should have...
   def encodingEndpoint(mrn: Option[String], handler: Request[ByteString] => Future[Result]): Unit = {
     "pass to the service with a character encoding if one is present in the request" in {
-      MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, None))
+      MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, None)))
       mockReportSuccessfulSubmission(mrn.isDefined)
       MockEntryDeclarationStore
         .handleSubmission(eori, rawPayload.copy(encoding = Some("US-ASCII")), mrn, now, clientInfo)
@@ -250,7 +251,7 @@ class EntryDeclarationSubmissionControllerSpec
     }
 
     "pass to the service without a character encoding if none is present in the request" in {
-      MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, None))
+      MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, None)))
       mockReportSuccessfulSubmission(mrn.isDefined)
       MockEntryDeclarationStore
         .handleSubmission(eori, rawPayload.copy(encoding = None), mrn, now, clientInfo)
@@ -266,7 +267,7 @@ class EntryDeclarationSubmissionControllerSpec
     "submission is successful" when {
       "nrs is enabled" must {
         "submit to NRS and not wait until NRS submission completes" in {
-          MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, Some(identityData)))
+          MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, Some(identityData))))
           mockReportSuccessfulSubmission(mrn.isDefined)
           MockEntryDeclarationStore
             .handleSubmission(eori, rawPayload, mrn, now, clientInfo)
@@ -283,7 +284,7 @@ class EntryDeclarationSubmissionControllerSpec
 
       "nrs is not enabled" must {
         "not submit to NRS" in {
-          MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, None))
+          MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, None)))
           mockReportSuccessfulSubmission(mrn.isDefined)
           MockEntryDeclarationStore
             .handleSubmission(eori, rawPayload, mrn, now, clientInfo)
@@ -298,10 +299,10 @@ class EntryDeclarationSubmissionControllerSpec
       }
     }
 
-  "EntryDeclarationSubmissionController postSubmission" should {
+  "EntryDeclarationSubmissionController postSubmission" must {
     "Return OK" when {
       "The submission is handled successfully" in {
-        MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, None))
+        MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, None)))
         mockReportSuccessfulSubmission(false)
         MockEntryDeclarationStore
           .handleSubmission(eori, rawPayload, None, now, clientInfo)
@@ -326,9 +327,9 @@ class EntryDeclarationSubmissionControllerSpec
   }
 
   "EntryDeclarationSubmissionController putAmendment" when {
-    "The submission is handled successfully" should {
+    "The submission is handled successfully" must {
       "Return OK" in {
-        MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, None))
+        MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, None)))
         mockReportSuccessfulSubmission(true)
         MockEntryDeclarationStore
           .handleSubmission(eori, rawPayload, Some(mrn), now, clientInfo)
@@ -344,9 +345,9 @@ class EntryDeclarationSubmissionControllerSpec
       }
     }
 
-    "The MRN in the body doesnt match the MRN in URL" should {
+    "The MRN in the body doesnt match the MRN in URL" must {
       "Return MRNMismatch Bad Request error" in {
-        MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, None))
+        MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, None)))
         mockReportUnsuccessfulSubmission(isAmendment = true, FailureType.MRNMismatchError)
         MockEntryDeclarationStore
           .handleSubmission(eori, rawPayload, Some(mrn), now, clientInfo)
@@ -363,7 +364,7 @@ class EntryDeclarationSubmissionControllerSpec
       }
 
       "Not submit to nrs even if enabled" in {
-        MockAuthService.authenticate returns Some(UserDetails(eori, clientInfo, Some(identityData)))
+        MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, Some(identityData))))
         mockReportUnsuccessfulSubmission(isAmendment = true, FailureType.MRNMismatchError)
         MockEntryDeclarationStore
           .handleSubmission(eori, rawPayload, Some(mrn), now, clientInfo)

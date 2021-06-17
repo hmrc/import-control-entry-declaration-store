@@ -18,6 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.services
 
 import com.kenshoo.play.metrics.Metrics
 import org.scalatest.Inside
+import org.scalatest.Matchers.{a, convertToAnyShouldWrapper}
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import play.api.libs.json.{JsString, JsValue}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
@@ -29,7 +30,8 @@ import uk.gov.hmrc.entrydeclarationstore.repositories.MockEntryDeclarationRepo
 import uk.gov.hmrc.entrydeclarationstore.utils.{MockIdGenerator, MockMetrics, XmlFormatConfig}
 import uk.gov.hmrc.entrydeclarationstore.validation._
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 
 import java.io.IOException
 import java.time.{Clock, Instant, ZoneOffset}
@@ -39,7 +41,7 @@ import scala.util.control.NoStackTrace
 import scala.xml.NodeSeq
 
 class EntryDeclarationStoreSpec
-    extends UnitSpec
+    extends WordSpec
     with MockEntryDeclarationRepo
     with Inside
     with ScalaFutures
@@ -180,15 +182,15 @@ class EntryDeclarationStoreSpec
     }
 
   "EntryDeclarationStore" when {
-    "a valid E315 is submitted" should {
+    "a valid E315 is submitted" must {
       behave like successfulSubmission(IE315payload, MessageType.IE315, None)
     }
 
-    "a valid E313 is submitted" should {
+    "a valid E313 is submitted" must {
       behave like successfulSubmission(IE313payload, MessageType.IE313, movementRefNo)
     }
 
-    "Payload has validation errors" should {
+    "Payload has validation errors" must {
       "return Left(FailureResponse)" in new Test {
         val errorWrapper: ErrorWrapper[ValidationErrors] =
           ErrorWrapper(ValidationErrors(Seq(ValidationError("errText", "errType", "123", "errLocation"))))
@@ -201,7 +203,7 @@ class EntryDeclarationStoreSpec
       }
     }
 
-    "Valid EntryDeclaration fails to save in the database" should {
+    "Valid EntryDeclaration fails to save in the database" must {
       "return Left(FailureResponse)" in new Test {
         MockAppConfig.validateXMLtoJsonTransformation.returns(false)
         MockValidationHandler.handleValidation(payload, eori, mrn) returns Right(xmlPayload)
@@ -216,7 +218,7 @@ class EntryDeclarationStoreSpec
       }
     }
 
-    "SubmissionReceived event fails to send" should {
+    "SubmissionReceived event fails to send" must {
       "return Left(FailureResponse)" in new Test {
         MockAppConfig.validateXMLtoJsonTransformation.returns(false)
         MockValidationHandler.handleValidation(payload, eori, mrn) returns Right(xmlPayload)
@@ -235,7 +237,7 @@ class EntryDeclarationStoreSpec
       }
     }
 
-    "EIS submission fails" should {
+    "EIS submission fails" must {
       "still send report and set failure status in database" in new Test {
         MockAppConfig.validateXMLtoJsonTransformation.returns(false)
         MockValidationHandler.handleValidation(payload, eori, mrn) returns Right(xmlPayload)
@@ -296,7 +298,7 @@ class EntryDeclarationStoreSpec
       }
     }
 
-    "EIS submission results in a failed future" should {
+    "EIS submission results in a failed future" must {
       "still send report and set failure status in database" in new Test {
         MockAppConfig.validateXMLtoJsonTransformation.returns(false)
         MockValidationHandler.handleValidation(payload, eori, mrn) returns Right(xmlPayload)

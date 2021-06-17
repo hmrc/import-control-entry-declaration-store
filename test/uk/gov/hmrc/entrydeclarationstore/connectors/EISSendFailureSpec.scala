@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.entrydeclarationstore.connectors
 
+import org.scalatest.Matchers.convertToAnyShouldWrapper
 import play.api.libs.json.Json
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
 
-class EISSendFailureSpec extends UnitSpec {
+class EISSendFailureSpec extends WordSpec {
 
-  "EISSendFailure" should {
+  "EISSendFailure" must {
     "write to Json correctly" in {
       Json.toJson(EISSendFailure.TrafficSwitchNotFlowing) shouldBe
         Json.parse("""

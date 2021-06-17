@@ -17,15 +17,17 @@
 package uk.gov.hmrc.entrydeclarationstore.nrs
 
 import com.kenshoo.play.metrics.Metrics
+import org.scalatest.Matchers.convertToAnyShouldWrapper
 import org.scalatest.concurrent.ScalaFutures
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.utils.MockMetrics
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-class NRSServiceSpec extends UnitSpec with MockNRSConnector with NRSMetadataTestData with ScalaFutures {
+class NRSServiceSpec extends WordSpec with MockNRSConnector with NRSMetadataTestData with ScalaFutures {
 
   val metrics: Metrics = new MockMetrics
 
@@ -40,7 +42,7 @@ class NRSServiceSpec extends UnitSpec with MockNRSConnector with NRSMetadataTest
     "NRS submission is successful" must {
       "return the response" in {
         val response = NRSResponse("someId")
-        MockNRSConnector.submit(nrsSubmission) returns Right(response)
+        MockNRSConnector.submit(nrsSubmission) returns Future.successful(Right(response))
 
         service.submit(nrsSubmission).futureValue shouldBe Some(response)
       }
@@ -50,7 +52,7 @@ class NRSServiceSpec extends UnitSpec with MockNRSConnector with NRSMetadataTest
           // WLOG
           val failure = NRSSubmisionFailure.ExceptionThrown
 
-          MockNRSConnector.submit(nrsSubmission) returns Left(failure)
+          MockNRSConnector.submit(nrsSubmission) returns Future.successful(Left(failure))
 
           service.submit(nrsSubmission).futureValue shouldBe None
         }

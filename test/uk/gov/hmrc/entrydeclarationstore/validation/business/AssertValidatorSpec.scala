@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.entrydeclarationstore.validation.business
 
+import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 import uk.gov.hmrc.entrydeclarationstore.validation.ValidationError
 import uk.gov.hmrc.entrydeclarationstore.validation.business.Assert.CompilationContext
-import uk.gov.hmrc.play.test.UnitSpec
 
-class AssertValidatorSpec extends UnitSpec {
+class AssertValidatorSpec extends WordSpec {
 
   implicit val compilationContext: CompilationContext = CompilationContext("pXXX")
 

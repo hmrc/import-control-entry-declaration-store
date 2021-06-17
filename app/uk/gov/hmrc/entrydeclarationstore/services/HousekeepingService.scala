@@ -17,7 +17,6 @@
 package uk.gov.hmrc.entrydeclarationstore.services
 
 import com.kenshoo.play.metrics.Metrics
-import play.api.Logger
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.Housekeeper
 import uk.gov.hmrc.entrydeclarationstore.models.HousekeepingStatus
@@ -58,7 +57,7 @@ class HousekeepingService @Inject()(
           .housekeep(clock.instant)
           .andThen {
             case Success(numDeleted) =>
-              Logger.info(s"Finished housekeeping. $numDeleted submissions housekept")
+              logger.info(s"Finished housekeeping. $numDeleted submissions housekept")
               numDeletedHistogram.update(numDeleted)
           }
           .map(_ => true)
@@ -66,11 +65,11 @@ class HousekeepingService @Inject()(
 
     housekeepingRepo.getHousekeepingStatus.flatMap {
       case HousekeepingStatus(true) =>
-        Logger.info("Running housekeeping")
+        logger.info("Running housekeeping")
         doHouskeeping()
 
       case HousekeepingStatus(false) =>
-        Logger.info("Skipping housekeeping")
+        logger.info("Skipping housekeeping")
         Future.successful(false)
     }
   }

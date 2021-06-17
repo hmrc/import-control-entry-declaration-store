@@ -17,6 +17,8 @@
 package uk.gov.hmrc.entrydeclarationstore.validation
 
 import com.kenshoo.play.metrics.Metrics
+import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, RawPayload}
@@ -24,11 +26,10 @@ import uk.gov.hmrc.entrydeclarationstore.utils.{MockMetrics, XmlFormatConfig}
 import uk.gov.hmrc.entrydeclarationstore.validation.business.MockRuleValidator
 import uk.gov.hmrc.entrydeclarationstore.validation.schema.SchemaValidationResult._
 import uk.gov.hmrc.entrydeclarationstore.validation.schema._
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.xml.NodeSeq
 
-class ValidationHandlerSpec extends UnitSpec with MockSchemaValidator with MockRuleValidator with MockAppConfig {
+class ValidationHandlerSpec extends WordSpec with MockSchemaValidator with MockRuleValidator with MockAppConfig {
 
   val mockedMetrics: Metrics      = new MockMetrics
   implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")

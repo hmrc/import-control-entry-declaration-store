@@ -18,10 +18,10 @@ package uk.gov.hmrc.entrydeclarationstore.validation.business
 
 import groovy.lang.{Closure, GroovyClassLoader, GroovyRuntimeException}
 import org.codehaus.groovy.control.CompilationFailedException
-import play.api.Logger
+import play.api.Logging
 import uk.gov.hmrc.entrydeclarationstore.validation.business.Assert.CompilationContext
 
-object AssertEvaluator {
+object AssertEvaluator extends Logging {
 
   abstract class ContextHelper(ctx: LocalNode) {
     self =>
@@ -132,7 +132,7 @@ object AssertEvaluator {
       try shell.parseClass(classSource).asInstanceOf[Class[ContextualAssertEvaluator]]
       catch {
         case e: CompilationFailedException =>
-          Logger.error(s"Compilation error in ${compilationContext.ruleName} for assert test:\n${assert.test}")
+          logger.error(s"Compilation error in ${compilationContext.ruleName} for assert test:\n${assert.test}")
           throw e
       }
 
@@ -145,7 +145,7 @@ object AssertEvaluator {
       catch {
         // Because groovy supports dynamic methods, may not see some code problems until runtime...
         case e: GroovyRuntimeException =>
-          Logger.error(s"Error evaluating in ${compilationContext.ruleName} for assert test:\n${assert.test}")
+          logger.error(s"Error evaluating in ${compilationContext.ruleName} for assert test:\n${assert.test}")
           throw e
       }
     }

@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.entrydeclarationstore.validation.business
 
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 
-class PathSpec extends UnitSpec {
+class PathSpec extends WordSpec {
 
   "Path" must {
     "parse absolute" in {

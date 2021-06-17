@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.entrydeclarationstore.reporting.events
 
-import akka.stream.actor.ActorPublisherMessage.Request
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
@@ -60,7 +59,6 @@ class EventConnectorSpec
 
   implicit val hc: HeaderCarrier    = HeaderCarrier()
   implicit val ec: ExecutionContext = ExecutionContext.global
-  implicit val request: Request     = Request(0L)
   implicit val lc: LoggingContext   = LoggingContext("eori", "corrId", "subId")
 
   private val wireMockServer = new WireMockServer(WireMockConfiguration.wireMockConfig().dynamicPort())
@@ -104,7 +102,7 @@ class EventConnectorSpec
   }
 
   "Calling .sendEvent" when {
-    "events responds 201 (Created)" should {
+    "events responds 201 (Created)" must {
       "return Future(Unit) and not log" in new Test {
 
         wireMockServer.stubFor(
@@ -120,7 +118,7 @@ class EventConnectorSpec
       }
     }
 
-    "events responds with 400" should {
+    "events responds with 400" must {
       "return Future(Unit) and log" in new Test {
         stubResponse(BAD_REQUEST)
         val result: Unit = await(connector.sendEvent(event))
@@ -131,7 +129,7 @@ class EventConnectorSpec
       }
     }
 
-    "exception thrown" should {
+    "exception thrown" must {
       "return Future(Unit) and log" in new Test {
         wireMockServer
           .stubFor(

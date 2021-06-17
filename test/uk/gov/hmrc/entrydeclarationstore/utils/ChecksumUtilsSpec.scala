@@ -17,20 +17,20 @@
 package uk.gov.hmrc.entrydeclarationstore.utils
 
 import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils._
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.{MustMatchers, WordSpec}
 
-class ChecksumUtilsSpec extends UnitSpec {
-  "StringWithSha256" must {
+class ChecksumUtilsSpec extends WordSpec with MustMatchers {
+  "StringWithSha256" should {
 
     "digest sha-256" in {
-      "FooBar1".getBytes("UTF-8").calculateSha256 should ===(
+      "FooBar1".getBytes("UTF-8").calculateSha256 must ===(
         "26a9f5a12e997b4dcfaefa87378e2a84500991a9befc13c774466415005182ca")
-      "Foobar1".getBytes("UTF-8").calculateSha256 should ===(
+      "Foobar1".getBytes("UTF-8").calculateSha256 must ===(
         "ee16369f2e7f155a12a83c72c237e46ca3cb5ce068a339f2889835eb08448d76")
     }
 
     "digest sha256 with leading zero" in {
-      "39".getBytes("UTF-8").calculateSha256 shouldBe "0b918943df0962bc7a1824c0555a389347b4febdc7cf9d1254406d80ce44e3f9"
+      "39".getBytes("UTF-8").calculateSha256 mustBe "0b918943df0962bc7a1824c0555a389347b4febdc7cf9d1254406d80ce44e3f9"
     }
   }
 }

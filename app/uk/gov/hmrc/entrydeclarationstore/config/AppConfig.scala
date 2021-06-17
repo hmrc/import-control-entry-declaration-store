@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.config
 
-import play.api.{Configuration, Logger}
+import play.api.{Configuration, Logging}
 import uk.gov.hmrc.entrydeclarationstore.trafficswitch.TrafficSwitchConfig
 import uk.gov.hmrc.entrydeclarationstore.utils.{Retrying, XmlFormatConfig}
 import uk.gov.hmrc.play.bootstrap.config.{AppName, ServicesConfig}
@@ -101,7 +101,7 @@ trait AppConfig {
 }
 
 @Singleton
-class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesConfig) extends AppConfig {
+class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesConfig) extends AppConfig with Logging {
 
   val authBaseUrl: String = servicesConfig.baseUrl("auth")
 
@@ -168,7 +168,7 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
     val totalRetryTime = eisRetries.fold(Duration.Zero)(_ + _)
 
     if (callTimeout < totalRetryTime) {
-      Logger.warn(s"Configured call timeout $callTimeout is less than total retry timeout $totalRetryTime")
+      logger.warn(s"Configured call timeout $callTimeout is less than total retry timeout $totalRetryTime")
     }
 
     TrafficSwitchConfig(

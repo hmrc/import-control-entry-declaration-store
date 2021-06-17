@@ -16,27 +16,27 @@
 
 package uk.gov.hmrc.entrydeclarationstore.logging
 
-import play.api.Logger
+import play.api.Logging
 
-object ContextLogger {
+object ContextLogger extends Logging {
 
   def debug(message: => String)(implicit lc: LoggingContext): Unit =
-    Logger.debug(formatMessage(message))
+    logger.debug(formatMessage(message))
 
   def debug(message: => String, e: => Throwable)(implicit lc: LoggingContext): Unit =
-    Logger.debug(formatMessage(message), e)
+    logger.debug(formatMessage(message), e)
 
   def info(message: => String)(implicit lc: LoggingContext): Unit =
-    Logger.info(formatMessage(message))
+    logger.info(formatMessage(message))
 
   def warn(message: => String)(implicit lc: LoggingContext): Unit =
-    Logger.warn(formatMessage(message))
+    logger.warn(formatMessage(message))
 
   def error(message: => String)(implicit lc: LoggingContext): Unit =
-    Logger.error(formatMessage(message))
+    logger.error(formatMessage(message))
 
   def error(message: => String, e: => Throwable)(implicit lc: LoggingContext): Unit =
-    Logger.error(formatMessage(message), e)
+    logger.error(formatMessage(message), e)
 
   private def formatMessage(message: => String)(implicit lc: LoggingContext): String =
     s"$message ${lc.context}"

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.entrydeclarationstore.models.{HousekeepingEnabled, HousekeepingStatus}
@@ -29,7 +29,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton()
 class HousekeepingController @Inject()(cc: ControllerComponents, service: HousekeepingService)(
   implicit ec: ExecutionContext)
-    extends BackendController(cc) {
+    extends BackendController(cc) with Logging {
 
   def setStatus(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     request.body.validate[HousekeepingEnabled] match {
@@ -39,7 +39,7 @@ class HousekeepingController @Inject()(cc: ControllerComponents, service: Housek
           .map(_ => NoContent)
 
       case err: JsError =>
-        Logger.error(s"Bad request: $err")
+        logger.error(s"Bad request: $err")
         Future.successful(BadRequest)
     }
   }

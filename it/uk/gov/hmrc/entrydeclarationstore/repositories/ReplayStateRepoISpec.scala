@@ -56,7 +56,7 @@ class ReplayStateRepoISpec
   val startTime: Instant       = Instant.now
   val replayState: ReplayState = ReplayState(startTime, None, completed = false, 0, 0, totalToReplay)
   "ReplayStateRepo" when {
-    "inserting a replay state" should {
+    "inserting a replay state" must {
       "work" in {
         await(repository.insert(replayId, totalToReplay, startTime))
       }
@@ -69,12 +69,12 @@ class ReplayStateRepoISpec
         await(repository.lookupState(replayId)) shouldBe Some(replayState)
       }
     }
-    "looking up a replay that does not exist" should {
+    "looking up a replay that does not exist" must {
       "return None" in {
         await(repository.lookupState("unknownReplayId")) shouldBe None
       }
     }
-    "updating a replay record" should {
+    "updating a replay record" must {
       val replayIdToUpdate = "otherReplayId"
       "return true and increment correctly" in {
         val successesToAdd = 3
@@ -93,7 +93,7 @@ class ReplayStateRepoISpec
         await(repository.incrementCounts("unknownReplayId", 1, 2)) shouldBe false
       }
     }
-    "setting a replay to completed" should {
+    "setting a replay to completed" must {
       val endTime = Instant.now
       "return update the replay and return true if the replay exists" in {
         await(repository.setCompleted(replayId, endTime)) shouldBe true

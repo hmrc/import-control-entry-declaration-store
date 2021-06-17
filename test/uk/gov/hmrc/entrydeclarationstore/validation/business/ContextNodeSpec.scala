@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.entrydeclarationstore.validation.business
 
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 
-class ContextNodeSpec extends UnitSpec {
+class ContextNodeSpec extends WordSpec {
 
   "ContextNode" when {
 

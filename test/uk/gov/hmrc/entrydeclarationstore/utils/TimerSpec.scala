@@ -17,11 +17,14 @@
 package uk.gov.hmrc.entrydeclarationstore.utils
 
 import com.kenshoo.play.metrics.Metrics
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.Matchers.{be, convertToAnyShouldWrapper}
+import org.scalatest.WordSpec
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-class TimerSpec extends UnitSpec with Timer with EventLogger {
+class TimerSpec extends WordSpec with Timer with EventLogger {
   val metrics: Metrics = new MockMetrics
 
   var timeMs: Long = _
@@ -29,12 +32,12 @@ class TimerSpec extends UnitSpec with Timer with EventLogger {
   override def stopAndLog[A](name: String, timer: com.codahale.metrics.Timer.Context): Unit =
     timeMs = timer.stop() / 1000000
 
-  "Timer" should {
+  "Timer" must {
     val sleepMs = 300
 
     "Time a future correctly" in {
       await(timeFuture("test timer", "test.sleep") {
-        Thread.sleep(sleepMs)
+        Future.successful(Thread.sleep(sleepMs))
       })
       val beWithinTolerance = be >= sleepMs.toLong and be <= (sleepMs + 100).toLong
       timeMs should beWithinTolerance
@@ -42,7 +45,7 @@ class TimerSpec extends UnitSpec with Timer with EventLogger {
 
     "Time a block correctly" in {
       await(time("test timer", "test.sleep") {
-        Thread.sleep(sleepMs)
+        Future.successful(Thread.sleep(sleepMs))
       })
       val beWithinTolerance = be >= sleepMs.toLong and be <= (sleepMs + 100).toLong
       timeMs should beWithinTolerance

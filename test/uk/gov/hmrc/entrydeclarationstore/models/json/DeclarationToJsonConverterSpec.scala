@@ -17,22 +17,23 @@
 package uk.gov.hmrc.entrydeclarationstore.models.json
 
 import org.scalatest.Inside
+import org.scalatest.Matchers.convertToAnyShouldWrapper
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, ServerError}
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
 
 import java.time.Instant
 import scala.xml.{Elem, XML}
 
-class DeclarationToJsonConverterSpec extends UnitSpec with Inside {
+class DeclarationToJsonConverterSpec extends WordSpec with Inside {
   val declarationToJsonConverter = new DeclarationToJsonConverter
 
   implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
 
-  "EntrySummaryDeclaration toJson " should {
-    "for submission" should {
+  "EntrySummaryDeclaration toJson " must {
+    "for submission" must {
       val input: InputParameters = InputParameters(
         None,
         "1234567890-1234567890-1234567890-123",
@@ -59,7 +60,7 @@ class DeclarationToJsonConverterSpec extends UnitSpec with Inside {
         }
       }
     }
-    "for amendment" should {
+    "for amendment" must {
       val input: InputParameters = InputParameters(
         Some("mrn"),
         "1234567890-1234567890-1234567890-123",
@@ -76,7 +77,7 @@ class DeclarationToJsonConverterSpec extends UnitSpec with Inside {
         }
       }
     }
-    "for bad xml" should {
+    "for bad xml" must {
       "return Left(ServerError)" in {
         val input: InputParameters = InputParameters(
           None,

@@ -17,7 +17,6 @@
 package uk.gov.hmrc.entrydeclarationstore.connectors
 
 import akka.actor.{ActorSystem, Scheduler}
-import akka.stream.actor.ActorPublisherMessage.Request
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.client.{CountMatchingStrategy, MappingBuilder, ResponseDefinitionBuilder, WireMock}
@@ -82,7 +81,6 @@ class EisConnectorSpec
   implicit val hc: HeaderCarrier =
     HeaderCarrier(extraHeaders = Seq(extraHeader -> "someValue"), otherHeaders = Seq(otherHeader -> "someOtherValue"))
 
-  implicit val request: Request   = Request(0L)
   implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
 
   private val wireMockServer = new WireMockServer(WireMockConfiguration.wireMockConfig().dynamicPort())

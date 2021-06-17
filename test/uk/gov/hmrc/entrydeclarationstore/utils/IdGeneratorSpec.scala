@@ -16,14 +16,15 @@
 
 package uk.gov.hmrc.entrydeclarationstore.utils
 
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.{MustMatchers, WordSpec}
 
-class IdGeneratorSpec extends UnitSpec {
+class IdGeneratorSpec extends WordSpec with MustMatchers {
 
   val idGenerator = new IdGenerator
 
   "IdGenerator" when {
-    "generating submissionIds" must {
+    "generating submissionIds" when {
       "generate ids that are different" in {
         val num = 1000000
         val ids = for (_ <- 1 to num) yield idGenerator.generateSubmissionId
@@ -32,11 +33,11 @@ class IdGeneratorSpec extends UnitSpec {
       }
 
       "generate ids that are uuids" in {
-        idGenerator.generateSubmissionId should fullyMatch regex """([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})""".r
+        idGenerator.generateSubmissionId must fullyMatch regex """([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})""".r
       }
     }
 
-    "generating correlationIds" must {
+    "generating correlationIds" when {
       "generate ids that are different" in {
         val num = 1000000
         val ids = for (_ <- 1 to num) yield idGenerator.generateCorrelationId
@@ -45,7 +46,7 @@ class IdGeneratorSpec extends UnitSpec {
       }
 
       "generate ids that are 14 characters alphanumeric" in {
-        idGenerator.generateCorrelationId should fullyMatch regex """[0-9A-Za-z]{14}""".r
+        idGenerator.generateCorrelationId must fullyMatch regex """[0-9A-Za-z]{14}""".r
       }
 
       "generate ids that are alphanumeric" in {
@@ -53,7 +54,7 @@ class IdGeneratorSpec extends UnitSpec {
       }
     }
 
-    "generating using correlationIdFrom" must {
+    "generating using correlationIdFrom" when {
       "generate 00000000000000 for all zero bytes" in {
         idGenerator.correlationIdFrom(Array.fill(14)(0.toByte)) shouldBe "00000000000000"
       }

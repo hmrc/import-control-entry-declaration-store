@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.validation.business
 
+import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
@@ -24,9 +25,8 @@ import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
-import uk.gov.hmrc.play.test.UnitSpec
 
-class ConfiguredRuleISpec extends UnitSpec with Injecting with GuiceOneAppPerSuite {
+class ConfiguredRuleISpec extends WordSpec with Injecting with GuiceOneAppPerSuite with MustMatchers {
   override lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
     .disable[HousekeepingScheduler]
@@ -56,9 +56,9 @@ class ConfiguredRuleISpec extends UnitSpec with Injecting with GuiceOneAppPerSui
     accessor: Assert => String)(rule: Rule, assert: Assert, assertIndex: Int): Unit =
     s"not have unescaped characters for rule ${rule.name} assert $assertIndex" in {
       {
-        accessor(assert) should not include ("\r")
-        accessor(assert) should not include ("\n")
-        accessor(assert) should not include ("\t")
+        accessor(assert) must not include ("\r")
+        accessor(assert) must not include ("\n")
+        accessor(assert) must not include ("\t")
 //        accessor(assert) should fullyMatch regex "^[\\u0000-\\u007F]*$"
       }
     }

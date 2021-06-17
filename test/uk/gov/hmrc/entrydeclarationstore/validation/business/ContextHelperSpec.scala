@@ -17,14 +17,15 @@
 package uk.gov.hmrc.entrydeclarationstore.validation.business
 
 import groovy.lang.Closure
+import org.scalatest.Matchers.convertToAnyShouldWrapper
 import uk.gov.hmrc.entrydeclarationstore.validation.business.Assert.CompilationContext
 import uk.gov.hmrc.entrydeclarationstore.validation.business.AssertEvaluator.ContextHelper
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.WordSpec
 
 import java.lang
 import scala.xml.Node
 
-class ContextHelperSpec extends UnitSpec {
+class ContextHelperSpec extends WordSpec {
 
   implicit val compilationContext: CompilationContext = CompilationContext("pXXX")
   // @formatter:off

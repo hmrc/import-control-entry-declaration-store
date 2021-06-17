@@ -51,7 +51,7 @@ class XmlErrorHandlerSpec
 
   import ExecutionContext.Implicits.global
 
-  "onServerError" should {
+  "onServerError" must {
 
     "convert a NotFoundException to NotFound response and audit the error" in new Setup {
       val notFoundException           = new NotFoundException("test")
@@ -261,7 +261,7 @@ class XmlErrorHandlerSpec
       }
 
       "an UpstreamErrorResponse exception occurs" in new WarningSetup(Seq(500)) {
-        withCaptureOfLoggingFrom(Logger) { logEvents =>
+        withCaptureOfLoggingFrom(Logger(xmlErrorHandler.getClass)) { logEvents =>
           xmlErrorHandler
             .onServerError(requestHeader, UpstreamErrorResponse("any application exception", 500, 502))
             .futureValue
@@ -275,7 +275,7 @@ class XmlErrorHandlerSpec
       }
 
       "a HttpException occurs" in new WarningSetup(Seq(400)) {
-        withCaptureOfLoggingFrom(Logger) { logEvents =>
+        withCaptureOfLoggingFrom(Logger(xmlErrorHandler.getClass)) { logEvents =>
           xmlErrorHandler.onServerError(requestHeader, new BadRequestException("any application exception")).futureValue
 
           eventually {
@@ -289,7 +289,7 @@ class XmlErrorHandlerSpec
 
   }
 
-  "onClientError" should {
+  "onClientError" must {
 
     "audit an error and return json response for 400" in new Setup {
       val createdDataEvent: DataEvent = DataEvent("auditSource", "auditType")

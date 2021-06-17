@@ -18,7 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.orchestrators
 
 import akka.stream.Materializer
 import akka.stream.scaladsl.Sink
-import play.api.Logger
+import play.api.Logging
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.models.{ReplayInitializationResult, ReplayResult}
 import uk.gov.hmrc.entrydeclarationstore.repositories.{EntryDeclarationRepo, ReplayStateRepo}
@@ -39,7 +39,7 @@ class ReplayOrchestrator @Inject()(
   submissionReplayService: SubmissionReplayService,
   replayLock: ReplayLock,
   appConfig: AppConfig,
-  clock: Clock)(implicit ec: ExecutionContext, mat: Materializer) {
+  clock: Clock)(implicit ec: ExecutionContext, mat: Materializer) extends Logging {
 
   /**
     * Starts a replay
@@ -89,7 +89,7 @@ class ReplayOrchestrator @Inject()(
 
   private def startReplay(limit: Option[Int], replayStartTime: Instant, replayId: String)(
     implicit hc: HeaderCarrier): Future[ReplayResult] = {
-    Logger.info(s"Starting replay for replayId $replayId")
+    logger.info(s"Starting replay for replayId $replayId")
 
     submissionStateRepo
       .getUndeliveredSubmissionIds(replayStartTime, limit)
@@ -107,17 +107,17 @@ class ReplayOrchestrator @Inject()(
           throw new RuntimeException(s"Unable to replay batch $error")
       }
       .fold(0) { (batchCount, _) =>
-        Logger.debug(s"Completed replay of batch $batchCount")
+        logger.debug(s"Completed replay of batch $batchCount")
         batchCount + 1
       }
       .map { numBatches =>
-        Logger.info(s"Completed replay of $numBatches batches")
+        logger.info(s"Completed replay of $numBatches batches")
         setCompleteAndUnlock(replayId)
         ReplayResult.Completed(numBatches)
       }
       .recover {
         case NonFatal(e) =>
-          Logger.error("Replay aborted", e)
+          logger.error("Replay aborted", e)
           setCompleteAndUnlock(replayId)
           ReplayResult.Aborted(e)
       }
@@ -128,11 +128,11 @@ class ReplayOrchestrator @Inject()(
     replayStateRepo
       .setCompleted(replayId, clock.instant)
       .failed
-      .foreach(e => Logger.warn(s"Unable to set replay $replayId as complete", e))
+      .foreach(e => logger.warn(s"Unable to set replay $replayId as complete", e))
 
     replayLock
       .unlock(replayId)
       .failed
-      .foreach(e => Logger.warn(s"Unable to unlock replay $replayId", e))
+      .foreach(e => logger.warn(s"Unable to unlock replay $replayId", e))
   }
 }
