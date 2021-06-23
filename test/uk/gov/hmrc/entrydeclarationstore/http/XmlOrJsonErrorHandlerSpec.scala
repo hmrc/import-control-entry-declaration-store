@@ -17,6 +17,7 @@
 package uk.gov.hmrc.entrydeclarationstore.http
 
 import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.MimeTypes
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -24,7 +25,6 @@ import play.api.test.Helpers.{GET, _}
 import play.api.test.{FakeRequest, Injecting}
 import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
-import org.scalatest.WordSpec
 
 import java.io.IOException
 

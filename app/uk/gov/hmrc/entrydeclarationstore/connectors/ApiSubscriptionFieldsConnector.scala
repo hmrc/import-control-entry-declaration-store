@@ -30,15 +30,13 @@ import scala.concurrent.{ExecutionContext, Future}
 class ApiSubscriptionFieldsConnector @Inject()(client: HttpClient, appConfig: AppConfig)(
   implicit ec: ExecutionContext) extends Logging {
 
-  def getAuthenticatedEoriField(clientId: String): Future[Option[String]] = {
+  def getAuthenticatedEoriField(clientId: String)(implicit hc: HeaderCarrier): Future[Option[String]] = {
     val url: String =
       s"${appConfig.apiSubscriptionFieldsHost}/field/application/$clientId/context/${URLEncoder.encode(appConfig.apiGatewayContext, "UTF-8")}/version/1.0"
     logger.info(s"sending GET request to $url")
 
-    implicit val hc: HeaderCarrier = HeaderCarrier()
-
     client
-      .GET[Option[JsObject]](url)
+      .GET[Option[JsObject]](url, Seq.empty, Seq.empty)
       .map {
         case Some(response) =>
           val eori = (response \\ "authenticatedEori").headOption.map(_.as[String])

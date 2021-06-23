@@ -18,12 +18,12 @@ package uk.gov.hmrc.entrydeclarationstore.services
 
 import com.kenshoo.play.metrics.Metrics
 import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import play.api.libs.json.Json
 import uk.gov.hmrc.entrydeclarationstore.models.{AcceptanceEnrichment, AmendmentRejectionEnrichment, DeclarationRejectionEnrichment}
 import uk.gov.hmrc.entrydeclarationstore.repositories.MockEntryDeclarationRepo
 import uk.gov.hmrc.entrydeclarationstore.utils.{MockMetrics, ResourceUtils}
-import org.scalatest.WordSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

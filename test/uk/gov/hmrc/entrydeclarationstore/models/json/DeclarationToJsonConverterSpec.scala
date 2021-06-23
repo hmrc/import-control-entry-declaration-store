@@ -16,13 +16,12 @@
 
 package uk.gov.hmrc.entrydeclarationstore.models.json
 
-import org.scalatest.Inside
 import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.{Inside, WordSpec}
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, ServerError}
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
-import org.scalatest.WordSpec
 
 import java.time.Instant
 import scala.xml.{Elem, XML}

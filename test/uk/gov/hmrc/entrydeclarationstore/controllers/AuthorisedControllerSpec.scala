@@ -19,6 +19,7 @@ package uk.gov.hmrc.entrydeclarationstore.controllers
 import com.kenshoo.play.metrics.Metrics
 import org.scalamock.matchers.ArgCapture.CaptureOne
 import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import play.api.http.{HeaderNames, Status}
 import play.api.libs.json.Json
@@ -31,7 +32,6 @@ import uk.gov.hmrc.entrydeclarationstore.reporting.{ClientInfo, ClientType}
 import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, MockAuthService, UserDetails}
 import uk.gov.hmrc.entrydeclarationstore.utils.{EventLogger, MockMetrics, Timer}
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
-import org.scalatest.WordSpec
 
 import scala.concurrent.Future
 import scala.xml.{Node, Utility}

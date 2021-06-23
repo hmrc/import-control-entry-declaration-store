@@ -18,7 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.trafficswitch
 
 import akka.actor.{ActorRef, ActorSystem, PoisonPill}
 import akka.testkit.{TestKit, TestProbe}
-import org.scalatest.{BeforeAndAfterAll, WordSpec, WordSpecLike}
+import org.scalatest.{BeforeAndAfterAll, WordSpecLike}
 import reactivemongo.core.errors.GenericDatabaseException
 import uk.gov.hmrc.entrydeclarationstore.models.TrafficSwitchState
 import uk.gov.hmrc.entrydeclarationstore.services.MockTrafficSwitchService

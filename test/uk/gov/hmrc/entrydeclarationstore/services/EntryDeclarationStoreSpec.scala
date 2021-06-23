@@ -17,10 +17,11 @@
 package uk.gov.hmrc.entrydeclarationstore.services
 
 import com.kenshoo.play.metrics.Metrics
-import org.scalatest.Inside
 import org.scalatest.Matchers.{a, convertToAnyShouldWrapper}
+import org.scalatest.{Inside, WordSpec}
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import play.api.libs.json.{JsString, JsValue}
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, MockEisConnector}
 import uk.gov.hmrc.entrydeclarationstore.models._
@@ -30,8 +31,6 @@ import uk.gov.hmrc.entrydeclarationstore.repositories.MockEntryDeclarationRepo
 import uk.gov.hmrc.entrydeclarationstore.utils.{MockIdGenerator, MockMetrics, XmlFormatConfig}
 import uk.gov.hmrc.entrydeclarationstore.validation._
 import uk.gov.hmrc.http.HeaderCarrier
-import org.scalatest.WordSpec
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
 
 import java.io.IOException
 import java.time.{Clock, Instant, ZoneOffset}

@@ -17,10 +17,10 @@
 package uk.gov.hmrc.entrydeclarationstore.services
 
 import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import uk.gov.hmrc.entrydeclarationstore.models.ReplayState
 import uk.gov.hmrc.entrydeclarationstore.repositories.MockReplayStateRepo
-import org.scalatest.WordSpec
 
 import java.time.Instant
 import scala.concurrent.Future

@@ -16,10 +16,9 @@
 
 package uk.gov.hmrc.entrydeclarationstore.models
 
-import org.scalatest.Inspectors
 import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.{Inspectors, WordSpec}
 import play.api.libs.json.{JsString, Json}
-import org.scalatest.WordSpec
 
 class EisSubmissionStateSpec extends WordSpec with Inspectors {
   import EisSubmissionState._

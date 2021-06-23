@@ -17,8 +17,8 @@
 package uk.gov.hmrc.entrydeclarationstore.models
 
 import org.scalatest.Matchers.convertToAnyShouldWrapper
-import uk.gov.hmrc.entrydeclarationstore.utils.XmlFormats
 import org.scalatest.WordSpec
+import uk.gov.hmrc.entrydeclarationstore.utils.XmlFormats
 
 import scala.xml.Utility
 

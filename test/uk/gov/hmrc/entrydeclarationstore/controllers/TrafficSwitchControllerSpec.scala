@@ -17,13 +17,13 @@
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 import play.api.http.MimeTypes
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.entrydeclarationstore.models.{TrafficSwitchState, TrafficSwitchStatus}
 import uk.gov.hmrc.entrydeclarationstore.services.MockTrafficSwitchService
-import org.scalatest.WordSpec
 
 import java.time.Instant
 import java.time.temporal.ChronoUnit

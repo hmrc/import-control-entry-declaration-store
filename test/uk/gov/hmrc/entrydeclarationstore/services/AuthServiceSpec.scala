@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
-import org.scalatest.Inside
 import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.{Inside, WordSpec}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Span}
 import play.api.mvc.Headers
@@ -30,7 +30,6 @@ import uk.gov.hmrc.entrydeclarationstore.nrs.NRSMetadataTestData
 import uk.gov.hmrc.entrydeclarationstore.reporting.{ClientInfo, ClientType}
 import uk.gov.hmrc.entrydeclarationstore.utils.CommonHeaders
 import uk.gov.hmrc.http.HeaderCarrier
-import org.scalatest.WordSpec
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NoStackTrace

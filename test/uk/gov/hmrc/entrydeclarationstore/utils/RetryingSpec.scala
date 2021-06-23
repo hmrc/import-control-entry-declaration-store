@@ -19,14 +19,14 @@ package uk.gov.hmrc.entrydeclarationstore.utils
 import akka.actor.{ActorSystem, Scheduler}
 import com.google.common.base.Stopwatch
 import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.test.Helpers.await
 import play.api.test.Injecting
 import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
-import org.scalatest.WordSpec
-import play.api.test.Helpers.await
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration._

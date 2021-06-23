@@ -18,11 +18,11 @@ package uk.gov.hmrc.entrydeclarationstore.nrs
 
 import com.kenshoo.play.metrics.Metrics
 import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.utils.MockMetrics
 import uk.gov.hmrc.http.HeaderCarrier
-import org.scalatest.WordSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

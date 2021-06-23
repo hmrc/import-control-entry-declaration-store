@@ -17,6 +17,7 @@
 package uk.gov.hmrc.entrydeclarationstore.services
 
 import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import play.api.http.Status._
 import reactivemongo.core.errors.GenericDatabaseException
@@ -25,7 +26,6 @@ import uk.gov.hmrc.entrydeclarationstore.models._
 import uk.gov.hmrc.entrydeclarationstore.reporting.{MockReportSender, SubmissionSentToEIS}
 import uk.gov.hmrc.entrydeclarationstore.repositories.{MetadataLookupError, MockEntryDeclarationRepo}
 import uk.gov.hmrc.http.HeaderCarrier
-import org.scalatest.WordSpec
 
 import java.io.IOException
 import java.time.{Clock, Instant, ZoneOffset}

@@ -39,7 +39,7 @@ class EventConnectorImpl @Inject()(client: HttpClient, appConfig: AppConfig, pag
 
   def sendEvent(event: Event)(implicit hc: HeaderCarrier, lc: LoggingContext): Future[Unit] =
     client
-      .POST[Event, HttpResponse](url, event)
+      .POST[Event, HttpResponse](url, event, Seq.empty)
       .map(response =>
         response.status match {
           case CREATED => ()

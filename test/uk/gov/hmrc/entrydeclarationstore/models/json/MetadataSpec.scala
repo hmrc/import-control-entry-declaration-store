@@ -17,10 +17,9 @@
 package uk.gov.hmrc.entrydeclarationstore.models.json
 
 import com.lucidchart.open.xtract.ParseSuccess
-import org.scalatest.Inside
 import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.{Inside, WordSpec}
 import uk.gov.hmrc.entrydeclarationstore.models.MessageType
-import org.scalatest.WordSpec
 
 import java.time.Instant
 

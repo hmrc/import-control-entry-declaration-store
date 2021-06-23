@@ -18,10 +18,9 @@ package uk.gov.hmrc.entrydeclarationstore.utils
 
 import cats.Show
 import org.scalacheck.{Arbitrary, Gen}
-import org.scalatest.Inspectors
 import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.{Inspectors, WordSpec}
 import play.api.libs.json._
-import org.scalatest.WordSpec
 
 sealed trait Enum
 

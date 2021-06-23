@@ -17,6 +17,7 @@
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import play.api.http.{HeaderNames, Status}
 import play.api.libs.json.Json
@@ -25,7 +26,6 @@ import play.api.test.Helpers.{defaultAwaitTimeout, stubControllerComponents}
 import play.api.test.{FakeRequest, ResultExtractors}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.http.HeaderCarrier
-import org.scalatest.WordSpec
 
 import scala.concurrent.Future
 

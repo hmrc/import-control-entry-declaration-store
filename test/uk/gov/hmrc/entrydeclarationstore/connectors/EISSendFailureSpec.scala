@@ -17,8 +17,8 @@
 package uk.gov.hmrc.entrydeclarationstore.connectors
 
 import org.scalatest.Matchers.convertToAnyShouldWrapper
-import play.api.libs.json.Json
 import org.scalatest.WordSpec
+import play.api.libs.json.Json
 
 class EISSendFailureSpec extends WordSpec {
 

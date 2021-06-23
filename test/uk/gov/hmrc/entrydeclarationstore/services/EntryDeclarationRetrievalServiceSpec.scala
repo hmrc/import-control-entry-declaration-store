@@ -17,11 +17,11 @@
 package uk.gov.hmrc.entrydeclarationstore.services
 
 import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import play.api.libs.json.JsString
 import uk.gov.hmrc.entrydeclarationstore.models.{EisSubmissionState, SubmissionIdLookupResult}
 import uk.gov.hmrc.entrydeclarationstore.repositories.MockEntryDeclarationRepo
-import org.scalatest.WordSpec
 
 import scala.concurrent.Future
 
