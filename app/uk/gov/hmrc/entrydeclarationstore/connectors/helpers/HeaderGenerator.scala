@@ -30,7 +30,7 @@ class HeaderGenerator @Inject()(clock: Clock, appConfig: AppConfig) extends Logg
 
   def headersForEIS(submissionId: String)(implicit hc: HeaderCarrier): Seq[(String, String)] = {
     val upperCasedAllowList = appConfig.headerAllowlist.map(_.toUpperCase)
-    val allowListedHeaders = hc.extraHeaders.filter {
+    val allowListedHeaders = (hc.extraHeaders ++ hc.otherHeaders).filter {
       case (name, _) => upperCasedAllowList contains name.toUpperCase
     }
     val headers = allowListedHeaders ++ Seq(

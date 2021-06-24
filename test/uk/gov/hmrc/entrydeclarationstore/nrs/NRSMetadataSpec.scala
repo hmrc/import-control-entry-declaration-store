@@ -17,10 +17,10 @@
 package uk.gov.hmrc.entrydeclarationstore.nrs
 
 import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 import play.api.libs.json.Json
 import play.api.mvc.Headers
 import play.api.test.FakeRequest
-import org.scalatest.WordSpec
 
 import java.time.Instant
 

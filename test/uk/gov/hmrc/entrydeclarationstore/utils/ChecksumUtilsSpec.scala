@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationstore.utils
 
-import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils._
 import org.scalatest.{MustMatchers, WordSpec}
+import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils._
 
 class ChecksumUtilsSpec extends WordSpec with MustMatchers {
   "StringWithSha256" should {

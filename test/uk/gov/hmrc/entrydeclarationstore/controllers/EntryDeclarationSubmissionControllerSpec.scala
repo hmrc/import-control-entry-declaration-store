@@ -19,6 +19,7 @@ package uk.gov.hmrc.entrydeclarationstore.controllers
 import akka.util.ByteString
 import com.kenshoo.play.metrics.Metrics
 import org.scalatest.Matchers.{contain, convertToAnyShouldWrapper}
+import org.scalatest.WordSpec
 import play.api.http.MimeTypes
 import play.api.mvc.{Request, Result}
 import play.api.test.Helpers._
@@ -31,7 +32,6 @@ import uk.gov.hmrc.entrydeclarationstore.services._
 import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils._
 import uk.gov.hmrc.entrydeclarationstore.utils.{MockMetrics, XmlFormatConfig, XmlFormats}
 import uk.gov.hmrc.entrydeclarationstore.validation.{EORIMismatchError, MRNMismatchError, ValidationError, ValidationErrors}
-import org.scalatest.WordSpec
 
 import java.time.{Clock, Instant, ZoneOffset}
 import scala.concurrent.ExecutionContext.Implicits.global

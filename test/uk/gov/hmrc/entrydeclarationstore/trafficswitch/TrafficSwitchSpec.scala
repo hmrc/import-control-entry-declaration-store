@@ -19,16 +19,16 @@ package uk.gov.hmrc.entrydeclarationstore.trafficswitch
 import akka.actor.ActorSystem
 import akka.pattern.{AskTimeoutException, CircuitBreakerOpenException}
 import org.scalatest.Matchers.{a, all, an, convertToAnyShouldWrapper}
+import org.scalatest.WordSpec
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.api.test.Injecting
 import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.entrydeclarationstore.models.TrafficSwitchState
 import uk.gov.hmrc.entrydeclarationstore.services.MockTrafficSwitchService
-import org.scalatest.WordSpec
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
 
 import java.util.concurrent.atomic.AtomicBoolean
 import scala.concurrent.ExecutionContext.Implicits.global

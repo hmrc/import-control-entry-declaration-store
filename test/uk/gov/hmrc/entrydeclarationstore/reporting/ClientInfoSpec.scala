@@ -17,8 +17,8 @@
 package uk.gov.hmrc.entrydeclarationstore.reporting
 
 import org.scalatest.Matchers.convertToAnyShouldWrapper
-import play.api.mvc.Headers
 import org.scalatest.WordSpec
+import play.api.mvc.Headers
 
 class ClientInfoSpec extends WordSpec {
   "ClientInfo" when {

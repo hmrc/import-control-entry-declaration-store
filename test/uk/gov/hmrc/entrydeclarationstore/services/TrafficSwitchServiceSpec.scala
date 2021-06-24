@@ -18,13 +18,13 @@ package uk.gov.hmrc.entrydeclarationstore.services
 
 import org.scalamock.handlers.CallHandler
 import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.{TrafficSwitchState, TrafficSwitchStatus}
 import uk.gov.hmrc.entrydeclarationstore.reporting.{MockReportSender, TrafficStarted}
 import uk.gov.hmrc.entrydeclarationstore.repositories.MockTrafficSwitchRepo
 import uk.gov.hmrc.http.HeaderCarrier
-import org.scalatest.WordSpec
 
 import java.time.temporal.ChronoUnit
 import java.time.{Duration, Instant}

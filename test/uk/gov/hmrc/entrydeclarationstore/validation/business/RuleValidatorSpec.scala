@@ -17,8 +17,8 @@
 package uk.gov.hmrc.entrydeclarationstore.validation.business
 
 import org.scalatest.Matchers.convertToAnyShouldWrapper
-import uk.gov.hmrc.entrydeclarationstore.validation.{ValidationError, ValidationErrors}
 import org.scalatest.WordSpec
+import uk.gov.hmrc.entrydeclarationstore.validation.{ValidationError, ValidationErrors}
 
 import scala.xml.Elem
 

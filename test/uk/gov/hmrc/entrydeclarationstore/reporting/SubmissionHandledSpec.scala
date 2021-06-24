@@ -17,8 +17,8 @@
 package uk.gov.hmrc.entrydeclarationstore.reporting
 
 import org.scalatest.Matchers.convertToAnyShouldWrapper
-import play.api.libs.json.{JsObject, Json}
 import org.scalatest.WordSpec
+import play.api.libs.json.{JsObject, Json}
 
 import java.time.Instant
 

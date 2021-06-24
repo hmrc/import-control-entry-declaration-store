@@ -16,11 +16,10 @@
 
 package uk.gov.hmrc.entrydeclarationstore.utils
 
-import org.scalatest.Inside
 import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.{Inside, WordSpec}
 import org.scalatest.concurrent.ScalaFutures
 import uk.gov.hmrc.entrydeclarationstore.repositories.MockEntryDeclarationRepo
-import org.scalatest.WordSpec
 
 class SchemaErrorCodeMapperSpec extends WordSpec with MockEntryDeclarationRepo with Inside with ScalaFutures {
 

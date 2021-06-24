@@ -18,6 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.connectors
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
@@ -25,8 +26,10 @@ trait MockApiSubscriptionFieldsConnector extends MockFactory {
   val mockApiSubscriptionFieldsConnector: ApiSubscriptionFieldsConnector = mock[ApiSubscriptionFieldsConnector]
 
   object MockApiSubscriptionFieldsConnector {
-    def getAuthenticatedEoriField(clientId: String): CallHandler[Future[Option[String]]] =
-      mockApiSubscriptionFieldsConnector.getAuthenticatedEoriField _ expects clientId
+    def getAuthenticatedEoriField(clientId: String)(implicit hc: HeaderCarrier) : CallHandler[Future[Option[String]]] =
+      (mockApiSubscriptionFieldsConnector
+        .getAuthenticatedEoriField(_: String)(_ : HeaderCarrier))
+        .expects(clientId, hc)
 
   }
 }

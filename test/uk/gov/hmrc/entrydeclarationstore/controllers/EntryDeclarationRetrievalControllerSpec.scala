@@ -17,6 +17,7 @@
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 import play.api.http.HeaderNames
 import play.api.libs.json.{JsString, JsValue, Json}
 import play.api.mvc.Result
@@ -26,7 +27,6 @@ import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.models.{EisSubmissionState, SubmissionIdLookupResult}
 import uk.gov.hmrc.entrydeclarationstore.services.MockEntryDeclarationRetrievalService
-import org.scalatest.WordSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

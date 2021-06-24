@@ -17,8 +17,8 @@
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import controllers.Assets
-import org.scalatest.Assertion
 import org.scalatest.Matchers.{be, convertToAnyShouldWrapper, have, include, not}
+import org.scalatest.{Assertion, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.HttpErrorHandler
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -30,7 +30,6 @@ import play.api.{Application, Environment, Mode}
 import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
-import org.scalatest.WordSpec
 
 import scala.concurrent.Future
 

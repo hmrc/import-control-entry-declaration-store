@@ -18,7 +18,6 @@ package uk.gov.hmrc.entrydeclarationstore.validation
 
 import org.scalatest.Matchers.convertToAnyShouldWrapper
 import org.scalatest.WordSpec
-import org.scalatest.WordSpec
 
 import scala.xml.SAXParseException
 

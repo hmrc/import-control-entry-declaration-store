@@ -18,14 +18,13 @@ package uk.gov.hmrc.entrydeclarationstore.reporting.audit
 
 import org.scalamock.matchers.ArgCapture.CaptureOne
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.Inside
-import org.scalatest.Matchers.{be, convertToAnyShouldWrapper, not}
+import org.scalatest.Matchers.{convertToAnyShouldWrapper, not}
+import org.scalatest.{Inside, WordSpec}
 import play.api.libs.json.{JsObject, JsString}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
 import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
-import org.scalatest.WordSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
