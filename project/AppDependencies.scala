@@ -2,10 +2,10 @@ import play.core.PlayVersion.current
 import sbt._
 
 object AppDependencies {
-  val bootstrapVersion = "5.2.0"
+  val bootstrapVersion = "5.7.0"
 
   val compile: Seq[ModuleID] = Seq(
-    "com.github.fge"         % "json-schema-validator"      % "2.2.6",
+    "com.github.fge"         % "json-schema-validator"      % "2.2.14",
     "uk.gov.hmrc"            %% "simple-reactivemongo"      % "7.31.0-play-27",
     "org.reactivemongo"      %% "reactivemongo-akkastream"  % "0.20.13",
     "uk.gov.hmrc"            %% "bootstrap-backend-play-27" % bootstrapVersion,
@@ -14,7 +14,7 @@ object AppDependencies {
     "org.scala-lang.modules" %% "scala-xml"                 % "1.3.0",
     "com.lucidchart"         %% "xtract"                    % "2.2.1",
     "org.codehaus.groovy"    % "groovy-all"                 % "3.0.8",
-    "com.chuusai"            %% "shapeless"                 % "2.3.4"
+    "com.chuusai"            %% "shapeless"                 % "2.3.7"
   )
 
   val test: Seq[ModuleID] = Seq(
