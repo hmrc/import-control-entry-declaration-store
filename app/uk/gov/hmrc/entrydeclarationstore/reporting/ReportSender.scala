@@ -17,10 +17,11 @@
 package uk.gov.hmrc.entrydeclarationstore.reporting
 import com.google.inject.Inject
 import com.kenshoo.play.metrics.Metrics
+import play.api.Logging
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.reporting.audit.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.entrydeclarationstore.reporting.events.{Event, EventConnector}
-import uk.gov.hmrc.entrydeclarationstore.utils.{EventLogger, Timer}
+import uk.gov.hmrc.entrydeclarationstore.utils.Timer
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.{Clock, Instant}
@@ -32,7 +33,7 @@ class ReportSender @Inject()(
   clock: Clock,
   override val metrics: Metrics)(implicit ec: ExecutionContext)
     extends Timer
-    with EventLogger {
+    with Logging {
   def sendReport[R: EventSources](timestamp: Instant, report: R)(
     implicit hc: HeaderCarrier,
     lc: LoggingContext): Future[Unit] = {

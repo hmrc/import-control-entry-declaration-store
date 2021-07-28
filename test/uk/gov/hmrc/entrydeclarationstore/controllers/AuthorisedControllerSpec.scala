@@ -21,6 +21,7 @@ import org.scalamock.matchers.ArgCapture.CaptureOne
 import org.scalatest.Matchers.convertToAnyShouldWrapper
 import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
+import play.api.Logging
 import play.api.http.{HeaderNames, Status}
 import play.api.libs.json.Json
 import play.api.mvc._
@@ -30,7 +31,7 @@ import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.entrydeclarationstore.nrs.NRSMetadataTestData
 import uk.gov.hmrc.entrydeclarationstore.reporting.{ClientInfo, ClientType}
 import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, MockAuthService, UserDetails}
-import uk.gov.hmrc.entrydeclarationstore.utils.{EventLogger, MockMetrics, Timer}
+import uk.gov.hmrc.entrydeclarationstore.utils.{MockMetrics, Timer}
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 
 import scala.concurrent.Future
@@ -60,7 +61,7 @@ class AuthorisedControllerSpec
     val hc: HeaderCarrier   = HeaderCarrier()
     val mrn: Option[String] = None
 
-    class TestController extends AuthorisedController(cc) with Timer with EventLogger {
+    class TestController extends AuthorisedController(cc) with Timer with Logging {
       override val authService: AuthService = mockAuthService
 
       def action(): Action[AnyContent] = authorisedAction().async { userRequest =>

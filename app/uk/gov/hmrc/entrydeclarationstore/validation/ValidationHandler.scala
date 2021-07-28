@@ -18,10 +18,11 @@ package uk.gov.hmrc.entrydeclarationstore.validation
 
 import cats.implicits._
 import com.kenshoo.play.metrics.Metrics
+import play.api.Logging
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, RawPayload}
-import uk.gov.hmrc.entrydeclarationstore.utils.{EventLogger, Timer, XmlFormatConfig}
+import uk.gov.hmrc.entrydeclarationstore.utils.{Timer, XmlFormatConfig}
 import uk.gov.hmrc.entrydeclarationstore.validation.business.RuleValidator
 import uk.gov.hmrc.entrydeclarationstore.validation.schema.{SchemaTypeE313, SchemaTypeE315, SchemaValidationResult, SchemaValidator}
 
@@ -41,7 +42,7 @@ class ValidationHandlerImpl @Inject()(
   appConfig: AppConfig)
     extends ValidationHandler
     with Timer
-    with EventLogger {
+    with Logging {
 
   implicit val xmlFormatConfig: XmlFormatConfig = appConfig.xmlFormatConfig
 

@@ -21,7 +21,8 @@ import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.Housekeeper
 import uk.gov.hmrc.entrydeclarationstore.models.HousekeepingStatus
 import uk.gov.hmrc.entrydeclarationstore.repositories.{EntryDeclarationRepo, HousekeepingRepo}
-import uk.gov.hmrc.entrydeclarationstore.utils.{EventLogger, Timer}
+import uk.gov.hmrc.entrydeclarationstore.utils.Timer
+import play.api.Logging
 
 import java.time.Clock
 import javax.inject.{Inject, Singleton}
@@ -37,7 +38,7 @@ class HousekeepingService @Inject()(
   override val metrics: Metrics)(implicit ec: ExecutionContext)
     extends Housekeeper
     with Timer
-    with EventLogger {
+    with Logging {
 
   private lazy val numDeletedHistogram = metrics.defaultRegistry.histogram("housekeep-num-deleted")
 
