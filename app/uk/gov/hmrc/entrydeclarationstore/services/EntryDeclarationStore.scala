@@ -19,6 +19,7 @@ package uk.gov.hmrc.entrydeclarationstore.services
 import cats.data.EitherT
 import cats.implicits._
 import com.kenshoo.play.metrics.Metrics
+import play.api.Logging
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, EisConnector}
@@ -61,7 +62,7 @@ class EntryDeclarationStoreImpl @Inject()(
 )(implicit ec: ExecutionContext)
     extends EntryDeclarationStore
     with Timer
-    with EventLogger
+    with Logging
     with MetricsReporter {
 
   def handleSubmission(

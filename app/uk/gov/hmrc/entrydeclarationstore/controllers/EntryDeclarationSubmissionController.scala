@@ -18,6 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import akka.util.ByteString
 import com.kenshoo.play.metrics.Metrics
+import play.api.Logging
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
@@ -25,7 +26,7 @@ import uk.gov.hmrc.entrydeclarationstore.nrs.{NRSMetadata, NRSService, NRSSubmis
 import uk.gov.hmrc.entrydeclarationstore.reporting.{FailureType, ReportSender, SubmissionHandled}
 import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, EntryDeclarationStore}
 import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils._
-import uk.gov.hmrc.entrydeclarationstore.utils.{EventLogger, Timer}
+import uk.gov.hmrc.entrydeclarationstore.utils.Timer
 import uk.gov.hmrc.entrydeclarationstore.validation.{EORIMismatchError, MRNMismatchError, ValidationErrors}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -46,7 +47,7 @@ class EntryDeclarationSubmissionController @Inject()(
 )(implicit ec: ExecutionContext)
     extends AuthorisedController(cc)
     with Timer
-    with EventLogger {
+    with Logging {
 
   def xmlSuccessResponse(correlationId: String): Elem =
     // @formatter:off

@@ -18,11 +18,12 @@ package uk.gov.hmrc.entrydeclarationstore.utils
 
 import com.codahale.metrics._
 import com.kenshoo.play.metrics.Metrics
+import play.api.Logging
 
 import scala.concurrent.{ExecutionContext, Future}
 
 trait Timer {
-  self: EventLogger =>
+  self: Logging =>
 
   val defaultTimerGroup: String = "timer"
   type Metric = String
