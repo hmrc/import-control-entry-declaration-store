@@ -175,7 +175,7 @@ class EntryDeclarationStoreSpec
 
       entryDeclarationStore
         .handleSubmission(eori, payload, mrn, receivedDateTime, clientInfo)
-        .futureValue shouldBe Right(SuccessResponse(correlationId))
+        .futureValue shouldBe Right(SuccessResponse(correlationId, submissionId))
 
       await(setEisSubmissionStateUpdated.future)
     }
@@ -293,7 +293,7 @@ class EntryDeclarationStoreSpec
 
         entryDeclarationStore
           .handleSubmission(eori, payload, mrn, receivedDateTime, clientInfo)
-          .futureValue shouldBe Right(SuccessResponse(correlationId))
+          .futureValue shouldBe Right(SuccessResponse(correlationId, submissionId))
       }
     }
 
@@ -325,7 +325,7 @@ class EntryDeclarationStoreSpec
 
         entryDeclarationStore
           .handleSubmission(eori, payload, mrn, receivedDateTime, clientInfo)
-          .futureValue shouldBe Right(SuccessResponse(correlationId))
+          .futureValue shouldBe Right(SuccessResponse(correlationId, submissionId))
 
         await(setEisSubmissionStateUpdated.future)
       }

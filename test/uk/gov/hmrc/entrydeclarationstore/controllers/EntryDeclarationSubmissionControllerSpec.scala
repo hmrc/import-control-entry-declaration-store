@@ -48,6 +48,7 @@ class EntryDeclarationSubmissionControllerSpec
     with MockAppConfig {
 
   val eori                   = "GB1234567890"
+  val submissionId           = "3216783621-123873821-12332"
   val mrn                    = "mrn"
   val clientInfo: ClientInfo = ClientInfo(ClientType.CSP, None, None)
 
@@ -79,7 +80,7 @@ class EntryDeclarationSubmissionControllerSpec
   val nrsSubmission: NRSSubmission =
     NRSSubmission(
       rawPayload,
-      NRSMetadata(now, eori, identityData, fakeRequest(xmlPayload), rawPayload.byteArray.calculateSha256))
+      NRSMetadata(now, submissionId, identityData, fakeRequest(xmlPayload), rawPayload.byteArray.calculateSha256))
 
   private val controller = new EntryDeclarationSubmissionController(
     Helpers.stubControllerComponents(),
@@ -241,7 +242,7 @@ class EntryDeclarationSubmissionControllerSpec
       mockReportSuccessfulSubmission(mrn.isDefined)
       MockEntryDeclarationStore
         .handleSubmission(eori, rawPayload.copy(encoding = Some("US-ASCII")), mrn, now, clientInfo)
-        .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
+        .returns(Future.successful(Right(SuccessResponse("12345678901234", "3216783621-123873821-12332"))))
 
       val result: Future[Result] = handler(
         fakeRequest(xmlPayload)
@@ -255,7 +256,7 @@ class EntryDeclarationSubmissionControllerSpec
       mockReportSuccessfulSubmission(mrn.isDefined)
       MockEntryDeclarationStore
         .handleSubmission(eori, rawPayload.copy(encoding = None), mrn, now, clientInfo)
-        .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
+        .returns(Future.successful(Right(SuccessResponse("12345678901234","3216783621-123873821-12332"))))
 
       val result: Future[Result] = handler(fakeRequest(xmlPayload))
 
@@ -271,7 +272,7 @@ class EntryDeclarationSubmissionControllerSpec
           mockReportSuccessfulSubmission(mrn.isDefined)
           MockEntryDeclarationStore
             .handleSubmission(eori, rawPayload, mrn, now, clientInfo)
-            .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
+            .returns(Future.successful(Right(SuccessResponse("12345678901234", "3216783621-123873821-12332"))))
 
           val nrsPromise = Promise[Option[NRSResponse]]
           MockNRSService.submit(nrsSubmission) returns nrsPromise.future
@@ -288,7 +289,7 @@ class EntryDeclarationSubmissionControllerSpec
           mockReportSuccessfulSubmission(mrn.isDefined)
           MockEntryDeclarationStore
             .handleSubmission(eori, rawPayload, mrn, now, clientInfo)
-            .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
+            .returns(Future.successful(Right(SuccessResponse("12345678901234", "3216783621-123873821-12332"))))
 
           MockNRSService.submit(nrsSubmission).never()
 
@@ -306,7 +307,7 @@ class EntryDeclarationSubmissionControllerSpec
         mockReportSuccessfulSubmission(false)
         MockEntryDeclarationStore
           .handleSubmission(eori, rawPayload, None, now, clientInfo)
-          .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
+          .returns(Future.successful(Right(SuccessResponse("12345678901234", "3216783621-123873821-12332"))))
 
         val result: Future[Result] = controller.postSubmission(fakeRequest(xmlPayload))
 
@@ -333,7 +334,7 @@ class EntryDeclarationSubmissionControllerSpec
         mockReportSuccessfulSubmission(true)
         MockEntryDeclarationStore
           .handleSubmission(eori, rawPayload, Some(mrn), now, clientInfo)
-          .returns(Future.successful(Right(SuccessResponse("12345678901234"))))
+          .returns(Future.successful(Right(SuccessResponse("12345678901234", "3216783621-123873821-12332"))))
 
         val result = controller.putAmendment(mrn)(fakeRequest(xmlPayload))
 
