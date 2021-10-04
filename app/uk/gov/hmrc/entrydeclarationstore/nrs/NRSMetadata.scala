@@ -39,7 +39,7 @@ object NRSMetadata extends InstantFormatter {
 
   def apply(
     userSubmissionTimestamp: Instant,
-    eori: String,
+    submissionId: String,
     identityData: IdentityData,
     request: RequestHeader,
     checkSum: String
@@ -53,6 +53,6 @@ object NRSMetadata extends InstantFormatter {
       identityData            = identityData,
       userAuthToken           = request.headers.get("Authorization").getOrElse(""),
       headerData              = JsObject(request.headers.toMap.map(x => x._1 -> JsString(x._2 mkString ","))),
-      searchKeys              = SearchKeys(eori)
+      searchKeys              = SearchKeys(submissionId)
     )
 }

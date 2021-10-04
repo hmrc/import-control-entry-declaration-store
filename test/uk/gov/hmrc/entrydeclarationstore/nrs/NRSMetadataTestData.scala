@@ -91,7 +91,7 @@ trait NRSMetadataTestData {
                   |      "Gov-Client-Public-Port": "12345"
                   |    },
                   |    "searchKeys": {
-                  |      "eori": "GB123456789"
+                  |      "submissionId": "3216783621-123873821-12332"
                   |    }
                   |}""".stripMargin)
 
@@ -153,7 +153,7 @@ trait NRSMetadataTestData {
 
     NRSMetadata(
       Instant.parse("2018-04-07T12:13:25.000Z"),
-      "GB123456789",
+      "3216783621-123873821-12332",
       identityData,
       request,
       request.body.calculateSha256)

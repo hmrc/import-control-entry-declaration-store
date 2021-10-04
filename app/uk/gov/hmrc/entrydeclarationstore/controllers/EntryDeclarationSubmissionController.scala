@@ -97,13 +97,13 @@ class EntryDeclarationSubmissionController @Inject()(
                 InternalServerError(failure.toXml)
             }
           case Right(success) =>
-            submitToNRSIfReqd(rawPayload, request, receivedDateTime)
+            submitToNRSIfReqd(rawPayload, request, receivedDateTime, success.submissionId)
             reportSender.sendReport(SubmissionHandled.Success(mrn.isDefined): SubmissionHandled)
             Ok(xmlSuccessResponse(success.correlationId))
         }
     }
 
-  private def submitToNRSIfReqd(rawPayload: RawPayload, request: UserRequest[_], receivedDateTime: Instant)(
+  private def submitToNRSIfReqd(rawPayload: RawPayload, request: UserRequest[_], receivedDateTime: Instant, submissionId: String)(
     implicit hc: HeaderCarrier): Unit =
     request.userDetails.identityData.foreach { identityData =>
       implicit val lc: LoggingContext = LoggingContext(eori = Some(request.userDetails.eori))
@@ -112,7 +112,7 @@ class EntryDeclarationSubmissionController @Inject()(
         rawPayload,
         NRSMetadata(
           receivedDateTime,
-          request.userDetails.eori,
+          submissionId,
           identityData,
           request,
           rawPayload.byteArray.calculateSha256))

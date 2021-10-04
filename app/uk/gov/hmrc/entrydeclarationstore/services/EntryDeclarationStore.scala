@@ -107,7 +107,7 @@ class EntryDeclarationStoreImpl @Inject()(
       } yield {
         submitToEIS(input, eori, transportMode, receivedDateTime)
         reportMetrics(MessageType(amendment = mrn.isDefined), clientInfo.clientType, transportMode, rawPayload.length)
-        SuccessResponse(entryDeclaration.correlationId)
+        SuccessResponse(entryDeclaration.correlationId, entryDeclaration.submissionId)
       }
 
       result.value

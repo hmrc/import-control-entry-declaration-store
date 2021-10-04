@@ -16,4 +16,4 @@
 
 package uk.gov.hmrc.entrydeclarationstore.models
 
-case class SuccessResponse(correlationId: String)
+case class SuccessResponse(correlationId: String, submissionId: String)
