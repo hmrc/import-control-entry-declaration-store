@@ -19,7 +19,7 @@ package uk.gov.hmrc.entrydeclarationstore.orchestrators
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import org.scalatest.Inside
-import org.scalatest.Matchers.{convertToAnyShouldWrapper, include}
+import org.scalatest.matchers.should.Matchers.{convertToAnyShouldWrapper, include}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder

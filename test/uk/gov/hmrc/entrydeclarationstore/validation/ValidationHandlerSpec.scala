@@ -17,7 +17,7 @@
 package uk.gov.hmrc.entrydeclarationstore.validation
 
 import com.kenshoo.play.metrics.Metrics
-import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.WordSpec
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext

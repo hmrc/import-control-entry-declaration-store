@@ -18,7 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.reporting.audit
 
 import org.scalamock.matchers.ArgCapture.CaptureOne
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.Matchers.{convertToAnyShouldWrapper, not}
+import org.scalatest.matchers.should.Matchers.{convertToAnyShouldWrapper, not}
 import org.scalatest.{Inside, WordSpec}
 import play.api.libs.json.{JsObject, JsString}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig

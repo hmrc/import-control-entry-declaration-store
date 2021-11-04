@@ -18,7 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.utils
 
 import akka.actor.{ActorSystem, Scheduler}
 import com.google.common.base.Stopwatch
-import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite

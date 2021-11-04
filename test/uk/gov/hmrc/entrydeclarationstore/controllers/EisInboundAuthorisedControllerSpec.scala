@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
-import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import play.api.http.{HeaderNames, Status}

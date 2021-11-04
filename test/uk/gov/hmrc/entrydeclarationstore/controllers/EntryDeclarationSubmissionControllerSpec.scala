@@ -18,7 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import akka.util.ByteString
 import com.kenshoo.play.metrics.Metrics
-import org.scalatest.Matchers.{contain, convertToAnyShouldWrapper}
+import org.scalatest.matchers.should.Matchers.{contain, convertToAnyShouldWrapper}
 import org.scalatest.WordSpec
 import play.api.http.MimeTypes
 import play.api.mvc.{Request, Result}

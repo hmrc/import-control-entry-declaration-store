@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.validation.schema
 
-import org.scalatest.Matchers.{a, convertToAnyShouldWrapper}
+import org.scalatest.matchers.should.Matchers.{a, convertToAnyShouldWrapper}
 import org.scalatest.{Assertion, WordSpec}
 import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils

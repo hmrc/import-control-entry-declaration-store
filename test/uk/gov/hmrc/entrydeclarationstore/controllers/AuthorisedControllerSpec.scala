@@ -18,7 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import com.kenshoo.play.metrics.Metrics
 import org.scalamock.matchers.ArgCapture.CaptureOne
-import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import play.api.Logging

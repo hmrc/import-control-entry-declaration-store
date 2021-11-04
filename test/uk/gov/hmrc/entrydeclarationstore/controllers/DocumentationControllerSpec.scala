@@ -17,7 +17,7 @@
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import controllers.Assets
-import org.scalatest.Matchers.{be, convertToAnyShouldWrapper, have, include, not}
+import org.scalatest.matchers.should.Matchers.{be, convertToAnyShouldWrapper, have, include, not}
 import org.scalatest.{Assertion, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.HttpErrorHandler

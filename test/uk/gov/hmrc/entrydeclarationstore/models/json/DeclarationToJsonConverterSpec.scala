@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.models.json
 
-import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.{Inside, WordSpec}
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext

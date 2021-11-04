@@ -17,7 +17,7 @@
 package uk.gov.hmrc.entrydeclarationstore.validation.business
 
 import groovy.lang.Closure
-import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.WordSpec
 import uk.gov.hmrc.entrydeclarationstore.validation.business.Assert.CompilationContext
 import uk.gov.hmrc.entrydeclarationstore.validation.business.AssertEvaluator.ContextHelper

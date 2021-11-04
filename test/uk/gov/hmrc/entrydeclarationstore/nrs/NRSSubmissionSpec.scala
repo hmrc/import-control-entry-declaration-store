@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.nrs
 
-import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.WordSpec
 import play.api.libs.json.Json
 import uk.gov.hmrc.entrydeclarationstore.models.RawPayload

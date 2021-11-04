@@ -19,7 +19,7 @@ package uk.gov.hmrc.entrydeclarationstore.trafficswitch
 import akka.actor.{ActorRef, ActorRefFactory, ActorSystem, Status}
 import akka.pattern.CircuitBreakerOpenException
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
-import org.scalatest.Matchers.{a, convertToAnyShouldWrapper}
+import org.scalatest.matchers.should.Matchers.{a, convertToAnyShouldWrapper}
 import org.scalatest.{BeforeAndAfterAll, Inside, WordSpecLike}
 import uk.gov.hmrc.entrydeclarationstore.models.TrafficSwitchState
 

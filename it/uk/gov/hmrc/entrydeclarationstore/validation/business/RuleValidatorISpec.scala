@@ -17,7 +17,7 @@
 package uk.gov.hmrc.entrydeclarationstore.validation.business
 
 import com.lucidchart.open.xtract.{ParseSuccess, XmlReader}
-import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.BindingKey
 import play.api.inject.guice.GuiceApplicationBuilder

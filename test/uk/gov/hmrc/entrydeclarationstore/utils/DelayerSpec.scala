@@ -18,7 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.utils
 
 import akka.actor.Scheduler
 import com.miguno.akka.testing.VirtualTime
-import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.WordSpec
 
 import scala.concurrent.ExecutionContext

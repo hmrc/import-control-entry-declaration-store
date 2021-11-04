@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.connectors
 
-import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.WordSpec
 import play.api.libs.json.Json
 
@@ -24,14 +24,14 @@ class EISSendFailureSpec extends WordSpec {
 
   "EISSendFailure" must {
     "write to Json correctly" in {
-      Json.toJson(EISSendFailure.TrafficSwitchNotFlowing) shouldBe
+      Json.toJson(EISSendFailure.TrafficSwitchNotFlowing : EISSendFailure) shouldBe
         Json.parse("""
                      |{
                      |  "type": "TRAFFIC_SWITCH_NOT_FLOWING"
                      |}
                      |""".stripMargin)
 
-      Json.toJson(EISSendFailure.ErrorResponse(123)) shouldBe
+      Json.toJson(EISSendFailure.ErrorResponse(123) : EISSendFailure) shouldBe
         Json.parse("""
                      |{
                      |  "type": "ERROR_RESPONSE",
@@ -39,14 +39,14 @@ class EISSendFailureSpec extends WordSpec {
                      |}
                      |""".stripMargin)
 
-      Json.toJson(EISSendFailure.ExceptionThrown) shouldBe
+      Json.toJson(EISSendFailure.ExceptionThrown : EISSendFailure) shouldBe
         Json.parse("""
                      |{
                      |  "type": "EXCEPTION_THROWN"
                      |}
                      |""".stripMargin)
 
-      Json.toJson(EISSendFailure.Timeout) shouldBe
+      Json.toJson(EISSendFailure.Timeout : EISSendFailure) shouldBe
         Json.parse("""
                      |{
                      |  "type": "TIMEOUT"

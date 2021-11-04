@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
-import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.WordSpec
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.{contentType, _}
@@ -55,7 +55,7 @@ class ReplayControllerSpec extends WordSpec with MockReplayOrchestrator with Moc
 
         status(result)        shouldBe ACCEPTED
         contentType(result)   shouldBe Some("application/json")
-        contentAsJson(result) shouldBe Json.toJson(ReplayInitializationResult.Started("replayId"))
+        contentAsJson(result) shouldBe Json.toJson(ReplayInitializationResult.Started("replayId") : ReplayInitializationResult)
       }
 
       "request with no limit defined is handled successfully" in {
@@ -66,7 +66,7 @@ class ReplayControllerSpec extends WordSpec with MockReplayOrchestrator with Moc
 
         status(result)        shouldBe ACCEPTED
         contentType(result)   shouldBe Some("application/json")
-        contentAsJson(result) shouldBe Json.toJson(ReplayInitializationResult.Started("replayId"))
+        contentAsJson(result) shouldBe Json.toJson(ReplayInitializationResult.Started("replayId") : ReplayInitializationResult)
       }
     }
 
@@ -96,7 +96,7 @@ class ReplayControllerSpec extends WordSpec with MockReplayOrchestrator with Moc
 
         status(result)        shouldBe ACCEPTED
         contentType(result)   shouldBe Some("application/json")
-        contentAsJson(result) shouldBe Json.toJson(ReplayInitializationResult.AlreadyRunning(Some("replayId")))
+        contentAsJson(result) shouldBe Json.toJson(ReplayInitializationResult.AlreadyRunning(Some("replayId")) : ReplayInitializationResult)
       }
 
       "there is a replay in progress and the last replay id cannot be determined" in {
@@ -107,7 +107,7 @@ class ReplayControllerSpec extends WordSpec with MockReplayOrchestrator with Moc
 
         status(result)        shouldBe ACCEPTED
         contentType(result)   shouldBe Some("application/json")
-        contentAsJson(result) shouldBe Json.toJson(ReplayInitializationResult.AlreadyRunning(None))
+        contentAsJson(result) shouldBe Json.toJson(ReplayInitializationResult.AlreadyRunning(None) : ReplayInitializationResult)
       }
     }
   }

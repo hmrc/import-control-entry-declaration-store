@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.entrydeclarationstore.models
 
-import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.WordSpec
 import play.api.libs.json.Json
 
 class ReplayInitializationResultSpec extends WordSpec {
   "ReplayStartResult.Started" must {
     "correctly serialize to JSON" in {
-      Json.toJson(ReplayInitializationResult.Started("someId")) shouldBe
+      Json.toJson(ReplayInitializationResult.Started("someId") : ReplayInitializationResult) shouldBe
         Json.parse("""{
                      |  "replayId": "someId", 
                      |  "alreadyStarted": false
@@ -34,7 +34,7 @@ class ReplayInitializationResultSpec extends WordSpec {
   "ReplayStartResult.AlreadyRunning" when {
     "the latest replayId can be determined" must {
       "correctly serialize to JSON" in {
-        Json.toJson(ReplayInitializationResult.AlreadyRunning(Some("someId"))) shouldBe
+        Json.toJson(ReplayInitializationResult.AlreadyRunning(Some("someId")) : ReplayInitializationResult) shouldBe
           Json.parse("""{
                        |  "replayId": "someId", 
                        |  "alreadyStarted": true
@@ -44,7 +44,7 @@ class ReplayInitializationResultSpec extends WordSpec {
 
     "the latest replayId cannot be determined" must {
       "correctly serialize to JSON" in {
-        Json.toJson(ReplayInitializationResult.AlreadyRunning(None)) shouldBe
+        Json.toJson(ReplayInitializationResult.AlreadyRunning(None) : ReplayInitializationResult) shouldBe
           Json.parse("""{
                        |  "alreadyStarted": true
                        |}""".stripMargin)

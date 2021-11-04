@@ -18,7 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.trafficswitch
 
 import akka.actor.ActorSystem
 import akka.pattern.{AskTimeoutException, CircuitBreakerOpenException}
-import org.scalatest.Matchers.{a, all, an, convertToAnyShouldWrapper}
+import org.scalatest.matchers.should.Matchers.{a, all, an, convertToAnyShouldWrapper}
 import org.scalatest.WordSpec
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite

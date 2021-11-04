@@ -17,7 +17,7 @@
 package uk.gov.hmrc.entrydeclarationstore.utils
 
 import com.kenshoo.play.metrics.Metrics
-import org.scalatest.Matchers.{be, convertToAnyShouldWrapper}
+import org.scalatest.matchers.should.Matchers.{be, convertToAnyShouldWrapper}
 import org.scalatest.WordSpec
 import play.api.Logging
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
