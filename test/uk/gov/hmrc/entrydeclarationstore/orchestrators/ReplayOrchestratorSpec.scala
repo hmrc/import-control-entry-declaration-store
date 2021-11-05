@@ -85,7 +85,7 @@ class ReplayOrchestratorSpec
     val unlockPromise = Promise[Unit]
     MockReplayLock.unlock(replayId).onCall { _ =>
       unlockPromise.trySuccess(())
-      Future.successful(true)
+      Future.successful(Unit)
     }
 
     Future.sequence(Seq(completePromise.future, unlockPromise.future)).map(_ => ())
