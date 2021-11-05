@@ -16,19 +16,20 @@
 
 package uk.gov.hmrc.entrydeclarationstore.http
 
+import java.io.IOException
+
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
-import org.scalatest.WordSpec
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.MimeTypes
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.mvc.AnyContentAsEmpty
 import play.api.test.Helpers.{GET, _}
 import play.api.test.{FakeRequest, Injecting}
 import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
 
-import java.io.IOException
-
-class XmlOrJsonErrorHandlerSpec extends WordSpec with GuiceOneAppPerSuite with Injecting {
+class XmlOrJsonErrorHandlerSpec extends AnyWordSpec with GuiceOneAppPerSuite with Injecting {
 
   override lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
@@ -43,9 +44,9 @@ class XmlOrJsonErrorHandlerSpec extends WordSpec with GuiceOneAppPerSuite with I
     val message    = "test message"
     val exception  = new IOException
 
-    protected def requestHeader = FakeRequest(GET, uri)
+    protected def requestHeader: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, uri)
 
-    val errorHandler = inject[XmlOrJsonErrorHandler]
+    val errorHandler: XmlOrJsonErrorHandler = inject[XmlOrJsonErrorHandler]
 
     protected def testOnServerError(acceptHeaders: String*): Option[String] = {
       val result = errorHandler.onServerError(requestHeader.withHeaders(acceptHeaders.map(ACCEPT -> _): _*), exception)

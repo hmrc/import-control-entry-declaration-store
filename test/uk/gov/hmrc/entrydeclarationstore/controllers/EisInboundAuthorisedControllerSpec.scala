@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
-import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.{HeaderNames, Status}
 import play.api.libs.json.Json
 import play.api.mvc._
@@ -30,7 +30,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.Future
 
 class EisInboundAuthorisedControllerSpec
-    extends WordSpec
+    extends AnyWordSpec
     with Status
     with HeaderNames
     with ResultExtractors

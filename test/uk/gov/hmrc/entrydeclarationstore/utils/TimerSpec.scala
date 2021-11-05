@@ -18,14 +18,14 @@ package uk.gov.hmrc.entrydeclarationstore.utils
 
 import com.kenshoo.play.metrics.Metrics
 import org.scalatest.matchers.should.Matchers.{be, convertToAnyShouldWrapper}
-import org.scalatest.WordSpec
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.Logging
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class TimerSpec extends WordSpec with Timer with Logging {
+class TimerSpec extends AnyWordSpec with Timer with Logging {
   val metrics: Metrics = new MockMetrics
 
   var timeMs: Long = _

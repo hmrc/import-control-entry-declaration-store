@@ -16,8 +16,10 @@
 
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
+import java.time.Instant
+
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
-import org.scalatest.WordSpec
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.MimeTypes
 import play.api.libs.json.Json
 import play.api.test.Helpers._
@@ -25,11 +27,10 @@ import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.entrydeclarationstore.models.ReplayState
 import uk.gov.hmrc.entrydeclarationstore.services.MockReplayStateRetrievalService
 
-import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class ReplayStateRetrievalControllerSpec extends WordSpec with MockReplayStateRetrievalService {
+class ReplayStateRetrievalControllerSpec extends AnyWordSpec with MockReplayStateRetrievalService {
   val controller =
     new ReplayStateRetrievalController(Helpers.stubControllerComponents(), mockReplayStateRetrievalService)
 

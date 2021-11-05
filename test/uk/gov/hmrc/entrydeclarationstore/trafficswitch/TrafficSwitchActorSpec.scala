@@ -20,7 +20,8 @@ import akka.actor.{ActorRef, ActorRefFactory, ActorSystem, Status}
 import akka.pattern.CircuitBreakerOpenException
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import org.scalatest.matchers.should.Matchers.{a, convertToAnyShouldWrapper}
-import org.scalatest.{BeforeAndAfterAll, Inside, WordSpecLike}
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.{BeforeAndAfterAll, Inside}
 import uk.gov.hmrc.entrydeclarationstore.models.TrafficSwitchState
 
 import scala.concurrent.duration._
@@ -30,7 +31,7 @@ import scala.util.control.NoStackTrace
 
 class TrafficSwitchActorSpec
     extends TestKit(ActorSystem("TrafficSwitchActorSpec"))
-    with WordSpecLike
+    with AnyWordSpecLike
     with BeforeAndAfterAll
     with ImplicitSender
     with Inside {

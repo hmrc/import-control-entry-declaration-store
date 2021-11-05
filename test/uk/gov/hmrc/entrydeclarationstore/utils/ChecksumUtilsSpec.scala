@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.entrydeclarationstore.utils
 
-import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils._
 
-class ChecksumUtilsSpec extends WordSpec with MustMatchers {
+class ChecksumUtilsSpec extends AnyWordSpec with Matchers {
   "StringWithSha256" should {
 
     "digest sha-256" in {

@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.entrydeclarationstore.utils
 
+import org.scalatest.matchers.must.Matchers
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
-import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatest.wordspec.AnyWordSpec
 
-class IdGeneratorSpec extends WordSpec with MustMatchers {
+class IdGeneratorSpec extends AnyWordSpec with Matchers {
 
   val idGenerator = new IdGenerator
 

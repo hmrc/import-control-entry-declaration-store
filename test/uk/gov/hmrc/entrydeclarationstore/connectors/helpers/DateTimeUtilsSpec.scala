@@ -16,14 +16,16 @@
 
 package uk.gov.hmrc.entrydeclarationstore.connectors.helpers
 
-import org.scalacheck.{Arbitrary, Gen}
-import org.scalatest.{Inspectors, Matchers, WordSpec}
-
 import java.time._
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-class DateTimeUtilsSpec extends WordSpec with Matchers with Inspectors {
+import org.scalacheck.{Arbitrary, Gen}
+import org.scalatest.Inspectors
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+
+class DateTimeUtilsSpec extends AnyWordSpec with Matchers with Inspectors {
 
   implicit val arbInstant: Arbitrary[Instant] = Arbitrary(
     for {

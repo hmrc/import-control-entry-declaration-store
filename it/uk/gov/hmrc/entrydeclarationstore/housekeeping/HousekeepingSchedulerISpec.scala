@@ -19,9 +19,10 @@ package uk.gov.hmrc.entrydeclarationstore.housekeeping
 import akka.actor.{ActorSystem, Scheduler}
 import akka.testkit.{TestKit, TestProbe}
 import com.miguno.akka.testing.VirtualTime
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.Eventually
 import org.scalatest.time.{Milliseconds, Span}
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -36,8 +37,7 @@ import scala.concurrent.duration._
 
 class HousekeepingSchedulerISpec
     extends TestKit(ActorSystem("TrafficSwitchStateActorSpec"))
-    with WordSpecLike
-    with Matchers
+    with AnyWordSpecLike
     with FutureAwaits
     with DefaultAwaitTimeout
     with GuiceOneAppPerSuite

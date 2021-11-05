@@ -17,12 +17,12 @@
 package uk.gov.hmrc.entrydeclarationstore.models
 
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
-import org.scalatest.WordSpec
+import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.entrydeclarationstore.utils.XmlFormats
 
 import scala.xml.Utility
 
-class StandardErrorSpec extends WordSpec {
+class StandardErrorSpec extends AnyWordSpec {
   "StandardError" must {
     "Serialize to xml correctly" in {
       val formatter = implicitly[XmlFormats[StandardError]]

@@ -17,9 +17,9 @@
 package uk.gov.hmrc.entrydeclarationstore.logging
 
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
-import org.scalatest.WordSpec
+import org.scalatest.wordspec.AnyWordSpec
 
-class LoggingContextSpec extends WordSpec {
+class LoggingContextSpec extends AnyWordSpec {
   "LoggingContext" when {
     "not including message type" must {
       "include mandatory properties" in {

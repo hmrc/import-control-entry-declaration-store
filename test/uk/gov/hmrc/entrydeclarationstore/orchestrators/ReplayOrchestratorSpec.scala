@@ -16,13 +16,17 @@
 
 package uk.gov.hmrc.entrydeclarationstore.orchestrators
 
+import java.time.{Clock, Instant, ZoneOffset}
+
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import org.scalatest.Inside
-import org.scalatest.matchers.should.Matchers.{convertToAnyShouldWrapper, include}
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.matchers.should.Matchers.{convertToAnyShouldWrapper, include}
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.api.test.Injecting
 import play.api.{Application, Environment, Mode}
 import reactivemongo.core.errors.ConnectionException
@@ -32,16 +36,13 @@ import uk.gov.hmrc.entrydeclarationstore.repositories.{MockEntryDeclarationRepo,
 import uk.gov.hmrc.entrydeclarationstore.services.MockSubmissionReplayService
 import uk.gov.hmrc.entrydeclarationstore.utils.MockIdGenerator
 import uk.gov.hmrc.http.HeaderCarrier
-import org.scalatest.WordSpec
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
 
-import java.time.{Clock, Instant, ZoneOffset}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, Promise}
 import scala.util.control.NoStackTrace
 
 class ReplayOrchestratorSpec
-    extends WordSpec
+    extends AnyWordSpec
     with MockIdGenerator
     with MockEntryDeclarationRepo
     with MockReplayStateRepo

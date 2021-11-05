@@ -16,8 +16,11 @@
 
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
-import org.scalatest.WordSpec
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.MimeTypes
 import play.api.libs.json.Json
 import play.api.test.Helpers._
@@ -25,12 +28,10 @@ import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.entrydeclarationstore.models.{TrafficSwitchState, TrafficSwitchStatus}
 import uk.gov.hmrc.entrydeclarationstore.services.MockTrafficSwitchService
 
-import java.time.Instant
-import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class TrafficSwitchControllerSpec extends WordSpec with MockTrafficSwitchService {
+class TrafficSwitchControllerSpec extends AnyWordSpec with MockTrafficSwitchService {
 
   val controller = new TrafficSwitchController(Helpers.stubControllerComponents(), mockTrafficSwitchService)
 

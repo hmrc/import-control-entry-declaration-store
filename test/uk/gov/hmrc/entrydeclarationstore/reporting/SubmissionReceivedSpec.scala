@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.entrydeclarationstore.reporting
 
+import java.time.Instant
+
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
-import org.scalatest.WordSpec
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsObject, JsString, Json}
 import uk.gov.hmrc.entrydeclarationstore.models.MessageType
 
-import java.time.Instant
-
-class SubmissionReceivedSpec extends WordSpec {
+class SubmissionReceivedSpec extends AnyWordSpec {
 
   val now: Instant = Instant.now
 

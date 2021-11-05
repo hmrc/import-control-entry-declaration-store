@@ -17,10 +17,10 @@
 package uk.gov.hmrc.entrydeclarationstore.connectors
 
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
-import org.scalatest.WordSpec
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
 
-class EISSendFailureSpec extends WordSpec {
+class EISSendFailureSpec extends AnyWordSpec {
 
   "EISSendFailure" must {
     "write to Json correctly" in {

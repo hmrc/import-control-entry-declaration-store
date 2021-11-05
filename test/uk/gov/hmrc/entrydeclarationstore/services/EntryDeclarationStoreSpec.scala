@@ -16,10 +16,14 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
+import java.io.IOException
+import java.time.{Clock, Instant, ZoneOffset}
+
 import com.kenshoo.play.metrics.Metrics
-import org.scalatest.matchers.should.Matchers.{a, convertToAnyShouldWrapper}
-import org.scalatest.{Inside, WordSpec}
+import org.scalatest.Inside
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
+import org.scalatest.matchers.should.Matchers.{a, convertToAnyShouldWrapper}
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsString, JsValue}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
@@ -32,15 +36,13 @@ import uk.gov.hmrc.entrydeclarationstore.utils.{MockIdGenerator, MockMetrics, Xm
 import uk.gov.hmrc.entrydeclarationstore.validation._
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.io.IOException
-import java.time.{Clock, Instant, ZoneOffset}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, Promise}
 import scala.util.control.NoStackTrace
 import scala.xml.NodeSeq
 
 class EntryDeclarationStoreSpec
-    extends WordSpec
+    extends AnyWordSpec
     with MockEntryDeclarationRepo
     with Inside
     with ScalaFutures

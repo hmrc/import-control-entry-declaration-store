@@ -16,16 +16,17 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
-import org.scalatest.WordSpec
+import java.time.Instant
+
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.entrydeclarationstore.models.ReplayState
 import uk.gov.hmrc.entrydeclarationstore.repositories.MockReplayStateRepo
 
-import java.time.Instant
 import scala.concurrent.Future
 
-class ReplayStateRetrievalServiceSpec extends WordSpec with MockReplayStateRepo with ScalaFutures {
+class ReplayStateRetrievalServiceSpec extends AnyWordSpec with MockReplayStateRepo with ScalaFutures {
 
   val service  = new ReplayStateRetrievalService(mockReplayStateRepo)
   val replayId = "replayId"

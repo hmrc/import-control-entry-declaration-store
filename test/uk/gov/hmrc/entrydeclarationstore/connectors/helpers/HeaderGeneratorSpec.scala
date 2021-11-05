@@ -16,14 +16,15 @@
 
 package uk.gov.hmrc.entrydeclarationstore.connectors.helpers
 
-import org.scalatest.{Matchers, WordSpec}
+import java.time.{Clock, LocalDateTime, ZoneOffset, ZonedDateTime}
+
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.{HeaderNames, MimeTypes}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.{Clock, LocalDateTime, ZoneOffset, ZonedDateTime}
-
-class HeaderGeneratorSpec extends WordSpec with Matchers with HeaderNames with MockAppConfig {
+class HeaderGeneratorSpec extends AnyWordSpec with Matchers with HeaderNames with MockAppConfig {
 
   val clock: Clock = {
     val t = ZonedDateTime.of(LocalDateTime.of(2015, 8, 13, 13, 28, 22), ZoneOffset.UTC)

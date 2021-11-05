@@ -23,10 +23,10 @@ import org.mockito.ArgumentMatchers.{any, eq => is}
 import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import org.mockito.MockitoSugar.mock
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.matchers.should.Matchers._
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
-import org.scalatest.{LoneElement, StreamlinedXml, WordSpec}
+import org.scalatest.matchers.should.Matchers._
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.{LoneElement, StreamlinedXml}
 import play.api.mvc.{AnyContentAsEmpty, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -43,7 +43,7 @@ import scala.util.Random
 import scala.xml.Elem
 
 class XmlErrorHandlerSpec
-    extends WordSpec
+    extends AnyWordSpec
     with ScalaFutures
     with LoneElement
     with Eventually

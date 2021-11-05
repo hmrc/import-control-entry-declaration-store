@@ -17,10 +17,10 @@
 package uk.gov.hmrc.entrydeclarationstore.models
 
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
-import org.scalatest.WordSpec
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
 
-class ReplayInitializationResultSpec extends WordSpec {
+class ReplayInitializationResultSpec extends AnyWordSpec {
   "ReplayStartResult.Started" must {
     "correctly serialize to JSON" in {
       Json.toJson(ReplayInitializationResult.Started("someId") : ReplayInitializationResult) shouldBe

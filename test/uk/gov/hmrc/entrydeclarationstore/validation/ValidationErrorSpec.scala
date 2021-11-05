@@ -17,11 +17,11 @@
 package uk.gov.hmrc.entrydeclarationstore.validation
 
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
-import org.scalatest.WordSpec
+import org.scalatest.wordspec.AnyWordSpec
 
 import scala.xml.SAXParseException
 
-class ValidationErrorSpec extends WordSpec {
+class ValidationErrorSpec extends AnyWordSpec {
   "ValidationError" when {
     "created from SaxParseException" must {
 

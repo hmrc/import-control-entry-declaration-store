@@ -17,9 +17,9 @@
 package uk.gov.hmrc.entrydeclarationstore.validation.business
 
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
-import org.scalatest.WordSpec
+import org.scalatest.wordspec.AnyWordSpec
 
-class ContextNodeSpec extends WordSpec {
+class ContextNodeSpec extends AnyWordSpec {
 
   "ContextNode" when {
 

@@ -16,7 +16,11 @@
 
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
-import org.scalatest.{BeforeAndAfterAll, Inside, Matchers, WordSpec}
+import java.time.Instant
+
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.{BeforeAndAfterAll, Inside}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits, Injecting}
@@ -24,13 +28,12 @@ import play.api.{Application, Environment, Mode}
 import reactivemongo.core.errors.DatabaseException
 import uk.gov.hmrc.entrydeclarationstore.models.ReplayState
 
-import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.Random
 
 class ReplayStateRepoISpec
-    extends WordSpec
+    extends AnyWordSpec
     with Matchers
     with FutureAwaits
     with DefaultAwaitTimeout

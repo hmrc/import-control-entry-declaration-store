@@ -23,7 +23,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.Future
 
 trait MockAuditHandler extends MockFactory {
-  val mockAuditHandler = mock[AuditHandler]
+  val mockAuditHandler: AuditHandler = mock[AuditHandler]
 
   object MockAuditHandler {
     def audit(auditEvent: AuditEvent): CallHandler[Future[Unit]] =

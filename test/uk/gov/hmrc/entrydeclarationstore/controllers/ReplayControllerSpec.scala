@@ -17,7 +17,7 @@
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
-import org.scalatest.WordSpec
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.{contentType, _}
 import play.api.test.{FakeRequest, Helpers}
@@ -29,7 +29,7 @@ import uk.gov.hmrc.entrydeclarationstore.services.MockSubmissionReplayService
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, Promise}
 
-class ReplayControllerSpec extends WordSpec with MockReplayOrchestrator with MockSubmissionReplayService {
+class ReplayControllerSpec extends AnyWordSpec with MockReplayOrchestrator with MockSubmissionReplayService {
   val controller =
     new ReplayController(Helpers.stubControllerComponents(), mockReplayOrchestrator, mockSubmissionReplayService)
   val limit    = 100
