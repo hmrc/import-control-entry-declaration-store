@@ -45,7 +45,7 @@ class DocumentationController @Inject()(
                      |    {
                      |      "key": "write:import-control-system",
                      |      "name": "Access Import Control System",
-                     |      "description": "Allow submission of entry summary declarations"
+                     |      "description": "Allow access to entry summary declaration outcomes"
                      |    }
                      |  ],
                      |  "api": {
