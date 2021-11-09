@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
-import org.scalatest.Matchers.convertToAnyShouldWrapper
-import org.scalatest.WordSpec
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.HeaderNames
 import play.api.libs.json.{JsString, JsValue, Json}
 import play.api.mvc.Result
@@ -32,7 +32,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class EntryDeclarationRetrievalControllerSpec
-    extends WordSpec
+    extends AnyWordSpec
     with MockEntryDeclarationRetrievalService
     with MockAppConfig {
 

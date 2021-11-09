@@ -18,9 +18,9 @@ package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import com.kenshoo.play.metrics.Metrics
 import org.scalamock.matchers.ArgCapture.CaptureOne
-import org.scalatest.Matchers.convertToAnyShouldWrapper
-import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.Logging
 import play.api.http.{HeaderNames, Status}
 import play.api.libs.json.Json
@@ -38,7 +38,7 @@ import scala.concurrent.Future
 import scala.xml.{Node, Utility}
 
 class AuthorisedControllerSpec
-    extends WordSpec
+    extends AnyWordSpec
     with Status
     with HeaderNames
     with ResultExtractors

@@ -16,11 +16,13 @@
 
 package uk.gov.hmrc.entrydeclarationstore.trafficswitch
 
+import java.util.concurrent.atomic.AtomicBoolean
+
 import akka.actor.ActorSystem
 import akka.pattern.{AskTimeoutException, CircuitBreakerOpenException}
-import org.scalatest.Matchers.{a, all, an, convertToAnyShouldWrapper}
-import org.scalatest.WordSpec
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
+import org.scalatest.matchers.should.Matchers.{a, all, an, convertToAnyShouldWrapper}
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
@@ -30,7 +32,6 @@ import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.entrydeclarationstore.models.TrafficSwitchState
 import uk.gov.hmrc.entrydeclarationstore.services.MockTrafficSwitchService
 
-import java.util.concurrent.atomic.AtomicBoolean
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.{FiniteDuration, _}
 import scala.concurrent.{Future, Promise, TimeoutException}
@@ -38,7 +39,7 @@ import scala.util.Try
 import scala.util.control.NoStackTrace
 
 class TrafficSwitchSpec
-    extends WordSpec
+    extends AnyWordSpec
     with ScalaFutures
     with Eventually
     with MockTrafficSwitchService

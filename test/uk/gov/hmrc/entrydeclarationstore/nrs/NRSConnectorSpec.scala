@@ -22,7 +22,9 @@ import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import com.github.tomakehurst.wiremock.http.Fault
 import com.github.tomakehurst.wiremock.stubbing.Scenario._
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.MimeTypes
 import play.api.http.Status._
@@ -39,7 +41,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
 class NRSConnectorSpec
-    extends WordSpec
+    extends AnyWordSpec
     with Matchers
     with FutureAwaits
     with DefaultAwaitTimeout

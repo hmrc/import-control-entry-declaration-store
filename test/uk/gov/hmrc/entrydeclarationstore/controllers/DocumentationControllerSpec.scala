@@ -17,8 +17,9 @@
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import controllers.Assets
-import org.scalatest.Matchers.{be, convertToAnyShouldWrapper, have, include, not}
-import org.scalatest.{Assertion, WordSpec}
+import org.scalatest.Assertion
+import org.scalatest.matchers.should.Matchers.{be, convertToAnyShouldWrapper, have, include, not}
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.HttpErrorHandler
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -33,7 +34,7 @@ import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
 
 import scala.concurrent.Future
 
-class DocumentationControllerSpec extends WordSpec with MockAppConfig with Injecting with GuiceOneAppPerSuite {
+class DocumentationControllerSpec extends AnyWordSpec with MockAppConfig with Injecting with GuiceOneAppPerSuite {
   override lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
     .disable[HousekeepingScheduler]

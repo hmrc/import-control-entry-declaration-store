@@ -18,9 +18,12 @@ package uk.gov.hmrc.entrydeclarationstore.repositories
 
 import java.time.Instant
 import java.util.UUID
+
 import akka.stream.Materializer
 import akka.stream.scaladsl.Sink
-import org.scalatest.{Assertion, BeforeAndAfterAll, Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.{Assertion, BeforeAndAfterAll}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json._
@@ -37,7 +40,7 @@ import scala.concurrent.duration._
 import scala.util.Random
 
 class EntryDeclarationRepoISpec
-    extends WordSpec
+    extends AnyWordSpec
     with Matchers
     with FutureAwaits
     with DefaultAwaitTimeout

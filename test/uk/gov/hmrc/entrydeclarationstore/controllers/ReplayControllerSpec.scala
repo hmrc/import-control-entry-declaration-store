@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
-import org.scalatest.Matchers.convertToAnyShouldWrapper
-import org.scalatest.WordSpec
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.{contentType, _}
 import play.api.test.{FakeRequest, Helpers}
@@ -29,7 +29,7 @@ import uk.gov.hmrc.entrydeclarationstore.services.MockSubmissionReplayService
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, Promise}
 
-class ReplayControllerSpec extends WordSpec with MockReplayOrchestrator with MockSubmissionReplayService {
+class ReplayControllerSpec extends AnyWordSpec with MockReplayOrchestrator with MockSubmissionReplayService {
   val controller =
     new ReplayController(Helpers.stubControllerComponents(), mockReplayOrchestrator, mockSubmissionReplayService)
   val limit    = 100
@@ -55,7 +55,7 @@ class ReplayControllerSpec extends WordSpec with MockReplayOrchestrator with Moc
 
         status(result)        shouldBe ACCEPTED
         contentType(result)   shouldBe Some("application/json")
-        contentAsJson(result) shouldBe Json.toJson(ReplayInitializationResult.Started("replayId"))
+        contentAsJson(result) shouldBe Json.toJson(ReplayInitializationResult.Started("replayId") : ReplayInitializationResult)
       }
 
       "request with no limit defined is handled successfully" in {
@@ -66,7 +66,7 @@ class ReplayControllerSpec extends WordSpec with MockReplayOrchestrator with Moc
 
         status(result)        shouldBe ACCEPTED
         contentType(result)   shouldBe Some("application/json")
-        contentAsJson(result) shouldBe Json.toJson(ReplayInitializationResult.Started("replayId"))
+        contentAsJson(result) shouldBe Json.toJson(ReplayInitializationResult.Started("replayId") : ReplayInitializationResult)
       }
     }
 
@@ -96,7 +96,7 @@ class ReplayControllerSpec extends WordSpec with MockReplayOrchestrator with Moc
 
         status(result)        shouldBe ACCEPTED
         contentType(result)   shouldBe Some("application/json")
-        contentAsJson(result) shouldBe Json.toJson(ReplayInitializationResult.AlreadyRunning(Some("replayId")))
+        contentAsJson(result) shouldBe Json.toJson(ReplayInitializationResult.AlreadyRunning(Some("replayId")) : ReplayInitializationResult)
       }
 
       "there is a replay in progress and the last replay id cannot be determined" in {
@@ -107,7 +107,7 @@ class ReplayControllerSpec extends WordSpec with MockReplayOrchestrator with Moc
 
         status(result)        shouldBe ACCEPTED
         contentType(result)   shouldBe Some("application/json")
-        contentAsJson(result) shouldBe Json.toJson(ReplayInitializationResult.AlreadyRunning(None))
+        contentAsJson(result) shouldBe Json.toJson(ReplayInitializationResult.AlreadyRunning(None) : ReplayInitializationResult)
       }
     }
   }

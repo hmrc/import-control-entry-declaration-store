@@ -84,9 +84,9 @@ class TrafficSwitchRepoImpl @Inject()(
       .preservingMdc(
         collection
           .findAndUpdate[JsObject, JsObject](
-            selector = Json.obj("_id" -> singletonId, "isTrafficFlowing" -> TrafficSwitchState.Flowing),
+            selector = Json.obj("_id" -> singletonId, "isTrafficFlowing" -> Json.toJson(TrafficSwitchState.Flowing : TrafficSwitchState)),
             update = Json.obj("$set" -> Json
-              .obj("isTrafficFlowing" -> TrafficSwitchState.NotFlowing, "lastTrafficStopped" -> Instant.now)),
+              .obj("isTrafficFlowing" -> Json.toJson(TrafficSwitchState.NotFlowing : TrafficSwitchState), "lastTrafficStopped" -> Instant.now)),
             fetchNewObject           = true,
             upsert                   = false,
             sort                     = None,
@@ -104,9 +104,9 @@ class TrafficSwitchRepoImpl @Inject()(
       .preservingMdc(
         collection
           .findAndUpdate[JsObject, JsObject](
-            selector = Json.obj("_id" -> singletonId, "isTrafficFlowing" -> TrafficSwitchState.NotFlowing),
+            selector = Json.obj("_id" -> singletonId, "isTrafficFlowing" -> Json.toJson(TrafficSwitchState.NotFlowing : TrafficSwitchState)),
             update = Json.obj("$set" -> Json
-              .obj("isTrafficFlowing" -> TrafficSwitchState.Flowing, "lastTrafficStarted" -> Instant.now)),
+              .obj("isTrafficFlowing" -> Json.toJson(TrafficSwitchState.Flowing : TrafficSwitchState), "lastTrafficStarted" -> Instant.now)),
             fetchNewObject           = true,
             upsert                   = false,
             sort                     = None,

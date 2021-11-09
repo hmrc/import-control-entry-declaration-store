@@ -16,14 +16,18 @@
 
 package uk.gov.hmrc.entrydeclarationstore.connectors
 
+import java.io.IOException
+
 import akka.actor.{ActorSystem, Scheduler}
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.client.{CountMatchingStrategy, MappingBuilder, ResponseDefinitionBuilder, WireMock}
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import com.github.tomakehurst.wiremock.stubbing.{Scenario, StubMapping}
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.Eventually
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.HeaderNames._
 import play.api.http.MimeTypes
@@ -42,13 +46,12 @@ import uk.gov.hmrc.entrydeclarationstore.trafficswitch.{TrafficSwitch, TrafficSw
 import uk.gov.hmrc.entrydeclarationstore.utils.MockPagerDutyLogger
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
-import java.io.IOException
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class EisConnectorSpec
-    extends WordSpec
+    extends AnyWordSpec
     with Matchers
     with FutureAwaits
     with DefaultAwaitTimeout

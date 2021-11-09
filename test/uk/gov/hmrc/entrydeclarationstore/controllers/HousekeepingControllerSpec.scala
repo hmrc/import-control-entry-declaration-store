@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
-import org.scalatest.Matchers.convertToAnyShouldWrapper
-import org.scalatest.WordSpec
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.MimeTypes
 import play.api.libs.json.Json
 import play.api.test.Helpers._
@@ -28,7 +28,7 @@ import uk.gov.hmrc.entrydeclarationstore.services.MockHousekeepingService
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class HousekeepingControllerSpec extends WordSpec with MockHousekeepingService {
+class HousekeepingControllerSpec extends AnyWordSpec with MockHousekeepingService {
 
   val controller = new HousekeepingController(Helpers.stubControllerComponents(), mockHousekeepingService)
 

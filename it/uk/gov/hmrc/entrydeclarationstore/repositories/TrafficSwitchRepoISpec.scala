@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits, Injecting}
@@ -27,7 +28,7 @@ import uk.gov.hmrc.entrydeclarationstore.models.{TrafficSwitchState, TrafficSwit
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class TrafficSwitchRepoISpec
-    extends WordSpec
+    extends AnyWordSpec
     with Matchers
     with FutureAwaits
     with DefaultAwaitTimeout
@@ -111,7 +112,7 @@ class TrafficSwitchRepoISpec
 
       "set flowing" must {
         "set flowing and update the last traffic started date" in new Scenario {
-          val setResult = await(repository.setTrafficSwitchState(TrafficSwitchState.Flowing))
+          val setResult: Option[TrafficSwitchStatus] = await(repository.setTrafficSwitchState(TrafficSwitchState.Flowing))
 
           val getResult: TrafficSwitchStatus = await(repository.getTrafficSwitchStatus)
           getResult.isTrafficFlowing   shouldBe TrafficSwitchState.Flowing
@@ -158,7 +159,7 @@ class TrafficSwitchRepoISpec
 
       "set not flowing" must {
         "set not flowing and update the last traffic stopped date" in new Scenario {
-          val setResult = await(repository.setTrafficSwitchState(TrafficSwitchState.NotFlowing))
+          val setResult: Option[TrafficSwitchStatus] = await(repository.setTrafficSwitchState(TrafficSwitchState.NotFlowing))
 
           val getResult: TrafficSwitchStatus = await(repository.getTrafficSwitchStatus)
           getResult.isTrafficFlowing   shouldBe TrafficSwitchState.NotFlowing
@@ -199,7 +200,7 @@ class TrafficSwitchRepoISpec
 
       "set flowing" must {
         "set flowing and update the last traffic started date" in new Scenario {
-          val setResult = await(repository.setTrafficSwitchState(TrafficSwitchState.Flowing))
+          val setResult: Option[TrafficSwitchStatus] = await(repository.setTrafficSwitchState(TrafficSwitchState.Flowing))
 
           val getResult: TrafficSwitchStatus = await(repository.getTrafficSwitchStatus)
           getResult.isTrafficFlowing   shouldBe TrafficSwitchState.Flowing

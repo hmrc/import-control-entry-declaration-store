@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
-import org.scalatest.Matchers.convertToAnyShouldWrapper
-import org.scalatest.{Inside, WordSpec}
+import org.scalatest.Inside
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.time.{Millis, Span}
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.mvc.Headers
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve._
@@ -35,7 +36,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NoStackTrace
 
 class AuthServiceSpec
-    extends WordSpec
+    extends AnyWordSpec
     with MockAuthConnector
     with MockApiSubscriptionFieldsConnector
     with ScalaFutures

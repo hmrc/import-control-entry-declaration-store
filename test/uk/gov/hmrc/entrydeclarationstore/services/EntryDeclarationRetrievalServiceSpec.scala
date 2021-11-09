@@ -16,16 +16,16 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
-import org.scalatest.Matchers.convertToAnyShouldWrapper
-import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.JsString
 import uk.gov.hmrc.entrydeclarationstore.models.{EisSubmissionState, SubmissionIdLookupResult}
 import uk.gov.hmrc.entrydeclarationstore.repositories.MockEntryDeclarationRepo
 
 import scala.concurrent.Future
 
-class EntryDeclarationRetrievalServiceSpec extends WordSpec with MockEntryDeclarationRepo with ScalaFutures {
+class EntryDeclarationRetrievalServiceSpec extends AnyWordSpec with MockEntryDeclarationRepo with ScalaFutures {
 
   val entryDeclarationRetrievalService = new EntryDeclarationRetrievalService(mockEntryDeclarationRepo)
 

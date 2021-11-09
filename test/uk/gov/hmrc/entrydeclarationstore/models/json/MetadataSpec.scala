@@ -16,14 +16,15 @@
 
 package uk.gov.hmrc.entrydeclarationstore.models.json
 
-import com.lucidchart.open.xtract.ParseSuccess
-import org.scalatest.Matchers.convertToAnyShouldWrapper
-import org.scalatest.{Inside, WordSpec}
-import uk.gov.hmrc.entrydeclarationstore.models.MessageType
-
 import java.time.Instant
 
-class MetadataSpec extends WordSpec with Inside {
+import com.lucidchart.open.xtract.ParseSuccess
+import org.scalatest.Inside
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.wordspec.AnyWordSpec
+import uk.gov.hmrc.entrydeclarationstore.models.MessageType
+
+class MetadataSpec extends AnyWordSpec with Inside {
 
   "metadata" when {
     {

@@ -18,7 +18,8 @@ package uk.gov.hmrc.entrydeclarationstore.trafficswitch
 
 import akka.actor.{ActorRef, ActorSystem, PoisonPill}
 import akka.testkit.{TestKit, TestProbe}
-import org.scalatest.{BeforeAndAfterAll, WordSpecLike}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.wordspec.AnyWordSpecLike
 import reactivemongo.core.errors.GenericDatabaseException
 import uk.gov.hmrc.entrydeclarationstore.models.TrafficSwitchState
 import uk.gov.hmrc.entrydeclarationstore.services.MockTrafficSwitchService
@@ -29,7 +30,7 @@ import scala.util.control.NoStackTrace
 
 class TrafficSwitchStateActorSpec
     extends TestKit(ActorSystem("TrafficSwitchStateActorSpec"))
-    with WordSpecLike
+    with AnyWordSpecLike
     with BeforeAndAfterAll
     with MockTrafficSwitchService {
   override def afterAll(): Unit = TestKit.shutdownActorSystem(system)

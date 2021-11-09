@@ -43,7 +43,8 @@ class HousekeepingScheduler @Inject()(
     override val holdLockFor: JodaDuration = JodaDuration.millis(appConfig.housekeepingLockDuration.toMillis)
   }
 
-  scheduler.schedule(appConfig.housekeepingRunInterval, appConfig.housekeepingRunInterval) {
+  scheduler.scheduleWithFixedDelay(appConfig.housekeepingRunInterval, appConfig.housekeepingRunInterval) {
+    () =>
     exclusiveTimePeriodLock
       .tryToAcquireOrRenewLock {
         housekeeper.housekeep()

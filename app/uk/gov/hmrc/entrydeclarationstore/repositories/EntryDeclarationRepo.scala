@@ -157,7 +157,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
               "$set" -> Json
                 .obj(
                   "eisSubmissionDateTime" -> PersistableDateTime(time),
-                  "eisSubmissionState"    -> EisSubmissionState.Sent))
+                  "eisSubmissionState"    -> Json.toJson(EisSubmissionState.Sent : EisSubmissionState)))
           ))
       .map(result => result.nModified > 0)
       .recover {
@@ -173,7 +173,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
           .update(ordered = false, WriteConcern.Default)
           .one(
             Json.obj("submissionId" -> submissionId),
-            Json.obj("$set"         -> Json.obj("eisSubmissionState" -> EisSubmissionState.Error))
+            Json.obj("$set"         -> Json.obj("eisSubmissionState" -> Json.toJson(EisSubmissionState.Error : EisSubmissionState)))
           ))
       .map { result =>
         val success = result.nModified > 0
@@ -364,7 +364,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
         .getOrElse(JsObject.empty)
 
     Json.obj(
-      "eisSubmissionState" -> EisSubmissionState.Error
+      "eisSubmissionState" -> Json.toJson(EisSubmissionState.Error : EisSubmissionState)
     ) ++ endTimeClause
   }
 }

@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits, Injecting}
@@ -27,7 +28,7 @@ import uk.gov.hmrc.entrydeclarationstore.models.HousekeepingStatus
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class HousekeepingRepoISpec
-    extends WordSpec
+    extends AnyWordSpec
     with Matchers
     with FutureAwaits
     with DefaultAwaitTimeout

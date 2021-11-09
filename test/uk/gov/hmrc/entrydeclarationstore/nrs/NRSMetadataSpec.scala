@@ -16,15 +16,15 @@
 
 package uk.gov.hmrc.entrydeclarationstore.nrs
 
-import org.scalatest.Matchers.convertToAnyShouldWrapper
-import org.scalatest.WordSpec
+import java.time.Instant
+
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
 import play.api.mvc.Headers
 import play.api.test.FakeRequest
 
-import java.time.Instant
-
-class NRSMetadataSpec extends WordSpec with NRSMetadataTestData {
+class NRSMetadataSpec extends AnyWordSpec with NRSMetadataTestData {
   "NRSMetadata" must {
     "contain the auth token from the request" in {
       val token = "someToken"

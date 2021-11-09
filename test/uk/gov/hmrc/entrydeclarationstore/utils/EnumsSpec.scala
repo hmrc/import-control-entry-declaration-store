@@ -18,8 +18,9 @@ package uk.gov.hmrc.entrydeclarationstore.utils
 
 import cats.Show
 import org.scalacheck.{Arbitrary, Gen}
-import org.scalatest.Matchers.convertToAnyShouldWrapper
-import org.scalatest.{Inspectors, WordSpec}
+import org.scalatest.Inspectors
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json._
 
 sealed trait Enum
@@ -39,7 +40,7 @@ object Foo {
   implicit def fmts[A: Format]: Format[Foo[A]] = Json.format[Foo[A]]
 }
 
-class EnumsSpec extends WordSpec with Inspectors {
+class EnumsSpec extends AnyWordSpec with Inspectors {
 
   import Enum._
 

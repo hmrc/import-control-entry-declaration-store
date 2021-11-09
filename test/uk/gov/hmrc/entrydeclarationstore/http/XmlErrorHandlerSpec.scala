@@ -19,13 +19,14 @@ package uk.gov.hmrc.entrydeclarationstore.http
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
-import org.mockito.Matchers.{any, eq => is}
+import org.mockito.ArgumentMatchers.{any, eq => is}
 import org.mockito.Mockito
 import org.mockito.Mockito.verify
-import org.scalatest.Matchers._
+import org.mockito.MockitoSugar.mock
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
-import org.scalatest.{LoneElement, StreamlinedXml, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
+import org.scalatest.matchers.should.Matchers._
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.{LoneElement, StreamlinedXml}
 import play.api.mvc.{AnyContentAsEmpty, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -42,9 +43,8 @@ import scala.util.Random
 import scala.xml.Elem
 
 class XmlErrorHandlerSpec
-    extends WordSpec
+    extends AnyWordSpec
     with ScalaFutures
-    with MockitoSugar
     with LoneElement
     with Eventually
     with StreamlinedXml {

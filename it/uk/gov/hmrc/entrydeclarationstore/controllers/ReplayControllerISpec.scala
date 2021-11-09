@@ -18,32 +18,33 @@ package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import java.time.Instant
 import java.util.UUID
+
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import com.github.tomakehurst.wiremock.http.Fault
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
-import org.scalatest.Matchers.convertToAnyShouldWrapper
 import org.scalatest.concurrent.{Eventually, IntegrationPatience}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{Assertion, BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.http.Status._
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{Json, _}
 import play.api.libs.ws.WSClient
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.api.test.Injecting
 import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.{EisSubmissionState, EntryDeclarationModel, ReplayState}
 import uk.gov.hmrc.entrydeclarationstore.repositories.EntryDeclarationRepoImpl
-import org.scalatest.WordSpec
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ReplayControllerISpec
-    extends WordSpec
+    extends AnyWordSpec
     with BeforeAndAfterAll
     with BeforeAndAfterEach
     with GuiceOneServerPerSuite

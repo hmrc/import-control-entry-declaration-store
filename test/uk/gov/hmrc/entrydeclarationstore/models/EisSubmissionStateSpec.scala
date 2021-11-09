@@ -16,30 +16,31 @@
 
 package uk.gov.hmrc.entrydeclarationstore.models
 
-import org.scalatest.Matchers.convertToAnyShouldWrapper
-import org.scalatest.{Inspectors, WordSpec}
+import org.scalatest.Inspectors
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsString, Json}
 
-class EisSubmissionStateSpec extends WordSpec with Inspectors {
+class EisSubmissionStateSpec extends AnyWordSpec with Inspectors {
   import EisSubmissionState._
   "EisSubmissionState" must {
     "serialize to JSON correctly" in {
-      Json.toJson(Sent)    shouldBe JsString("sent")
-      Json.toJson(NotSent) shouldBe JsString("not-sent")
-      Json.toJson(Error)   shouldBe JsString("error")
+      Json.toJson(Sent : EisSubmissionState)    shouldBe JsString("sent")
+      Json.toJson(NotSent : EisSubmissionState) shouldBe JsString("not-sent")
+      Json.toJson(Error : EisSubmissionState)   shouldBe JsString("error")
     }
 
     "round trip correctly back to the object" in {
       forAll(List(Sent, NotSent, Error)) { value =>
-        Json.toJson(value).as[EisSubmissionState] shouldBe value
+        Json.toJson(value : EisSubmissionState).as[EisSubmissionState] shouldBe value
       }
     }
 
     // So that we can reference the object in e.g. BSONDocument without hard-coding the string
     "know its own format string" in {
-      mongoFormatString(Sent)    shouldBe "sent"
-      mongoFormatString(NotSent) shouldBe "not-sent"
-      mongoFormatString(Error)   shouldBe "error"
+      mongoFormatString(Sent : EisSubmissionState)    shouldBe "sent"
+      mongoFormatString(NotSent : EisSubmissionState) shouldBe "not-sent"
+      mongoFormatString(Error : EisSubmissionState)   shouldBe "error"
     }
   }
 }

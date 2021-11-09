@@ -16,18 +16,18 @@
 
 package uk.gov.hmrc.entrydeclarationstore.validation.schema
 
-import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
-import org.scalatest.WordSpec
 
 import scala.xml.{NodeSeq, XML}
 
-class SchemaValidatorISpec extends WordSpec with GuiceOneAppPerSuite {
+class SchemaValidatorISpec extends AnyWordSpec with GuiceOneAppPerSuite {
 
   override lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
