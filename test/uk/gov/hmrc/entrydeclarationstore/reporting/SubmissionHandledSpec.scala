@@ -16,15 +16,18 @@
 
 package uk.gov.hmrc.entrydeclarationstore.reporting
 
-import java.time.Instant
-
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsObject, Json}
+import uk.gov.hmrc.entrydeclarationstore.nrs.NRSMetadataTestData
+import uk.gov.hmrc.entrydeclarationstore.utils.SubmissionUtils
 
-class SubmissionHandledSpec extends AnyWordSpec {
+import java.time.Instant
+
+class SubmissionHandledSpec extends AnyWordSpec with NRSMetadataTestData {
 
   val now: Instant  = Instant.now
+  val eori                   = "GB1234567890"
 
   val failureType: FailureType = FailureType.MRNMismatchError
 
@@ -49,25 +52,30 @@ class SubmissionHandledSpec extends AnyWordSpec {
   }
 
   "SubmissionHandled" when {
+    val handledDetails = SubmissionUtils.extractSubmissionHandledDetails(eori, Some(identityData))
+
     "Success(true)" must {
-      checkEvents(SubmissionHandled.Success(true), "SuccessfulAmendment", "Successful amendment", JsObject.empty)
+      checkEvents(SubmissionHandled.Success(true, handledDetails), "SuccessfulAmendment", "Successful amendment", SubmissionHandled.createAuditObject(handledDetails))
     }
+
     "Success(false)" must {
-      checkEvents(SubmissionHandled.Success(false), "SuccessfulDeclaration", "Successful declaration", JsObject.empty)
+      checkEvents(SubmissionHandled.Success(false, handledDetails), "SuccessfulDeclaration", "Successful declaration", SubmissionHandled.createAuditObject(handledDetails))
     }
     "Failure(true, FailureType)" must {
+
+
       checkEvents(
-        SubmissionHandled.Failure(isAmendment = true, failureType),
+        SubmissionHandled.Failure(isAmendment = true, failureType, handledDetails),
         "UnsuccessfulAmendment",
         "Unsuccessful amendment",
-        Json.obj("failureType" -> failureType))
+        SubmissionHandled.createAuditObject(handledDetails, Json.obj("failureType" -> failureType)))
     }
     "Failure(false, FailureType)" must {
       checkEvents(
-        SubmissionHandled.Failure(isAmendment = false, failureType),
+        SubmissionHandled.Failure(isAmendment = false, failureType, handledDetails),
         "UnsuccessfulDeclaration",
         "Unsuccessful declaration",
-        Json.obj("failureType" -> failureType))
+        SubmissionHandled.createAuditObject(handledDetails, Json.obj("failureType" -> failureType)))
     }
   }
 }

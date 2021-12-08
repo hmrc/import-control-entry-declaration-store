@@ -79,6 +79,7 @@ trait NRSMetadataTestData {
                   |      },
                   |      "affinityGroup": "Individual",
                   |      "credentialStrength": "strong",
+                  |      "enrolments":{"enrolments":[]},
                   |      "loginTimes": {
                   |        "currentLogin": "2016-11-27T09:00:00.000Z",
                   |        "previousLogin": "2016-11-01T12:00:00.000Z"

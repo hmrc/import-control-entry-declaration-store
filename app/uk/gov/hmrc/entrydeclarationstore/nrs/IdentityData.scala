@@ -19,7 +19,7 @@ package uk.gov.hmrc.entrydeclarationstore.nrs
 import org.joda.time.{DateTime, LocalDate}
 import play.api.libs.json.{Json, Writes}
 import uk.gov.hmrc.auth.core.retrieve._
-import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, CredentialRole}
+import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, CredentialRole, Enrolments}
 import uk.gov.hmrc.http.controllers.RestFormats
 
 case class IdentityData(
@@ -42,6 +42,7 @@ case class IdentityData(
   itmpAddress: Option[ItmpAddress]         = None,
   affinityGroup: Option[AffinityGroup]     = None,
   credentialStrength: Option[String]       = None,
+  enrolments: Enrolments           = Enrolments(Set()),
   loginTimes: LoginTimes)
 
 object IdentityData {
@@ -54,5 +55,6 @@ object IdentityData {
   implicit val itmpNameWrites: Writes[ItmpName]          = Json.writes[ItmpName]
   implicit val itmpAddressWrites: Writes[ItmpAddress]    = Json.writes[ItmpAddress]
   implicit val loginTimesWrites: Writes[LoginTimes]      = Json.writes[LoginTimes]
+  implicit val enrolmentWrites: Writes[Enrolments]       = Json.writes[Enrolments]
   implicit val writes: Writes[IdentityData]              = Json.writes[IdentityData]
 }

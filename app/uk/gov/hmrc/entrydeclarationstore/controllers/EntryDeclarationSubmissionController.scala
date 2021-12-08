@@ -26,6 +26,7 @@ import uk.gov.hmrc.entrydeclarationstore.nrs.{NRSMetadata, NRSService, NRSSubmis
 import uk.gov.hmrc.entrydeclarationstore.reporting.{FailureType, ReportSender, SubmissionHandled}
 import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, EntryDeclarationStore}
 import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils._
+import uk.gov.hmrc.entrydeclarationstore.utils.SubmissionUtils.extractSubmissionHandledDetails
 import uk.gov.hmrc.entrydeclarationstore.utils.Timer
 import uk.gov.hmrc.entrydeclarationstore.validation.{EORIMismatchError, MRNMismatchError, ValidationErrors}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -81,24 +82,41 @@ class EntryDeclarationSubmissionController @Inject()(
             failure.error match {
               case _: ValidationErrors =>
                 reportSender.sendReport(
-                  SubmissionHandled.Failure(mrn.isDefined, FailureType.ValidationErrors): SubmissionHandled)
+                  SubmissionHandled.Failure(
+                    mrn.isDefined,
+                    FailureType.ValidationErrors,
+                    extractSubmissionHandledDetails(request.userDetails.eori, request.userDetails.identityData)
+                  ): SubmissionHandled)
                 BadRequest(failure.toXml)
               case MRNMismatchError =>
                 reportSender.sendReport(
-                  SubmissionHandled.Failure(mrn.isDefined, FailureType.MRNMismatchError): SubmissionHandled)
+                  SubmissionHandled.Failure(mrn.isDefined,
+                    FailureType.MRNMismatchError,
+                    extractSubmissionHandledDetails(request.userDetails.eori, request.userDetails.identityData)
+                  ): SubmissionHandled)
                 BadRequest(failure.toXml)
               case EORIMismatchError =>
                 reportSender.sendReport(
-                  SubmissionHandled.Failure(mrn.isDefined, FailureType.EORIMismatchError): SubmissionHandled)
+                  SubmissionHandled.Failure(mrn.isDefined,
+                    FailureType.EORIMismatchError,
+                    extractSubmissionHandledDetails(request.userDetails.eori, request.userDetails.identityData)
+                  ): SubmissionHandled)
                 Forbidden(failure.toXml)
               case _ =>
                 reportSender.sendReport(
-                  SubmissionHandled.Failure(mrn.isDefined, FailureType.InternalServerError): SubmissionHandled)
+                  SubmissionHandled.Failure(mrn.isDefined,
+                    FailureType.InternalServerError,
+                    extractSubmissionHandledDetails(request.userDetails.eori, request.userDetails.identityData)
+                  ): SubmissionHandled)
                 InternalServerError(failure.toXml)
             }
           case Right(success) =>
             submitToNRSIfReqd(rawPayload, request, receivedDateTime, success.submissionId)
-            reportSender.sendReport(SubmissionHandled.Success(mrn.isDefined): SubmissionHandled)
+            reportSender.sendReport(
+              SubmissionHandled.Success(
+                mrn.isDefined,
+                extractSubmissionHandledDetails(request.userDetails.eori, request.userDetails.identityData)
+              ): SubmissionHandled)
             Ok(xmlSuccessResponse(success.correlationId))
         }
     }
