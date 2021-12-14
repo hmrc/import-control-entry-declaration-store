@@ -72,14 +72,14 @@ class AuthServiceSpec
       internalId and externalId and agentCode and credentials
       and confidenceLevel and nino and saUtr and name and dateOfBirth
       and email and agentInformation and groupIdentifier and credentialRole
-      and mdtpInformation and itmpName and itmpDateOfBirth and itmpAddress and credentialStrength and loginTimes and allEnrolments
+      and mdtpInformation and itmpName and itmpDateOfBirth and itmpAddress and credentialStrength and allEnrolments and loginTimes and allEnrolments
   )
 
   private val nonCSPRetrievalNRSDisabled = EmptyRetrieval and allEnrolments
 
   private def nonCSPRetrievalResultsNRSEnabled(enrolments: Enrolments) =
     // @formatter:off
-    new ~(new ~(new ~(new ~(  new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(
+    new ~(new ~(new ~(new ~(  new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(
       identityData.affinityGroup,
       identityData.internalId),
       identityData.externalId),
@@ -99,6 +99,7 @@ class AuthServiceSpec
       identityData.itmpDateOfBirth),
       identityData.itmpAddress),
       identityData.credentialStrength),
+      identityData.enrolments),
       identityData.loginTimes),
       enrolments
     )
@@ -111,7 +112,7 @@ class AuthServiceSpec
     internalId and externalId and agentCode and credentials
     and confidenceLevel and nino and saUtr and name and dateOfBirth
     and email and agentInformation and groupIdentifier and credentialRole
-    and mdtpInformation and itmpName and itmpDateOfBirth and itmpAddress and credentialStrength and loginTimes)
+    and mdtpInformation and itmpName and itmpDateOfBirth and itmpAddress and credentialStrength and allEnrolments and loginTimes)
 
   private def stubNonCSPAuth[A](retrieval: Retrieval[A])(implicit hc: HeaderCarrier) =
     MockAuthConnector
@@ -122,7 +123,7 @@ class AuthServiceSpec
 
   private val cspIdentityDataRetrievalNRSEnabled =
     // @formatter:off
-   new ~(new ~(new ~(  new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(
+   new ~(new ~(new ~(  new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(
      identityData.affinityGroup,
      identityData.internalId),
      identityData.externalId),
@@ -142,6 +143,7 @@ class AuthServiceSpec
      identityData.itmpDateOfBirth),
      identityData.itmpAddress),
      identityData.credentialStrength),
+     identityData.enrolments),
      identityData.loginTimes
    )
   // @formatter:on

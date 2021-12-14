@@ -17,7 +17,6 @@
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
 import java.time.{Clock, Instant, ZoneOffset}
-
 import akka.util.ByteString
 import com.kenshoo.play.metrics.Metrics
 import org.scalatest.matchers.should.Matchers.{contain, convertToAnyShouldWrapper}
@@ -32,6 +31,7 @@ import uk.gov.hmrc.entrydeclarationstore.nrs._
 import uk.gov.hmrc.entrydeclarationstore.reporting._
 import uk.gov.hmrc.entrydeclarationstore.services._
 import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils._
+import uk.gov.hmrc.entrydeclarationstore.utils.SubmissionUtils.extractSubmissionHandledDetails
 import uk.gov.hmrc.entrydeclarationstore.utils.{MockMetrics, XmlFormatConfig, XmlFormats}
 import uk.gov.hmrc.entrydeclarationstore.validation.{EORIMismatchError, MRNMismatchError, ValidationError, ValidationErrors}
 
@@ -143,11 +143,11 @@ class EntryDeclarationSubmissionControllerSpec
   </err:ErrorResponse>)
   // @formatter:on
 
-  private def mockReportUnsuccessfulSubmission(isAmendment: Boolean, failureType: FailureType) =
-    MockReportSender.sendReport(SubmissionHandled.Failure(isAmendment, failureType)) returns Future.successful((): Unit)
+  private def mockReportUnsuccessfulSubmission(isAmendment: Boolean, failureType: FailureType, submissionHandledData: SubmissionHandledData) =
+    MockReportSender.sendReport(SubmissionHandled.Failure(isAmendment, failureType, submissionHandledData)) returns Future.successful((): Unit)
 
-  private def mockReportSuccessfulSubmission(isAmendment: Boolean) =
-    MockReportSender.sendReport(SubmissionHandled.Success(isAmendment)) returns Future.successful((): Unit)
+  private def mockReportSuccessfulSubmission(isAmendment: Boolean, submissionHandledData: SubmissionHandledData) =
+    MockReportSender.sendReport(SubmissionHandled.Success(isAmendment, submissionHandledData)) returns Future.successful((): Unit)
 
   def mockServiceFailWithError[E: XmlFormats](
     e: E,
@@ -183,7 +183,7 @@ class EntryDeclarationSubmissionControllerSpec
           .handleSubmission(eori, rawPayload, mrn, now, clientInfo)
           .returns(Future.successful(Left(ErrorWrapper(EORIMismatchError))))
 
-        mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.EORIMismatchError)
+        mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.EORIMismatchError, extractSubmissionHandledDetails(eori, None))
 
         check(fakeRequest(xmlPayload), FORBIDDEN, "FORBIDDEN")
       }
@@ -196,7 +196,7 @@ class EntryDeclarationSubmissionControllerSpec
     "The submission fails with ValidationErrors" must {
       "Return BAD_REQUEST" in {
         mockServiceFailWithError(validationErrors, mrn, None)
-        mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.ValidationErrors)
+        mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.ValidationErrors, extractSubmissionHandledDetails(eori, None))
 
         val result: Future[Result] = handler(fakeRequest(xmlPayload))
         status(result) shouldBe BAD_REQUEST
@@ -206,8 +206,8 @@ class EntryDeclarationSubmissionControllerSpec
         contentType(result) shouldBe Some("application/xml")
       }
       "Not submit to nrs even if enabled" in {
-        mockServiceFailWithError(validationErrors, mrn, Some(identityData))
-        mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.ValidationErrors)
+        mockServiceFailWithError(validationErrors, mrn, None)
+        mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.ValidationErrors, extractSubmissionHandledDetails(eori, None))
         MockNRSService.submit(nrsSubmission).never()
 
         await(handler(fakeRequest(xmlPayload)))
@@ -217,7 +217,7 @@ class EntryDeclarationSubmissionControllerSpec
     "The submission fails with a ServerError (e.g. database problem)" must {
       "Return INTERNAL_SERVER_ERROR" in {
         mockServiceFailWithError(ServerError, mrn, None)
-        mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.InternalServerError)
+        mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.InternalServerError, extractSubmissionHandledDetails(eori, None))
 
         val result: Future[Result] = handler(fakeRequest(xmlPayload))
         status(result) shouldBe INTERNAL_SERVER_ERROR
@@ -227,8 +227,8 @@ class EntryDeclarationSubmissionControllerSpec
         contentType(result) shouldBe Some("application/xml")
       }
       "Not submit to nrs even if enabled" in {
-        mockServiceFailWithError(ServerError, mrn, Some(identityData))
-        mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.InternalServerError)
+        mockServiceFailWithError(ServerError, mrn, None)
+        mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.InternalServerError, extractSubmissionHandledDetails(eori, None))
         MockNRSService.submit(nrsSubmission).never()
 
         await(handler(fakeRequest(xmlPayload)))
@@ -240,7 +240,7 @@ class EntryDeclarationSubmissionControllerSpec
   def encodingEndpoint(mrn: Option[String], handler: Request[ByteString] => Future[Result]): Unit = {
     "pass to the service with a character encoding if one is present in the request" in {
       MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, None)))
-      mockReportSuccessfulSubmission(mrn.isDefined)
+      mockReportSuccessfulSubmission(mrn.isDefined, extractSubmissionHandledDetails(eori, None))
       MockEntryDeclarationStore
         .handleSubmission(eori, rawPayload.copy(encoding = Some("US-ASCII")), mrn, now, clientInfo)
         .returns(Future.successful(Right(SuccessResponse("12345678901234", "3216783621-123873821-12332"))))
@@ -254,7 +254,7 @@ class EntryDeclarationSubmissionControllerSpec
 
     "pass to the service without a character encoding if none is present in the request" in {
       MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, None)))
-      mockReportSuccessfulSubmission(mrn.isDefined)
+      mockReportSuccessfulSubmission(mrn.isDefined, extractSubmissionHandledDetails(eori, None))
       MockEntryDeclarationStore
         .handleSubmission(eori, rawPayload.copy(encoding = None), mrn, now, clientInfo)
         .returns(Future.successful(Right(SuccessResponse("12345678901234","3216783621-123873821-12332"))))
@@ -270,7 +270,7 @@ class EntryDeclarationSubmissionControllerSpec
       "nrs is enabled" must {
         "submit to NRS and not wait until NRS submission completes" in {
           MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, Some(identityData))))
-          mockReportSuccessfulSubmission(mrn.isDefined)
+          mockReportSuccessfulSubmission(mrn.isDefined, extractSubmissionHandledDetails(eori, Some(identityData)))
           MockEntryDeclarationStore
             .handleSubmission(eori, rawPayload, mrn, now, clientInfo)
             .returns(Future.successful(Right(SuccessResponse("12345678901234", "3216783621-123873821-12332"))))
@@ -287,7 +287,7 @@ class EntryDeclarationSubmissionControllerSpec
       "nrs is not enabled" must {
         "not submit to NRS" in {
           MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, None)))
-          mockReportSuccessfulSubmission(mrn.isDefined)
+          mockReportSuccessfulSubmission(mrn.isDefined, extractSubmissionHandledDetails(eori, None))
           MockEntryDeclarationStore
             .handleSubmission(eori, rawPayload, mrn, now, clientInfo)
             .returns(Future.successful(Right(SuccessResponse("12345678901234", "3216783621-123873821-12332"))))
@@ -305,7 +305,7 @@ class EntryDeclarationSubmissionControllerSpec
     "Return OK" when {
       "The submission is handled successfully" in {
         MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, None)))
-        mockReportSuccessfulSubmission(false)
+        mockReportSuccessfulSubmission(false, extractSubmissionHandledDetails(eori, None))
         MockEntryDeclarationStore
           .handleSubmission(eori, rawPayload, None, now, clientInfo)
           .returns(Future.successful(Right(SuccessResponse("12345678901234", "3216783621-123873821-12332"))))
@@ -332,7 +332,7 @@ class EntryDeclarationSubmissionControllerSpec
     "The submission is handled successfully" must {
       "Return OK" in {
         MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, None)))
-        mockReportSuccessfulSubmission(true)
+        mockReportSuccessfulSubmission(true, extractSubmissionHandledDetails(eori, None))
         MockEntryDeclarationStore
           .handleSubmission(eori, rawPayload, Some(mrn), now, clientInfo)
           .returns(Future.successful(Right(SuccessResponse("12345678901234", "3216783621-123873821-12332"))))
@@ -350,7 +350,7 @@ class EntryDeclarationSubmissionControllerSpec
     "The MRN in the body doesnt match the MRN in URL" must {
       "Return MRNMismatch Bad Request error" in {
         MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, None)))
-        mockReportUnsuccessfulSubmission(isAmendment = true, FailureType.MRNMismatchError)
+        mockReportUnsuccessfulSubmission(isAmendment = true, FailureType.MRNMismatchError, extractSubmissionHandledDetails(eori, None))
         MockEntryDeclarationStore
           .handleSubmission(eori, rawPayload, Some(mrn), now, clientInfo)
           .returns(Future.successful(Left(ErrorWrapper(MRNMismatchError))))
@@ -366,8 +366,8 @@ class EntryDeclarationSubmissionControllerSpec
       }
 
       "Not submit to nrs even if enabled" in {
-        MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, Some(identityData))))
-        mockReportUnsuccessfulSubmission(isAmendment = true, FailureType.MRNMismatchError)
+        MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, None)))
+        mockReportUnsuccessfulSubmission(isAmendment = true, FailureType.MRNMismatchError, extractSubmissionHandledDetails(eori, None))
         MockEntryDeclarationStore
           .handleSubmission(eori, rawPayload, Some(mrn), now, clientInfo)
           .returns(Future.successful(Left(ErrorWrapper(MRNMismatchError))))
