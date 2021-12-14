@@ -15,6 +15,7 @@
  */
 
 package uk.gov.hmrc.entrydeclarationstore.reporting
+
 import play.api.libs.json.{Format, JsObject, Json, Writes}
 import uk.gov.hmrc.auth.core.Enrolments
 import uk.gov.hmrc.auth.core.retrieve.Name
@@ -60,7 +61,7 @@ object SubmissionHandled {
       case _ => JsObject.empty
     }
 
-    val optionalEnrolmentsData = submissionHandledData.enrolments   match {
+    val optionalEnrolmentsData = submissionHandledData.enrolments match {
       case Some(data) => Json.toJson(data)
       case _ => JsObject.empty
     }
@@ -70,7 +71,7 @@ object SubmissionHandled {
       "identityData" -> optionalIdentityData,
       "name" -> optionalNameData,
       "country" -> optionalCountryData,
-      "enrolments" -> optionalEnrolmentsData,
+      "enrolments" -> optionalEnrolmentsData
     )
   }
 
