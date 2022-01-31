@@ -29,7 +29,6 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.api.test.Injecting
 import play.api.{Application, Environment, Mode}
-import reactivemongo.core.errors.ConnectionException
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.models.{BatchReplayError, BatchReplayResult, ReplayInitializationResult, ReplayResult}
 import uk.gov.hmrc.entrydeclarationstore.repositories.{MockEntryDeclarationRepo, MockReplayStateRepo}
@@ -121,7 +120,7 @@ class ReplayOrchestratorSpec
       .returns(Future.successful(true))
   }
 
-  private val databaseException = new ConnectionException("failure") with NoStackTrace
+  private val databaseException = new Exception("failure") with NoStackTrace
 
   "ReplayOrchestrator" when {
     "a single undelivered submission requires replay" when {

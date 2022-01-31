@@ -14,20 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.entrydeclarationstore.repositories
+package uk.gov.hmrc.entrydeclarationstore.models
 
+
+import org.bson.types.ObjectId
 import play.api.libs.json.{Format, Json}
+import uk.gov.hmrc.mongo.play.json.formats.MongoFormats.Implicits.objectIdFormat
 
-import java.time.Instant
+case class EntryObjectId(_id: ObjectId)
 
-//This allows consistent listing of the date time in ascending order. Instant writes drops 'insignificant zeros'
-private[repositories] case class PersistableDateTime($date: Long) {
-  def toInstant: Instant = Instant.ofEpochMilli($date)
-}
-
-private[repositories] object PersistableDateTime {
-  implicit def format: Format[PersistableDateTime] = Json.format[PersistableDateTime]
-
-  def apply(instant: Instant): PersistableDateTime =
-    PersistableDateTime(instant.toEpochMilli)
+object EntryObjectId {
+  implicit val formats: Format[EntryObjectId] = Json.format[EntryObjectId] 
 }

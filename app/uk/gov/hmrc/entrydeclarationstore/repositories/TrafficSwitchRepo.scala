@@ -16,39 +16,37 @@
 
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
-import play.api.libs.json.{JsObject, Json}
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.{ReadPreference, WriteConcern}
-import reactivemongo.bson.BSONObjectID
-import reactivemongo.play.json.ImplicitBSONHandlers._
-import uk.gov.hmrc.entrydeclarationstore.models.{TrafficSwitchState, TrafficSwitchStatus}
-import uk.gov.hmrc.mongo.ReactiveRepository
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
+import org.mongodb.scala._
+import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.model.Updates._
+import org.mongodb.scala.model._
+import uk.gov.hmrc.mongo._
+import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
+import uk.gov.hmrc.entrydeclarationstore.models.{TrafficSwitchState, TrafficSwitchStatus, InstantFormatter}
 import uk.gov.hmrc.play.http.logging.Mdc
-
 import java.time.Instant
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 trait TrafficSwitchRepo {
   def setTrafficSwitchState(value: TrafficSwitchState): Future[Option[TrafficSwitchStatus]]
-
   def getTrafficSwitchStatus: Future[TrafficSwitchStatus]
-
   def resetToDefault: Future[Unit]
 }
 
 @Singleton
 class TrafficSwitchRepoImpl @Inject()(
-  implicit mongo: ReactiveMongoComponent,
+  implicit mongo: MongoComponent,
   ec: ExecutionContext
-) extends ReactiveRepository[TrafficSwitchStatus, BSONObjectID](
-      "trafficSwitch",
-      mongo.mongoConnector.db,
-      TrafficSwitchStatus.format,
-      ReactiveMongoFormats.objectIdFormats
-    )
-    with TrafficSwitchRepo {
+) extends PlayMongoRepository[TrafficSwitchStatus](
+  collectionName = "trafficSwitch",
+  mongoComponent = mongo,
+  domainFormat = TrafficSwitchStatus.format,
+  indexes = Seq.empty,
+  extraCodecs = Seq(Codecs.playFormatCodec(TrafficSwitchState.formats),
+                    Codecs.playFormatCodec(InstantFormatter.instantWrites)),
+  replaceIndexes = true) with TrafficSwitchRepo  {
+  import TrafficSwitchState.mongoFormatString
 
   private val singletonId = "af38807c-c127-11ea-b3de-0242ac130004"
 
@@ -67,66 +65,66 @@ class TrafficSwitchRepoImpl @Inject()(
   // We cannot upsert in these (since match failure would attempt insert and violate unique _id).
   // Hence this, which will insert only when the singleton document is missing, allows not flowing/flowing without
   // upsert or the need to do racy 'check-then-act' logic:
-  private def insertDefaultIfEmpty() =
+  private def insertDefaultIfEmpty(): Future[Option[TrafficSwitchStatus]] =
     Mdc.preservingMdc(
       collection
-        .update(ordered = false, WriteConcern.Default)
-        .one(
-          q = Json.obj("_id" -> singletonId),
-          u = Json.obj(
-            "$setOnInsert" -> defaultStatus
+        .findOneAndUpdate(
+          equal("_id", singletonId),
+          combine(
+            set("_id", singletonId),
+            setOnInsert("isTrafficFlowing", mongoFormatString(defaultStatus.isTrafficFlowing))
           ),
-          upsert = true
-        ))
+          FindOneAndUpdateOptions().upsert(true)
+          )
+        .toFutureOption
+    )
 
   private def stopTrafficFlow =
     Mdc
       .preservingMdc(
         collection
-          .findAndUpdate[JsObject, JsObject](
-            selector = Json.obj("_id" -> singletonId, "isTrafficFlowing" -> Json.toJson(TrafficSwitchState.Flowing : TrafficSwitchState)),
-            update = Json.obj("$set" -> Json
-              .obj("isTrafficFlowing" -> Json.toJson(TrafficSwitchState.NotFlowing : TrafficSwitchState), "lastTrafficStopped" -> Instant.now)),
-            fetchNewObject           = true,
-            upsert                   = false,
-            sort                     = None,
-            fields                   = None,
-            bypassDocumentValidation = false,
-            writeConcern             = WriteConcern.Default,
-            maxTime                  = None,
-            collation                = None,
-            arrayFilters             = Seq.empty
-          ))
-      .map(_.result[TrafficSwitchStatus])
+          .findOneAndUpdate(
+            and(equal("_id", singletonId), equal("isTrafficFlowing", mongoFormatString(TrafficSwitchState.Flowing))),
+            combine(
+              set("isTrafficFlowing", mongoFormatString(TrafficSwitchState.NotFlowing)),
+              set("lastTrafficStopped", Instant.now)
+            ),
+            FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER).bypassDocumentValidation(false)
+          )
+          .toFutureOption
+      )
 
   private def startTrafficFlow =
     Mdc
       .preservingMdc(
         collection
-          .findAndUpdate[JsObject, JsObject](
-            selector = Json.obj("_id" -> singletonId, "isTrafficFlowing" -> Json.toJson(TrafficSwitchState.NotFlowing : TrafficSwitchState)),
-            update = Json.obj("$set" -> Json
-              .obj("isTrafficFlowing" -> Json.toJson(TrafficSwitchState.Flowing : TrafficSwitchState), "lastTrafficStarted" -> Instant.now)),
-            fetchNewObject           = true,
-            upsert                   = false,
-            sort                     = None,
-            fields                   = None,
-            bypassDocumentValidation = false,
-            writeConcern             = WriteConcern.Default,
-            maxTime                  = None,
-            collation                = None,
-            arrayFilters             = Seq.empty
-          ))
-      .map(_.result[TrafficSwitchStatus])
+          .findOneAndUpdate(
+            and(equal("_id", singletonId), equal("isTrafficFlowing", mongoFormatString(TrafficSwitchState.NotFlowing))),
+            combine(
+              set("isTrafficFlowing", mongoFormatString(TrafficSwitchState.Flowing)),
+              set("lastTrafficStarted", Instant.now)
+            ),
+            FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER).bypassDocumentValidation(false)
+          )
+          .toFutureOption
+      )
 
   override def getTrafficSwitchStatus: Future[TrafficSwitchStatus] =
     Mdc
       .preservingMdc(
         collection
-          .find(selector = Json.obj("_id" -> singletonId), projection = Option.empty[JsObject])
-          .one[TrafficSwitchStatus](ReadPreference.primaryPreferred))
+          .withReadPreference(ReadPreference.primaryPreferred)
+          .find(equal("_id", singletonId))
+          .headOption
+      )
       .map(_.getOrElse(defaultStatus))
 
   override def resetToDefault: Future[Unit] =
-    Mdc.preservingMdc(removeAll(WriteConcern.Default).map(_ => ()))
+    Mdc.preservingMdc(removeAll)
+
+  def removeAll: Future[Unit] =
+    collection
+      .deleteMany(exists("_id"))
+      .toFutureOption
+      .map( _ => ())
 }

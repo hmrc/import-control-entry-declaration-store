@@ -20,8 +20,16 @@ import play.api.libs.json.{Format, Json}
 
 import java.time.Instant
 
+
+case class DeclarationRejectionEnrichmenResult(eisSubmissionDateTime: Option[Instant])
+
+object DeclarationRejectionEnrichmenResult {
+  import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats.Implicits.jatInstantFormat
+  implicit val jsonFormat: Format[DeclarationRejectionEnrichmenResult] = Json.format[DeclarationRejectionEnrichmenResult]
+}
+
 case class DeclarationRejectionEnrichment(eisSubmissionDateTime: Option[Instant])
 
-object DeclarationRejectionEnrichment {
+object DeclarationRejectionEnrichment extends InstantFormatter {
   implicit val jsonFormat: Format[DeclarationRejectionEnrichment] = Json.format[DeclarationRejectionEnrichment]
 }

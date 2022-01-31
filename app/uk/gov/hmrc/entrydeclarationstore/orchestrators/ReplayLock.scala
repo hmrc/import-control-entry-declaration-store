@@ -16,37 +16,32 @@
 
 package uk.gov.hmrc.entrydeclarationstore.orchestrators
 
-import org.joda.time.{Duration => JodaDuration}
+import java.util.concurrent.TimeUnit
+import scala.concurrent.duration.Duration
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
-import uk.gov.hmrc.entrydeclarationstore.repositories.LockRepositoryProvider
+import uk.gov.hmrc.mongo.lock._
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 trait ReplayLock {
   def lock(replayId: String): Future[Boolean]
-
   def renew(replayId: String): Future[Unit]
-
   def unlock(replayId: String): Future[Unit]
 }
 
 @Singleton
-class ReplayLockImpl @Inject()(lockRepositoryProvider: LockRepositoryProvider, appConfig: AppConfig)(
+class ReplayLockImpl @Inject()(repo: MongoLockRepository, appConfig: AppConfig)(
   implicit ec: ExecutionContext)
     extends ReplayLock {
-  private val forceReleaseAfter: JodaDuration = JodaDuration.millis(appConfig.replayLockDuration.toMillis)
+  private val forceReleaseAfter: Duration = Duration(appConfig.replayLockDuration.toMillis, TimeUnit.MILLISECONDS)
 
   private val lockId: String = "replay_lock"
 
-  private def repo = lockRepositoryProvider.lockRepository
-
-  def lock(replayId: String): Future[Boolean] =
-    repo.lock(reqLockId = lockId, reqOwner = replayId, forceReleaseAfter)
+  def lock(replayId: String): Future[Boolean] = repo.takeLock(lockId, replayId, forceReleaseAfter)
 
   def renew(replayId: String): Future[Unit] =
-    repo.renew(reqLockId = lockId, reqOwner = replayId, forceReleaseAfter).map(_ => ())
+    repo.refreshExpiry(lockId, replayId, forceReleaseAfter).map(_ => ())
 
-  def unlock(replayId: String): Future[Unit] =
-    repo.releaseLock(reqLockId = lockId, reqOwner = replayId)
+  def unlock(replayId: String): Future[Unit] = repo.releaseLock(lockId, replayId)
 }

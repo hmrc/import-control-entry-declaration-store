@@ -19,7 +19,6 @@ package uk.gov.hmrc.entrydeclarationstore.services
 import cats.data.EitherT
 import cats.implicits._
 import play.api.http.Status.BAD_REQUEST
-import reactivemongo.core.errors.ReactiveMongoException
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, EisConnector}
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationstore.models.{BatchReplayError, BatchReplayResult, ReplayMetadata, UndeliveredCounts}
@@ -44,8 +43,7 @@ class SubmissionReplayService @Inject()(
 
   def getUndeliveredCounts: Future[UndeliveredCounts] = entryDeclarationRepo.getUndeliveredCounts
 
-  def replaySubmissions(submissionIds: Seq[String])(
-    implicit hc: HeaderCarrier): Future[Either[BatchReplayError, BatchReplayResult]] =
+  def replaySubmissions(submissionIds: Seq[String])(implicit hc: HeaderCarrier): Future[Either[BatchReplayError, BatchReplayResult]] =
     submissionIds
       .foldLeft(Future.successful(Counts(0, 0).asRight[Abort]): Future[Either[Abort, Counts]]) { (acc, submissionId) =>
         acc.flatMap {
@@ -58,7 +56,7 @@ class SubmissionReplayService @Inject()(
         case Left(abort)   => Left(abort.error)
       }
       .recover {
-        case _: ReactiveMongoException => Left(BatchReplayError.MetadataRetrievalError)
+        case err => Left(BatchReplayError.MetadataRetrievalError)
       }
 
   private def replaySubmissionId(submissionId: String, state: Counts)(
@@ -83,7 +81,7 @@ class SubmissionReplayService @Inject()(
   private def doMetadataLookup(submissionId: String): Future[Either[Abort, Option[ReplayMetadata]]] = {
     implicit val lc: LoggingContext = LoggingContext(submissionId = Some(submissionId))
 
-    ContextLogger.info("Replaying submission")
+    ContextLogger.info(s"Replaying submission $submissionId")
 
     entryDeclarationRepo
       .lookupMetadata(submissionId)
@@ -93,12 +91,11 @@ class SubmissionReplayService @Inject()(
         case Left(MetadataLookupError.DataFormatError)  => Right(None)
       }
       .recover {
-        case _: ReactiveMongoException => Left(Abort(BatchReplayError.MetadataRetrievalError))
+        case _ => Left(Abort(BatchReplayError.MetadataRetrievalError))
       }
   }
 
-  private def doEisSubmit(optionReplayMetadata: Option[ReplayMetadata], submissionId: String)(
-    implicit hc: HeaderCarrier): Future[Either[Abort, Boolean]] =
+  private def doEisSubmit(optionReplayMetadata: Option[ReplayMetadata], submissionId: String)(implicit hc: HeaderCarrier): Future[Either[Abort, Boolean]] =
     optionReplayMetadata match {
       case Some(replayMetadata) =>
         implicit val lc: LoggingContext = LoggingContext(

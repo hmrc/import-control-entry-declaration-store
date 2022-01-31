@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
+import java.time.Instant
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
@@ -27,7 +28,7 @@ private[repositories] case class EntryDeclarationMetadataPersisted(
   correlationId: String,
   messageType: MessageType,
   modeOfTransport: String,
-  receivedDateTime: PersistableDateTime,
+  receivedDateTime: Instant,
   movementReferenceNumber: Option[String]) {
   def toDomain: ReplayMetadata =
     ReplayMetadata(
@@ -37,7 +38,7 @@ private[repositories] case class EntryDeclarationMetadataPersisted(
         submissionId            = submissionId,
         messageType             = messageType,
         modeOfTransport         = modeOfTransport,
-        receivedDateTime        = receivedDateTime.toInstant,
+        receivedDateTime        = receivedDateTime,
         movementReferenceNumber = movementReferenceNumber
       )
     )
@@ -50,7 +51,7 @@ private[repositories] object EntryDeclarationMetadataPersisted extends InstantFo
       (__ \ "correlationId").read[String] and
       (__ \ "payload" \ "metadata" \ "messageType").read[MessageType] and
       (__ \ "payload" \ "itinerary" \ "modeOfTransportAtBorder").read[String] and
-      (__ \ "receivedDateTime").read[PersistableDateTime] and
+      (__ \ "receivedDateTime").read[Instant] and
       (__ \ "mrn").readNullable[String]
   )(EntryDeclarationMetadataPersisted.apply _)
 }

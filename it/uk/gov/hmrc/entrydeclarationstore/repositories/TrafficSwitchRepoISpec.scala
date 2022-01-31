@@ -25,8 +25,6 @@ import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.entrydeclarationstore.models.{TrafficSwitchState, TrafficSwitchStatus}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
 class TrafficSwitchRepoISpec
     extends AnyWordSpec
     with Matchers
@@ -47,7 +45,7 @@ class TrafficSwitchRepoISpec
     "database is empty" when {
 
       trait Scenario {
-        await(repository.removeAll())
+        await(repository.removeAll)
       }
 
       "getTrafficSwitchStatus" must {
@@ -80,7 +78,7 @@ class TrafficSwitchRepoISpec
         "do nothing" in new Scenario {
           await(repository.resetToDefault)
 
-          await(repository.count)                  shouldBe 0
+          await(repository.collection.countDocuments.toFuture)                  shouldBe 0
           await(repository.getTrafficSwitchStatus) shouldBe repository.defaultStatus
         }
       }
@@ -88,7 +86,7 @@ class TrafficSwitchRepoISpec
 
     "database state is explicitly not flowing" when {
       trait Scenario {
-        await(repository.removeAll())
+        await(repository.removeAll)
         await(repository.setTrafficSwitchState(TrafficSwitchState.NotFlowing))
 
         val initialStatus: TrafficSwitchStatus = await(repository.getTrafficSwitchStatus)
@@ -126,7 +124,7 @@ class TrafficSwitchRepoISpec
         "set state to the default" in new Scenario {
           await(repository.resetToDefault) shouldBe ((): Unit)
 
-          await(repository.count)                  shouldBe 0
+          await(repository.collection.countDocuments.toFuture)                  shouldBe 0
           await(repository.getTrafficSwitchStatus) shouldBe repository.defaultStatus
         }
       }
@@ -134,7 +132,7 @@ class TrafficSwitchRepoISpec
 
     "database state is flowing" when {
       trait Scenario {
-        await(repository.removeAll())
+        await(repository.removeAll)
         await(repository.setTrafficSwitchState(TrafficSwitchState.NotFlowing))
         await(repository.setTrafficSwitchState(TrafficSwitchState.Flowing))
 
@@ -173,7 +171,7 @@ class TrafficSwitchRepoISpec
         "set state to the default" in new Scenario {
           await(repository.resetToDefault)
 
-          await(repository.count)                  shouldBe 0
+          await(repository.collection.countDocuments.toFuture)                  shouldBe 0
           await(repository.getTrafficSwitchStatus) shouldBe repository.defaultStatus
         }
       }
@@ -182,7 +180,7 @@ class TrafficSwitchRepoISpec
     // Case where both lastTrafficStarted and lastTrafficStopped dates are set initially
     "traffic switch flow is stopped after previous traffic flow start" must {
       trait Scenario {
-        await(repository.removeAll())
+        await(repository.removeAll)
         await(repository.setTrafficSwitchState(TrafficSwitchState.NotFlowing))
         await(repository.setTrafficSwitchState(TrafficSwitchState.Flowing))
         await(repository.setTrafficSwitchState(TrafficSwitchState.NotFlowing))
@@ -214,7 +212,7 @@ class TrafficSwitchRepoISpec
         "set state to the default" in new Scenario {
           await(repository.resetToDefault)
 
-          await(repository.count)                  shouldBe 0
+          await(repository.collection.countDocuments.toFuture)                  shouldBe 0
           await(repository.getTrafficSwitchStatus) shouldBe repository.defaultStatus
         }
       }

@@ -16,12 +16,16 @@
 
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
-import play.modules.reactivemongo.ReactiveMongoComponent
-import uk.gov.hmrc.lock.LockRepository
-
+import uk.gov.hmrc.mongo.lock._
+import org.mongodb.scala.model.Filters._
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class LockRepositoryProvider @Inject()(implicit reactiveMongoComponent: ReactiveMongoComponent) {
-  val lockRepository: LockRepository = new LockRepository()(reactiveMongoComponent.mongoConnector.db)
+class LockRepositoryProvider @Inject()(implicit val lockRepository: MongoLockRepository, ec: ExecutionContext) {
+  def removeAll: Future[Unit] =
+    lockRepository.collection
+      .deleteMany(exists("_id"))
+      .toFutureOption
+      .map( _ => ())
 }

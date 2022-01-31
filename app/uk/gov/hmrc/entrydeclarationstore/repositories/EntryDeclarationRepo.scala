@@ -20,93 +20,118 @@ import akka.NotUsed
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import play.api.libs.json._
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.akkastream.cursorProducer
-import reactivemongo.api.indexes.Index
-import reactivemongo.api.indexes.IndexType.Ascending
-import reactivemongo.api.{ReadPreference, WriteConcern}
-import reactivemongo.bson.{BSONDocument, BSONObjectID}
-import reactivemongo.core.errors.DatabaseException
-import reactivemongo.play.json.ImplicitBSONHandlers._
+import play.api.Logger
+import uk.gov.hmrc.mongo.play.json.formats.MongoFormats
+import org.bson.BsonValue
+import org.mongodb.scala._
+import org.mongodb.scala.model.Projections._
+import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.model.Sorts._
+import org.mongodb.scala.model.Updates._
+import org.mongodb.scala.model._
+import uk.gov.hmrc.mongo._
+import org.mongodb.scala.result._
+import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
+import org.mongodb.scala.bson.conversions.Bson
+import org.mongodb.scala.bson.BsonDocument
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationstore.models._
-import uk.gov.hmrc.mongo.ReactiveRepository
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import uk.gov.hmrc.play.http.logging.Mdc
-
 import java.time.Instant
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 trait EntryDeclarationRepo {
+  def removeAll: Future[Unit]
   def save(entryDeclaration: EntryDeclarationModel)(implicit lc: LoggingContext): Future[Boolean]
-
   def lookupSubmissionId(eori: String, correlationId: String): Future[Option[SubmissionIdLookupResult]]
-
   def lookupEntryDeclaration(submissionId: String): Future[Option[JsValue]]
-
   def setEisSubmissionSuccess(submissionId: String, time: Instant)(implicit lc: LoggingContext): Future[Boolean]
-
   def setEisSubmissionFailure(submissionId: String)(implicit lc: LoggingContext): Future[Boolean]
-
   def lookupAcceptanceEnrichment(submissionId: String): Future[Option[AcceptanceEnrichment]]
-
   def lookupAmendmentRejectionEnrichment(submissionId: String): Future[Option[AmendmentRejectionEnrichment]]
-
   def lookupDeclarationRejectionEnrichment(submissionId: String): Future[Option[DeclarationRejectionEnrichment]]
-
-  def lookupMetadata(submissionId: String)(
-    implicit lc: LoggingContext): Future[Either[MetadataLookupError, ReplayMetadata]]
-
+  def lookupMetadata(submissionId: String)(implicit lc: LoggingContext): Future[Either[MetadataLookupError, ReplayMetadata]]
   def setHousekeepingAt(submissionId: String, time: Instant): Future[Boolean]
-
   def setHousekeepingAt(eori: String, correlationId: String, time: Instant): Future[Boolean]
-
   def housekeep(now: Instant): Future[Int]
-
   def getUndeliveredCounts: Future[UndeliveredCounts]
-
   def totalUndeliveredMessages(receivedNoLaterThan: Instant): Future[Int]
-
   def getUndeliveredSubmissionIds(receivedNoLaterThan: Instant, limit: Option[Int] = None): Source[String, NotUsed]
 }
 
 @Singleton
 class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
-  implicit mongo: ReactiveMongoComponent,
+  implicit mongo: MongoComponent,
   ec: ExecutionContext,
   mat: Materializer
-) extends ReactiveRepository[EntryDeclarationPersisted, BSONObjectID](
-      "entryDeclarationStore",
-      mongo.mongoConnector.db,
-      EntryDeclarationPersisted.format,
-      ReactiveMongoFormats.objectIdFormats
-    )
-    with EntryDeclarationRepo {
+) extends PlayMongoRepository[EntryDeclarationPersisted](
+  collectionName = "entryDeclarationStore",
+  mongoComponent = mongo,
+  domainFormat = EntryDeclarationPersisted.format,
+  indexes = Seq(IndexModel(ascending("submissionId"),
+                           IndexOptions()
+                            .name("submissionIdIndex")
+                            .unique(true)),
+                IndexModel(ascending("housekeepingAt"),
+                           IndexOptions()
+                            .name("housekeepingIndex")),
+                IndexModel(ascending("eori", "correlationId"),
+                           IndexOptions()
+                            .name("eoriPlusCorrelationIdIndex")
+                            .unique(true)
+                            .background(true)),
+                IndexModel(ascending("eisSubmissionState", "receivedDateTime"),
+                           IndexOptions()
+                            .partialFilterExpression(equal("eisSubmissionState", EisSubmissionState.mongoFormatString(EisSubmissionState.Error)))),
+                ),
+  extraCodecs = Seq(Codecs.playFormatCodec(MongoFormats.objectIdFormat),
+                    Codecs.playFormatCodec(EisSubmissionState.jsonFormat)),
+  replaceIndexes = true ) with EntryDeclarationRepo {
+  import EisSubmissionState.mongoFormatString
 
-  override def indexes: Seq[Index] = Seq(
-    Index(Seq(("submissionId", Ascending)), name = Some("submissionIdIndex"), unique = true),
-    Index(Seq("housekeepingAt" -> Ascending), name = Some("housekeepingIndex")),
-    Index(
-      Seq(("eori", Ascending), ("correlationId", Ascending)),
-      name   = Some("eoriPlusCorrelationIdIndex"),
-      unique = true
-    ),
-    Index(
-      Seq("eisSubmissionState" -> Ascending, "receivedDateTime" -> Ascending),
-      partialFilter =
-        Some(BSONDocument("eisSubmissionState" -> EisSubmissionState.mongoFormatString(EisSubmissionState.Error)))
-    )
-  )
+  val logger: Logger = Logger(getClass)
+
+  //
+  // Test support FNs
+  //
+  def removeAll: Future[Unit] =
+    collection
+      .deleteMany(exists("_id"))
+      .toFutureOption
+      .map( _ => ())
+
+  def find(submissionId: String): Future[Option[EntryDeclarationPersisted]] =
+    collection
+      .find(equal("submissionId", submissionId))
+      .headOption()
+
+  def find(eori: String, correlationId: String): Future[Option[EntryDeclarationPersisted]] =
+    collection
+      .find(and(equal("eori", eori), equal("correlationId", correlationId)))
+      .headOption()
+
+  def updateModeOfTransport(submissionId: String, modeOfTransport: String): Future[Unit] =
+    collection
+      .updateOne(equal("submissionId", submissionId), set("payload.itinerary.modeOfTransportAtBorder", modeOfTransport))
+      .toFutureOption
+      .map(_ => ())
+  //
+  // End of Test support FNs
+  //
 
   override def save(entryDeclaration: EntryDeclarationModel)(implicit lc: LoggingContext): Future[Boolean] = {
     val entryDeclarationPersisted = EntryDeclarationPersisted.from(entryDeclaration, appConfig.defaultTtl)
     Mdc
-      .preservingMdc(insert(entryDeclarationPersisted))
-      .map(result => result.ok)
+      .preservingMdc(
+        collection
+          .insertOne(entryDeclarationPersisted)
+          .toFutureOption
+      )
+      .map(_.map(_.wasAcknowledged).getOrElse(false))
       .recover {
-        case e: DatabaseException =>
+        case e =>
           ContextLogger.error(s"Unable to save entry declaration", e)
           false
       }
@@ -116,74 +141,75 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
     Mdc
       .preservingMdc(
         collection
-          .find(
-            Json.obj("eori" -> eori, "correlationId" -> correlationId),
-            Some(
-              Json.obj(
-                "submissionId"          -> 1,
-                "receivedDateTime"      -> 1,
-                "housekeepingAt"        -> 1,
-                "eisSubmissionDateTime" -> 1,
-                "eisSubmissionState"    -> 1))
-          )
-          .one[JsObject](ReadPreference.primaryPreferred))
-      .map(_.map { doc =>
-        SubmissionIdLookupResult(
-          (doc \ "receivedDateTime").as[PersistableDateTime].toInstant.toString,
-          (doc \ "housekeepingAt").as[PersistableDateTime].toInstant.toString,
-          (doc \ "submissionId").as[String],
-          (doc \ "eisSubmissionDateTime").asOpt[PersistableDateTime].map(_.toInstant.toString),
-          (doc \ "eisSubmissionState").as[EisSubmissionState]
-        )
-      })
-
-  override def lookupEntryDeclaration(submissionId: String): Future[Option[JsValue]] =
-    Mdc
-      .preservingMdc(
-        collection
-          .find(Json.obj("submissionId" -> submissionId), Some(Json.obj("payload" -> 1)))
-          .one[JsObject](ReadPreference.primaryPreferred))
-      .map(_.map(doc => (doc \ "payload").as[JsValue]))
-
-  override def setEisSubmissionSuccess(submissionId: String, time: Instant)(
-    implicit lc: LoggingContext): Future[Boolean] =
-    Mdc
-      .preservingMdc(
-        collection
-          .update(ordered = false, WriteConcern.Default)
-          .one(
-            Json.obj("submissionId" -> submissionId),
-            Json.obj(
-              "$set" -> Json
-                .obj(
-                  "eisSubmissionDateTime" -> PersistableDateTime(time),
-                  "eisSubmissionState"    -> Json.toJson(EisSubmissionState.Sent : EisSubmissionState)))
+          .withReadPreference(ReadPreference.primaryPreferred)
+          .find[BsonValue](and(equal("eori", eori), equal("correlationId", correlationId)))
+          .projection(fields(include("submissionId", "receivedDateTime", "housekeepingAt", "eisSubmissionDateTime", "eisSubmissionState"), excludeId()))
+          .headOption()
+      ).map{
+        case None => None
+        case Some(bson) =>
+          val sqr: SubmissionIdQueryResult = Codecs.fromBson[SubmissionIdQueryResult](bson)
+          Some(SubmissionIdLookupResult(
+            sqr.receivedDateTime.toString,
+            sqr.housekeepingAt.toString,
+            sqr.submissionId.toString,
+            sqr.eisSubmissionDateTime.map(_.toString),
+            sqr.eisSubmissionState
           ))
-      .map(result => result.nModified > 0)
-      .recover {
-        case e: DatabaseException =>
-          ContextLogger.error(s"Unable to set eis submission success for entry declaration", e)
-          false
       }
+
+  def lookupEntryDeclaration(submissionId: String): Future[Option[JsValue]] =
+    Mdc
+      .preservingMdc(
+        collection
+          .withReadPreference(ReadPreference.primaryPreferred)
+          .find[BsonValue](equal("submissionId", submissionId))
+          .projection(fields(include("payload"), excludeId()))
+          .headOption()
+      ).map(_.map(Codecs.fromBson[EntryDeclarationPayload](_).payload))
+
+  override def setEisSubmissionSuccess(submissionId: String, time: Instant)(implicit lc: LoggingContext): Future[Boolean] =
+    Mdc
+      .preservingMdc(
+        collection
+          .updateOne(
+            equal("submissionId", submissionId),
+            combine(
+              set("eisSubmissionDateTime", time),
+              set("eisSubmissionState", mongoFormatString(EisSubmissionState.Sent))
+            )
+          )
+          .toFutureOption
+          .recover {
+            case e =>
+              ContextLogger.error(s"Unable to set eis submission success for entry declaration", e)
+              false
+          }
+      )
+      .map{
+        case Some(result: UpdateResult) => result.getModifiedCount > 0
+        case _ => false
+      }
+
 
   override def setEisSubmissionFailure(submissionId: String)(implicit lc: LoggingContext): Future[Boolean] =
     Mdc
       .preservingMdc(
         collection
-          .update(ordered = false, WriteConcern.Default)
-          .one(
-            Json.obj("submissionId" -> submissionId),
-            Json.obj("$set"         -> Json.obj("eisSubmissionState" -> Json.toJson(EisSubmissionState.Error : EisSubmissionState)))
-          ))
-      .map { result =>
-        val success = result.nModified > 0
-        if (success) {
+          .updateOne(
+            equal("submissionId", submissionId),
+            set("eisSubmissionState", mongoFormatString(EisSubmissionState.Error))
+          )
+          .toFutureOption
+      )
+      .map {
+        case Some(result: UpdateResult) if result.getModifiedCount > 0 =>
           ContextLogger.warn("Submission set to Undelivered")
-        }
-        success
+          true
+        case _ => false
       }
       .recover {
-        case e: DatabaseException =>
+        case e =>
           ContextLogger.error(s"Unable to set eis submission failure for entry declaration", e)
           false
       }
@@ -192,36 +218,33 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
     Mdc
       .preservingMdc(
         collection
-          .find(Json.obj("submissionId" -> submissionId), Some(Json.obj("eisSubmissionDateTime" -> 1, "payload" -> 1)))
-          .one[JsObject](ReadPreference.primaryPreferred))
-      .map(_.map { doc =>
-        AcceptanceEnrichment(
-          (doc \ "eisSubmissionDateTime").asOpt[PersistableDateTime].map(_.toInstant),
-          (doc \ "payload").as[JsValue]
-        )
+          .withReadPreference(ReadPreference.primaryPreferred())
+          .find[BsonValue](equal("submissionId", submissionId))
+          .projection(fields(include("eisSubmissionDateTime", "payload"), excludeId()))
+          .headOption
+      )
+      .map(_.map{bson =>
+          val result = Codecs.fromBson[EntryDeclarationPayload](bson)
+          AcceptanceEnrichment(result.eisSubmissionDateTime, result.payload)
       })
 
   override def lookupAmendmentRejectionEnrichment(submissionId: String): Future[Option[AmendmentRejectionEnrichment]] =
     Mdc
       .preservingMdc(
         collection
-          .find(
-            Json.obj("submissionId" -> submissionId),
-            Some(Json.obj(
-              "eisSubmissionDateTime"                          -> 1,
-              "payload.parties.declarant"                      -> 1,
-              "payload.parties.representative"                 -> 1,
-              "payload.itinerary.officeOfFirstEntry.reference" -> 1,
-              "payload.amendment.movementReferenceNumber"      -> 1,
-              "payload.amendment.dateTime"                     -> 1
-            ))
-          )
-          .one[JsObject](ReadPreference.primaryPreferred))
-      .map(_.map { doc =>
-        AmendmentRejectionEnrichment(
-          (doc \ "eisSubmissionDateTime").asOpt[PersistableDateTime].map(_.toInstant),
-          (doc \ "payload").as[JsValue]
-        )
+          .withReadPreference(ReadPreference.primaryPreferred)
+          .find[BsonValue](equal("submissionId", submissionId))
+          .projection(fields(include("eisSubmissionDateTime",
+                                     "payload.parties.declarant",
+                                     "payload.parties.representative",
+                                     "payload.itinerary.officeOfFirstEntry.reference",
+                                     "payload.amendment.movementReferenceNumber",
+                                     "payload.amendment.dateTime"), excludeId()))
+          .headOption
+      )
+      .map(_.map{bson =>
+          val result = Codecs.fromBson[EntryDeclarationPayload](bson)
+          AmendmentRejectionEnrichment(result.eisSubmissionDateTime, result.payload)
       })
 
   override def lookupDeclarationRejectionEnrichment(
@@ -229,10 +252,14 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
     Mdc
       .preservingMdc(
         collection
-          .find(Json.obj("submissionId" -> submissionId), Some(Json.obj("eisSubmissionDateTime" -> 1)))
-          .one[JsObject](ReadPreference.primaryPreferred))
-      .map(_.map { doc =>
-        DeclarationRejectionEnrichment((doc \ "eisSubmissionDateTime").asOpt[PersistableDateTime].map(_.toInstant))
+          .withReadPreference(ReadPreference.primaryPreferred)
+          .find[BsonValue](equal("submissionId", submissionId))
+          .projection(fields(include("eisSubmissionDateTime"), excludeId()))
+          .headOption
+      )
+      .map( _.map{bson =>
+          val drer: DeclarationRejectionEnrichmenResult = Codecs.fromBson[DeclarationRejectionEnrichmenResult](bson)
+          DeclarationRejectionEnrichment(drer.eisSubmissionDateTime)
       })
 
   override def lookupMetadata(submissionId: String)(
@@ -240,131 +267,132 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
     Mdc
       .preservingMdc(
         collection
-          .find(
-            Json.obj("submissionId" -> submissionId),
-            Some(Json.obj(
-              "submissionId"                              -> 1,
-              "eori"                                      -> 1,
-              "correlationId"                             -> 1,
-              "payload.metadata.messageType"              -> 1,
-              "payload.itinerary.modeOfTransportAtBorder" -> 1,
-              "mrn"                                       -> 1,
-              "receivedDateTime"                          -> 1
-            ))
-          )
-          .one[JsValue](ReadPreference.primaryPreferred))
-      .map {
-        case Some(json) =>
-          json.validate[EntryDeclarationMetadataPersisted] match {
-            case JsSuccess(value, _) => Right(value.toDomain)
-            case JsError(errs) =>
-              ContextLogger.warn(s"Unable to read metadata: $errs")
-              Left(MetadataLookupError.DataFormatError)
-          }
+          .withReadPreference(ReadPreference.primaryPreferred)
+          .find(equal("submissionId", submissionId))
+          // .projection(fields(include("submissionId",
+          //                            "eori",
+          //                            "correlationId",
+          //                            "payload.metadata.messageType",
+          //                            "payload.itinerary.modeOfTransportAtBorder",
+          //                            "mrn",
+          //                            "receivedDateTime"), excludeId()))
+          .headOption
+      )
+      .map{
         case None =>
           ContextLogger.info(s"No metadata found")
           Left(MetadataLookupError.MetadataNotFound)
+        case Some(edp) =>
+          edp.payload.asOpt((JsPath \\ "metadata" \\ "messageType").read[MessageType]).flatMap{ messageType =>
+            edp.payload.asOpt((JsPath \\ "itinerary" \\ "modeOfTransportAtBorder").read[String]).map{ mode =>
+              Right(EntryDeclarationMetadataPersisted(
+                edp.submissionId,
+                edp.eori,
+                edp.correlationId,
+                messageType,
+                mode,
+                edp.receivedDateTime,
+                edp.mrn
+              ).toDomain)
+            }
+          }.fold[Either[MetadataLookupError, ReplayMetadata]]{
+            ContextLogger.info(s"No metadata found due to processing error")
+            Left(MetadataLookupError.DataFormatError)
+          }{result => result}
       }
 
   override def setHousekeepingAt(submissionId: String, time: Instant): Future[Boolean] =
-    setHousekeepingAt(time, Json.obj("submissionId" -> submissionId))
+    setHousekeepingAt(time, equal("submissionId", submissionId))
 
   override def setHousekeepingAt(eori: String, correlationId: String, time: Instant): Future[Boolean] =
-    setHousekeepingAt(time, Json.obj("eori" -> eori, "correlationId" -> correlationId))
+    setHousekeepingAt(time, and(equal("eori", eori), equal("correlationId", correlationId)))
 
-  private def setHousekeepingAt(time: Instant, query: JsObject): Future[Boolean] =
+  private def setHousekeepingAt(time: Instant, query: Bson): Future[Boolean] =
     Mdc
       .preservingMdc(
         collection
-          .update(ordered = false, WriteConcern.Default)
-          .one(query, Json.obj("$set" -> Json.obj("housekeepingAt" -> PersistableDateTime(time)))))
-      .map(result => result.n == 1)
+          .updateOne(query, set("housekeepingAt", time))
+          .toFutureOption
+      )
+      .map(_.map(_.getMatchedCount > 0).getOrElse(false))
 
-  override def housekeep(now: Instant): Future[Int] = {
-    val deleteBuilder = collection.delete(ordered = false)
-
+  override def housekeep(now: Instant): Future[Int] =
     Mdc.preservingMdc(
-      collection
-        .find(
-          selector   = Json.obj("housekeepingAt" -> Json.obj("$lte" -> PersistableDateTime(now))),
-          projection = Some(Json.obj("_id" -> 1))
-        )
-        .sort(Json.obj("housekeepingAt" -> 1))
-        .cursor[JsObject]()
-        .documentSource(maxDocs = appConfig.housekeepingRunLimit)
-        .mapAsync(1) { idDoc =>
-          deleteBuilder.element(q = idDoc, limit = Some(1), collation = None)
-        }
-        .batch(appConfig.housekeepingBatchSize, List(_)) { (deletions, element) =>
-          element :: deletions
-        }
-        .mapAsync(1) { deletions =>
-          collection
-            .delete()
-            .many(deletions)
-            .map(_.n)
-        }
-        .runFold(0)(_ + _))
-  }
+      Source.fromPublisher(
+        collection
+          .find[BsonValue](lte("housekeepingAt", now))
+          .projection(fields(include("_id")))
+          .sort(ascending("housekeepingAt"))
+          .limit(appConfig.housekeepingRunLimit)
+      )
+      .batch(appConfig.housekeepingBatchSize, List(_)) { (deletions, element) =>
+        element :: deletions
+      }
+      .mapAsync(1) { deletions =>
+        collection.bulkWrite(deletions.map(oid => DeleteManyModel(equal("_id", Codecs.fromBson[EntryObjectId](oid)._id))))
+          .toFutureOption
+          .map(_.map(_.getDeletedCount).getOrElse(0))
+          .recover{
+            case e =>
+              logger.error(s"Failed to bulkWrite of deletions $deletions")
+              0
+          }
+      }
+      .runFold(0)(_ + _))
 
   override def getUndeliveredCounts: Future[UndeliveredCounts] = {
-    import collection.BatchCommands.AggregationFramework
-    import AggregationFramework._
+    import Aggregates._
+    import Accumulators._
 
-    val groupTransportType = Group(Json.obj("_id" -> "$payload.itinerary.modeOfTransportAtBorder"))(
-      "transportMode" -> First(JsString("$payload.itinerary.modeOfTransportAtBorder")),
-      "count"         -> Sum(JsNumber(1))
-    )
+    val groupTransportType = group("$payload.itinerary.modeOfTransportAtBorder",
+                                   first("transportMode", "$payload.itinerary.modeOfTransportAtBorder"),
+                                   sum("count", 1))
 
-    val groupIntoArray = Group(Json.obj("_id" -> ""))(
-      "totalCount" -> SumField("count"),
-      "transportCounts" -> Push(
-        Json.obj(
-          "transportMode" -> "$transportMode",
-          "count"         -> "$count"
-        )
-      )
-    )
+    val groupIntoArray = group("",
+                               sum("totalCount", "$count"),
+                               push("transportCounts", BsonDocument("transportMode" -> "$transportMode",
+                                                                    "count" -> "$count")))
 
     Mdc
       .preservingMdc(
         collection
-          .aggregateWith[JsObject](explain = false)(_ =>
-            Match(undeliveredSubmissionsSelector(None)) -> List(groupTransportType, groupIntoArray))
-          .headOption)
+          .aggregate[BsonValue](
+            List(filter(undeliveredSubmissionsSelector(None)),
+                 groupTransportType,
+                 groupIntoArray)
+          )
+          .headOption
+      )
       .map {
-        case Some(results) => results.as[UndeliveredCounts].sorted
-        case None          => UndeliveredCounts(totalCount = 0, transportCounts = None)
+        case Some(bson) => (Codecs.fromBson[UndeliveredCounts](bson)).sorted
+        case None         => UndeliveredCounts(totalCount = 0, transportCounts = None)
       }
   }
 
   override def totalUndeliveredMessages(receivedNoLaterThan: Instant): Future[Int] =
-    Mdc.preservingMdc(count(undeliveredSubmissionsSelector(Some(receivedNoLaterThan))))
+    Mdc.preservingMdc(
+      collection
+        .countDocuments(undeliveredSubmissionsSelector(Some(receivedNoLaterThan)))
+        .headOption()
+        .map{
+          case None => 0
+          case Some(count) => count.toInt
+        }
+    )
 
   override def getUndeliveredSubmissionIds(receivedNoLaterThan: Instant, limit: Option[Int]): Source[String, NotUsed] =
-    collection
-      .find(
-        selector = undeliveredSubmissionsSelector(Some(receivedNoLaterThan)),
-        projection = Some(
-          Json.obj(
-            "_id"          -> 0,
-            "submissionId" -> 1
-          ))
-      )
-      .sort(Json.obj("receivedDateTime" -> -1))
-      .cursor[SubmissionId]()
-      .documentSource(maxDocs = limit.getOrElse(Int.MaxValue))
-      .map(_.value)
-      .mapMaterializedValue(_ => NotUsed)
+    Source.fromPublisher(
+      collection
+        .find[BsonValue](undeliveredSubmissionsSelector(Some(receivedNoLaterThan)))
+        .projection(fields(include("submissionId"), excludeId()))
+        .sort(descending("receivedDateTime"))
+        .limit(limit.getOrElse(Int.MaxValue))
+    )
+    .map(Codecs.fromBson[SubmissionId](_).value)
+    .mapMaterializedValue(_ => NotUsed)
 
-  private def undeliveredSubmissionsSelector(optEndTime: Option[Instant]) = {
-    val endTimeClause =
-      optEndTime
-        .map(endTime => Json.obj("receivedDateTime" -> Json.obj("$lte" -> PersistableDateTime(endTime))))
-        .getOrElse(JsObject.empty)
-
-    Json.obj(
-      "eisSubmissionState" -> Json.toJson(EisSubmissionState.Error : EisSubmissionState)
-    ) ++ endTimeClause
+  private def undeliveredSubmissionsSelector(optEndTime: Option[Instant]): Bson = {
+    val stateClause = equal("eisSubmissionState", EisSubmissionState.mongoFormatString(EisSubmissionState.Error))
+    optEndTime.fold(stateClause){endTime => and(stateClause, lte("receivedDateTime", endTime))}
   }
 }

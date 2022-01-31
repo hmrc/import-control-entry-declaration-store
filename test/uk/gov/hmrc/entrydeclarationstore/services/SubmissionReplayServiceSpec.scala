@@ -23,7 +23,6 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.Status._
-import reactivemongo.core.errors.GenericDatabaseException
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, MockEisConnector}
 import uk.gov.hmrc.entrydeclarationstore.models._
 import uk.gov.hmrc.entrydeclarationstore.reporting.{MockReportSender, SubmissionSentToEIS}
@@ -140,7 +139,7 @@ class SubmissionReplayServiceSpec
 
             MockEntryDeclarationRepo
               .lookupMetadata(submissionIds.head)
-              .returns(Future.failed(GenericDatabaseException("abc", None)))
+              .returns(Future.failed(new Exception("abc")))
 
             service.replaySubmissions(submissionIds).futureValue shouldBe Left(BatchReplayError.MetadataRetrievalError)
           }

@@ -29,3 +29,5 @@ trait InstantFormatter {
     Format(Reads.DefaultInstantReads, Writes.temporalWrites[Instant, DateTimeFormatter](dateTimeWithMillis))
   }
 }
+
+object InstantFormatter extends InstantFormatter

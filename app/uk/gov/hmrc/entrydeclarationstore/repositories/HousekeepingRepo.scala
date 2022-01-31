@@ -16,14 +16,15 @@
 
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
-import play.api.libs.json.{JsObject, Json}
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.WriteConcern
-import reactivemongo.bson.BSONObjectID
-import reactivemongo.play.json.ImplicitBSONHandlers._
+import play.api.Logger
+import uk.gov.hmrc.mongo.play.json.formats.MongoFormats
+import org.mongodb.scala._
+import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.model.Updates._
+import org.mongodb.scala.model._
+import uk.gov.hmrc.mongo._
+import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 import uk.gov.hmrc.entrydeclarationstore.models.HousekeepingStatus
-import uk.gov.hmrc.mongo.ReactiveRepository
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import uk.gov.hmrc.play.http.logging.Mdc
 
 import javax.inject.{Inject, Singleton}
@@ -38,24 +39,36 @@ trait HousekeepingRepo {
 
 @Singleton
 class HousekeepingRepoImpl @Inject()(
-  implicit mongo: ReactiveMongoComponent,
+  implicit mongo: MongoComponent,
   ec: ExecutionContext
-) extends ReactiveRepository[HousekeepingStatus, BSONObjectID](
-      "houskeeping-status",
-      mongo.mongoConnector.db,
-      HousekeepingStatus.format,
-      ReactiveMongoFormats.objectIdFormats
+) extends PlayMongoRepository[HousekeepingStatus](
+      collectionName = "houskeeping-status",
+      mongoComponent = mongo,
+      domainFormat = HousekeepingStatus.format,
+      indexes = Seq.empty,
+      extraCodecs = Seq(Codecs.playFormatCodec(MongoFormats.objectIdFormat)),
+      replaceIndexes = true
     )
     with HousekeepingRepo {
 
+  val logger: Logger = Logger(getClass)
   private val singletonId = "1d4165fc-3a66-4f13-b067-ac7e087aab73"
+
+  //
+  // Test support FNs
+  //
+  def removeAll: Future[Unit] =
+    collection
+      .deleteMany(exists("_id"))
+      .toFutureOption
+      .map( _ => ())
 
   override def enableHousekeeping(value: Boolean): Future[Unit] =
     if (value) turnOn() else turnOff()
 
   private def turnOn() =
     Mdc
-      .preservingMdc(remove("_id" -> singletonId))
+      .preservingMdc(collection.deleteOne(equal("_id", singletonId)).toFutureOption)
       .andThen {
         case Success(_) => logger.warn("Housekeeping turned on")
       }
@@ -65,12 +78,9 @@ class HousekeepingRepoImpl @Inject()(
     Mdc
       .preservingMdc(
         collection
-          .update(ordered = false, WriteConcern.Default)
-          .one(
-            q      = Json.obj("_id" -> singletonId),
-            u      = JsObject.empty,
-            upsert = true
-          ))
+          .updateOne(equal("_id", singletonId), set("_id", singletonId), UpdateOptions().upsert(true))
+          .toFutureOption
+      )
       .andThen {
         case Success(_) => logger.warn("Housekeeping turned off")
       }
@@ -78,6 +88,9 @@ class HousekeepingRepoImpl @Inject()(
 
   override def getHousekeepingStatus: Future[HousekeepingStatus] =
     Mdc
-      .preservingMdc(count(Json.obj("_id" -> singletonId)))
-      .map(n => HousekeepingStatus(n == 0))
+      .preservingMdc(collection.countDocuments(equal("_id", singletonId)).toFutureOption)
+      .map{
+        case Some(n) => HousekeepingStatus(n == 0)
+        case _ => HousekeepingStatus(false)
+      }
 }

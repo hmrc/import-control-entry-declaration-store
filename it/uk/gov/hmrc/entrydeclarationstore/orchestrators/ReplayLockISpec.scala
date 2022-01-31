@@ -26,8 +26,6 @@ import play.api.test.Injecting
 import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.entrydeclarationstore.repositories.LockRepositoryProvider
-
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
 class ReplayLockISpec
@@ -52,7 +50,7 @@ class ReplayLockISpec
   val lock: ReplayLock                               = inject[ReplayLock]
 
   override def beforeAll(): Unit =
-    lockRepositoryProvider.lockRepository.removeAll().futureValue
+    lockRepositoryProvider.removeAll.futureValue
 
   val replayId = "someReplayId"
 
@@ -68,7 +66,7 @@ class ReplayLockISpec
 
     "unlocked" must {
       trait Scenario {
-        lockRepositoryProvider.lockRepository.removeAll().futureValue
+        lockRepositoryProvider.removeAll.futureValue
       }
 
       "allow lock" in new Scenario {
@@ -89,7 +87,7 @@ class ReplayLockISpec
 
     "locked" must {
       trait Scenario {
-        lockRepositoryProvider.lockRepository.removeAll().futureValue
+        lockRepositoryProvider.removeAll.futureValue
         lock.lock(replayId).futureValue
       }
 

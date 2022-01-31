@@ -16,21 +16,13 @@
 
 package uk.gov.hmrc.entrydeclarationstore.models
 
-import play.api.libs.json.{Format, JsValue, Json}
-
+import play.api.libs.json.{Format, Json, JsValue}
+import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats.Implicits._
 import java.time.Instant
 
-case class EntryDeclarationModel(
-  correlationId: String,
-  submissionId: String,
-  eori: String,
-  payload: JsValue,
-  mrn: Option[String],
-  receivedDateTime: Instant,
-  eisSubmissionDateTime: Option[Instant] = None,
-  eisSubmissionState: EisSubmissionState = EisSubmissionState.NotSent)
+case class EntryDeclarationPayload(payload: JsValue, eisSubmissionDateTime: Option[Instant])
 
-object EntryDeclarationModel extends InstantFormatter{
-  import EisSubmissionState.jsonFormat
-  implicit val format: Format[EntryDeclarationModel] = Json.format[EntryDeclarationModel]
+object EntryDeclarationPayload {
+
+  implicit val format: Format[EntryDeclarationPayload] = Json.format[EntryDeclarationPayload]
 }
