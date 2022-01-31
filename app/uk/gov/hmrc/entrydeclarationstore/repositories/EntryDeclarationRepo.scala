@@ -269,13 +269,6 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
         collection
           .withReadPreference(ReadPreference.primaryPreferred)
           .find(equal("submissionId", submissionId))
-          // .projection(fields(include("submissionId",
-          //                            "eori",
-          //                            "correlationId",
-          //                            "payload.metadata.messageType",
-          //                            "payload.itinerary.modeOfTransportAtBorder",
-          //                            "mrn",
-          //                            "receivedDateTime"), excludeId()))
           .headOption
       )
       .map{
