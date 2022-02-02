@@ -65,16 +65,16 @@ class TrafficSwitchRepoImpl @Inject()(
   // We cannot upsert in these (since match failure would attempt insert and violate unique _id).
   // Hence this, which will insert only when the singleton document is missing, allows not flowing/flowing without
   // upsert or the need to do racy 'check-then-act' logic:
-  private def insertDefaultIfEmpty(): Future[Option[TrafficSwitchStatus]] =
+  private def insertDefaultIfEmpty() =
     Mdc.preservingMdc(
       collection
-        .findOneAndUpdate(
+        .updateOne(
           equal("_id", singletonId),
           combine(
             set("_id", singletonId),
             setOnInsert("isTrafficFlowing", mongoFormatString(defaultStatus.isTrafficFlowing))
           ),
-          FindOneAndUpdateOptions().upsert(true)
+          UpdateOptions().upsert(true)
           )
         .toFutureOption
     )
