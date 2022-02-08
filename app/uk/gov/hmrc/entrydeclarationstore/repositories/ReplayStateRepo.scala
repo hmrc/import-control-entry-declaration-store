@@ -60,7 +60,7 @@ class ReplayStateRepoImpl @Inject()(
   //
   // Test support FNs
   //
-  def removeAll: Future[Unit] =
+  def removeAll(): Future[Unit] =
     collection
       .deleteMany(exists("_id"))
       .toFutureOption

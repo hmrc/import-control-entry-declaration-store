@@ -122,7 +122,7 @@ class TrafficSwitchRepoImpl @Inject()(
   override def resetToDefault: Future[Unit] =
     Mdc.preservingMdc(removeAll)
 
-  def removeAll: Future[Unit] =
+  def removeAll(): Future[Unit] =
     collection
       .deleteMany(exists("_id"))
       .toFutureOption

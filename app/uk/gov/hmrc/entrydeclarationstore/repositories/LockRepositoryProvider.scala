@@ -23,7 +23,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class LockRepositoryProvider @Inject()(implicit val lockRepository: MongoLockRepository, ec: ExecutionContext) {
-  def removeAll: Future[Unit] =
+  def removeAll(): Future[Unit] =
     lockRepository.collection
       .deleteMany(exists("_id"))
       .toFutureOption

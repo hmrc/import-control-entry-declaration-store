@@ -43,7 +43,6 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 trait EntryDeclarationRepo {
-  def removeAll: Future[Unit]
   def save(entryDeclaration: EntryDeclarationModel)(implicit lc: LoggingContext): Future[Boolean]
   def lookupSubmissionId(eori: String, correlationId: String): Future[Option[SubmissionIdLookupResult]]
   def lookupEntryDeclaration(submissionId: String): Future[Option[JsValue]]
@@ -96,7 +95,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
   //
   // Test support FNs
   //
-  def removeAll: Future[Unit] =
+  def removeAll(): Future[Unit] =
     collection
       .deleteMany(exists("_id"))
       .toFutureOption
