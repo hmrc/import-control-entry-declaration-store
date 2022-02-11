@@ -37,7 +37,7 @@ class HousekeepingScheduler @Inject()(
 
   private val exclusiveTimePeriodLock: TimePeriodLockService =
     TimePeriodLockService(lockProvider.lockRepository,
-                          lockId = "my-lock",
+                          lockId = "housekeeping_lock",
                           ttl = Duration(appConfig.housekeepingLockDuration.toMillis, TimeUnit.MILLISECONDS))
 
   scheduler.scheduleWithFixedDelay(appConfig.housekeepingRunInterval, appConfig.housekeepingRunInterval) {
