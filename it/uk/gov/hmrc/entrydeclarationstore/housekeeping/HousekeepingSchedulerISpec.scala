@@ -55,7 +55,7 @@ class HousekeepingSchedulerISpec
   val lockRepositoryProvider: LockRepositoryProvider = inject[LockRepositoryProvider]
 
   override def beforeAll(): Unit =
-    await(lockRepositoryProvider.lockRepository.removeAll())
+    await(lockRepositoryProvider.removeAll)
 
   private def newHousekeeper: Housekeeper = () => {
     housekeeperProbe.ref ! HousekeepCalled

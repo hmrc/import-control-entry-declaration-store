@@ -29,7 +29,6 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json._
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits, Injecting}
 import play.api.{Application, Environment, Mode}
-import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.{TransportCount, _}
@@ -68,7 +67,7 @@ class EntryDeclarationRepoISpec
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    await(repository.removeAll())
+    await(repository.removeAll)
   }
 
   val defaultTtl: FiniteDuration = 60.seconds
@@ -117,7 +116,7 @@ class EntryDeclarationRepoISpec
   )
 
   def lookupEntryDeclaration(submissionId: String): Option[EntryDeclarationModel] =
-    await(repository.find("submissionId" -> submissionId)).headOption.map(_.toEntryDeclarationModel)
+    await(repository.find(submissionId).map(_.map(_.toEntryDeclarationModel)))
 
   "EntryDeclarationRepo" when {
     "saving an EntryDeclaration" when {
@@ -154,8 +153,8 @@ class EntryDeclarationRepoISpec
       }
 
       "housekeepingAt must be initialised to 7 days" in {
-        await(repository.find("submissionId" -> submissionId313)).headOption.map(entryDeclaration =>
-          entryDeclaration.housekeepingAt.$date - entryDeclaration.receivedDateTime.$date) shouldBe
+        await(repository.find(submissionId313).map(entryDeclaration =>
+          entryDeclaration.map(ed => ed.housekeepingAt.toEpochMilli - ed.receivedDateTime.toEpochMilli()))) shouldBe
           Some(defaultTtl.toMillis)
       }
     }
@@ -179,7 +178,7 @@ class EntryDeclarationRepoISpec
 
     "setting the eis submission as success" when {
       trait Scenario {
-        await(repository.removeAll())
+        await(repository.removeAll)
         await(repository.save(entryDeclaration313))
       }
 
@@ -205,7 +204,7 @@ class EntryDeclarationRepoISpec
 
     "setting the eis submission as failure" when {
       trait Scenario {
-        await(repository.removeAll())
+        await(repository.removeAll)
         await(repository.save(entryDeclaration313))
       }
 
@@ -231,7 +230,7 @@ class EntryDeclarationRepoISpec
 
     "looking up a submissionId from an eori & correlationId" when {
       trait Scenario {
-        await(repository.removeAll())
+        await(repository.removeAll)
         await(repository.save(entryDeclaration313))
       }
 
@@ -292,7 +291,7 @@ class EntryDeclarationRepoISpec
 
     "looking up an acceptance enrichment" when {
       trait Scenario {
-        await(repository.removeAll())
+        await(repository.removeAll)
         await(repository.save(entryDeclaration313))
         await(repository.save(entryDeclaration315))
         await(repository.setEisSubmissionSuccess(submissionId313, eisSubmissionDateTime))
@@ -319,7 +318,7 @@ class EntryDeclarationRepoISpec
     "looking up a rejection enrichment" when {
       "an amendment" when {
         trait Scenario {
-          await(repository.removeAll())
+          await(repository.removeAll)
           await(repository.save(entryDeclaration313))
         }
 
@@ -346,7 +345,7 @@ class EntryDeclarationRepoISpec
 
       "a declaration" when {
         trait Scenario {
-          await(repository.removeAll())
+          await(repository.removeAll)
           await(repository.save(entryDeclaration315))
         }
 
@@ -373,7 +372,7 @@ class EntryDeclarationRepoISpec
     "looking up metadata" when {
       "a IE313 submission with the submissionId exists in the database" must {
         trait Scenario {
-          await(repository.removeAll())
+          await(repository.removeAll)
           await(repository.save(entryDeclaration313))
         }
 
@@ -396,7 +395,7 @@ class EntryDeclarationRepoISpec
 
       "a IE315 submission with the submissionId exists in the database" must {
         trait Scenario {
-          await(repository.removeAll())
+          await(repository.removeAll)
           await(repository.save(entryDeclaration315))
         }
 
@@ -446,19 +445,18 @@ class EntryDeclarationRepoISpec
         val time = Instant.now.plusSeconds(60)
 
         "be settable" in {
-          await(repository.removeAll())
+          await(repository.removeAll)
           await(repository.save(entryDeclaration313))                shouldBe true
           await(repository.setHousekeepingAt(submissionId313, time)) shouldBe true
 
           await(
-            repository.collection
-              .find(Json.obj("submissionId" -> submissionId313), Option.empty[JsObject])
-              .one[EntryDeclarationPersisted]
-              .map(_.map(_.housekeepingAt.toInstant))).get shouldBe time
+            repository
+              .find(submissionId313)
+              .map(_.map(_.housekeepingAt))).get shouldBe time
         }
 
         "return true if no change is made" in {
-          await(repository.removeAll())
+          await(repository.removeAll)
           await(repository.save(entryDeclaration313))                shouldBe true
           await(repository.setHousekeepingAt(submissionId313, time)) shouldBe true
           await(repository.setHousekeepingAt(submissionId313, time)) shouldBe true
@@ -472,19 +470,18 @@ class EntryDeclarationRepoISpec
         val time = Instant.now.plusSeconds(60)
 
         "be settable" in {
-          await(repository.removeAll())
+          await(repository.removeAll)
           await(repository.save(entryDeclaration313))                       shouldBe true
           await(repository.setHousekeepingAt(eori, correlationId313, time)) shouldBe true
 
           await(
-            repository.collection
-              .find(Json.obj("eori" -> eori, "correlationId" -> correlationId313), Option.empty[JsObject])
-              .one[EntryDeclarationPersisted]
-              .map(_.map(_.housekeepingAt.toInstant))).get shouldBe time
+            repository
+              .find(eori, correlationId313)
+              .map(_.map(_.housekeepingAt))).get shouldBe time
         }
 
         "return true if no change is made" in {
-          await(repository.removeAll())
+          await(repository.removeAll)
           await(repository.save(entryDeclaration313))                       shouldBe true
           await(repository.setHousekeepingAt(eori, correlationId313, time)) shouldBe true
           await(repository.setHousekeepingAt(eori, correlationId313, time)) shouldBe true
@@ -500,7 +497,7 @@ class EntryDeclarationRepoISpec
       val t0 = Instant.now
 
       def populateDeclarations(numDecls: Int): Seq[EntryDeclarationModel] = {
-        await(repository.removeAll())
+        await(repository.removeAll)
         (1 to numDecls).map { _ =>
           val decl = randomEntryDeclaration()
           await(repository.save(decl)) shouldBe true
@@ -567,7 +564,7 @@ class EntryDeclarationRepoISpec
     "there are submissions in error (undelivered)" must {
 
       trait Scenario {
-        await(repository.removeAll())
+        await(repository.removeAll)
 
         def createSubmissions(number: Int, eisSubmissionState: EisSubmissionState): Seq[EntryDeclarationModel] =
           (0 until number).map { i =>
@@ -624,19 +621,13 @@ class EntryDeclarationRepoISpec
       }
 
       "allow geting total counts of submissionIds by transport mode when no undelivered" in new Scenario {
-        await(repository.removeAll())
+        await(repository.removeAll)
 
         await(repository.getUndeliveredCounts) shouldBe UndeliveredCounts(totalCount = 0, transportCounts = None)
       }
 
       "allow geting total counts of submissionIds by transport mode where multiple transport modes" in new Scenario {
-        await(
-          repository.collection
-            .update(ordered = false)
-            .one(
-              q = Json.obj("submissionId" -> errorDeclarationIdsNewestFirst.head),
-              u = Json.obj("$set"         -> Json.obj("payload.itinerary.modeOfTransportAtBorder" -> "10"))
-            ))
+        await(repository.updateModeOfTransport(errorDeclarationIdsNewestFirst.head, "10"))
 
         val result: UndeliveredCounts = await(repository.getUndeliveredCounts)
 

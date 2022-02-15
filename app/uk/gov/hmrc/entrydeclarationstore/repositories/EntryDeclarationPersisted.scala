@@ -16,8 +16,10 @@
 
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
+import java.time.Instant
+import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats.Implicits._
 import play.api.libs.json.{Format, JsValue, Json}
-import uk.gov.hmrc.entrydeclarationstore.models.{EisSubmissionState, EntryDeclarationModel, InstantFormatter}
+import uk.gov.hmrc.entrydeclarationstore.models.{EisSubmissionState, EntryDeclarationModel}
 
 import scala.concurrent.duration._
 
@@ -25,11 +27,11 @@ private[repositories] case class EntryDeclarationPersisted(
   submissionId: String,
   eori: String,
   correlationId: String,
-  housekeepingAt: PersistableDateTime,
+  housekeepingAt: Instant,
   payload: JsValue,
   mrn: Option[String],
-  receivedDateTime: PersistableDateTime,
-  eisSubmissionDateTime: Option[PersistableDateTime],
+  receivedDateTime: Instant,
+  eisSubmissionDateTime: Option[Instant],
   eisSubmissionState: EisSubmissionState
 ) {
   def toEntryDeclarationModel: EntryDeclarationModel =
@@ -39,19 +41,20 @@ private[repositories] case class EntryDeclarationPersisted(
       correlationId         = correlationId,
       payload               = payload,
       mrn                   = mrn,
-      receivedDateTime      = receivedDateTime.toInstant,
-      eisSubmissionDateTime = eisSubmissionDateTime.map(_.toInstant),
+      receivedDateTime      = receivedDateTime,
+      eisSubmissionDateTime = eisSubmissionDateTime,
       eisSubmissionState    = eisSubmissionState
     )
 }
 
-private[repositories] object EntryDeclarationPersisted extends InstantFormatter {
+private[repositories] object EntryDeclarationPersisted {
+  import EisSubmissionState.jsonFormat
   implicit val format: Format[EntryDeclarationPersisted] = Json.format[EntryDeclarationPersisted]
 
   def from(entryDeclarationModel: EntryDeclarationModel, defaultTtl: FiniteDuration): EntryDeclarationPersisted = {
     import entryDeclarationModel._
 
-    val housekeepingAt = PersistableDateTime(receivedDateTime.toEpochMilli + defaultTtl.toMillis)
+    val housekeepingAt = receivedDateTime.plusMillis(defaultTtl.toMillis)
 
     EntryDeclarationPersisted(
       submissionId          = submissionId,
@@ -60,8 +63,8 @@ private[repositories] object EntryDeclarationPersisted extends InstantFormatter 
       housekeepingAt        = housekeepingAt,
       payload               = payload,
       mrn                   = mrn,
-      receivedDateTime      = PersistableDateTime(receivedDateTime),
-      eisSubmissionDateTime = eisSubmissionDateTime.map(PersistableDateTime(_)),
+      receivedDateTime      = receivedDateTime,
+      eisSubmissionDateTime = eisSubmissionDateTime,
       eisSubmissionState    = eisSubmissionState
     )
   }

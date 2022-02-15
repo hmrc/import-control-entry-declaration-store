@@ -26,5 +26,6 @@ case class TrafficSwitchStatus(
                                 lastTrafficStarted: Option[Instant])
 
 object TrafficSwitchStatus {
+  import TrafficSwitchState.formats
   implicit val format: Format[TrafficSwitchStatus] = Json.format[TrafficSwitchStatus]
 }

@@ -25,7 +25,6 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits, Injecting}
 import play.api.{Application, Environment, Mode}
-import reactivemongo.core.errors.DatabaseException
 import uk.gov.hmrc.entrydeclarationstore.models.ReplayState
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -46,7 +45,7 @@ class ReplayStateRepoISpec
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    await(repository.removeAll())
+    await(repository.removeAll)
   }
   val replayId = "replayId"
 
@@ -64,7 +63,7 @@ class ReplayStateRepoISpec
         await(repository.insert(replayId, totalToReplay, startTime))
       }
       "fail if the replayId exists" in {
-        intercept[DatabaseException] {
+        intercept[Exception] {
           await(repository.insert(replayId, totalToReplay, startTime))
         }
       }
@@ -136,14 +135,14 @@ class ReplayStateRepoISpec
     "looking up the latest replay" when {
       "no replay states exist" must {
         "return None" in {
-          await(repository.removeAll())
+          await(repository.removeAll)
           await(repository.lookupIdOfLatest) shouldBe None
         }
       }
 
       "an incomplete replay state exists" must {
         "return it" in {
-          await(repository.removeAll())
+          await(repository.removeAll)
           await(repository.insert(replayId, totalToReplay, startTime))
           await(repository.lookupIdOfLatest) shouldBe Some(replayId)
         }
@@ -151,7 +150,7 @@ class ReplayStateRepoISpec
 
       "multiple replay states exist" must {
         "return the one with the latest start date" in {
-          await(repository.removeAll())
+          await(repository.removeAll)
           val num = 10
 
           val idsAndStarts = Random.shuffle((1 to num).map(i => (s"replayId-$i", startTime.plusSeconds(i))))
@@ -164,7 +163,7 @@ class ReplayStateRepoISpec
       }
 
       "return any if multiple have same start date" in {
-        await(repository.removeAll())
+        await(repository.removeAll)
 
         val replayId1 = "replayId-1"
         val replayId2 = "replayId-2"

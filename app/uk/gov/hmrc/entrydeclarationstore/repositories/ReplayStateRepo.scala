@@ -16,16 +16,16 @@
 
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
-import play.api.libs.json.{JsObject, Json}
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.indexes.Index
-import reactivemongo.api.indexes.IndexType.Ascending
-import reactivemongo.api.{ReadPreference, WriteConcern}
-import reactivemongo.bson.BSONObjectID
-import reactivemongo.play.json.ImplicitBSONHandlers._
+import uk.gov.hmrc.mongo.play.json.formats.MongoFormats
+import org.mongodb.scala._
+import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.model.Sorts._
+import org.mongodb.scala.model.Updates._
+import org.mongodb.scala.model._
+import uk.gov.hmrc.mongo._
+import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
+
 import uk.gov.hmrc.entrydeclarationstore.models.ReplayState
-import uk.gov.hmrc.mongo.ReactiveRepository
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import uk.gov.hmrc.play.http.logging.Mdc
 
 import java.time.Instant
@@ -34,86 +34,102 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait ReplayStateRepo {
   def lookupState(replayId: String): Future[Option[ReplayState]]
-
   def lookupIdOfLatest: Future[Option[String]]
-
   def setState(replayId: String, replayState: ReplayState): Future[Unit]
-
   def insert(replayId: String, totalToReplay: Int, startTime: Instant): Future[Unit]
-
   def incrementCounts(replayId: String, successesToAdd: Int, failuresToAdd: Int): Future[Boolean]
-
   def setCompleted(replayId: String, endTime: Instant): Future[Boolean]
 }
 
 @Singleton
 class ReplayStateRepoImpl @Inject()(
-  implicit mongo: ReactiveMongoComponent,
+  implicit mongo: MongoComponent,
   ec: ExecutionContext
-) extends ReactiveRepository[ReplayStatePersisted, BSONObjectID](
-      "replayState",
-      mongo.mongoConnector.db,
-      ReplayStatePersisted.format,
-      ReactiveMongoFormats.objectIdFormats)
+) extends PlayMongoRepository[ReplayStatePersisted](
+  collectionName = "replayState",
+  mongoComponent = mongo,
+  domainFormat = ReplayStatePersisted.format,
+  indexes = Seq(IndexModel(ascending("replayId"),
+                           IndexOptions()
+                            .name("replayIdIndex")
+                            .unique(true))),
+  extraCodecs = Seq(Codecs.playFormatCodec(MongoFormats.objectIdFormat)),
+  replaceIndexes = true)
     with ReplayStateRepo {
 
-  override def indexes: Seq[Index] =
-    Seq(Index(Seq(("replayId", Ascending)), name = Some("replayIdIndex"), unique = true))
+  //
+  // Test support FNs
+  //
+  def removeAll(): Future[Unit] =
+    collection
+      .deleteMany(exists("_id"))
+      .toFutureOption
+      .map( _ => ())
 
   override def lookupState(replayId: String): Future[Option[ReplayState]] =
     Mdc
       .preservingMdc(
         collection
-          .find(Json.obj("replayId" -> replayId), Option.empty[JsObject])
-          .one[ReplayStatePersisted](ReadPreference.primaryPreferred))
+          .withReadPreference(ReadPreference.primaryPreferred)
+          .find(equal("replayId", replayId))
+          .headOption
+      )
       .map(_.map(_.toDomain))
 
   override def lookupIdOfLatest: Future[Option[String]] =
     Mdc
       .preservingMdc(
         collection
-          .find(JsObject.empty, Some(Json.obj("replayId" -> 1)))
-          .sort(Json.obj("startTime" -> -1))
-          .one[JsObject](ReadPreference.primaryPreferred))
-      .map(_.map(doc => (doc \ "replayId").as[String]))
+          .withReadPreference(ReadPreference.primaryPreferred())
+          .find()
+          .sort(descending("startTime"))
+          .headOption
+      )
+      .map{
+        case Some(id) => Some(id.replayId)
+        case _ => None
+      }
 
   override def setState(replayId: String, replayState: ReplayState): Future[Unit] =
     Mdc
       .preservingMdc(
         collection
-          .update(ordered = false, WriteConcern.Default)
-          .one(
-            q      = Json.obj("replayId" -> replayId),
-            u      = Json.toJson(ReplayStatePersisted.fromDomain(replayId, replayState)).as[JsObject],
-            upsert = true
-          ))
+          .findOneAndReplace(equal("replayId", replayId),
+                             ReplayStatePersisted.fromDomain(replayId, replayState),
+                             FindOneAndReplaceOptions().upsert(true))
+          .headOption
+      )
       .map(_ => ())
 
   override def insert(replayId: String, totalToReplay: Int, startTime: Instant): Future[Unit] =
     Mdc
-      .preservingMdc(insert(ReplayStatePersisted(replayId, PersistableDateTime(startTime), totalToReplay)))
+      .preservingMdc(
+        collection
+          .insertOne(ReplayStatePersisted(replayId, startTime, totalToReplay))
+          .toFutureOption
+      )
       .map(_ => ())
 
   override def incrementCounts(replayId: String, successesToAdd: Int, failuresToAdd: Int): Future[Boolean] =
     Mdc
       .preservingMdc(
         collection
-          .update(ordered = false, WriteConcern.Default)
-          .one(
-            Json.obj("replayId" -> replayId),
-            Json.obj("$inc"     -> Json.obj("successCount" -> successesToAdd, "failureCount" -> failuresToAdd))
-          ))
-      .map(result => result.nModified > 0)
+          .updateOne(equal("replayId", replayId),
+                     combine(inc("successCount", successesToAdd),
+                             inc("failureCount", failuresToAdd)))
+          .toFutureOption
+      )
+      .map{
+        result => result.map(_.getModifiedCount > 0).getOrElse(false)
+      }
 
   override def setCompleted(replayId: String, endTime: Instant): Future[Boolean] =
     Mdc
       .preservingMdc(
         collection
-          .update(ordered = false, WriteConcern.Default)
-          .one(
-            Json.obj("replayId" -> replayId),
-            Json.obj("$set"     -> Json.obj("completed" -> true, "endTime" -> PersistableDateTime(endTime)))
-          )
+          .updateOne(equal("replayId", replayId),
+                    combine(set("completed", true), set("endTime", endTime)))
+          .headOption
       )
-      .map(result => result.nModified > 0)
+      .map(_.map(_.getModifiedCount > 0).getOrElse(false))
 }

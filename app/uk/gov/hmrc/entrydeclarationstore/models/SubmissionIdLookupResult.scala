@@ -16,7 +16,9 @@
 
 package uk.gov.hmrc.entrydeclarationstore.models
 
+import java.time.Instant
 import play.api.libs.json.{Format, Json}
+import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats.Implicits._
 
 case class SubmissionIdLookupResult(
   receivedDateTime: String,
@@ -26,5 +28,20 @@ case class SubmissionIdLookupResult(
   eisSubmissionState: EisSubmissionState)
 
 object SubmissionIdLookupResult {
+  import EisSubmissionState.jsonFormat
   implicit val formats: Format[SubmissionIdLookupResult] = Json.format[SubmissionIdLookupResult]
+}
+
+case class SubmissionIdQueryResult(
+  receivedDateTime: Instant,
+  housekeepingAt: Instant,
+  submissionId: String,
+  eisSubmissionDateTime: Option[Instant],
+  eisSubmissionState: EisSubmissionState
+)
+
+object SubmissionIdQueryResult {
+
+  import EisSubmissionState.jsonFormat
+  implicit val formats: Format[SubmissionIdQueryResult] = Json.format[SubmissionIdQueryResult]
 }

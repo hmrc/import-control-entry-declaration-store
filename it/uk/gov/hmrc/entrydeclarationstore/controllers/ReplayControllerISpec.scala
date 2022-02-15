@@ -41,8 +41,6 @@ import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.{EisSubmissionState, EntryDeclarationModel, ReplayState}
 import uk.gov.hmrc.entrydeclarationstore.repositories.EntryDeclarationRepoImpl
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
 class ReplayControllerISpec
     extends AnyWordSpec
     with BeforeAndAfterAll
@@ -79,7 +77,7 @@ class ReplayControllerISpec
     wireMockServer.stop()
 
   override def beforeEach(): Unit = {
-    await(entryDeclarationRepo.removeAll())
+    await(entryDeclarationRepo.removeAll)
     wireMockServer.resetAll()
   }
 
@@ -176,7 +174,6 @@ class ReplayControllerISpec
     val numToReplay = numDeclarations min limit.getOrElse(Int.MaxValue)
 
     val submissionIds = (1 to numDeclarations).map(_ => createEntryDeclarationInError())
-
     await(entryDeclarationRepo.totalUndeliveredMessages(Instant.now)) shouldBe numDeclarations
 
     submissionIds.foreach(id => willSubmitMetadataToEis(id, ACCEPTED))
@@ -186,7 +183,9 @@ class ReplayControllerISpec
     totalToReplay(replayId) shouldBe numToReplay
 
     eventually {
-      await(entryDeclarationRepo.totalUndeliveredMessages(Instant.now)) shouldBe numDeclarations - numToReplay
+      val res = await(entryDeclarationRepo.totalUndeliveredMessages(Instant.now))
+
+      res shouldBe numDeclarations - numToReplay
 
       val replayState = getReplayState(replayId)
 

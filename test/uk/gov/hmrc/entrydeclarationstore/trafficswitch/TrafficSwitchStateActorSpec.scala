@@ -20,7 +20,6 @@ import akka.actor.{ActorRef, ActorSystem, PoisonPill}
 import akka.testkit.{TestKit, TestProbe}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.wordspec.AnyWordSpecLike
-import reactivemongo.core.errors.GenericDatabaseException
 import uk.gov.hmrc.entrydeclarationstore.models.TrafficSwitchState
 import uk.gov.hmrc.entrydeclarationstore.services.MockTrafficSwitchService
 
@@ -40,7 +39,7 @@ class TrafficSwitchStateActorSpec
   val config: TrafficSwitchConfig =
     TrafficSwitchConfig(5, 10.seconds, notFlowingStateRefreshPeriod = 1.minute, flowingStateRefreshPeriod = 1.minute)
 
-  val dbException: GenericDatabaseException = new GenericDatabaseException("abc", None) with NoStackTrace
+  val dbException: Exception = new Exception("abc") with NoStackTrace
 
   // Used to avoid mocks getting called after a test has finished...
   def stop(actorRef: ActorRef): Unit = {
