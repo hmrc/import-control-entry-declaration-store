@@ -628,11 +628,6 @@ class EntryDeclarationRepoISpec
 
       "allow geting total counts of submissionIds by transport mode where multiple transport modes" in new Scenario {
         await(repository.updateModeOfTransport(errorDeclarationIdsNewestFirst.head, "10"))
-            // .update(ordered = false)
-            // .one(
-            //   q = Json.obj("submissionId" -> errorDeclarationIdsNewestFirst.head),
-            //   u = Json.obj("$set"         -> Json.obj("payload.itinerary.modeOfTransportAtBorder" -> "10"))
-            // ))
 
         val result: UndeliveredCounts = await(repository.getUndeliveredCounts)
 
