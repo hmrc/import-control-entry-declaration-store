@@ -83,7 +83,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
                             .background(true)),
                 IndexModel(ascending("eisSubmissionState", "receivedDateTime"),
                            IndexOptions()
-                            .partialFilterExpression(equal("eisSubmissionState", EisSubmissionState.mongoFormatString(EisSubmissionState.Error)))),
+                            .partialFilterExpression(equal("eisSubmissionState", EisSubmissionState.mongoFormatString(EisSubmissionState.Error))))
                 ),
   extraCodecs = Seq(Codecs.playFormatCodec(MongoFormats.objectIdFormat),
                     Codecs.playFormatCodec(EisSubmissionState.jsonFormat)),
@@ -325,7 +325,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
           .toFutureOption
           .map(_.map(_.getDeletedCount).getOrElse(0))
           .recover{
-            case e =>
+            case _ =>
               logger.error(s"Failed to bulkWrite of deletions $deletions")
               0
           }
