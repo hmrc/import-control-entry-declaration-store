@@ -21,12 +21,13 @@ import com.google.inject.{AbstractModule, Provides}
 import play.api.libs.json.Json
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EisConnector, EisConnectorImpl}
-import uk.gov.hmrc.entrydeclarationstore.housekeeping.{Housekeeper, HousekeepingScheduler, SubmissionReplayer, ReplayScheduler}
+import uk.gov.hmrc.entrydeclarationstore.autoreplay.{AutoReplayer, AutoReplayScheduler}
+import uk.gov.hmrc.entrydeclarationstore.housekeeping.{Housekeeper, HousekeepingScheduler}
 import uk.gov.hmrc.entrydeclarationstore.nrs.{NRSConnector, NRSConnectorImpl}
 import uk.gov.hmrc.entrydeclarationstore.orchestrators.{ReplayLock, ReplayLockImpl}
 import uk.gov.hmrc.entrydeclarationstore.reporting.events.{EventConnector, EventConnectorImpl}
 import uk.gov.hmrc.entrydeclarationstore.repositories._
-import uk.gov.hmrc.entrydeclarationstore.services.{EntryDeclarationStore, EntryDeclarationStoreImpl, HousekeepingService, ScheduledReplayService}
+import uk.gov.hmrc.entrydeclarationstore.services.{EntryDeclarationStore, EntryDeclarationStoreImpl, HousekeepingService, AutoReplayService}
 import uk.gov.hmrc.entrydeclarationstore.trafficswitch.{TrafficSwitchActor, TrafficSwitchConfig}
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
 import uk.gov.hmrc.entrydeclarationstore.validation.business.{Rule, RuleValidator, RuleValidatorImpl}
@@ -42,11 +43,12 @@ class DIModule extends AbstractModule {
     bind(classOf[EntryDeclarationRepo]).to(classOf[EntryDeclarationRepoImpl])
     bind(classOf[HousekeepingScheduler]).asEagerSingleton()
     bind(classOf[HousekeepingRepo]).to(classOf[HousekeepingRepoImpl])
+    bind(classOf[AutoReplayRepository]).to(classOf[AutoReplayRepositoryImpl])
     bind(classOf[Housekeeper]).to(classOf[HousekeepingService])
     bind(classOf[TrafficSwitchRepo]).to(classOf[TrafficSwitchRepoImpl])
     bind(classOf[ReplayStateRepo]).to(classOf[ReplayStateRepoImpl])
-    bind(classOf[ReplayScheduler]).asEagerSingleton()
-    bind(classOf[SubmissionReplayer]).to(classOf[ScheduledReplayService])
+    bind(classOf[AutoReplayScheduler]).asEagerSingleton()
+    bind(classOf[AutoReplayer]).to(classOf[AutoReplayService])
     bind(classOf[AppConfig]).to(classOf[AppConfigImpl]).asEagerSingleton()
     bind(classOf[EntryDeclarationStore]).to(classOf[EntryDeclarationStoreImpl])
     bind(classOf[ValidationHandler]).to(classOf[ValidationHandlerImpl])

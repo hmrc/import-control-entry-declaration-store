@@ -14,10 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.entrydeclarationstore.housekeeping
+package uk.gov.hmrc.entrydeclarationstore.services
+
+import org.scalamock.handlers.CallHandler
+import org.scalamock.scalatest.MockFactory
+import uk.gov.hmrc.entrydeclarationstore.models.AutoReplayStatus
 
 import scala.concurrent.Future
 
-trait SubmissionReplayer {
-  def replay(): Future[Boolean]
+trait MockAutoReplayService extends MockFactory {
+  val mockAutoReplayService: AutoReplayService = mock[AutoReplayService]
+
+  object MockAutoReplayService {
+    def setStatus(value: AutoReplayStatus): CallHandler[Future[Unit]] =
+      mockAutoReplayService.setStatus _ expects value
+
+    def getStatus: CallHandler[Future[AutoReplayStatus]] =
+      mockAutoReplayService.getStatus _ expects ()
+  }
 }

@@ -1,0 +1,42 @@
+/*
+ * Copyright 2022 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.gov.hmrc.entrydeclarationstore.services
+
+import uk.gov.hmrc.entrydeclarationstore.models.AutoReplayStatus
+import uk.gov.hmrc.entrydeclarationstore.repositories.AutoReplayRepository
+import uk.gov.hmrc.entrydeclarationstore.autoreplay.AutoReplayer
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+import play.api.Logging
+
+@Singleton
+class AutoReplayService @Inject()(repository: AutoReplayRepository)(implicit ec: ExecutionContext) extends AutoReplayer with Logging {
+
+  def replay(): Future[Boolean] = getStatus().map{
+      case AutoReplayStatus.On =>
+        // TODO
+        logger.info(s"Undelivered submission auto replay service running")
+        // TODO
+        true
+      case _ =>
+        logger.info(s"Undelivered submission auto replay switched off")
+        false
+    }
+
+  def setStatus(status: AutoReplayStatus): Future[Unit] = repository.setAutoReplayStatus(status)
+  def getStatus(): Future[AutoReplayStatus] = repository.getAutoReplayStatus()
+}

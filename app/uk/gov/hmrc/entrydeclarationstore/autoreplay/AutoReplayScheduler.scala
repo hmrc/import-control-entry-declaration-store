@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.entrydeclarationstore.housekeeping
+package uk.gov.hmrc.entrydeclarationstore.autoreplay
 
 import akka.actor.Scheduler
 import java.util.concurrent.TimeUnit
@@ -28,26 +28,23 @@ import scala.concurrent.ExecutionContext
 import scala.util.Failure
 
 @Singleton
-class ReplayScheduler @Inject()(
+class AutoReplayScheduler @Inject()(
   scheduler: Scheduler,
-  replayer: SubmissionReplayer,
+  replayer: AutoReplayer,
   lockProvider: LockRepositoryProvider,
   appConfig: AppConfig
 )(implicit ec: ExecutionContext) extends Logging {
 
   private val exclusiveTimePeriodLock: TimePeriodLockService =
     TimePeriodLockService(lockProvider.lockRepository,
-                          lockId = "scheduled_replay_lock",
-                          ttl = Duration(appConfig.scheduledReplayLockDuration .toMillis, TimeUnit.MILLISECONDS))
+                          lockId = "auto_replay_lock",
+                          ttl = Duration(appConfig.autoReplayLockDuration .toMillis, TimeUnit.MILLISECONDS))
 
-  scheduler.scheduleWithFixedDelay(appConfig.scheduledReplayRunInterval, appConfig.scheduledReplayRunInterval) {
-    () =>
-    exclusiveTimePeriodLock
-      .withRenewedLock {
-        replayer.replay()
-      }
+  scheduler.scheduleWithFixedDelay(appConfig.autoReplayRunInterval, appConfig.autoReplayRunInterval) {
+    () => exclusiveTimePeriodLock
+      .withRenewedLock(replayer.replay())
       .andThen {
-        case Failure(e) => logger.error("Failed replay scheduling", e)
+        case Failure(e) => logger.error("Failed auto-replay scheduling", e)
       }
   }
 }
