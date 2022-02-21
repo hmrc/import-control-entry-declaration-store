@@ -2,7 +2,7 @@ import play.core.PlayVersion.current
 import sbt._
 
 object AppDependencies {
-  val bootstrapVersion = "5.19.0"
+  val bootstrapVersion = "5.20.0"
 
   val compile: Seq[ModuleID] = Seq(
     "com.github.java-json-tools"   %  "json-schema-validator"     % "2.2.14",
@@ -12,7 +12,7 @@ object AppDependencies {
     "org.scala-lang.modules"       %% "scala-xml"                 % "2.0.1",
     "com.lucidchart"               %% "xtract"                    % "2.2.1",
     "org.codehaus.groovy"          %  "groovy-all"                % "3.0.9",
-    "com.chuusai"                  %% "shapeless"                 % "2.3.7",
+    "com.chuusai"                  %% "shapeless"                 % "2.3.8",
     "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.13.1"
   )
 
