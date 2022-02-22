@@ -21,6 +21,7 @@ import com.google.inject.{AbstractModule, Provides}
 import play.api.libs.json.Json
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EisConnector, EisConnectorImpl}
+import uk.gov.hmrc.entrydeclarationstore.autoreplay.{AutoReplayer, AutoReplayScheduler}
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.{Housekeeper, HousekeepingScheduler}
 import uk.gov.hmrc.entrydeclarationstore.nrs.{NRSConnector, NRSConnectorImpl}
 import uk.gov.hmrc.entrydeclarationstore.orchestrators.{ReplayLock, ReplayLockImpl}

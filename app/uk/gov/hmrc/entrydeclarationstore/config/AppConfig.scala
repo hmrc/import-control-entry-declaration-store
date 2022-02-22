@@ -98,6 +98,11 @@ trait AppConfig {
   def replayBatchSize: Int
 
   def replayLockDuration: FiniteDuration
+
+  def autoReplayLockDuration: FiniteDuration
+  def autoReplayRunInterval: FiniteDuration
+  def autoReplayLimit: Int
+  def autoReplayBatchSize: Int
 }
 
 @Singleton
@@ -206,6 +211,11 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
   lazy val replayBatchSize: Int = config.getOptional[Int]("replay.batchSize").getOrElse(10)
 
   lazy val replayLockDuration: FiniteDuration = getFiniteDuration(config, "replay.lockDuration")
+
+  lazy val autoReplayLockDuration: FiniteDuration = getFiniteDuration(config, "auto-replay.lockDuration")
+  lazy val autoReplayRunInterval: FiniteDuration = getFiniteDuration(config, "auto-replay.runInterval")
+  lazy val autoReplayLimit: Int = config.get[Int]("auto-replay.limit")
+  lazy val autoReplayBatchSize: Int = config.get[Int]("auto-replay.batchSize")
 
   private def fibonacciRetryDelays(conf: Configuration): List[FiniteDuration] =
     Retrying.fibonacciDelays(getFiniteDuration(conf, "initialDelay"), conf.get[Int]("numberOfRetries"))
