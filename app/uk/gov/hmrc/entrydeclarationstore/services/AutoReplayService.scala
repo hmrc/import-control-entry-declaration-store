@@ -18,13 +18,18 @@ package uk.gov.hmrc.entrydeclarationstore.services
 
 import uk.gov.hmrc.entrydeclarationstore.models.AutoReplayStatus
 import uk.gov.hmrc.entrydeclarationstore.repositories.AutoReplayRepository
+import uk.gov.hmrc.entrydeclarationstore.autoreplay.AutoReplayer
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
 @Singleton
-class AutoReplayService @Inject()(repository: AutoReplayRepository) {
+class AutoReplayService @Inject()(repository: AutoReplayRepository) extends AutoReplayer {
 
   def start(): Future[Unit] = repository.startAutoReplay()
   def stop(): Future[Unit] = repository.stopAutoReplay()
   def getStatus(): Future[AutoReplayStatus] = repository.getAutoReplayStatus()
+
+  def replay(): Future[Boolean] = {
+    Future.successful(false)
+  }
 }
