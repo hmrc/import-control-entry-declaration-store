@@ -22,15 +22,23 @@ import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.models.AutoReplayStatus
 import uk.gov.hmrc.entrydeclarationstore.repositories.MockAutoReplayRepository
+import uk.gov.hmrc.entrydeclarationstore.orchestrators.MockReplayOrchestrator
 import scala.concurrent.Future
+import java.time._
+import uk.gov.hmrc.entrydeclarationstore.repositories.MockEntryDeclarationRepo
 
 class AutoReplayServiceSpec
     extends AnyWordSpec
     with MockAppConfig
     with MockAutoReplayRepository
+    with MockEntryDeclarationRepo
+    with MockReplayOrchestrator
     with ScalaFutures {
 
-  val service = new AutoReplayService(mockAutoReplayRepository)
+  val now: Instant = Instant.now
+  val clock: Clock = Clock.fixed(now, ZoneOffset.UTC)
+
+  val service = new AutoReplayService(mockReplayOrchestrator, mockAutoReplayRepository, mockEntryDeclarationRepo, clock)
 
   "AutoReplayService" when {
     "getting autoReplay status" must {
