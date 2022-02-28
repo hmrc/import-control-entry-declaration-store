@@ -50,7 +50,7 @@ class AutoReplayRepositoryISpec
           await(repository.startAutoReplay())
 
           await(repository.getAutoReplayStatus) shouldBe AutoReplayStatus.On
-          await(repository.collection.countDocuments.toFuture)                 shouldBe 0
+          await(repository.collection.countDocuments.toFuture)                 shouldBe 1
         }
       }
 
@@ -90,7 +90,7 @@ class AutoReplayRepositoryISpec
           await(repository.startAutoReplay())
 
           await(repository.getAutoReplayStatus) shouldBe AutoReplayStatus.On
-          await(repository.collection.countDocuments.toFuture)                 shouldBe 0
+          await(repository.collection.countDocuments.toFuture)                 shouldBe 1
         }
       }
     }
