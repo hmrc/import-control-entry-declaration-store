@@ -23,10 +23,11 @@ import uk.gov.hmrc.entrydeclarationstore.nrs.IdentityData
 import uk.gov.hmrc.entrydeclarationstore.reporting.audit.AuditEvent
 import uk.gov.hmrc.entrydeclarationstore.reporting.events.Event
 import uk.gov.hmrc.entrydeclarationstore.utils.Enums
-
 import java.time.Instant
 
-case class SubmissionHandledData(identityData: Option[IdentityData], eori: String, name: Option[Name], country: Option[String], enrolments: Option[Enrolments])
+import uk.gov.hmrc.entrydeclarationstore.models.json.Parties
+
+case class SubmissionHandledData(identityData: Option[IdentityData], eori: String, name: Option[Name], country: Option[String], enrolments: Option[Enrolments], parties: Option[Parties])
 
 object SubmissionHandledData {
   implicit val nameWrites: Writes[Name]              = Json.writes[Name]
@@ -66,12 +67,18 @@ object SubmissionHandled {
       case _ => JsObject.empty
     }
 
+    val optionalPartiesData = submissionHandledData.parties match {
+      case Some(data) => Json.toJson(data)
+      case _ => JsObject.empty
+    }
+
     initialObject ++ Json.obj(
       "eori" -> submissionHandledData.eori,
       "identityData" -> optionalIdentityData,
       "name" -> optionalNameData,
       "country" -> optionalCountryData,
-      "enrolments" -> optionalEnrolmentsData
+      "enrolments" -> optionalEnrolmentsData,
+      "parties" -> optionalPartiesData
     )
   }
 

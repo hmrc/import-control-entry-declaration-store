@@ -16,9 +16,12 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
+import java.time.{Clock, Instant}
+
 import cats.data.EitherT
 import cats.implicits._
 import com.kenshoo.play.metrics.Metrics
+import javax.inject.{Inject, Singleton}
 import play.api.Logging
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
@@ -32,8 +35,6 @@ import uk.gov.hmrc.entrydeclarationstore.utils._
 import uk.gov.hmrc.entrydeclarationstore.validation.ValidationHandler
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.{Clock, Instant}
-import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
@@ -45,14 +46,16 @@ trait EntryDeclarationStore {
     rawPayload: RawPayload,
     mrn: Option[String],
     receivedDateTime: Instant,
-    clientInfo: ClientInfo)(implicit hc: HeaderCarrier): Future[Either[ErrorWrapper[_], SuccessResponse]]
+    clientInfo: ClientInfo,
+    submissionId: String,
+    correlationId: String,
+    input: InputParameters)(implicit hc: HeaderCarrier): Future[Either[ErrorWrapper[_], SuccessResponse]]
 }
 
 @Singleton
 class EntryDeclarationStoreImpl @Inject()(
   entryDeclarationRepo: EntryDeclarationRepo,
   validationHandler: ValidationHandler,
-  idGenerator: IdGenerator,
   declarationToJsonConverter: DeclarationToJsonConverter,
   eisConnector: EisConnector,
   reportSender: ReportSender,
@@ -70,12 +73,11 @@ class EntryDeclarationStoreImpl @Inject()(
     rawPayload: RawPayload,
     mrn: Option[String],
     receivedDateTime: Instant,
-    clientInfo: ClientInfo)(implicit hc: HeaderCarrier): Future[Either[ErrorWrapper[_], SuccessResponse]] =
+    clientInfo: ClientInfo,
+    submissionId: String,
+    correlationId: String,
+    input: InputParameters)(implicit hc: HeaderCarrier): Future[Either[ErrorWrapper[_], SuccessResponse]] =
     timeFuture("Service handleSubmission", "handleSubmission.total") {
-
-      val correlationId          = idGenerator.generateCorrelationId
-      val submissionId           = idGenerator.generateSubmissionId
-      val input: InputParameters = InputParameters(mrn, submissionId, correlationId, receivedDateTime)
 
       implicit val lc: LoggingContext =
         LoggingContext

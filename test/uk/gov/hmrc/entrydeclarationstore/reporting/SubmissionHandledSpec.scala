@@ -21,8 +21,10 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.entrydeclarationstore.nrs.NRSMetadataTestData
 import uk.gov.hmrc.entrydeclarationstore.utils.SubmissionUtils
-
 import java.time.Instant
+
+import uk.gov.hmrc.entrydeclarationstore.models.MessageType
+import uk.gov.hmrc.entrydeclarationstore.models.json.{EntrySummaryDeclaration, Goods, Itinerary, Metadata, OfficeOfFirstEntry, Parties, Trader}
 
 class SubmissionHandledSpec extends AnyWordSpec with NRSMetadataTestData {
 
@@ -30,6 +32,16 @@ class SubmissionHandledSpec extends AnyWordSpec with NRSMetadataTestData {
   val eori                   = "GB1234567890"
 
   val failureType: FailureType = FailureType.MRNMismatchError
+  val entrySummaryDeclaration = EntrySummaryDeclaration(
+    "submissionId",
+    None,
+    Metadata("", "", "", MessageType.IE315, "", "", ""),
+    None,
+    Parties(None, None, Trader(None, None,None, None), None, None, None),
+    Goods(1,None, None, None, None),
+    Itinerary("", None, None, None, None, None, None, OfficeOfFirstEntry("", ""), None),
+    None
+  )
 
   def checkEvents(
     submissionHandled: SubmissionHandled,
@@ -52,7 +64,7 @@ class SubmissionHandledSpec extends AnyWordSpec with NRSMetadataTestData {
   }
 
   "SubmissionHandled" when {
-    val handledDetails = SubmissionUtils.extractSubmissionHandledDetails(eori, Some(identityData))
+    val handledDetails = SubmissionUtils.extractSubmissionHandledDetails(eori, Some(identityData), Right(entrySummaryDeclaration))
 
     "Success(true)" must {
       checkEvents(SubmissionHandled.Success(true, handledDetails), "SuccessfulAmendment", "Successful amendment", SubmissionHandled.createAuditObject(handledDetails))

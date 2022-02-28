@@ -21,8 +21,10 @@ import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, RawPayload, SuccessResponse}
 import uk.gov.hmrc.entrydeclarationstore.reporting.ClientInfo
 import uk.gov.hmrc.http.HeaderCarrier
-
 import java.time.Instant
+
+import uk.gov.hmrc.entrydeclarationstore.models.json.InputParameters
+
 import scala.concurrent.Future
 
 trait MockEntryDeclarationStore extends MockFactory {
@@ -34,10 +36,13 @@ trait MockEntryDeclarationStore extends MockFactory {
       rawPayload: RawPayload,
       mrn: Option[String],
       receivedDateTime: Instant,
-      clientInfo: ClientInfo): CallHandler[Future[Either[ErrorWrapper[_], SuccessResponse]]] =
+      clientInfo: ClientInfo,
+      submissionId: String,
+      correlationId: String,
+      input: InputParameters): CallHandler[Future[Either[ErrorWrapper[_], SuccessResponse]]] =
       (mockEntryDeclarationStore
-        .handleSubmission(_: String, _: RawPayload, _: Option[String], _: Instant, _: ClientInfo)(_: HeaderCarrier))
-        .expects(eori, rawPayload, mrn, receivedDateTime, clientInfo, *)
+        .handleSubmission(_: String, _: RawPayload, _: Option[String], _: Instant, _: ClientInfo, _: String, _: String, _ : InputParameters)(_: HeaderCarrier))
+        .expects(eori, rawPayload, mrn, receivedDateTime, clientInfo, submissionId, correlationId,  input, *)
   }
 
 }

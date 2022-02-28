@@ -29,7 +29,7 @@ import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, MockEisConnector}
 import uk.gov.hmrc.entrydeclarationstore.models._
-import uk.gov.hmrc.entrydeclarationstore.models.json.MockDeclarationToJsonConverter
+import uk.gov.hmrc.entrydeclarationstore.models.json.{InputParameters, MockDeclarationToJsonConverter}
 import uk.gov.hmrc.entrydeclarationstore.reporting._
 import uk.gov.hmrc.entrydeclarationstore.repositories.MockEntryDeclarationRepo
 import uk.gov.hmrc.entrydeclarationstore.utils.{MockIdGenerator, MockMetrics, XmlFormatConfig}
@@ -63,13 +63,11 @@ class EntryDeclarationStoreSpec
   implicit val xmlFormatConfig: XmlFormatConfig = XmlFormatConfig(responseMaxErrors = 100)
 
   val receivedDateTime: Instant = Instant.now
-  val now: Instant              = receivedDateTime.plusSeconds(1)
-  val clock: Clock              = Clock.fixed(now, ZoneOffset.UTC)
+  val clock: Clock              = Clock.fixed(receivedDateTime, ZoneOffset.UTC)
 
   val entryDeclarationStore = new EntryDeclarationStoreImpl(
     mockEntryDeclarationRepo,
     mockValidationHandler,
-    mockIdGenerator,
     mockDeclarationToJsonConverter,
     mockEisConnector,
     mockReportSender,
@@ -84,9 +82,10 @@ class EntryDeclarationStoreSpec
   val transportMode               = "42"
   val jsonPayload: JsValue        = JsString("payload")
   val clientInfo: ClientInfo      = ClientInfo(ClientType.CSP, None, None)
-
   val correlationId = "correlationId"
+
   val submissionId  = "submissionId"
+  def inputParams(mrn: Option[String]) = InputParameters(mrn, submissionId, correlationId, clock.instant())
 
   val IE315payload: NodeSeq =
     <ie:CC315A>
@@ -143,40 +142,38 @@ class EntryDeclarationStoreSpec
     val messageType: MessageType = MessageType.IE313,
     val mrn: Option[String]      = movementRefNo) {
     val payload: RawPayload = RawPayload(xmlPayload)
-    MockIdGenerator.generateCorrelationId returns correlationId
-    MockIdGenerator.generateSubmissionId returns submissionId
 
     MockAppConfig.logSubmissionPayloads returns false
   }
 
-  def successfulSubmission(xmlPayload: NodeSeq, messageType: MessageType, mrn: Option[String]): Unit =
-    "return Right(SuccessResponse)" in new Test(xmlPayload, messageType, mrn) {
+  def successfulSubmission(xmlPayload: NodeSeq, messageType: MessageType, movementRef: Option[String]): Unit =
+    "return Right(SuccessResponse)" in new Test(xmlPayload, messageType, movementRef) {
       MockAppConfig.validateXMLtoJsonTransformation.returns(false)
-      MockValidationHandler.handleValidation(payload, eori, mrn) returns Right(xmlPayload)
+      MockValidationHandler.handleValidation(payload, eori, movementRef) returns Right(xmlPayload)
       MockDeclarationToJsonConverter.convertToJson(xmlPayload).returns(Right(jsonPayload))
 
       MockEntryDeclarationRepo
-        .saveEntryDeclaration(declarationWith(mrn))
+        .saveEntryDeclaration(declarationWith(movementRef))
         .returns(Future.successful(true))
 
       MockReportSender
-        .sendReport(receivedDateTime, submissionReceivedReport(xmlPayload, messageType, mrn))
+        .sendReport(receivedDateTime, submissionReceivedReport(xmlPayload, messageType, movementRef))
         .returns(Future.successful(()))
       MockReportSender.sendReport(submissionSentToEISReport(messageType, None))
 
       MockEisConnector
-        .submitMetadata(metadataWith(messageType, mrn), bypassTrafficSwitch = false)
+        .submitMetadata(metadataWith(messageType, movementRef), bypassTrafficSwitch = false)
         .returns(Future.successful(None))
 
       // Called async so wait on promise to be sure it's called...
       val setEisSubmissionStateUpdated: Promise[Unit] = Promise[Unit]
-      MockEntryDeclarationRepo.setEisSubmissionSuccess(submissionId, now).onCall { _ =>
+      MockEntryDeclarationRepo.setEisSubmissionSuccess(submissionId, Instant.now(clock)).onCall { _ =>
         setEisSubmissionStateUpdated.success(())
         Future.successful(true)
       }
 
       entryDeclarationStore
-        .handleSubmission(eori, payload, mrn, receivedDateTime, clientInfo)
+        .handleSubmission(eori, payload, movementRef, receivedDateTime, clientInfo, submissionId, correlationId, inputParams(movementRef))
         .futureValue shouldBe Right(SuccessResponse(correlationId, submissionId))
 
       await(setEisSubmissionStateUpdated.future)
@@ -199,7 +196,7 @@ class EntryDeclarationStoreSpec
         MockValidationHandler.handleValidation(payload, eori, mrn) returns Left(errorWrapper)
 
         entryDeclarationStore
-          .handleSubmission(eori, payload, mrn, receivedDateTime, clientInfo)
+          .handleSubmission(eori, payload, mrn, receivedDateTime, clientInfo, submissionId, correlationId, inputParams(mrn))
           .futureValue shouldBe Left(errorWrapper)
       }
     }
@@ -214,7 +211,7 @@ class EntryDeclarationStoreSpec
           .saveEntryDeclaration(declarationWith(mrn))
           .returns(Future.successful(false))
 
-        entryDeclarationStore.handleSubmission(eori, payload, mrn, receivedDateTime, clientInfo).futureValue shouldBe
+        entryDeclarationStore.handleSubmission(eori, payload, mrn, receivedDateTime, clientInfo, submissionId, correlationId, inputParams(mrn)).futureValue shouldBe
           Left(ErrorWrapper(ServerError))
       }
     }
@@ -233,7 +230,7 @@ class EntryDeclarationStoreSpec
           .sendReport(receivedDateTime, submissionReceivedReport(xmlPayload, messageType, mrn))
           .returns(Future.failed(new IOException))
 
-        entryDeclarationStore.handleSubmission(eori, payload, mrn, receivedDateTime, clientInfo).futureValue shouldBe
+        entryDeclarationStore.handleSubmission(eori, payload, mrn, receivedDateTime, clientInfo, submissionId, correlationId, inputParams(mrn)).futureValue shouldBe
           Left(ErrorWrapper(ServerError))
       }
     }
@@ -267,7 +264,7 @@ class EntryDeclarationStoreSpec
           Future.successful(true)
         }
 
-        inside(entryDeclarationStore.handleSubmission(eori, payload, mrn, receivedDateTime, clientInfo).futureValue) {
+        inside(entryDeclarationStore.handleSubmission(eori, payload, mrn, receivedDateTime, clientInfo, submissionId, correlationId, inputParams(mrn)).futureValue) {
           case Right(response) => response shouldBe a[SuccessResponse]
         }
 
@@ -294,7 +291,7 @@ class EntryDeclarationStoreSpec
           .returns(Promise[Option[EISSendFailure]].future)
 
         entryDeclarationStore
-          .handleSubmission(eori, payload, mrn, receivedDateTime, clientInfo)
+          .handleSubmission(eori, payload, mrn, receivedDateTime, clientInfo, submissionId, correlationId, inputParams(mrn))
           .futureValue shouldBe Right(SuccessResponse(correlationId, submissionId))
       }
     }
@@ -326,7 +323,7 @@ class EntryDeclarationStoreSpec
         }
 
         entryDeclarationStore
-          .handleSubmission(eori, payload, mrn, receivedDateTime, clientInfo)
+          .handleSubmission(eori, payload, mrn, receivedDateTime, clientInfo, submissionId, correlationId, inputParams(mrn))
           .futureValue shouldBe Right(SuccessResponse(correlationId, submissionId))
 
         await(setEisSubmissionStateUpdated.future)
