@@ -37,6 +37,18 @@ class DeclarationToJsonConverter {
         Left(ErrorWrapper(ServerError))
     }
 
+  def convertToModel(xml: NodeSeq, inputParameters: InputParameters)(
+    implicit lc: LoggingContext): Either[ErrorWrapper[_], EntrySummaryDeclaration] =
+    XmlReader.of(EntrySummaryDeclaration.reader(inputParameters)).read(xml) match {
+      case ParseSuccess(entrySummaryDeclaration) => Right(entrySummaryDeclaration)
+      case ParseFailure(errors) =>
+        ContextLogger.error("Failed to convert to model " + errors)
+        Left(ErrorWrapper(ServerError))
+      case PartialParseSuccess(_, errors) =>
+        ContextLogger.error("Failed to convert to model (PartialParseSuccess) " + errors)
+        Left(ErrorWrapper(ServerError))
+    }
+
   def validateJson(entrySummaryDeclaration: JsValue)(implicit lc: LoggingContext): Boolean =
     JsonSchemaValidator.validateJSONAgainstSchema(entrySummaryDeclaration)
 }
