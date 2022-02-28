@@ -27,12 +27,14 @@ import uk.gov.hmrc.entrydeclarationstore.reporting.{FailureType, ReportSender, S
 import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, EntryDeclarationStore}
 import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils._
 import uk.gov.hmrc.entrydeclarationstore.utils.SubmissionUtils.extractSubmissionHandledDetails
-import uk.gov.hmrc.entrydeclarationstore.utils.Timer
-import uk.gov.hmrc.entrydeclarationstore.validation.{EORIMismatchError, MRNMismatchError, ValidationErrors}
+import uk.gov.hmrc.entrydeclarationstore.utils.{IdGenerator, Timer}
+import uk.gov.hmrc.entrydeclarationstore.validation.{EORIMismatchError, MRNMismatchError, ValidationErrors, ValidationHandler}
 import uk.gov.hmrc.http.HeaderCarrier
-
 import java.time.{Clock, Instant}
+
 import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.entrydeclarationstore.models.json.{DeclarationToJsonConverter, InputParameters}
+
 import scala.concurrent.ExecutionContext
 import scala.xml.Elem
 
@@ -40,6 +42,9 @@ import scala.xml.Elem
 class EntryDeclarationSubmissionController @Inject()(
   cc: ControllerComponents,
   service: EntryDeclarationStore,
+  idGenerator: IdGenerator,
+  validationHandler: ValidationHandler,
+  declarationToJsonConverter: DeclarationToJsonConverter,
   val authService: AuthService,
   nrsService: NRSService,
   reportSender: ReportSender,
@@ -74,9 +79,20 @@ class EntryDeclarationSubmissionController @Inject()(
       implicit val lc: LoggingContext = LoggingContext()
 
       val rawPayload = RawPayload(request.body, request.charset)
+      val correlationId          = idGenerator.generateCorrelationId
+      val submissionId           = idGenerator.generateSubmissionId
+      val input: InputParameters = InputParameters(mrn, submissionId, correlationId, receivedDateTime)
+
+      val xml = validationHandler.handleValidation(rawPayload, request.userDetails.eori, mrn)
+
+      val model = for {
+        xml <- xml
+        model <- declarationToJsonConverter.convertToModel(xml, input)
+      }
+        yield model
 
       service
-        .handleSubmission(request.userDetails.eori, rawPayload, mrn, receivedDateTime, request.userDetails.clientInfo)
+        .handleSubmission(request.userDetails.eori, rawPayload, mrn, receivedDateTime, request.userDetails.clientInfo, submissionId, correlationId, input)
         .map {
           case Left(failure) =>
             failure.error match {
@@ -85,28 +101,28 @@ class EntryDeclarationSubmissionController @Inject()(
                   SubmissionHandled.Failure(
                     mrn.isDefined,
                     FailureType.ValidationErrors,
-                    extractSubmissionHandledDetails(request.userDetails.eori, request.userDetails.identityData)
+                    extractSubmissionHandledDetails(request.userDetails.eori, request.userDetails.identityData, model)
                   ): SubmissionHandled)
                 BadRequest(failure.toXml)
               case MRNMismatchError =>
                 reportSender.sendReport(
                   SubmissionHandled.Failure(mrn.isDefined,
                     FailureType.MRNMismatchError,
-                    extractSubmissionHandledDetails(request.userDetails.eori, request.userDetails.identityData)
+                    extractSubmissionHandledDetails(request.userDetails.eori, request.userDetails.identityData, model)
                   ): SubmissionHandled)
                 BadRequest(failure.toXml)
               case EORIMismatchError =>
                 reportSender.sendReport(
                   SubmissionHandled.Failure(mrn.isDefined,
                     FailureType.EORIMismatchError,
-                    extractSubmissionHandledDetails(request.userDetails.eori, request.userDetails.identityData)
+                    extractSubmissionHandledDetails(request.userDetails.eori, request.userDetails.identityData, model)
                   ): SubmissionHandled)
                 Forbidden(failure.toXml)
               case _ =>
                 reportSender.sendReport(
                   SubmissionHandled.Failure(mrn.isDefined,
                     FailureType.InternalServerError,
-                    extractSubmissionHandledDetails(request.userDetails.eori, request.userDetails.identityData)
+                    extractSubmissionHandledDetails(request.userDetails.eori, request.userDetails.identityData, model)
                   ): SubmissionHandled)
                 InternalServerError(failure.toXml)
             }
@@ -115,7 +131,7 @@ class EntryDeclarationSubmissionController @Inject()(
             reportSender.sendReport(
               SubmissionHandled.Success(
                 mrn.isDefined,
-                extractSubmissionHandledDetails(request.userDetails.eori, request.userDetails.identityData)
+                extractSubmissionHandledDetails(request.userDetails.eori, request.userDetails.identityData, model)
               ): SubmissionHandled)
             Ok(xmlSuccessResponse(success.correlationId))
         }

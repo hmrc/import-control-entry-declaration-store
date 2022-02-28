@@ -31,5 +31,9 @@ trait MockDeclarationToJsonConverter extends MockFactory {
     def convertToJson(xml: NodeSeq): CallHandler[Either[ErrorWrapper[_], JsValue]] =
       (mockDeclarationToJsonConverter
         .convertToJson(_: NodeSeq, _: InputParameters)(_: LoggingContext)) expects (xml, *, *)
+
+    def convertToModel(xml: NodeSeq): CallHandler[Either[ErrorWrapper[_], EntrySummaryDeclaration]] =
+      (mockDeclarationToJsonConverter
+        .convertToModel(_: NodeSeq, _: InputParameters)(_: LoggingContext)) expects (xml, *, *)
   }
 }
