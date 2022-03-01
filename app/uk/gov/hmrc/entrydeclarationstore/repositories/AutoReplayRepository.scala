@@ -17,7 +17,6 @@
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
 import play.api.Logging
-import play.api.libs.json.{Format, Json}
 import java.time.Instant
 import org.mongodb.scala._
 import org.mongodb.scala.model.Filters._
@@ -27,23 +26,15 @@ import org.mongodb.scala.bson.conversions.Bson
 import uk.gov.hmrc.mongo._
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.play.http.logging.Mdc
-import uk.gov.hmrc.entrydeclarationstore.models.AutoReplayStatus
-import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats.Implicits._
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.entrydeclarationstore.models._
 
 trait AutoReplayRepository {
   def startAutoReplay(): Future[Unit]
   def stopAutoReplay(): Future[Unit]
-  def getAutoReplayStatus(): Future[AutoReplayStatus]
-  def setLastRepay(replayId: Option[String], when: Instant = Instant.now): Future[AutoReplayRepoStatus]
-}
-
-case class Replay(id: Option[String], when: Instant)
-case class AutoReplayRepoStatus(autoReplay: Boolean, lastReplay: Option[Replay])
-object AutoReplayRepoStatus {
-  implicit val resultsFormat: Format[Replay] = Json.format[Replay]
-  implicit val format: Format[AutoReplayRepoStatus] = Json.format[AutoReplayRepoStatus]
+  def getAutoReplayStatus(): Future[Option[AutoReplayRepoStatus]]
+  def setLastReplay(replayId: Option[String], when: Instant = Instant.now): Future[Option[AutoReplayRepoStatus]]
 }
 
 @Singleton
@@ -58,24 +49,31 @@ class AutoReplayRepositoryImpl @Inject()(
     )
     with AutoReplayRepository with Logging {
 
-  import AutoReplayStatus._
   private val singletonId = "2fe7847b-5922-455c-99fb-8bcce811c37"
 
-  def removeAll(): Future[Unit] = startAutoReplay() // Test support FN
+  def removeAll(): Future[Unit] =
+    collection
+      .deleteOne(equal("_id", singletonId))
+      .headOption()
+      .map( _ => ())
 
-  def getAutoReplayStatus(): Future[AutoReplayStatus] =
+  def getAutoReplayStatus(): Future[Option[AutoReplayRepoStatus]] =
     Mdc.preservingMdc(
       collection
         .find(equal("_id", singletonId))
         .headOption
         .map{
-          case Some(AutoReplayRepoStatus(true, _)) => On
-          case Some(AutoReplayRepoStatus(false, _)) => Off
-          case _ => On
+          case None => Some(AutoReplayRepoStatus(true, None))
+          case status => status
+        }
+        .recover{
+          case err =>
+            logger.error(s"Database error attempting to update details of last replay: $err")
+            None
         }
     )
 
-  def setLastRepay(replayId: Option[String], when: Instant = Instant.now): Future[AutoReplayRepoStatus] ={
+  def setLastReplay(replayId: Option[String], when: Instant = Instant.now): Future[Option[AutoReplayRepoStatus]] ={
     val update: Bson = replayId.fold(set("lastReplay.when", when)){id =>
       combine(set("lastReplay.id", id),
               set("lastReplay.when", when))
@@ -88,8 +86,13 @@ class AutoReplayRepositoryImpl @Inject()(
                           FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER))
         .headOption
         .map{
-          case None => AutoReplayRepoStatus(true, None)
-          case Some(status) => status
+          case None => Some(AutoReplayRepoStatus(true, None))
+          case Some(status) => Some(status)
+        }
+        .recover{
+          case err =>
+            logger.error(s"Database error attempting to update details of last replay: $err")
+            None
         }
     )
   }
@@ -100,7 +103,9 @@ class AutoReplayRepositoryImpl @Inject()(
         .updateOne(equal("_id", singletonId), set("autoReplay", true), UpdateOptions().upsert(true))
         .toFutureOption
         .map(_ => ())
-      //collection.deleteOne(equal("_id", singletonId)).toFutureOption.map(_ => ())
+        .recover{
+          case err => logger.error(s"Database error attempting to start auto=-replay: $err")
+        }
     }
 
   def stopAutoReplay(): Future[Unit] =
@@ -109,6 +114,10 @@ class AutoReplayRepositoryImpl @Inject()(
         .updateOne(equal("_id", singletonId), set("autoReplay", false), UpdateOptions().upsert(true))
         .toFutureOption
         .map(_ => ())
+        .recover{
+          case err => logger.error(s"Database error attempting to stop auto=-replay: $err")
+        }
+
     }
 
 }

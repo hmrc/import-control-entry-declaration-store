@@ -39,7 +39,7 @@ class AutoReplayControllerSpec extends AnyWordSpec with MockAutoReplayService {
     "getting autoReplay state" when {
       "autoReplay is on" must {
         "return 200 with autoReplay as true" in {
-          MockAutoReplayService.getStatus returns Future.successful(AutoReplayStatus.On)
+          MockAutoReplayService.getStatus returns Future.successful(AutoReplayStatus.On(None))
           val result = controller.getStatus()(FakeRequest())
 
           status(result)        shouldBe OK
@@ -51,7 +51,7 @@ class AutoReplayControllerSpec extends AnyWordSpec with MockAutoReplayService {
 
     "autoReplay is off" must {
       "return 200 with autoReplay as false" in {
-        MockAutoReplayService.getStatus returns Future.successful(AutoReplayStatus.Off)
+        MockAutoReplayService.getStatus returns Future.successful(AutoReplayStatus.Off(None))
         val result = controller.getStatus()(FakeRequest())
 
         status(result)        shouldBe OK

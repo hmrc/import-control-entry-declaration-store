@@ -18,8 +18,8 @@ package uk.gov.hmrc.entrydeclarationstore.repositories
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
-import uk.gov.hmrc.entrydeclarationstore.models.AutoReplayStatus
-
+import uk.gov.hmrc.entrydeclarationstore.models.AutoReplayRepoStatus
+import java.time.Instant
 import scala.concurrent.Future
 
 trait MockAutoReplayRepository extends MockFactory {
@@ -32,7 +32,10 @@ trait MockAutoReplayRepository extends MockFactory {
     def stopAutoReplay(): CallHandler[Future[Unit]] =
       mockAutoReplayRepository.stopAutoReplay _ expects ()
 
-    def getAutoReplayStatus: CallHandler[Future[AutoReplayStatus]] =
+    def getAutoReplayStatus(): CallHandler[Future[Option[AutoReplayRepoStatus]]] =
       mockAutoReplayRepository.getAutoReplayStatus _ expects ()
+
+    def setLastReplay(replayId: Option[String], when: Instant): CallHandler[Future[Option[AutoReplayRepoStatus]]] =
+      (mockAutoReplayRepository.setLastReplay(_: Option[String], _: Instant)) expects (replayId, *)
   }
 }

@@ -20,33 +20,35 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
-import uk.gov.hmrc.entrydeclarationstore.models.AutoReplayStatus
 import uk.gov.hmrc.entrydeclarationstore.repositories.MockAutoReplayRepository
 import uk.gov.hmrc.entrydeclarationstore.orchestrators.MockReplayOrchestrator
 import scala.concurrent.Future
 import java.time._
-import uk.gov.hmrc.entrydeclarationstore.repositories.MockEntryDeclarationRepo
+import uk.gov.hmrc.entrydeclarationstore.repositories.{MockReplayStateRepo, MockEntryDeclarationRepo}
+import uk.gov.hmrc.entrydeclarationstore.models.{AutoReplayStatus, AutoReplayRepoStatus, ReplayInitializationResult, ReplayResult, LastReplay}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class AutoReplayServiceSpec
     extends AnyWordSpec
     with MockAppConfig
     with MockAutoReplayRepository
     with MockEntryDeclarationRepo
+    with MockReplayStateRepo
     with MockReplayOrchestrator
     with ScalaFutures {
 
   val now: Instant = Instant.now
   val clock: Clock = Clock.fixed(now, ZoneOffset.UTC)
 
-  val service = new AutoReplayService(mockReplayOrchestrator, mockAutoReplayRepository, mockEntryDeclarationRepo, clock)
+  val service = new AutoReplayService(mockReplayOrchestrator, mockAutoReplayRepository, mockEntryDeclarationRepo, mockReplayStateRepo, clock)
 
   "AutoReplayService" when {
     "getting autoReplay status" must {
       "get using the repo" in {
-        val status = AutoReplayStatus.On
+        val status = Some(AutoReplayRepoStatus(true, None))
 
         MockAutoReplayRepository.getAutoReplayStatus returns Future.successful(status)
-        service.getStatus.futureValue shouldBe status
+        service.getStatus.futureValue shouldBe AutoReplayStatus.On(None)
       }
     }
 
@@ -65,6 +67,31 @@ class AutoReplayServiceSpec
         MockAutoReplayRepository.stopAutoReplay() returns Future.unit
         service.stop().futureValue
       }
+    }
+
+    "replay" must {
+      "replay undelivered submissions if enabled and there are undelivered submissions" in {
+        val result = (Future.successful(ReplayInitializationResult.Started("1")), Future.successful(ReplayResult.Completed(5)))
+        MockAutoReplayRepository.getAutoReplayStatus() returns Future.successful(Some(AutoReplayRepoStatus(true, None)))
+        MockEntryDeclarationRepo.totalUndeliveredMessages(now) returns Future.successful(5)
+        MockReplayOrchestrator.startReplay(Some(5)) returns result
+        MockAutoReplayRepository.setLastReplay(Some("1"), now) returns
+          Future.successful(Some(AutoReplayRepoStatus(true, Some(LastReplay(Some("1"), now)))))
+        service.replay().futureValue shouldBe true
+      }
+
+      "Not replay if enabled but there are no undelivered submissions" in {
+        MockAutoReplayRepository.getAutoReplayStatus() returns Future.successful(Some(AutoReplayRepoStatus(true, None)))
+        MockEntryDeclarationRepo.totalUndeliveredMessages(now) returns Future.successful(0)
+        service.replay().futureValue shouldBe false
+      }
+
+      "Not replay undelivered submissions if not enabled" in {
+
+        MockAutoReplayRepository.getAutoReplayStatus() returns Future.successful(Some(AutoReplayRepoStatus(false, None)))
+        service.replay().futureValue shouldBe false
+      }
+
     }
 
   }

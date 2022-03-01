@@ -20,7 +20,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits, Injecting}
-import uk.gov.hmrc.entrydeclarationstore.models.AutoReplayStatus
+import uk.gov.hmrc.entrydeclarationstore.models.AutoReplayRepoStatus
 
 class AutoReplayRepositoryISpec
     extends AnyWordSpec
@@ -41,7 +41,7 @@ class AutoReplayRepositoryISpec
 
       "getAutoReplayStatus" must {
         "return state as on" in new Scenario {
-          await(repository.getAutoReplayStatus) shouldBe AutoReplayStatus.On
+          await(repository.getAutoReplayStatus) shouldBe Some(AutoReplayRepoStatus(true, None))
         }
       }
 
@@ -49,7 +49,7 @@ class AutoReplayRepositoryISpec
         "do nothing" in new Scenario {
           await(repository.startAutoReplay())
 
-          await(repository.getAutoReplayStatus) shouldBe AutoReplayStatus.On
+          await(repository.getAutoReplayStatus) shouldBe Some(AutoReplayRepoStatus(true, None))
           await(repository.collection.countDocuments.toFuture)                 shouldBe 1
         }
       }
@@ -58,7 +58,7 @@ class AutoReplayRepositoryISpec
         "add off indicator document" in new Scenario {
           await(repository.stopAutoReplay())
 
-          await(repository.getAutoReplayStatus) shouldBe AutoReplayStatus.Off
+          await(repository.getAutoReplayStatus) shouldBe Some(AutoReplayRepoStatus(false, None))
           await(repository.collection.countDocuments.toFuture)                 shouldBe 1
         }
       }
@@ -72,7 +72,7 @@ class AutoReplayRepositoryISpec
 
       "getAutoReplayStatus" must {
         "report state as off" in new Scenario {
-          await(repository.getAutoReplayStatus) shouldBe AutoReplayStatus.Off
+          await(repository.getAutoReplayStatus) shouldBe Some(AutoReplayRepoStatus(false, None))
         }
       }
 
@@ -80,7 +80,7 @@ class AutoReplayRepositoryISpec
         "do nothing" in new Scenario {
           await(repository.stopAutoReplay())
 
-          await(repository.getAutoReplayStatus) shouldBe AutoReplayStatus.Off
+          await(repository.getAutoReplayStatus) shouldBe Some(AutoReplayRepoStatus(false, None))
           await(repository.collection.countDocuments.toFuture)                 shouldBe 1
         }
       }
@@ -89,7 +89,7 @@ class AutoReplayRepositoryISpec
         "remove the off indicator document" in new Scenario {
           await(repository.startAutoReplay())
 
-          await(repository.getAutoReplayStatus) shouldBe AutoReplayStatus.On
+          await(repository.getAutoReplayStatus) shouldBe Some(AutoReplayRepoStatus(true, None))
           await(repository.collection.countDocuments.toFuture)                 shouldBe 1
         }
       }

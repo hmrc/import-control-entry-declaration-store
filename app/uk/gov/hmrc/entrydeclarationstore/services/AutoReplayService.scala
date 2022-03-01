@@ -17,8 +17,8 @@
 package uk.gov.hmrc.entrydeclarationstore.services
 
 import play.api.Logging
-import uk.gov.hmrc.entrydeclarationstore.models.{ReplayResult, AutoReplayStatus, ReplayInitializationResult}
-import uk.gov.hmrc.entrydeclarationstore.repositories.{EntryDeclarationRepo, AutoReplayRepository}
+import uk.gov.hmrc.entrydeclarationstore.models.{ReplayResult, AutoReplayStatus, AutoReplayRepoStatus, ReplayInitializationResult, ReplayState, LastReplay}
+import uk.gov.hmrc.entrydeclarationstore.repositories.{EntryDeclarationRepo, AutoReplayRepository, ReplayStateRepo}
 import uk.gov.hmrc.entrydeclarationstore.autoreplay.AutoReplayer
 import uk.gov.hmrc.entrydeclarationstore.orchestrators.ReplayOrchestrator
 import uk.gov.hmrc.http.HeaderCarrier
@@ -27,26 +27,38 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
 import java.time.Clock
+import ReplayResult._
+import ReplayInitializationResult._
 
 @Singleton
 class AutoReplayService @Inject()(
   orchestrator: ReplayOrchestrator,
   repository: AutoReplayRepository,
   submissionsRepo: EntryDeclarationRepo,
+  replayRepo: ReplayStateRepo,
   clock: Clock
 ) extends AutoReplayer with Logging {
+
   val DefaultOtherHeaders: Seq[(String, String)] = Seq((USER_AGENT, "import-cont rol-entry-declaration-store"))
   def start(): Future[Unit] = repository.startAutoReplay()
   def stop(): Future[Unit] = repository.stopAutoReplay()
-  def getStatus(): Future[AutoReplayStatus] = repository.getAutoReplayStatus()
-  import ReplayResult._
-  import AutoReplayStatus._
-  import ReplayInitializationResult._
+
+  def getStatus()(implicit ec: ExecutionContext): Future[AutoReplayStatus] = repository.getAutoReplayStatus().flatMap{
+    _.fold[Future[AutoReplayStatus]](Future.successful(AutoReplayStatus.Unavailable)){ status =>
+        getLastReplayState(status.lastReplay).map{ replay =>
+          status match {
+            case AutoReplayRepoStatus(true, _) => AutoReplayStatus.On(replay)
+            case AutoReplayRepoStatus(false, _) => AutoReplayStatus.Off(replay)
+            case _ => AutoReplayStatus.Unavailable
+          }
+        }
+    }
+  }
 
   def replay()(implicit ec: ExecutionContext): Future[Boolean] = {
     implicit val defaultHeaderCarrier: HeaderCarrier = HeaderCarrier(otherHeaders = DefaultOtherHeaders)
     getStatusAndUndeliveredCount().flatMap{
-      case (AutoReplayStatus.On, Some(count)) if count > 0 =>
+      case (true, Some(count)) if count > 0 =>
         logger.info(s"Attempting to replay $count undelivered submissions ... ")
 
         val (initResult, replayResult) = orchestrator.startReplay(Some(count))
@@ -55,14 +67,14 @@ class AutoReplayService @Inject()(
             logger.info(s"Succesfully replayed $replayed undelivered submissions" )
             initResult.map{
               case Started(replayId) =>
-                repository.setLastRepay(Some(replayId))
+                repository.setLastReplay(Some(replayId))
                 true
               case AlreadyRunning(Some(replayId)) =>
-                repository.setLastRepay(Some(replayId))
+                repository.setLastReplay(Some(replayId))
                 true
               case AlreadyRunning(None) =>
                 logger.error(s"Unable to recover replay Id of successful replay")
-                repository.setLastRepay(None)
+                repository.setLastReplay(None)
                 true
             }
           case Aborted(t) =>
@@ -74,10 +86,17 @@ class AutoReplayService @Inject()(
     }
   }
 
-
-  private def getStatusAndUndeliveredCount()(implicit ec: ExecutionContext): Future[(AutoReplayStatus, Option[Int])] =
-    getStatus().flatMap{
-      case On => submissionsRepo.totalUndeliveredMessages(clock.instant).map(count => (On, Some(count)))
-      case Off => Future.successful((Off, None))
+  private def getStatusAndUndeliveredCount()(implicit ec: ExecutionContext): Future[(Boolean, Option[Int])] =
+    repository.getAutoReplayStatus().flatMap{
+      _.map{
+        case AutoReplayRepoStatus(true, _) => submissionsRepo.totalUndeliveredMessages(clock.instant).map(count => (true, Some(count)))
+        case AutoReplayRepoStatus(false, _) => Future.successful((false, None))
+      }.getOrElse(Future.successful((false, None)))
     }
+
+  private def getLastReplayState(lastReplay: Option[LastReplay]): Future[Option[ReplayState]] =
+    lastReplay.fold[Future[Option[ReplayState]]](Future.successful(None)){lr =>
+      lr.id.fold[Future[Option[ReplayState]]](Future.successful(None))(replayRepo.lookupState(_))
+    }
+
 }

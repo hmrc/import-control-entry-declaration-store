@@ -20,7 +20,7 @@ import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.entrydeclarationstore.models.AutoReplayStatus
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 trait MockAutoReplayService extends MockFactory {
   val mockAutoReplayService: AutoReplayService = mock[AutoReplayService]
@@ -32,7 +32,11 @@ trait MockAutoReplayService extends MockFactory {
     def stop(): CallHandler[Future[Unit]] =
       mockAutoReplayService.stop _ expects ()
 
-    def getStatus: CallHandler[Future[AutoReplayStatus]] =
-      mockAutoReplayService.getStatus _ expects ()
+    def getStatus(): CallHandler[Future[AutoReplayStatus]] =
+      (mockAutoReplayService.getStatus()(_: ExecutionContext)) expects (*)
+
+    def replay(): CallHandler[Future[Boolean]] =
+      (mockAutoReplayService.replay()(_: ExecutionContext)) expects (*)
+
   }
 }
