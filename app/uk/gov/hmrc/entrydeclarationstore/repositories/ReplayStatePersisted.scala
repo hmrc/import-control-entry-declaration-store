@@ -19,12 +19,13 @@ package uk.gov.hmrc.entrydeclarationstore.repositories
 import java.time.Instant
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats.Implicits._
 import play.api.libs.json.{Format, Json}
-import uk.gov.hmrc.entrydeclarationstore.models.ReplayState
+import uk.gov.hmrc.entrydeclarationstore.models.{ReplayTrigger, ReplayState}
 
 private[repositories] case class ReplayStatePersisted(
   replayId: String,
   startTime: Instant,
   totalToReplay: Int,
+  trigger: Option[ReplayTrigger] = Some(ReplayTrigger.Manual),
   completed: Boolean                   = false,
   endTime: Option[Instant] = None,
   successCount: Int                    = 0,
@@ -32,6 +33,7 @@ private[repositories] case class ReplayStatePersisted(
 ) {
   def toDomain: ReplayState =
     ReplayState(
+      trigger       = trigger.getOrElse(ReplayTrigger.Manual),
       startTime     = startTime,
       endTime       = endTime,
       completed     = completed,
@@ -48,6 +50,7 @@ private[repositories] object ReplayStatePersisted {
     import replayState._
     ReplayStatePersisted(
       replayId,
+      trigger       = Some(trigger),
       startTime     = startTime,
       endTime       = endTime,
       completed     = completed,

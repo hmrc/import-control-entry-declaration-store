@@ -18,7 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.repositories
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
-import uk.gov.hmrc.entrydeclarationstore.models.ReplayState
+import uk.gov.hmrc.entrydeclarationstore.models.{ReplayTrigger, ReplayState}
 
 import java.time.Instant
 import scala.concurrent.Future
@@ -36,8 +36,8 @@ trait MockReplayStateRepo extends MockFactory {
     def setState(replayId: String, replayState: ReplayState): CallHandler[Future[Unit]] =
       (mockReplayStateRepo.setState(_: String, _: ReplayState)).expects(replayId, replayState)
 
-    def insert(replayId: String, totalToReplay: Int, startTime: Instant): CallHandler[Future[Unit]] =
-      (mockReplayStateRepo.insert(_: String, _: Int, _: Instant)).expects(replayId, totalToReplay, startTime)
+    def insert(replayId: String, trigger: ReplayTrigger, totalToReplay: Int, startTime: Instant): CallHandler[Future[Unit]] =
+      (mockReplayStateRepo.insert(_: String, _: ReplayTrigger, _: Int, _: Instant)).expects(replayId, trigger, totalToReplay, startTime)
 
     def incrementCounts(replayId: String, successesToAdd: Int, failuresToAdd: Int): CallHandler[Future[Boolean]] =
       (mockReplayStateRepo.incrementCounts(_: String, _: Int, _: Int)).expects(replayId, successesToAdd, failuresToAdd)

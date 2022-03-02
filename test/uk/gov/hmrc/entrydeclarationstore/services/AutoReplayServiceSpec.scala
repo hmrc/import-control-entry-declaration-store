@@ -25,7 +25,7 @@ import uk.gov.hmrc.entrydeclarationstore.orchestrators.MockReplayOrchestrator
 import scala.concurrent.Future
 import java.time._
 import uk.gov.hmrc.entrydeclarationstore.repositories.{MockReplayStateRepo, MockEntryDeclarationRepo}
-import uk.gov.hmrc.entrydeclarationstore.models.{AutoReplayStatus, AutoReplayRepoStatus, ReplayInitializationResult, ReplayResult, LastReplay}
+import uk.gov.hmrc.entrydeclarationstore.models.{AutoReplayStatus, AutoReplayRepoStatus, ReplayInitializationResult, ReplayResult, LastReplay, ReplayTrigger}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class AutoReplayServiceSpec
@@ -74,7 +74,7 @@ class AutoReplayServiceSpec
         val result = (Future.successful(ReplayInitializationResult.Started("1")), Future.successful(ReplayResult.Completed(5)))
         MockAutoReplayRepository.getAutoReplayStatus() returns Future.successful(Some(AutoReplayRepoStatus(true, None)))
         MockEntryDeclarationRepo.totalUndeliveredMessages(now) returns Future.successful(5)
-        MockReplayOrchestrator.startReplay(Some(5)) returns result
+        MockReplayOrchestrator.startReplay(Some(5), ReplayTrigger.Automatic) returns result
         MockAutoReplayRepository.setLastReplay(Some("1"), now) returns
           Future.successful(Some(AutoReplayRepoStatus(true, Some(LastReplay(Some("1"), now)))))
         service.replay().futureValue shouldBe true

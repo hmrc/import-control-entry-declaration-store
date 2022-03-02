@@ -17,7 +17,8 @@
 package uk.gov.hmrc.entrydeclarationstore.services
 
 import play.api.Logging
-import uk.gov.hmrc.entrydeclarationstore.models.{ReplayResult, AutoReplayStatus, AutoReplayRepoStatus, ReplayInitializationResult, ReplayState, LastReplay}
+import uk.gov.hmrc.entrydeclarationstore.models.{ReplayResult, ReplayTrigger, AutoReplayStatus, AutoReplayRepoStatus}
+import uk.gov.hmrc.entrydeclarationstore.models.{ReplayInitializationResult, ReplayState, LastReplay}
 import uk.gov.hmrc.entrydeclarationstore.repositories.{EntryDeclarationRepo, AutoReplayRepository, ReplayStateRepo}
 import uk.gov.hmrc.entrydeclarationstore.autoreplay.AutoReplayer
 import uk.gov.hmrc.entrydeclarationstore.orchestrators.ReplayOrchestrator
@@ -61,7 +62,7 @@ class AutoReplayService @Inject()(
       case (true, Some(count)) if count > 0 =>
         logger.info(s"Attempting to replay $count undelivered submissions ... ")
 
-        val (initResult, replayResult) = orchestrator.startReplay(Some(count))
+        val (initResult, replayResult) = orchestrator.startReplay(Some(count), ReplayTrigger.Automatic)
         replayResult.flatMap {
           case Completed(replayed) =>
             logger.info(s"Succesfully replayed $replayed undelivered submissions" )

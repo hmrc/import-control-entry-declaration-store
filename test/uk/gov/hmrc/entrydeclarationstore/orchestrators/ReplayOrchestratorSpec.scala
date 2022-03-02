@@ -30,7 +30,7 @@ import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.api.test.Injecting
 import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
-import uk.gov.hmrc.entrydeclarationstore.models.{BatchReplayError, BatchReplayResult, ReplayInitializationResult, ReplayResult}
+import uk.gov.hmrc.entrydeclarationstore.models.{BatchReplayError, BatchReplayResult, ReplayInitializationResult, ReplayResult, ReplayTrigger}
 import uk.gov.hmrc.entrydeclarationstore.repositories.{MockEntryDeclarationRepo, MockReplayStateRepo}
 import uk.gov.hmrc.entrydeclarationstore.services.MockSubmissionReplayService
 import uk.gov.hmrc.entrydeclarationstore.utils.MockIdGenerator
@@ -97,7 +97,7 @@ class ReplayOrchestratorSpec
     // totalToReplay should always be the same as the number of ids in the source
     // (as this should take into account the replayLimit - regardless of the
     // number of undeliverables in the database)
-    MockReplayStateRepo.insert(replayId, totalToReplay = submissionIds.length, time) returns Future.unit
+    MockReplayStateRepo.insert(replayId, ReplayTrigger.Manual, totalToReplay = submissionIds.length, time) returns Future.unit
 
     MockEntryDeclarationRepo
       .getUndeliveredSubmissionIds(time, replayLimit)
@@ -205,7 +205,7 @@ class ReplayOrchestratorSpec
         MockIdGenerator.generateUuid() returns replayId
 
         MockEntryDeclarationRepo.totalUndeliveredMessages(time) returns Future.successful(1)
-        MockReplayStateRepo.insert(replayId, 1, time) throws databaseException
+        MockReplayStateRepo.insert(replayId, ReplayTrigger.Manual, 1, time) throws databaseException
 
         replayOrchestrator.startReplay(None)._1.failed.futureValue shouldBe databaseException
       }
@@ -221,7 +221,7 @@ class ReplayOrchestratorSpec
 
         MockEntryDeclarationRepo.totalUndeliveredMessages(time) returns Future.successful(totalUndelivered)
 
-        MockReplayStateRepo.insert(replayId, totalUndelivered, time) returns Future.unit
+        MockReplayStateRepo.insert(replayId, ReplayTrigger.Manual, totalUndelivered, time) returns Future.unit
         MockEntryDeclarationRepo.getUndeliveredSubmissionIds(time, None) returns Source.failed(databaseException)
 
         val completeFuture = willSetCompletedAndUnlock

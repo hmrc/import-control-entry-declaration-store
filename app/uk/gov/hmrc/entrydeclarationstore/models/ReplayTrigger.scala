@@ -16,19 +16,14 @@
 
 package uk.gov.hmrc.entrydeclarationstore.models
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.Format
+import uk.gov.hmrc.entrydeclarationstore.utils.Enums
 
-import java.time.Instant
+sealed trait ReplayTrigger
 
-case class ReplayState(
-  trigger: ReplayTrigger,
-  startTime: Instant,
-  endTime: Option[Instant],
-  completed: Boolean,
-  successCount: Int,
-  failureCount: Int,
-  totalToReplay: Int)
+object ReplayTrigger {
+  case object Automatic extends ReplayTrigger
+  case object Manual extends ReplayTrigger
 
-object ReplayState {
-  implicit val formats: Format[ReplayState] = Json.format[ReplayState]
+  implicit val formats: Format[ReplayTrigger] = Enums.format[ReplayTrigger]
 }

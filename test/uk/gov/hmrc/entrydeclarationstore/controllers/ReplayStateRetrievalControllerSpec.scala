@@ -24,7 +24,7 @@ import play.api.http.MimeTypes
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
-import uk.gov.hmrc.entrydeclarationstore.models.ReplayState
+import uk.gov.hmrc.entrydeclarationstore.models.{ReplayTrigger, ReplayState}
 import uk.gov.hmrc.entrydeclarationstore.services.MockReplayStateRetrievalService
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -39,7 +39,7 @@ class ReplayStateRetrievalControllerSpec extends AnyWordSpec with MockReplayStat
   "ReplayStateRetrievalController" when {
     "state exists for a replayId" must {
       "return it" in {
-        val state = ReplayState(Instant.now, None, completed = false, 0, 1, 2)
+        val state = ReplayState(ReplayTrigger.Manual, Instant.now, None, completed = false, 0, 1, 2)
 
         MockReplayStateRetrievalService.retrieveReplayState(replayId) returns Future.successful(Some(state))
 

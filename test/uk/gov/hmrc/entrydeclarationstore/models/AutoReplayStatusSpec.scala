@@ -79,12 +79,13 @@ class AutoReplayStatusSpec extends AnyWordSpec {
   }
 
   "AutoReplayStatus with ReplayState" when {
-    val replayState: ReplayState = ReplayState(now, Some(now), true, 5, 0, 5)
+    val replayState: ReplayState = ReplayState(ReplayTrigger.Automatic, now, Some(now), true, 5, 0, 5)
     "On" must {
       val json = Json.parse("""
                               |{
                               |  "autoReplay": true,
                               |  "lastReplay": {
+                              |    "trigger": "Automatic",
                               |    "startTime": "2022-03-02T10:26:38.559Z",
                               |    "endTime": "2022-03-02T10:26:38.559Z",
                               |    "completed": true,
@@ -110,6 +111,7 @@ class AutoReplayStatusSpec extends AnyWordSpec {
                               |{
                               |"autoReplay": false,
                               |  "lastReplay": {
+                              |    "trigger": "Automatic",
                               |    "startTime": "2022-03-02T10:26:38.559Z",
                               |    "endTime": "2022-03-02T10:26:38.559Z",
                               |    "completed": true,
