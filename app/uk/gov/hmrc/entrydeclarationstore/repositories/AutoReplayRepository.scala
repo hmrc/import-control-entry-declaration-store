@@ -73,17 +73,14 @@ class AutoReplayRepositoryImpl @Inject()(
         }
     )
 
-  def setLastReplay(replayId: Option[String], when: Instant = Instant.now): Future[Option[AutoReplayRepoStatus]] ={
-    val update: Bson = replayId.fold(set("lastReplay.when", when)){id =>
-      combine(set("lastReplay.id", id),
-              set("lastReplay.when", when))
-    }
-
+  def setLastReplay(replayId: Option[String], when: Instant = Instant.now): Future[Option[AutoReplayRepoStatus]] =
     Mdc.preservingMdc(
       collection
-        .findOneAndUpdate(equal("_id", singletonId),
-                          update,
-                          FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER))
+        .findOneAndUpdate(
+          equal("_id", singletonId),
+          replayId.fold(set("lastReplay.when", when))(id => combine(set("lastReplay.id", id), set("lastReplay.when", when))),
+          FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+        )
         .headOption
         .map{
           case None => Some(AutoReplayRepoStatus(true, None))
@@ -95,7 +92,6 @@ class AutoReplayRepositoryImpl @Inject()(
             None
         }
     )
-  }
 
   def startAutoReplay(): Future[Unit] =
     Mdc.preservingMdc{
