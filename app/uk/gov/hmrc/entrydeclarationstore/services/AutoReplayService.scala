@@ -40,7 +40,7 @@ class AutoReplayService @Inject()(
   clock: Clock
 ) extends AutoReplayer with Logging {
 
-  val DefaultOtherHeaders: Seq[(String, String)] = Seq((USER_AGENT, "import-cont rol-entry-declaration-store"))
+  val DefaultOtherHeaders: Seq[(String, String)] = Seq((USER_AGENT, "import-control-entry-declaration-store"))
   def start(): Future[Unit] = repository.startAutoReplay()
   def stop(): Future[Unit] = repository.stopAutoReplay()
 
