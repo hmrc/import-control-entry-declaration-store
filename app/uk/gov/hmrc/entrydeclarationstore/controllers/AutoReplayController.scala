@@ -23,6 +23,7 @@ import uk.gov.hmrc.entrydeclarationstore.services.AutoReplayService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
+import uk.gov.hmrc.entrydeclarationstore.models.AutoReplayStatus._
 
 @Singleton()
 class AutoReplayController @Inject()(cc: ControllerComponents, service: AutoReplayService)(

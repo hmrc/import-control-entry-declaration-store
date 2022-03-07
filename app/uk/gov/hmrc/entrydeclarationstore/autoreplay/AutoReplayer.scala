@@ -14,21 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.entrydeclarationstore.models
+package uk.gov.hmrc.entrydeclarationstore.autoreplay
 
-import play.api.libs.json.{Format, Json}
+import scala.concurrent.{ExecutionContext, Future}
 
-import java.time.Instant
-
-case class ReplayState(
-  trigger: ReplayTrigger,
-  startTime: Instant,
-  endTime: Option[Instant],
-  completed: Boolean,
-  successCount: Int,
-  failureCount: Int,
-  totalToReplay: Int)
-
-object ReplayState {
-  implicit val formats: Format[ReplayState] = Json.format[ReplayState]
+trait AutoReplayer {
+  def replay()(implicit ec: ExecutionContext): Future[Boolean]
 }

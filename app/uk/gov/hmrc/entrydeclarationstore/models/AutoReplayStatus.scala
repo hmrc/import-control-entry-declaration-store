@@ -18,23 +18,58 @@ package uk.gov.hmrc.entrydeclarationstore.models
 
 import play.api.libs.json._
 import play.api.libs.json.Reads._
+import play.api.libs.functional.syntax._
+import java.time.Instant
 
-sealed trait AutoReplayStatus
+sealed trait AutoReplayStatus {
+  val lastReplay: Option[ReplayState]
+}
 
 object AutoReplayStatus {
+  import ReplayState._
 
-  case object On extends AutoReplayStatus
-  case object Off extends AutoReplayStatus
-
-  implicit val reads: Reads[AutoReplayStatus] = (JsPath \ "autoReplay").read[Boolean].map {
-    case true  => On
-    case false => Off
+  case class On(val lastReplay: Option[ReplayState]) extends AutoReplayStatus
+  case class Off(val lastReplay: Option[ReplayState]) extends AutoReplayStatus
+  case object Unavailable extends AutoReplayStatus {
+    val lastReplay: Option[ReplayState] = None
   }
 
-  implicit val writes: Writes[AutoReplayStatus] = {
-    case On => Json.obj("autoReplay" -> true)
-    case Off => Json.obj("autoReplay" -> false)
+  def buildStatus(autoReplay: Option[Boolean], lastReplay: Option[ReplayState]): AutoReplayStatus =
+    autoReplay match {
+      case Some(true) => On(lastReplay)
+      case Some(false) => Off(lastReplay)
+      case None => Unavailable
+    }
+
+  val reads: Reads[AutoReplayStatus] =
+    (
+      (JsPath \ "autoReplay").readNullable[Boolean] and
+      (JsPath \ "lastReplay").readNullable[ReplayState]
+    )(buildStatus _)
+
+  val writes: OWrites[AutoReplayStatus] = {
+
+    val unpackStatus: AutoReplayStatus => (Option[Boolean], Option[ReplayState]) = {
+      case On(lastReplay)        => (Some(true), lastReplay)
+      case Off(lastReplay)        => (Some(false), lastReplay)
+      case Unavailable => (None, None)
+    }
+
+    ((__ \ "autoReplay").writeNullable[Boolean] and
+      (__ \ "lastReplay").writeNullable[ReplayState])(unpackStatus)
   }
 
   implicit val format: Format[AutoReplayStatus] = Format(reads, writes)
 }
+
+case class LastReplay(id: Option[String], when: Instant)
+
+case class AutoReplayRepoStatus(autoReplay: Boolean, lastReplay: Option[LastReplay])
+
+object AutoReplayRepoStatus {
+  import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats.Implicits._
+
+  implicit val resultsFormat: Format[LastReplay] = Json.format[LastReplay]
+  implicit val format: Format[AutoReplayRepoStatus] = Json.format[AutoReplayRepoStatus]
+}
+

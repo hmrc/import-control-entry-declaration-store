@@ -6,7 +6,7 @@ object AppDependencies {
 
   val compile: Seq[ModuleID] = Seq(
     "com.github.java-json-tools"   %  "json-schema-validator"     % "2.2.14",
-    "uk.gov.hmrc.mongo"            %% "hmrc-mongo-play-28"        % "0.59.0",
+    "uk.gov.hmrc.mongo"            %% "hmrc-mongo-play-28"        % "0.60.0",
     "uk.gov.hmrc"                  %% "bootstrap-backend-play-28" % bootstrapVersion,
     "org.typelevel"                %% "cats-core"                 % "2.7.0",
     "org.scala-lang.modules"       %% "scala-xml"                 % "2.0.1",
@@ -18,7 +18,7 @@ object AppDependencies {
 
   val test: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"            %% "bootstrap-test-play-28"  % bootstrapVersion % "test, it",
-    "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-28" % "0.59.0"         % "test, it",
+    "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-28" % "0.60.0"         % "test, it",
     "com.typesafe.play"      %% "play-test"               % current          % "test, it",
     "org.pegdown"            %  "pegdown"                 % "1.6.0"          % "test, it",
     "org.scalamock"          %% "scalamock"               % "5.2.0"          % "test, it",

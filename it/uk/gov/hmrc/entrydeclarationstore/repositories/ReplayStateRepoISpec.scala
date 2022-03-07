@@ -25,7 +25,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits, Injecting}
 import play.api.{Application, Environment, Mode}
-import uk.gov.hmrc.entrydeclarationstore.models.ReplayState
+import uk.gov.hmrc.entrydeclarationstore.models.{ReplayTrigger, ReplayState}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -56,15 +56,15 @@ class ReplayStateRepoISpec
 
   val totalToReplay: Int       = 10
   val startTime: Instant       = Instant.now
-  val replayState: ReplayState = ReplayState(startTime, None, completed = false, 0, 0, totalToReplay)
+  val replayState: ReplayState = ReplayState(ReplayTrigger.Manual, startTime, None, completed = false, 0, 0, totalToReplay)
   "ReplayStateRepo" when {
     "inserting a replay state" must {
       "work" in {
-        await(repository.insert(replayId, totalToReplay, startTime))
+        await(repository.insert(replayId, ReplayTrigger.Manual, totalToReplay, startTime))
       }
       "fail if the replayId exists" in {
         intercept[Exception] {
-          await(repository.insert(replayId, totalToReplay, startTime))
+          await(repository.insert(replayId, ReplayTrigger.Manual, totalToReplay, startTime))
         }
       }
       "create a replay of the correct format" in {
@@ -81,7 +81,7 @@ class ReplayStateRepoISpec
       "return true and increment correctly" in {
         val successesToAdd = 3
         val failuresToAdd  = 4
-        await(repository.insert(replayIdToUpdate, totalToReplay, startTime))
+        await(repository.insert(replayIdToUpdate, ReplayTrigger.Manual, totalToReplay, startTime))
         await(repository.incrementCounts(replayIdToUpdate, successesToAdd, failuresToAdd)) shouldBe true
         await(repository.lookupState(replayIdToUpdate)) shouldBe
           Some(replayState.copy(successCount = successesToAdd, failureCount = failuresToAdd))
@@ -113,7 +113,7 @@ class ReplayStateRepoISpec
 
       "no state for a replayId exists" must {
         "insert" in {
-          val replayState = ReplayState(t1, None, completed = false, 0, 0, 0)
+          val replayState = ReplayState(ReplayTrigger.Manual, t1, None, completed = false, 0, 0, 0)
 
           await(repository.setState(otherReplayId, replayState))
           await(repository.lookupState(otherReplayId)) shouldBe Some(replayState)
@@ -124,7 +124,7 @@ class ReplayStateRepoISpec
           val t2 = t1.plusSeconds(1)
 
           // Update every field...
-          val updatedReplayState = ReplayState(t2, Some(t2), completed = true, 123, 654, 777)
+          val updatedReplayState = ReplayState(ReplayTrigger.Manual, t2, Some(t2), completed = true, 123, 654, 777)
 
           await(repository.setState(otherReplayId, updatedReplayState))
           await(repository.lookupState(otherReplayId)) shouldBe Some(updatedReplayState)
@@ -143,7 +143,7 @@ class ReplayStateRepoISpec
       "an incomplete replay state exists" must {
         "return it" in {
           await(repository.removeAll)
-          await(repository.insert(replayId, totalToReplay, startTime))
+          await(repository.insert(replayId, ReplayTrigger.Manual, totalToReplay, startTime))
           await(repository.lookupIdOfLatest) shouldBe Some(replayId)
         }
       }
@@ -156,7 +156,7 @@ class ReplayStateRepoISpec
           val idsAndStarts = Random.shuffle((1 to num).map(i => (s"replayId-$i", startTime.plusSeconds(i))))
           val idOfLatest   = idsAndStarts.maxBy(_._2)._1
 
-          await(Future.traverse(idsAndStarts) { case (id, start) => repository.insert(id, totalToReplay, start) })
+          await(Future.traverse(idsAndStarts) { case (id, start) => repository.insert(id, ReplayTrigger.Manual, totalToReplay, start) })
 
           await(repository.lookupIdOfLatest) shouldBe Some(idOfLatest)
         }
@@ -168,8 +168,8 @@ class ReplayStateRepoISpec
         val replayId1 = "replayId-1"
         val replayId2 = "replayId-2"
 
-        await(repository.insert(replayId1, totalToReplay, startTime))
-        await(repository.insert(replayId2, totalToReplay, startTime))
+        await(repository.insert(replayId1, ReplayTrigger.Manual, totalToReplay, startTime))
+        await(repository.insert(replayId2, ReplayTrigger.Manual, totalToReplay, startTime))
 
         await(repository.lookupIdOfLatest) should (be(Some(replayId1)) or be(Some(replayId2)))
       }

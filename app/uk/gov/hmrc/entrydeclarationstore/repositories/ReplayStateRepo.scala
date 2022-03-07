@@ -25,7 +25,7 @@ import org.mongodb.scala.model._
 import uk.gov.hmrc.mongo._
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
-import uk.gov.hmrc.entrydeclarationstore.models.ReplayState
+import uk.gov.hmrc.entrydeclarationstore.models.{ReplayTrigger, ReplayState}
 import uk.gov.hmrc.play.http.logging.Mdc
 
 import java.time.Instant
@@ -36,7 +36,7 @@ trait ReplayStateRepo {
   def lookupState(replayId: String): Future[Option[ReplayState]]
   def lookupIdOfLatest: Future[Option[String]]
   def setState(replayId: String, replayState: ReplayState): Future[Unit]
-  def insert(replayId: String, totalToReplay: Int, startTime: Instant): Future[Unit]
+  def insert(replayId: String, trigger: ReplayTrigger, totalToReplay: Int, startTime: Instant): Future[Unit]
   def incrementCounts(replayId: String, successesToAdd: Int, failuresToAdd: Int): Future[Boolean]
   def setCompleted(replayId: String, endTime: Instant): Future[Boolean]
 }
@@ -101,11 +101,11 @@ class ReplayStateRepoImpl @Inject()(
       )
       .map(_ => ())
 
-  override def insert(replayId: String, totalToReplay: Int, startTime: Instant): Future[Unit] =
+  override def insert(replayId: String, trigger: ReplayTrigger, totalToReplay: Int, startTime: Instant): Future[Unit] =
     Mdc
       .preservingMdc(
         collection
-          .insertOne(ReplayStatePersisted(replayId, startTime, totalToReplay))
+          .insertOne(ReplayStatePersisted(replayId, startTime, totalToReplay, Some(trigger)))
           .toFutureOption
       )
       .map(_ => ())

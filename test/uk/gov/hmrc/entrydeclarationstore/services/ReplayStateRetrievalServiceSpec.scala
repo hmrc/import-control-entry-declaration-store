@@ -21,7 +21,7 @@ import java.time.Instant
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.entrydeclarationstore.models.ReplayState
+import uk.gov.hmrc.entrydeclarationstore.models.{ReplayTrigger, ReplayState}
 import uk.gov.hmrc.entrydeclarationstore.repositories.MockReplayStateRepo
 
 import scala.concurrent.Future
@@ -34,7 +34,7 @@ class ReplayStateRetrievalServiceSpec extends AnyWordSpec with MockReplayStateRe
   "SubmissionStateRetrievalService" when {
     "submission exists for a submissionId" must {
       "return it" in {
-        val state = ReplayState(Instant.now, None, completed = false, 0, 1, 2)
+        val state = ReplayState(ReplayTrigger.Automatic, Instant.now, None, completed = false, 0, 1, 2)
 
         MockReplayStateRepo.lookupState(replayId) returns Future.successful(Some(state))
 
