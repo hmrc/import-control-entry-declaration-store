@@ -26,14 +26,14 @@ trait MockAutoReplayRepository extends MockFactory {
   val mockAutoReplayRepository: AutoReplayRepository = mock[AutoReplayRepository]
 
   object MockAutoReplayRepository {
-    def startAutoReplay(): CallHandler[Future[Unit]] =
-      mockAutoReplayRepository.startAutoReplay _ expects ()
+    def start(): CallHandler[Future[Unit]] =
+      mockAutoReplayRepository.start _ expects ()
 
-    def stopAutoReplay(): CallHandler[Future[Unit]] =
-      mockAutoReplayRepository.stopAutoReplay _ expects ()
+    def stop(): CallHandler[Future[Unit]] =
+      mockAutoReplayRepository.stop _ expects ()
 
-    def getAutoReplayStatus(): CallHandler[Future[Option[AutoReplayRepoStatus]]] =
-      mockAutoReplayRepository.getAutoReplayStatus _ expects ()
+    def getStatus(): CallHandler[Future[Option[AutoReplayRepoStatus]]] =
+      mockAutoReplayRepository.getStatus _ expects ()
 
     def setLastReplay(replayId: Option[String], when: Instant): CallHandler[Future[Option[AutoReplayRepoStatus]]] =
       (mockAutoReplayRepository.setLastReplay(_: Option[String], _: Instant)) expects (replayId, *)

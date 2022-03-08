@@ -101,6 +101,7 @@ trait AppConfig {
 
   def autoReplayLockDuration: FiniteDuration
   def autoReplayRunInterval: FiniteDuration
+  def replayCountAfterTrafficSwitchReset: Int
 }
 
 @Singleton
@@ -212,6 +213,7 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
 
   lazy val autoReplayLockDuration: FiniteDuration = getFiniteDuration(config, "auto-replay.lockDuration")
   lazy val autoReplayRunInterval: FiniteDuration = getFiniteDuration(config, "auto-replay.runInterval")
+  lazy val replayCountAfterTrafficSwitchReset: Int = config.get[Int]("auto-replay.replayCountAfterTrafficSwitchReset")
 
   private def fibonacciRetryDelays(conf: Configuration): List[FiniteDuration] =
     Retrying.fibonacciDelays(getFiniteDuration(conf, "initialDelay"), conf.get[Int]("numberOfRetries"))

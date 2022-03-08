@@ -101,18 +101,19 @@ class ReplayOrchestrator @Inject()(
       }
       .mapAsync(parallelism = 1) {
         case Right(counts) =>
-          replayStateRepo.incrementCounts(replayId, counts.successCount, counts.failureCount)
+          replayStateRepo
+            .incrementCounts(replayId, counts.successCount, counts.failureCount)
+            .map((_, counts))
         case Left(error) =>
           throw new RuntimeException(s"Unable to replay batch $error")
       }
-      .fold(0) { (batchCount, _) =>
-        logger.debug(s"Completed replay of batch $batchCount")
-        batchCount + 1
+      .fold[(Int, Int, Int)]((0,0,0)) { (c, r) =>
+        (c._1 + 1, c._2 + r._2.successCount, c._3 + r._2.failureCount)
       }
-      .map { numBatches =>
-        logger.info(s"Completed replay of $numBatches batches")
+      .map { totals =>
+        logger.info(s"Completed replay of ${totals._1} batches")
         setCompleteAndUnlock(replayId)
-        ReplayResult.Completed(numBatches)
+        ReplayResult.Completed(totals._1, totals._2, totals._3)
       }
       .recover {
         case NonFatal(e) =>

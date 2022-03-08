@@ -64,6 +64,8 @@ class ReplayOrchestratorSpec
   val time: Instant = Instant.now
   val replayId      = "someReplayId"
   val clock: Clock  = Clock.fixed(time, ZoneOffset.UTC)
+  val BatchSuccesses = 123
+  val BatchFailures = 321
 
   val replayOrchestrator = new ReplayOrchestrator(
     mockIdGenerator,
@@ -108,8 +110,8 @@ class ReplayOrchestratorSpec
 
     // WLOG - these are the reposibility of the store to set - we
     // just increment with what we're told...
-    val succeessIncrement = 123
-    val failureIncrement  = 321
+    val succeessIncrement = BatchSuccesses
+    val failureIncrement  = BatchFailures
 
     MockSubmissionReplayService
       .replaySubmissions(submissionIds)
@@ -138,7 +140,7 @@ class ReplayOrchestratorSpec
 
           val (fReplayId, result) = replayOrchestrator.startReplay(None)
           fReplayId.futureValue shouldBe ReplayInitializationResult.Started(replayId)
-          result.futureValue    shouldBe ReplayResult.Completed(numBatches = 1)
+          result.futureValue    shouldBe ReplayResult.Completed(numBatches = 1, BatchSuccesses, BatchFailures)
 
           await(completeFuture)
         }
@@ -161,7 +163,7 @@ class ReplayOrchestratorSpec
 
         val (initResult, result) = replayOrchestrator.startReplay(replayLimit)
         initResult.futureValue shouldBe ReplayInitializationResult.Started(replayId)
-        result.futureValue     shouldBe ReplayResult.Completed(numBatches = 1)
+        result.futureValue     shouldBe ReplayResult.Completed(numBatches = 1, BatchSuccesses, BatchFailures)
 
         await(completeFuture)
       }
@@ -183,7 +185,7 @@ class ReplayOrchestratorSpec
 
         val (initResult, result) = replayOrchestrator.startReplay(replayLimit)
         initResult.futureValue shouldBe ReplayInitializationResult.Started(replayId)
-        result.futureValue     shouldBe ReplayResult.Completed(numBatches = 1)
+        result.futureValue     shouldBe ReplayResult.Completed(numBatches = 1, BatchSuccesses, BatchFailures)
 
         await(completeFuture)
       }
@@ -249,7 +251,7 @@ class ReplayOrchestratorSpec
 
           val (initResult, result) = replayOrchestrator.startReplay(None)
           initResult.futureValue shouldBe ReplayInitializationResult.Started(replayId)
-          result.futureValue     shouldBe ReplayResult.Completed(numBatches = 3)
+          result.futureValue     shouldBe ReplayResult.Completed(numBatches = 3, BatchSuccesses * 3, BatchFailures * 3)
 
           await(completeFuture)
         }
@@ -271,7 +273,7 @@ class ReplayOrchestratorSpec
 
           val (initResult, result) = replayOrchestrator.startReplay(None)
           initResult.futureValue shouldBe ReplayInitializationResult.Started(replayId)
-          result.futureValue     shouldBe ReplayResult.Completed(numBatches = 3)
+          result.futureValue     shouldBe ReplayResult.Completed(numBatches = 3, BatchSuccesses * 3, BatchFailures * 3)
 
           await(completeFuture)
         }
@@ -292,7 +294,7 @@ class ReplayOrchestratorSpec
 
           val (initResult, result) = replayOrchestrator.startReplay(None)
           initResult.futureValue shouldBe ReplayInitializationResult.Started(replayId)
-          result.futureValue     shouldBe ReplayResult.Completed(numBatches = 2)
+          result.futureValue     shouldBe ReplayResult.Completed(numBatches = 2, BatchSuccesses * 2, BatchFailures * 2)
 
           await(completeFuture)
         }
