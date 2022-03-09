@@ -17,7 +17,7 @@
 package uk.gov.hmrc.entrydeclarationstore.services
 
 import play.api.Logging
-import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
+import uk.gov.hmrc.entrydeclarationstore.trafficswitch.TrafficSwitchConfig
 import uk.gov.hmrc.entrydeclarationstore.models.{ReplayResult, ReplayTrigger, AutoReplayStatus, AutoReplayRepoStatus}
 import uk.gov.hmrc.entrydeclarationstore.models.{ReplayInitializationResult, ReplayState, LastReplay, TrafficSwitchState}
 import uk.gov.hmrc.entrydeclarationstore.repositories.{EntryDeclarationRepo, AutoReplayRepository}
@@ -34,7 +34,7 @@ import ReplayInitializationResult._
 
 @Singleton
 class AutoReplayService @Inject()(
-  appConfig: AppConfig,
+  trafficeSwitchConfig: TrafficSwitchConfig,
   orchestrator: ReplayOrchestrator,
   repository: AutoReplayRepository,
   submissionsRepo: EntryDeclarationRepo,
@@ -82,7 +82,7 @@ class AutoReplayService @Inject()(
 
     def resetTrafficSwitchAndReplay(undeliveredCount: Int): Future[Boolean] =
       trafficSwitchService.startTrafficFlow.flatMap{_ =>
-        val testSubmissionCount: Int = Math.min(appConfig.replayCountAfterTrafficSwitchReset, undeliveredCount)
+        val testSubmissionCount: Int = Math.min(trafficeSwitchConfig.maxFailures, undeliveredCount)
         replaySubmissions(testSubmissionCount).flatMap{
           case (true, successful, failures) if successful >= failures =>
             replaySubmissions(undeliveredCount - successful).map(_._1)

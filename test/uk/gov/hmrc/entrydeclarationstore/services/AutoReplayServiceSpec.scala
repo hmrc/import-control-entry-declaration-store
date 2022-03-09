@@ -19,18 +19,18 @@ package uk.gov.hmrc.entrydeclarationstore.services
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.orchestrators.MockReplayOrchestrator
 import uk.gov.hmrc.entrydeclarationstore.repositories.{MockAutoReplayRepository, MockEntryDeclarationRepo}
 import uk.gov.hmrc.entrydeclarationstore.models.{AutoReplayStatus, AutoReplayRepoStatus, ReplayInitializationResult}
 import uk.gov.hmrc.entrydeclarationstore.models.{ReplayResult, LastReplay, ReplayTrigger, TrafficSwitchState}
+import uk.gov.hmrc.entrydeclarationstore.trafficswitch.TrafficSwitchConfig
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.duration._
 import java.time._
 
 class AutoReplayServiceSpec
     extends AnyWordSpec
-    with MockAppConfig
     with MockAutoReplayRepository
     with MockEntryDeclarationRepo
     with MockReplayStateRetrievalService
@@ -40,9 +40,12 @@ class AutoReplayServiceSpec
 
   val now: Instant = Instant.now
   val clock: Clock = Clock.fixed(now, ZoneOffset.UTC)
+  val TrafficSwitchMaxFailures: Int = 5
+  val config: TrafficSwitchConfig =
+    TrafficSwitchConfig(TrafficSwitchMaxFailures, 200.millis, notFlowingStateRefreshPeriod = 1.minute, flowingStateRefreshPeriod = 1.minute)
 
   val service = new AutoReplayService(
-    mockAppConfig,
+    config,
     mockReplayOrchestrator,
     mockAutoReplayRepository,
     mockEntryDeclarationRepo,
@@ -90,14 +93,13 @@ class AutoReplayServiceSpec
       }
 
       "reset TS and replay undelivered submissions if enabled and there are undelivered submissions" in {
-        val result1 = (Future.successful(ReplayInitializationResult.Started("1")), Future.successful(ReplayResult.Completed(3, 3, 0)))
+        val result1 = (Future.successful(ReplayInitializationResult.Started("1")), Future.successful(ReplayResult.Completed(TrafficSwitchMaxFailures, TrafficSwitchMaxFailures, 0)))
         val result2 = (Future.successful(ReplayInitializationResult.Started("1")), Future.successful(ReplayResult.Completed(2, 2, 0)))
         MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(TrafficSwitchState.NotFlowing)
         MockAutoReplayRepository.getStatus() returns Future.successful(Some(AutoReplayRepoStatus(true, None)))
-        MockEntryDeclarationRepo.totalUndeliveredMessages(now) returns Future.successful(5)
+        MockEntryDeclarationRepo.totalUndeliveredMessages(now) returns Future.successful(7)
         MockTrafficSwitchService.startTrafficFlow returns Future.successful(())
-        MockAppConfig.replayCountAfterTrafficSwitchReset returns 3
-        MockReplayOrchestrator.startReplay(Some(3), ReplayTrigger.Automatic) returns result1
+        MockReplayOrchestrator.startReplay(Some(TrafficSwitchMaxFailures), ReplayTrigger.Automatic) returns result1
         MockAutoReplayRepository.setLastReplay(Some("1"), now) returns
           Future.successful(Some(AutoReplayRepoStatus(true, Some(LastReplay(Some("1"), now)))))
         MockReplayOrchestrator.startReplay(Some(2), ReplayTrigger.Automatic) returns result2
@@ -110,7 +112,6 @@ class AutoReplayServiceSpec
         MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(TrafficSwitchState.NotFlowing)
         MockAutoReplayRepository.getStatus() returns Future.successful(Some(AutoReplayRepoStatus(true, None)))
         MockEntryDeclarationRepo.totalUndeliveredMessages(now) returns Future.successful(0)
-        MockAppConfig.replayCountAfterTrafficSwitchReset returns 3
         MockTrafficSwitchService.startTrafficFlow returns Future.successful(())
         service.replay().futureValue shouldBe false
       }
