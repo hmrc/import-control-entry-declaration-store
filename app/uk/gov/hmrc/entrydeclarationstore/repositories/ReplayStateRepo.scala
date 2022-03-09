@@ -24,10 +24,10 @@ import org.mongodb.scala.model.Updates._
 import org.mongodb.scala.model._
 import uk.gov.hmrc.mongo._
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
-
+import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.models.{ReplayTrigger, ReplayState}
 import uk.gov.hmrc.play.http.logging.Mdc
-
+import java.util.concurrent.TimeUnit
 import java.time.Instant
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -42,17 +42,22 @@ trait ReplayStateRepo {
 }
 
 @Singleton
-class ReplayStateRepoImpl @Inject()(
-  implicit mongo: MongoComponent,
-  ec: ExecutionContext
-) extends PlayMongoRepository[ReplayStatePersisted](
+class ReplayStateRepoImpl @Inject()
+  (config: AppConfig)
+  (implicit mongo: MongoComponent,
+   ec: ExecutionContext) extends PlayMongoRepository[ReplayStatePersisted](
   collectionName = "replayState",
   mongoComponent = mongo,
   domainFormat = ReplayStatePersisted.format,
   indexes = Seq(IndexModel(ascending("replayId"),
                            IndexOptions()
                             .name("replayIdIndex")
-                            .unique(true))),
+                            .unique(true)),
+                IndexModel(ascending("startTime"),
+                           IndexOptions()
+                            .name("expiryIndex")
+                            .unique(false)
+                            .expireAfter(config.replayStateExpirySeconds.toSeconds, TimeUnit.SECONDS))),
   extraCodecs = Seq(Codecs.playFormatCodec(MongoFormats.objectIdFormat)),
   replaceIndexes = true)
     with ReplayStateRepo {
