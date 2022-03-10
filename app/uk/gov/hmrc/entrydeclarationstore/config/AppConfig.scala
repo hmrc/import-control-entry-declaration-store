@@ -99,7 +99,10 @@ trait AppConfig {
 
   def replayLockDuration: FiniteDuration
 
+  def replayStateLifetime: FiniteDuration
+
   def autoReplayLockDuration: FiniteDuration
+
   def autoReplayRunInterval: FiniteDuration
 }
 
@@ -210,9 +213,13 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
 
   lazy val replayLockDuration: FiniteDuration = getFiniteDuration(config, "replay.lockDuration")
 
+  lazy val replayStateLifetime: FiniteDuration = getFiniteDuration(config, "replay.storageLifetime")
+
   lazy val autoReplayLockDuration: FiniteDuration = getFiniteDuration(config, "auto-replay.lockDuration")
+
   lazy val autoReplayRunInterval: FiniteDuration = getFiniteDuration(config, "auto-replay.runInterval")
 
   private def fibonacciRetryDelays(conf: Configuration): List[FiniteDuration] =
     Retrying.fibonacciDelays(getFiniteDuration(conf, "initialDelay"), conf.get[Int]("numberOfRetries"))
+
 }
