@@ -17,6 +17,7 @@
 package uk.gov.hmrc.entrydeclarationstore.services
 
 import play.api.Logging
+import uk.gov.hmrc.entrydeclarationstore.trafficswitch.TrafficSwitchConfig
 import uk.gov.hmrc.entrydeclarationstore.models.{ReplayResult, ReplayTrigger, AutoReplayStatus, AutoReplayRepoStatus}
 import uk.gov.hmrc.entrydeclarationstore.models.{ReplayInitializationResult, ReplayState, LastReplay, TrafficSwitchState}
 import uk.gov.hmrc.entrydeclarationstore.repositories.{EntryDeclarationRepo, AutoReplayRepository}
@@ -33,6 +34,7 @@ import ReplayInitializationResult._
 
 @Singleton
 class AutoReplayService @Inject()(
+  trafficeSwitchConfig: TrafficSwitchConfig,
   orchestrator: ReplayOrchestrator,
   repository: AutoReplayRepository,
   submissionsRepo: EntryDeclarationRepo,
@@ -42,10 +44,10 @@ class AutoReplayService @Inject()(
 ) extends AutoReplayer with Logging {
 
   val DefaultOtherHeaders: Seq[(String, String)] = Seq((USER_AGENT, "import-control-entry-declaration-store"))
-  def start(): Future[Unit] = repository.startAutoReplay()
-  def stop(): Future[Unit] = repository.stopAutoReplay()
+  def start(): Future[Unit] = repository.start()
+  def stop(): Future[Unit] = repository.stop()
 
-  def getStatus()(implicit ec: ExecutionContext): Future[AutoReplayStatus] = repository.getAutoReplayStatus().flatMap{
+  def getStatus()(implicit ec: ExecutionContext): Future[AutoReplayStatus] = repository.getStatus().flatMap{
     _.fold[Future[AutoReplayStatus]](Future.successful(AutoReplayStatus.Unavailable)){ status =>
         getLastReplayState(status.lastReplay).map{ replay =>
           status match {
@@ -58,55 +60,50 @@ class AutoReplayService @Inject()(
   }
 
   def replay()(implicit ec: ExecutionContext): Future[Boolean] = {
-    def replayUndeliveredSubmisstions(undeliveredCount: Int): Future[Boolean] =
-      if (undeliveredCount == 0) Future.successful(false)
+    implicit val defaultHeaderCarrier: HeaderCarrier = HeaderCarrier(otherHeaders = DefaultOtherHeaders)
+
+    def replaySubmissions(undeliveredCount: Int): Future[(Boolean, Int, Int)] =
+      if (undeliveredCount <= 0) Future.successful((false, 0, 0))
       else {
-        implicit val defaultHeaderCarrier: HeaderCarrier = HeaderCarrier(otherHeaders = DefaultOtherHeaders)
         logger.info(s"Attempting to replay $undeliveredCount undelivered submissions ... ")
         val (initResult, replayResult) = orchestrator.startReplay(Some(undeliveredCount), ReplayTrigger.Automatic)
         replayResult.flatMap {
-          case Completed(replayed) =>
-            logger.info(s"Succesfully replayed $replayed undelivered submissions" )
-            initResult.map{
-              case Started(replayId) =>
-                repository.setLastReplay(Some(replayId))
-                true
-              case AlreadyRunning(Some(replayId)) =>
-                repository.setLastReplay(Some(replayId))
-                true
-              case AlreadyRunning(None) =>
-                logger.error(s"Unable to recover replay Id of successful replay")
-                repository.setLastReplay(None)
-                true
+          case Completed(replayed, successful, failures) =>
+            logger.info(s"Succesfully replayed $successful undelivered submissions with $failures failures" )
+            initResult.flatMap{
+              case Started(replayId) => repository.setLastReplay(Some(replayId)).map(_ => (true, successful, failures))
+              case running: AlreadyRunning => repository.setLastReplay(running.replayId).map(_ => (true, successful, failures))
             }
           case Aborted(t) =>
             logger.error(s"Replay aborted with error ${t.getMessage()}")
-            Future.successful(false)
+            Future.successful((false, 0, 0))
+        }
+      }
+
+    def resetTrafficSwitchAndReplay(undeliveredCount: Int): Future[Boolean] =
+      trafficSwitchService.startTrafficFlow.flatMap{_ =>
+        val testSubmissionCount: Int = Math.min(trafficeSwitchConfig.maxFailures, undeliveredCount)
+        replaySubmissions(testSubmissionCount).flatMap{
+          case (true, successful, failures) if successful >= failures =>
+            replaySubmissions(undeliveredCount - successful).map(_._1)
+          case _ => Future.successful(false)
         }
       }
 
     getServiceStatusIfEnabled().flatMap{
       _.fold(Future.successful(false)){
-        case (TrafficSwitchState.NotFlowing, undeliveredCount) =>
-          logger.warn(s"Resetting TrafficSwitch ....")
-          // Reset traffic switch if found to have been triggered
-          trafficSwitchService.startTrafficFlow.flatMap{_ =>
-            replayUndeliveredSubmisstions(undeliveredCount)
-          }
-
-        case (TrafficSwitchState.Flowing, undeliveredCount) =>
-          replayUndeliveredSubmisstions(undeliveredCount)
+        case (TrafficSwitchState.NotFlowing, undeliveredCount) => resetTrafficSwitchAndReplay(undeliveredCount)
+        case (TrafficSwitchState.Flowing, undeliveredCount) => replaySubmissions(undeliveredCount).map(_._1)
       }
     }
   }
 
   private def getServiceStatusIfEnabled()(implicit ec: ExecutionContext): Future[Option[(TrafficSwitchState, Int)]] =
-    repository.getAutoReplayStatus().flatMap{
+    repository.getStatus().flatMap{
       case Some(AutoReplayRepoStatus(true, _)) =>
         trafficSwitchService.getTrafficSwitchState.flatMap{ trafficeSwitchState =>
           submissionsRepo.totalUndeliveredMessages(clock.instant).map(count => Some((trafficeSwitchState, count)))
         }
-
       case _ => Future.successful(None)
     }
 

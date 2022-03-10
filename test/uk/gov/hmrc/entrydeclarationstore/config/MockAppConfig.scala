@@ -81,6 +81,10 @@ trait MockAppConfig extends MockFactory {
     def nrsEnabled: CallHandler[Boolean] = mockAppConfig.nrsEnabled _ expects ()
 
     def replayBatchSize: CallHandler[Int] = (mockAppConfig.replayBatchSize _).expects
+
+    def autoReplayLockDuration: CallHandler[FiniteDuration] = mockAppConfig.autoReplayLockDuration _ expects ()
+    def autoReplayRunInterval: CallHandler[FiniteDuration] = mockAppConfig.autoReplayRunInterval _ expects ()
+
   }
 
 }

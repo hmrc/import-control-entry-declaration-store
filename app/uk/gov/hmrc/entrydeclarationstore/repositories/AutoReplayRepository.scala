@@ -22,7 +22,6 @@ import org.mongodb.scala._
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Updates._
 import org.mongodb.scala.model._
-import org.mongodb.scala.bson.conversions.Bson
 import uk.gov.hmrc.mongo._
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.play.http.logging.Mdc
@@ -31,9 +30,9 @@ import scala.concurrent.{ExecutionContext, Future}
 import uk.gov.hmrc.entrydeclarationstore.models._
 
 trait AutoReplayRepository {
-  def startAutoReplay(): Future[Unit]
-  def stopAutoReplay(): Future[Unit]
-  def getAutoReplayStatus(): Future[Option[AutoReplayRepoStatus]]
+  def start(): Future[Unit]
+  def stop(): Future[Unit]
+  def getStatus(): Future[Option[AutoReplayRepoStatus]]
   def setLastReplay(replayId: Option[String], when: Instant = Instant.now): Future[Option[AutoReplayRepoStatus]]
 }
 
@@ -57,7 +56,7 @@ class AutoReplayRepositoryImpl @Inject()(
       .headOption()
       .map( _ => ())
 
-  def getAutoReplayStatus(): Future[Option[AutoReplayRepoStatus]] =
+  def getStatus(): Future[Option[AutoReplayRepoStatus]] =
     Mdc.preservingMdc(
       collection
         .find(equal("_id", singletonId))
@@ -93,7 +92,7 @@ class AutoReplayRepositoryImpl @Inject()(
         }
     )
 
-  def startAutoReplay(): Future[Unit] =
+  def start(): Future[Unit] =
     Mdc.preservingMdc{
       collection
         .updateOne(equal("_id", singletonId), set("autoReplay", true), UpdateOptions().upsert(true))
@@ -104,7 +103,7 @@ class AutoReplayRepositoryImpl @Inject()(
         }
     }
 
-  def stopAutoReplay(): Future[Unit] =
+  def stop(): Future[Unit] =
     Mdc.preservingMdc{
       collection
         .updateOne(equal("_id", singletonId), set("autoReplay", false), UpdateOptions().upsert(true))
