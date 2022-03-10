@@ -99,7 +99,7 @@ trait AppConfig {
 
   def replayLockDuration: FiniteDuration
 
-  def replayStateExpirySeconds: FiniteDuration
+  def replayStateLifetime: FiniteDuration
 
   def autoReplayLockDuration: FiniteDuration
 
@@ -213,7 +213,7 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
 
   lazy val replayLockDuration: FiniteDuration = getFiniteDuration(config, "replay.lockDuration")
 
-  lazy val replayStateExpirySeconds: FiniteDuration = getFiniteDuration(config, "replay.expirySeconds")
+  lazy val replayStateLifetime: FiniteDuration = getFiniteDuration(config, "replay.storageLifetime")
 
   lazy val autoReplayLockDuration: FiniteDuration = getFiniteDuration(config, "auto-replay.lockDuration")
 

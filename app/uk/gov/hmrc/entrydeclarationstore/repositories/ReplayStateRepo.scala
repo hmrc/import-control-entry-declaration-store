@@ -57,7 +57,7 @@ class ReplayStateRepoImpl @Inject()
                            IndexOptions()
                             .name("expiryIndex")
                             .unique(false)
-                            .expireAfter(config.replayStateExpirySeconds.toSeconds, TimeUnit.SECONDS))),
+                            .expireAfter(config.replayStateLifetime.toSeconds, TimeUnit.SECONDS))),
   extraCodecs = Seq(Codecs.playFormatCodec(MongoFormats.objectIdFormat)),
   replaceIndexes = true)
     with ReplayStateRepo {
