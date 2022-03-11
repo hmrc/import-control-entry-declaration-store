@@ -85,12 +85,14 @@ class AutoReplayService @Inject()(
         val testSubmissionCount: Int = Math.min(trafficeSwitchConfig.maxFailures, undeliveredCount)
         replaySubmissions(testSubmissionCount).flatMap{
           case (true, successful, failures) if successful >= failures =>
+            logger.warn(s"Initial replay after Traffic Switch reset, succeeded $successful, failures $failures")
             replaySubmissions(undeliveredCount - successful).map(_._1)
-          case (true, successful, failures) if successful == 0 =>
+          case (_, successful, failures) if successful == 0 =>
             logger.error(s"Post TF-reset Submission failure, initial replay after Traffic Switch reset failed, succeeded $successful, failures $failures")
             Future.successful(false)
-          case (_, successful, _) =>
-            Future.successful(successful > 0)
+          case (result, successful, failures) =>
+            logger.warn(s"Initial replay after Traffic Switch reset, succeeded $successful, failures $failures")
+            Future.successful(result)
         }
       }
 
