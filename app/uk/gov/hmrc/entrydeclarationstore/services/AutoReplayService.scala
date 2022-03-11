@@ -86,11 +86,11 @@ class AutoReplayService @Inject()(
         replaySubmissions(testSubmissionCount).flatMap{
           case (true, successful, failures) if successful >= failures =>
             replaySubmissions(undeliveredCount - successful).map(_._1)
-          case (true, successful, failures) =>
-            logger.error(s"Post TF-reset Submission failure, initial replay after Traffic Switch reset failed to deliver majority of submissions, succeeded $successful, failures $failures")
-            Future.successful(successful > 0)
-          case _ =>
+          case (true, successful, failures) if successful == 0 =>
+            logger.error(s"Post TF-reset Submission failure, initial replay after Traffic Switch reset failed, succeeded $successful, failures $failures")
             Future.successful(false)
+          case (_, successful, _) =>
+            Future.successful(successful > 0)
         }
       }
 
