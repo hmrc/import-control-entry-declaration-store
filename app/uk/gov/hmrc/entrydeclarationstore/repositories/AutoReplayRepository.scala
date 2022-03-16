@@ -28,6 +28,7 @@ import uk.gov.hmrc.play.http.logging.Mdc
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import uk.gov.hmrc.entrydeclarationstore.models._
+import org.mongodb.scala.bson.conversions.Bson
 
 trait AutoReplayRepository {
   def start(): Future[Unit]
@@ -67,7 +68,7 @@ class AutoReplayRepositoryImpl @Inject()(
         }
         .recover{
           case err =>
-            logger.error(s"Database error attempting to update details of last replay: $err")
+            logger.error(s"Error retrieving auto-replay status: $err")
             None
         }
     )
@@ -77,7 +78,9 @@ class AutoReplayRepositoryImpl @Inject()(
       collection
         .findOneAndUpdate(
           equal("_id", singletonId),
-          replayId.fold(set("lastReplay.when", when))(id => combine(set("lastReplay.id", id), set("lastReplay.when", when))),
+          combine(
+            Vector(setOnInsert("autoReplay", true), set("lastReplay.when", when)) ++
+            replayId.fold[Vector[Bson]](Vector())(id => Vector(set("lastReplay.id", id))): _*),
           FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
         )
         .headOption
@@ -87,7 +90,7 @@ class AutoReplayRepositoryImpl @Inject()(
         }
         .recover{
           case err =>
-            logger.error(s"Database error attempting to update details of last replay: $err")
+            logger.error(s"Error attempting to update details of last auto-replay: $err")
             None
         }
     )
@@ -99,7 +102,7 @@ class AutoReplayRepositoryImpl @Inject()(
         .toFutureOption
         .map(_ => ())
         .recover{
-          case err => logger.error(s"Database error attempting to start auto=-replay: $err")
+          case err => logger.error(s"Error attempting to start auto-replay: $err")
         }
     }
 
@@ -110,7 +113,7 @@ class AutoReplayRepositoryImpl @Inject()(
         .toFutureOption
         .map(_ => ())
         .recover{
-          case err => logger.error(s"Database error attempting to stop auto=-replay: $err")
+          case err => logger.error(s"Error attempting to stop auto-replay: $err")
         }
 
     }
