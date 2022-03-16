@@ -87,7 +87,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
                 ),
   extraCodecs = Seq(Codecs.playFormatCodec(MongoFormats.objectIdFormat),
                     Codecs.playFormatCodec(EisSubmissionState.jsonFormat)),
-  replaceIndexes = false ) with EntryDeclarationRepo {
+  replaceIndexes = true ) with EntryDeclarationRepo {
   import EisSubmissionState.mongoFormatString
 
   val logger: Logger = Logger(getClass)
