@@ -83,6 +83,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
                             .background(true)),
                 IndexModel(ascending("eisSubmissionState", "receivedDateTime"),
                            IndexOptions()
+                            .name("eisSubmissionState_1_receivedDateTime_1")
                             .partialFilterExpression(equal("eisSubmissionState", EisSubmissionState.mongoFormatString(EisSubmissionState.Error))))
                 ),
   extraCodecs = Seq(Codecs.playFormatCodec(MongoFormats.objectIdFormat),
