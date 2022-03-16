@@ -65,11 +65,12 @@ class AutoReplayService @Inject()(
     def replaySubmissions(undeliveredCount: Int): Future[(Boolean, Int, Int)] =
       if (undeliveredCount <= 0) Future.successful((false, 0, 0))
       else {
-        logger.info(s"Attempting to replay $undeliveredCount undelivered submissions ... ")
+        logger.warn(s"Attempting to replay $undeliveredCount undelivered submissions ... ")
         val (initResult, replayResult) = orchestrator.startReplay(Some(undeliveredCount), ReplayTrigger.Automatic)
         replayResult.flatMap {
           case Completed(replayed, successful, failures) =>
-            logger.info(s"Succesfully replayed $successful undelivered submissions with $failures failures" )
+            logger.warn(s"Succesfully replayed $successful undelivered submissions with $failures failures" )
+            if (failures > 0) logger.warn(s"Failed to auto-replay $failures submissions")
             initResult.flatMap{
               case Started(replayId) => repository.setLastReplay(Some(replayId)).map(_ => (true, successful, failures))
               case running: AlreadyRunning => repository.setLastReplay(running.replayId).map(_ => (true, successful, failures))
@@ -96,6 +97,7 @@ class AutoReplayService @Inject()(
         }
       }
 
+    logger.info(s"Checking for undelivered submissions ...")
     getServiceStatusIfEnabled().flatMap{
       _.fold(Future.successful(false)){
         case (TrafficSwitchState.NotFlowing, undeliveredCount) => resetTrafficSwitchAndReplay(undeliveredCount)
