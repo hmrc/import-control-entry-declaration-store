@@ -49,7 +49,7 @@ class AutoReplayService @Inject()(
 
   def getStatus()(implicit ec: ExecutionContext): Future[AutoReplayStatus] = repository.getStatus().flatMap{
     _.fold[Future[AutoReplayStatus]](Future.successful(AutoReplayStatus.Unavailable)){ status =>
-        getLastReplayState(status.lastReplay).map{ replay =>
+        mostRecentReplayState().map{ replay =>
           status match {
             case AutoReplayRepoStatus(true, _) => AutoReplayStatus.On(replay)
             case AutoReplayRepoStatus(false, _) => AutoReplayStatus.Off(replay)
@@ -62,8 +62,8 @@ class AutoReplayService @Inject()(
   def replay()(implicit ec: ExecutionContext): Future[Boolean] = {
     implicit val defaultHeaderCarrier: HeaderCarrier = HeaderCarrier(otherHeaders = DefaultOtherHeaders)
 
-    def replaySubmissions(undeliveredCount: Int): Future[(Boolean, Int, Int)] =
-      if (undeliveredCount <= 0) Future.successful((false, 0, 0))
+    def replaySubmissions(undeliveredCount: Int): Future[(Boolean, Option[(Int, Int)])] =
+      if (undeliveredCount <= 0) Future.successful((false, Some((0, 0))))
       else {
         logger.warn(s"Attempting to replay $undeliveredCount undelivered submissions ... ")
         val (initResult, replayResult) = orchestrator.startReplay(Some(undeliveredCount), ReplayTrigger.Automatic)
@@ -72,12 +72,12 @@ class AutoReplayService @Inject()(
             logger.warn(s"Succesfully replayed $successful undelivered submissions with $failures failures" )
             if (failures > 0) logger.warn(s"Failed to auto-replay $failures submissions")
             initResult.flatMap{
-              case Started(replayId) => repository.setLastReplay(Some(replayId)).map(_ => (true, successful, failures))
-              case running: AlreadyRunning => repository.setLastReplay(running.replayId).map(_ => (true, successful, failures))
+              case Started(replayId) => repository.setLastReplay(Some(replayId)).map(_ => (true, Some((successful, failures))))
+              case running: AlreadyRunning => repository.setLastReplay(running.replayId).map(_ => (true, Some((successful, failures))))
             }
-          case Aborted(t) =>
+          case Aborted(t, replayId) =>
             logger.error(s"Replay aborted with error ${t.getMessage()}")
-            Future.successful((false, 0, 0))
+            repository.setLastReplay(Some(replayId)).map(_ => (false, None))
         }
       }
 
@@ -85,14 +85,17 @@ class AutoReplayService @Inject()(
       trafficSwitchService.startTrafficFlow.flatMap{_ =>
         val testSubmissionCount: Int = Math.min(trafficeSwitchConfig.maxFailures, undeliveredCount)
         replaySubmissions(testSubmissionCount).flatMap{
-          case (true, successful, failures) if successful >= failures =>
+          case (true, Some((successful, failures))) if successful >= failures =>
             logger.warn(s"Initial replay after Traffic Switch reset, succeeded $successful, failures $failures")
             replaySubmissions(undeliveredCount - successful).map(_._1)
-          case (_, successful, failures) if successful == 0 =>
+          case (_, Some((successful, failures))) if successful == 0 =>
             logger.error(s"Post TF-reset Submission failure, initial replay after Traffic Switch reset failed, succeeded $successful, failures $failures")
             Future.successful(false)
-          case (result, successful, failures) =>
+          case (result, Some((successful, failures))) =>
             logger.warn(s"Initial replay after Traffic Switch reset, succeeded $successful, failures $failures")
+            Future.successful(result)
+          case (result, None) =>
+            logger.warn(s"Initial replay after Traffic Switch reset has been aborted")
             Future.successful(result)
         }
       }
@@ -114,6 +117,9 @@ class AutoReplayService @Inject()(
         }
       case _ => Future.successful(None)
     }
+
+  private def mostRecentReplayState(): Future[Option[ReplayState]] =
+    replayService.mostRecentByTrigger(ReplayTrigger.Automatic)
 
   private def getLastReplayState(lastReplay: Option[LastReplay]): Future[Option[ReplayState]] =
     lastReplay.fold[Future[Option[ReplayState]]](Future.successful(None)){lr =>

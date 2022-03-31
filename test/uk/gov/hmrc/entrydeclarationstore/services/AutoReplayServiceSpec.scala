@@ -59,6 +59,7 @@ class AutoReplayServiceSpec
         val status = Some(AutoReplayRepoStatus(true, None))
 
         MockAutoReplayRepository.getStatus returns Future.successful(status)
+        MockReplayStateRetrievalService.mostRecentByTrigger(ReplayTrigger.Automatic) returns Future.successful(None)
         service.getStatus.futureValue shouldBe AutoReplayStatus.On(None)
       }
     }

@@ -27,14 +27,17 @@ trait MockReplayStateRepo extends MockFactory {
   val mockReplayStateRepo: ReplayStateRepo = mock[ReplayStateRepo]
 
   object MockReplayStateRepo {
+    def list(count: Option[Int]): CallHandler[Future[List[ReplayState]]] =
+      (mockReplayStateRepo.list _).expects(count)
+
+    def mostRecentByTrigger(trigger: ReplayTrigger): CallHandler[Future[Option[ReplayState]]] =
+      (mockReplayStateRepo.mostRecentByTrigger _).expects(trigger)
+
     def lookupState(replayId: String): CallHandler[Future[Option[ReplayState]]] =
       (mockReplayStateRepo.lookupState _).expects(replayId)
 
     def lookupIdOfLatest: CallHandler[Future[Option[String]]] =
       (mockReplayStateRepo.lookupIdOfLatest _).expects
-
-    def setState(replayId: String, replayState: ReplayState): CallHandler[Future[Unit]] =
-      (mockReplayStateRepo.setState(_: String, _: ReplayState)).expects(replayId, replayState)
 
     def insert(replayId: String, trigger: ReplayTrigger, totalToReplay: Int, startTime: Instant): CallHandler[Future[Unit]] =
       (mockReplayStateRepo.insert(_: String, _: ReplayTrigger, _: Int, _: Instant)).expects(replayId, trigger, totalToReplay, startTime)

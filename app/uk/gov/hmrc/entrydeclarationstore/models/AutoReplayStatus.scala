@@ -20,13 +20,13 @@ import play.api.libs.json._
 import play.api.libs.json.Reads._
 import play.api.libs.functional.syntax._
 import java.time.Instant
+import uk.gov.hmrc.entrydeclarationstore.models.ReplayState.Implicits._
 
 sealed trait AutoReplayStatus {
   val lastReplay: Option[ReplayState]
 }
 
 object AutoReplayStatus {
-  import ReplayState._
 
   case class On(val lastReplay: Option[ReplayState]) extends AutoReplayStatus
   case class Off(val lastReplay: Option[ReplayState]) extends AutoReplayStatus

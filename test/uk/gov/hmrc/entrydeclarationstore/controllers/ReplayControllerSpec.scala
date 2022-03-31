@@ -28,10 +28,11 @@ import uk.gov.hmrc.entrydeclarationstore.services.MockSubmissionReplayService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, Promise}
+import uk.gov.hmrc.entrydeclarationstore.services.MockReplayStateRetrievalService
 
-class ReplayControllerSpec extends AnyWordSpec with MockReplayOrchestrator with MockSubmissionReplayService {
+class ReplayControllerSpec extends AnyWordSpec with MockReplayOrchestrator with MockSubmissionReplayService with MockReplayStateRetrievalService {
   val controller =
-    new ReplayController(Helpers.stubControllerComponents(), mockReplayOrchestrator, mockSubmissionReplayService)
+    new ReplayController(Helpers.stubControllerComponents(), mockReplayOrchestrator, mockSubmissionReplayService, mockReplayStateRetrievalService)
   val limit    = 100
   val replayId = "replayId"
 

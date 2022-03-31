@@ -21,14 +21,23 @@ import play.api.libs.json.{Format, Json}
 import java.time.Instant
 
 case class ReplayState(
-  trigger: ReplayTrigger,
+  replayId: String,
   startTime: Instant,
-  endTime: Option[Instant],
-  completed: Boolean,
-  successCount: Int,
-  failureCount: Int,
-  totalToReplay: Int)
+  totalToReplay: Int,
+  trigger: ReplayTrigger,
+  completed: Boolean = false,
+  endTime: Option[Instant] = None,
+  successCount: Int = 0,
+  failureCount: Int = 0)
 
 object ReplayState {
-  implicit val formats: Format[ReplayState] = Json.format[ReplayState]
+  object Implicits {
+    implicit val replayStateFormat: Format[ReplayState] = Json.format[ReplayState]
+  }
+
+  object MongoImplicits {
+    import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats.Implicits._
+
+    implicit val mongoFormat: Format[ReplayState] = Json.format[ReplayState]
+  }
 }

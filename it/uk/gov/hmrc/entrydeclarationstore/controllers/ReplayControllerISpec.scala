@@ -137,6 +137,7 @@ class ReplayControllerISpec
   }
 
   def getReplayState(replayId: String): ReplayState = {
+    import ReplayState.Implicits._
     val response = await(client.url(s"http://localhost:$port/import-control/replays/$replayId").get())
     response.status shouldBe OK
     response.json.as[ReplayState]

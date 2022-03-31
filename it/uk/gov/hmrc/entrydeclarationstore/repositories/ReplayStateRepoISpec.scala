@@ -47,7 +47,7 @@ class ReplayStateRepoISpec
     super.beforeAll()
     await(repository.removeAll)
   }
-  val replayId = "replayId"
+  val initialReplayId = "replayId"
 
   override implicit lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
@@ -56,19 +56,19 @@ class ReplayStateRepoISpec
 
   val totalToReplay: Int       = 10
   val startTime: Instant       = Instant.now
-  val replayState: ReplayState = ReplayState(ReplayTrigger.Manual, startTime, None, completed = false, 0, 0, totalToReplay)
+  val replayState: ReplayState = ReplayState(initialReplayId, startTime, totalToReplay, ReplayTrigger.Manual, false, None, 0, 0)
   "ReplayStateRepo" when {
     "inserting a replay state" must {
       "work" in {
-        await(repository.insert(replayId, ReplayTrigger.Manual, totalToReplay, startTime))
+        await(repository.insert(initialReplayId, ReplayTrigger.Manual, totalToReplay, startTime))
       }
       "fail if the replayId exists" in {
         intercept[Exception] {
-          await(repository.insert(replayId, ReplayTrigger.Manual, totalToReplay, startTime))
+          await(repository.insert(initialReplayId, ReplayTrigger.Manual, totalToReplay, startTime))
         }
       }
       "create a replay of the correct format" in {
-        await(repository.lookupState(replayId)) shouldBe Some(replayState)
+        await(repository.lookupState(initialReplayId)) shouldBe Some(replayState)
       }
     }
     "looking up a replay that does not exist" must {
@@ -84,11 +84,11 @@ class ReplayStateRepoISpec
         await(repository.insert(replayIdToUpdate, ReplayTrigger.Manual, totalToReplay, startTime))
         await(repository.incrementCounts(replayIdToUpdate, successesToAdd, failuresToAdd)) shouldBe true
         await(repository.lookupState(replayIdToUpdate)) shouldBe
-          Some(replayState.copy(successCount = successesToAdd, failureCount = failuresToAdd))
+          Some(replayState.copy(replayId = replayIdToUpdate, successCount = successesToAdd, failureCount = failuresToAdd))
         await(repository.incrementCounts(replayIdToUpdate, successesToAdd, failuresToAdd)) shouldBe true
         await(repository.lookupState(replayIdToUpdate)) shouldBe Some(
           replayState
-            .copy(successCount = successesToAdd * 2, failureCount = failuresToAdd * 2))
+            .copy(replayId = replayIdToUpdate, successCount = successesToAdd * 2, failureCount = failuresToAdd * 2))
 
       }
       "return false if the replay does not exist" in {
@@ -98,37 +98,12 @@ class ReplayStateRepoISpec
     "setting a replay to completed" must {
       val endTime = Instant.now
       "return update the replay and return true if the replay exists" in {
-        await(repository.setCompleted(replayId, endTime)) shouldBe true
-        await(repository.lookupState(replayId)) shouldBe Some(
+        await(repository.setCompleted(initialReplayId, endTime)) shouldBe true
+        await(repository.lookupState(initialReplayId)) shouldBe Some(
           replayState.copy(endTime = Some(endTime), completed = true))
       }
       "return false if replay does not exist" in {
         await(repository.setCompleted("unknownReplayId", endTime)) shouldBe false
-      }
-    }
-
-    "putting the state" when {
-      val otherReplayId = "someReplayId1"
-      val t1            = Instant.now
-
-      "no state for a replayId exists" must {
-        "insert" in {
-          val replayState = ReplayState(ReplayTrigger.Manual, t1, None, completed = false, 0, 0, 0)
-
-          await(repository.setState(otherReplayId, replayState))
-          await(repository.lookupState(otherReplayId)) shouldBe Some(replayState)
-        }
-      }
-      "state for a replayId already exists" must {
-        "update" in {
-          val t2 = t1.plusSeconds(1)
-
-          // Update every field...
-          val updatedReplayState = ReplayState(ReplayTrigger.Manual, t2, Some(t2), completed = true, 123, 654, 777)
-
-          await(repository.setState(otherReplayId, updatedReplayState))
-          await(repository.lookupState(otherReplayId)) shouldBe Some(updatedReplayState)
-        }
       }
     }
 
@@ -143,8 +118,8 @@ class ReplayStateRepoISpec
       "an incomplete replay state exists" must {
         "return it" in {
           await(repository.removeAll)
-          await(repository.insert(replayId, ReplayTrigger.Manual, totalToReplay, startTime))
-          await(repository.lookupIdOfLatest) shouldBe Some(replayId)
+          await(repository.insert(initialReplayId, ReplayTrigger.Manual, totalToReplay, startTime))
+          await(repository.lookupIdOfLatest) shouldBe Some(initialReplayId)
         }
       }
 
