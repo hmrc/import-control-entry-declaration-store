@@ -107,6 +107,31 @@ class ReplayStateRepoISpec
       }
     }
 
+    "putting the state" when {
+      val otherReplayId = "someReplayId1"
+      val t1            = Instant.now
+
+      "no state for a replayId exists" must {
+        "insert" in {
+          val replayState = ReplayState(otherReplayId, t1, 0, ReplayTrigger.Manual, false, None, 0, 0)
+
+          await(repository.setState(replayState))
+          await(repository.lookupState(otherReplayId)) shouldBe Some(replayState)
+        }
+      }
+      "state for a replayId already exists" must {
+        "update" in {
+          val t2 = t1.plusSeconds(1)
+
+          // Update every field...
+          val updatedReplayState = ReplayState(otherReplayId, t2, 777, ReplayTrigger.Manual, true, Some(t2), 123, 654)
+
+          await(repository.setState(updatedReplayState))
+          await(repository.lookupState(otherReplayId)) shouldBe Some(updatedReplayState)
+        }
+      }
+    }
+
     "looking up the latest replay" when {
       "no replay states exist" must {
         "return None" in {

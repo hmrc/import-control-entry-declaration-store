@@ -35,6 +35,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait ReplayStateRepo {
   def list(count: Option[Int]): Future[List[ReplayState]]
   def lookupState(replayId: String): Future[Option[ReplayState]]
+  def setState(replayState: ReplayState): Future[Unit]
   def lookupIdOfLatest: Future[Option[String]]
   def mostRecentByTrigger(trigger: ReplayTrigger): Future[Option[ReplayState]]
   def insert(replayId: String, trigger: ReplayTrigger, totalToReplay: Int, startTime: Instant): Future[Unit]
@@ -79,6 +80,7 @@ class ReplayStateRepoImpl @Inject()
         collection
           .withReadPreference(ReadPreference.primaryPreferred)
           .find()
+          .sort(descending("startTime"))
           .limit(count.getOrElse(Int.MaxValue))
           .collect
           .toFutureOption
@@ -117,6 +119,17 @@ class ReplayStateRepoImpl @Inject()
         case Some(id) => Some(id.replayId)
         case _ => None
       }
+
+override def setState(replayState: ReplayState): Future[Unit] =
+    Mdc
+      .preservingMdc(
+        collection
+          .findOneAndReplace(equal("replayId", replayState.replayId),
+                             replayState,
+                             FindOneAndReplaceOptions().upsert(true))
+          .headOption
+      )
+      .map(_ => ())
 
   override def insert(replayId: String, trigger: ReplayTrigger, totalToReplay: Int, startTime: Instant): Future[Unit] =
     Mdc
