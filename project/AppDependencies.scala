@@ -24,9 +24,9 @@ object AppDependencies {
     "org.scalamock"          %% "scalamock"               % "5.2.0"          % "test, it",
     "org.scalacheck"         %% "scalacheck"              % "1.15.4"         % "test, it",
     "com.github.tomakehurst" %  "wiremock-jre8"           % "2.32.0"         % "test, it",
-    "org.mockito"            %  "mockito-core"            % "4.2.0"          % "test, it",
-    "org.mockito"            %% "mockito-scala"           % "1.16.49"        % "test, it",
-    "org.mockito"            %% "mockito-scala-scalatest" % "1.16.49"        % "test, it",
+    "org.mockito"            %  "mockito-core"            % "4.4.0"          % "test, it",
+    "org.mockito"            %% "mockito-scala"           % "1.17.5"        % "test, it",
+    "org.mockito"            %% "mockito-scala-scalatest" % "1.17.5"        % "test, it",
     "com.miguno.akka"        %% "akka-mock-scheduler"     % "0.5.5"          % "test, it",
     "com.typesafe.akka"      %% "akka-testkit"            % "2.6.19"         % "test, it"
   )
