@@ -190,7 +190,7 @@ class ReplayControllerISpec
 
       val replayState = getReplayState(replayId)
 
-      replayState.completed     shouldBe true
+      replayState.completed     shouldBe Some(true)
       replayState.failureCount  shouldBe 0
       replayState.totalToReplay shouldBe numToReplay
       replayState.successCount  shouldBe numToReplay
@@ -237,7 +237,7 @@ class ReplayControllerISpec
 
             val replayState = getReplayState(replayId)
 
-            replayState.completed     shouldBe true
+            replayState.completed     shouldBe Some(true)
             replayState.failureCount  shouldBe numFailures
             replayState.totalToReplay shouldBe numDeclarations
             replayState.successCount  shouldBe numDeclarations - numFailures
@@ -263,7 +263,7 @@ class ReplayControllerISpec
 
           eventually {
             val replayState = getReplayState(replayId)
-            replayState.completed shouldBe true
+            replayState.completed shouldBe Some(false)
 
             // Should have replayed one successfully
             // (but note that we don't have information about the number of
@@ -291,7 +291,7 @@ class ReplayControllerISpec
 
           eventually {
             val replayState = getReplayState(replayId)
-            replayState.completed shouldBe true
+            replayState.completed shouldBe Some(false)
 
             // Should have replayed one successfully
             // (but note that we don't have information about the number of
@@ -317,7 +317,7 @@ class ReplayControllerISpec
 
           eventually {
             val replayState = getReplayState(replayId)
-            replayState.completed shouldBe true
+            replayState.completed shouldBe Some(true)
           }
         }
       }

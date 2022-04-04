@@ -19,7 +19,7 @@ package uk.gov.hmrc.entrydeclarationstore.services
 import play.api.Logging
 import uk.gov.hmrc.entrydeclarationstore.trafficswitch.TrafficSwitchConfig
 import uk.gov.hmrc.entrydeclarationstore.models.{ReplayResult, ReplayTrigger, AutoReplayStatus, AutoReplayRepoStatus}
-import uk.gov.hmrc.entrydeclarationstore.models.{ReplayInitializationResult, ReplayState, LastReplay, TrafficSwitchState}
+import uk.gov.hmrc.entrydeclarationstore.models.{ReplayInitializationResult, ReplayState, TrafficSwitchState}
 import uk.gov.hmrc.entrydeclarationstore.repositories.{EntryDeclarationRepo, AutoReplayRepository}
 import uk.gov.hmrc.entrydeclarationstore.autoreplay.AutoReplayer
 import uk.gov.hmrc.entrydeclarationstore.orchestrators.ReplayOrchestrator
@@ -120,10 +120,5 @@ class AutoReplayService @Inject()(
 
   private def mostRecentReplayState(): Future[Option[ReplayState]] =
     replayService.mostRecentByTrigger(ReplayTrigger.Automatic)
-
-  private def getLastReplayState(lastReplay: Option[LastReplay]): Future[Option[ReplayState]] =
-    lastReplay.fold[Future[Option[ReplayState]]](Future.successful(None)){lr =>
-      lr.id.fold[Future[Option[ReplayState]]](Future.successful(None))(replayService.retrieveReplayState(_))
-    }
 
 }

@@ -34,7 +34,7 @@ class ReplayStateRetrievalServiceSpec extends AnyWordSpec with MockReplayStateRe
   "SubmissionStateRetrievalService" when {
     "submission exists for a submissionId" must {
       "return it" in {
-        val state = ReplayState(replayId, Instant.now, 2, ReplayTrigger.Automatic, false, None, 0, 1)
+        val state = ReplayState(replayId, Instant.now, 2, ReplayTrigger.Automatic, None, None, 0, 1)
 
         MockReplayStateRepo.lookupState(replayId) returns Future.successful(Some(state))
 

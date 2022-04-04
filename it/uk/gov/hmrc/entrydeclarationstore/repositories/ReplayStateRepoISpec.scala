@@ -56,7 +56,7 @@ class ReplayStateRepoISpec
 
   val totalToReplay: Int       = 10
   val startTime: Instant       = Instant.now
-  val replayState: ReplayState = ReplayState(initialReplayId, startTime, totalToReplay, ReplayTrigger.Manual, false, None, 0, 0)
+  val replayState: ReplayState = ReplayState(initialReplayId, startTime, totalToReplay, ReplayTrigger.Manual, None, None, 0, 0)
   "ReplayStateRepo" when {
     "inserting a replay state" must {
       "work" in {
@@ -98,12 +98,12 @@ class ReplayStateRepoISpec
     "setting a replay to completed" must {
       val endTime = Instant.now
       "return update the replay and return true if the replay exists" in {
-        await(repository.setCompleted(initialReplayId, endTime)) shouldBe true
+        await(repository.setCompleted(initialReplayId, true, endTime)) shouldBe true
         await(repository.lookupState(initialReplayId)) shouldBe Some(
-          replayState.copy(endTime = Some(endTime), completed = true))
+          replayState.copy(endTime = Some(endTime), completed = Some(true)))
       }
       "return false if replay does not exist" in {
-        await(repository.setCompleted("unknownReplayId", endTime)) shouldBe false
+        await(repository.setCompleted("unknownReplayId", true, endTime)) shouldBe false
       }
     }
 
@@ -113,7 +113,7 @@ class ReplayStateRepoISpec
 
       "no state for a replayId exists" must {
         "insert" in {
-          val replayState = ReplayState(otherReplayId, t1, 0, ReplayTrigger.Manual, false, None, 0, 0)
+          val replayState = ReplayState(otherReplayId, t1, 0, ReplayTrigger.Manual, None, None, 0, 0)
 
           await(repository.setState(replayState))
           await(repository.lookupState(otherReplayId)) shouldBe Some(replayState)
@@ -124,7 +124,7 @@ class ReplayStateRepoISpec
           val t2 = t1.plusSeconds(1)
 
           // Update every field...
-          val updatedReplayState = ReplayState(otherReplayId, t2, 777, ReplayTrigger.Manual, true, Some(t2), 123, 654)
+          val updatedReplayState = ReplayState(otherReplayId, t2, 777, ReplayTrigger.Manual, Some(true), Some(t2), 123, 654)
 
           await(repository.setState(updatedReplayState))
           await(repository.lookupState(otherReplayId)) shouldBe Some(updatedReplayState)

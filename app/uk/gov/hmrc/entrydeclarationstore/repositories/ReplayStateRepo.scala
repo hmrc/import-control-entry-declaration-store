@@ -40,7 +40,7 @@ trait ReplayStateRepo {
   def mostRecentByTrigger(trigger: ReplayTrigger): Future[Option[ReplayState]]
   def insert(replayId: String, trigger: ReplayTrigger, totalToReplay: Int, startTime: Instant): Future[Unit]
   def incrementCounts(replayId: String, successesToAdd: Int, failuresToAdd: Int): Future[Boolean]
-  def setCompleted(replayId: String, endTime: Instant): Future[Boolean]
+  def setCompleted(replayId: String, completed: Boolean, endTime: Instant): Future[Boolean]
 }
 
 @Singleton
@@ -153,12 +153,12 @@ override def setState(replayState: ReplayState): Future[Unit] =
         result => result.map(_.getModifiedCount > 0).getOrElse(false)
       }
 
-  override def setCompleted(replayId: String, endTime: Instant): Future[Boolean] =
+  override def setCompleted(replayId: String, completed: Boolean, endTime: Instant): Future[Boolean] =
     Mdc
       .preservingMdc(
         collection
           .updateOne(equal("replayId", replayId),
-                    combine(set("completed", true), set("endTime", endTime)))
+                    combine(set("completed", completed), set("endTime", endTime)))
           .headOption
       )
       .map(_.map(_.getModifiedCount > 0).getOrElse(false))

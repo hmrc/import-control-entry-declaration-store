@@ -39,7 +39,7 @@ class ReplayStateRetrievalControllerSpec extends AnyWordSpec with MockReplayStat
   "ReplayStateRetrievalController" when {
     "state exists for a replayId" must {
       "return it" in {
-        val state = ReplayState(replayId, Instant.now, 2, ReplayTrigger.Manual, false, None, 0, 1)
+        val state = ReplayState(replayId, Instant.now, 2, ReplayTrigger.Manual, None, None, 0, 1)
 
         MockReplayStateRetrievalService.retrieveReplayState(replayId) returns Future.successful(Some(state))
 

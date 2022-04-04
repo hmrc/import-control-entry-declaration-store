@@ -45,8 +45,8 @@ trait MockReplayStateRepo extends MockFactory {
     def incrementCounts(replayId: String, successesToAdd: Int, failuresToAdd: Int): CallHandler[Future[Boolean]] =
       (mockReplayStateRepo.incrementCounts(_: String, _: Int, _: Int)).expects(replayId, successesToAdd, failuresToAdd)
 
-    def setCompleted(replayId: String, endTime: Instant): CallHandler[Future[Boolean]] =
-      (mockReplayStateRepo.setCompleted(_: String, _: Instant)).expects(replayId, endTime)
+    def setCompleted(replayId: String, completed: Boolean, endTime: Instant): CallHandler[Future[Boolean]] =
+      (mockReplayStateRepo.setCompleted(_: String, _: Boolean, _: Instant)).expects(replayId, completed, endTime)
   }
 
 }

@@ -80,7 +80,7 @@ class AutoReplayStatusSpec extends AnyWordSpec {
 
   "AutoReplayStatus with ReplayState" when {
     val replayId = "replayId"
-    val replayState: ReplayState = ReplayState(replayId, now, 5, ReplayTrigger.Automatic, true, Some(now), 5, 0)
+    val replayState: ReplayState = ReplayState(replayId, now, 5, ReplayTrigger.Automatic, Some(true), Some(now), 5, 0)
     "On" must {
       val json = Json.parse("""
                               |{

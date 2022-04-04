@@ -25,7 +25,7 @@ case class ReplayState(
   startTime: Instant,
   totalToReplay: Int,
   trigger: ReplayTrigger,
-  completed: Boolean = false,
+  completed: Option[Boolean] = None,
   endTime: Option[Instant] = None,
   successCount: Int = 0,
   failureCount: Int = 0)
