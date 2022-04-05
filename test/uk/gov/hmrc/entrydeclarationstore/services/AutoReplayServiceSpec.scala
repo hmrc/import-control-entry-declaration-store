@@ -88,8 +88,6 @@ class AutoReplayServiceSpec
         MockAutoReplayRepository.getStatus() returns Future.successful(Some(AutoReplayRepoStatus(true)))
         MockEntryDeclarationRepo.totalUndeliveredMessages(now) returns Future.successful(5)
         MockReplayOrchestrator.startReplay(Some(5), ReplayTrigger.Automatic) returns result
-        // MockAutoReplayRepository.setLastReplay(Some("1"), now) returns
-        //   Future.successful(Some(AutoReplayRepoStatus(true, Some(LastReplay(Some("1"), now)))))
         service.replay().futureValue shouldBe true
       }
 
@@ -101,11 +99,7 @@ class AutoReplayServiceSpec
         MockEntryDeclarationRepo.totalUndeliveredMessages(now) returns Future.successful(7)
         MockTrafficSwitchService.startTrafficFlow returns Future.successful(())
         MockReplayOrchestrator.startReplay(Some(TrafficSwitchMaxFailures), ReplayTrigger.Automatic) returns result1
-        // MockAutoReplayRepository.setLastReplay(Some("1"), now) returns
-        //   Future.successful(Some(AutoReplayRepoStatus(true, Some(LastReplay(Some("1"), now)))))
         MockReplayOrchestrator.startReplay(Some(2), ReplayTrigger.Automatic) returns result2
-        // MockAutoReplayRepository.setLastReplay(Some("1"), now) returns
-        //   Future.successful(Some(AutoReplayRepoStatus(true, Some(LastReplay(Some("1"), now)))))
         service.replay().futureValue shouldBe true
       }
 
