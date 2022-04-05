@@ -21,9 +21,16 @@ import uk.gov.hmrc.entrydeclarationstore.repositories.ReplayStateRepo
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
+import uk.gov.hmrc.entrydeclarationstore.models.ReplayTrigger
 
 @Singleton
 class ReplayStateRetrievalService @Inject()(repository: ReplayStateRepo) {
   def retrieveReplayState(replayId: String): Future[Option[ReplayState]] =
     repository.lookupState(replayId)
+
+  def mostRecentByTrigger(trigger: ReplayTrigger): Future[Option[ReplayState]] =
+    repository.mostRecentByTrigger(trigger)
+
+  def replays(count: Option[Int] = None): Future[List[ReplayState]] =
+    repository.list(count)
 }

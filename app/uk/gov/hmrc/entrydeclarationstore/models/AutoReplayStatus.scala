@@ -19,14 +19,13 @@ package uk.gov.hmrc.entrydeclarationstore.models
 import play.api.libs.json._
 import play.api.libs.json.Reads._
 import play.api.libs.functional.syntax._
-import java.time.Instant
+import uk.gov.hmrc.entrydeclarationstore.models.ReplayState.Implicits._
 
 sealed trait AutoReplayStatus {
   val lastReplay: Option[ReplayState]
 }
 
 object AutoReplayStatus {
-  import ReplayState._
 
   case class On(val lastReplay: Option[ReplayState]) extends AutoReplayStatus
   case class Off(val lastReplay: Option[ReplayState]) extends AutoReplayStatus
@@ -62,14 +61,9 @@ object AutoReplayStatus {
   implicit val format: Format[AutoReplayStatus] = Format(reads, writes)
 }
 
-case class LastReplay(id: Option[String], when: Instant)
-
-case class AutoReplayRepoStatus(autoReplay: Boolean, lastReplay: Option[LastReplay])
+case class AutoReplayRepoStatus(autoReplay: Boolean)
 
 object AutoReplayRepoStatus {
-  import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats.Implicits._
-
-  implicit val resultsFormat: Format[LastReplay] = Json.format[LastReplay]
   implicit val format: Format[AutoReplayRepoStatus] = Json.format[AutoReplayRepoStatus]
 }
 

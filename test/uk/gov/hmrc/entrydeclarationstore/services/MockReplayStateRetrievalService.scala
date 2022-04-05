@@ -18,7 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.services
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
-import uk.gov.hmrc.entrydeclarationstore.models.ReplayState
+import uk.gov.hmrc.entrydeclarationstore.models.{ReplayTrigger, ReplayState}
 
 import scala.concurrent.Future
 
@@ -28,6 +28,12 @@ trait MockReplayStateRetrievalService extends MockFactory {
   object MockReplayStateRetrievalService {
     def retrieveReplayState(replayId: String): CallHandler[Future[Option[ReplayState]]] =
       (mockReplayStateRetrievalService.retrieveReplayState _).expects(replayId)
+
+    def mostRecentByTrigger(trigger: ReplayTrigger): CallHandler[Future[Option[ReplayState]]] =
+      (mockReplayStateRetrievalService.mostRecentByTrigger _).expects(trigger)
+
+    def replays(count: Option[Int] = None): CallHandler[Future[List[ReplayState]]] =
+      (mockReplayStateRetrievalService.replays _).expects(count)
   }
 
 }

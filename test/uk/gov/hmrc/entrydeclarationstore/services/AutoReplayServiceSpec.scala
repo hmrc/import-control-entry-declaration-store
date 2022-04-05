@@ -22,7 +22,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.entrydeclarationstore.orchestrators.MockReplayOrchestrator
 import uk.gov.hmrc.entrydeclarationstore.repositories.{MockAutoReplayRepository, MockEntryDeclarationRepo}
 import uk.gov.hmrc.entrydeclarationstore.models.{AutoReplayStatus, AutoReplayRepoStatus, ReplayInitializationResult}
-import uk.gov.hmrc.entrydeclarationstore.models.{ReplayResult, LastReplay, ReplayTrigger, TrafficSwitchState}
+import uk.gov.hmrc.entrydeclarationstore.models.{ReplayResult, ReplayTrigger, TrafficSwitchState}
 import uk.gov.hmrc.entrydeclarationstore.trafficswitch.TrafficSwitchConfig
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -56,9 +56,10 @@ class AutoReplayServiceSpec
   "AutoReplayService" when {
     "getting autoReplay status" must {
       "get using the repo" in {
-        val status = Some(AutoReplayRepoStatus(true, None))
+        val status = Some(AutoReplayRepoStatus(true))
 
         MockAutoReplayRepository.getStatus returns Future.successful(status)
+        MockReplayStateRetrievalService.mostRecentByTrigger(ReplayTrigger.Automatic) returns Future.successful(None)
         service.getStatus.futureValue shouldBe AutoReplayStatus.On(None)
       }
     }
@@ -84,11 +85,9 @@ class AutoReplayServiceSpec
       "replay undelivered submissions if enabled and there are undelivered submissions" in {
         val result = (Future.successful(ReplayInitializationResult.Started("1")), Future.successful(ReplayResult.Completed(5, 0, 0)))
         MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(TrafficSwitchState.Flowing)
-        MockAutoReplayRepository.getStatus() returns Future.successful(Some(AutoReplayRepoStatus(true, None)))
+        MockAutoReplayRepository.getStatus() returns Future.successful(Some(AutoReplayRepoStatus(true)))
         MockEntryDeclarationRepo.totalUndeliveredMessages(now) returns Future.successful(5)
         MockReplayOrchestrator.startReplay(Some(5), ReplayTrigger.Automatic) returns result
-        MockAutoReplayRepository.setLastReplay(Some("1"), now) returns
-          Future.successful(Some(AutoReplayRepoStatus(true, Some(LastReplay(Some("1"), now)))))
         service.replay().futureValue shouldBe true
       }
 
@@ -96,35 +95,31 @@ class AutoReplayServiceSpec
         val result1 = (Future.successful(ReplayInitializationResult.Started("1")), Future.successful(ReplayResult.Completed(TrafficSwitchMaxFailures, TrafficSwitchMaxFailures, 0)))
         val result2 = (Future.successful(ReplayInitializationResult.Started("1")), Future.successful(ReplayResult.Completed(2, 2, 0)))
         MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(TrafficSwitchState.NotFlowing)
-        MockAutoReplayRepository.getStatus() returns Future.successful(Some(AutoReplayRepoStatus(true, None)))
+        MockAutoReplayRepository.getStatus() returns Future.successful(Some(AutoReplayRepoStatus(true)))
         MockEntryDeclarationRepo.totalUndeliveredMessages(now) returns Future.successful(7)
         MockTrafficSwitchService.startTrafficFlow returns Future.successful(())
         MockReplayOrchestrator.startReplay(Some(TrafficSwitchMaxFailures), ReplayTrigger.Automatic) returns result1
-        MockAutoReplayRepository.setLastReplay(Some("1"), now) returns
-          Future.successful(Some(AutoReplayRepoStatus(true, Some(LastReplay(Some("1"), now)))))
         MockReplayOrchestrator.startReplay(Some(2), ReplayTrigger.Automatic) returns result2
-        MockAutoReplayRepository.setLastReplay(Some("1"), now) returns
-          Future.successful(Some(AutoReplayRepoStatus(true, Some(LastReplay(Some("1"), now)))))
         service.replay().futureValue shouldBe true
       }
 
       "reset TS and not if enabled and there are no undelivered submissions" in {
         MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(TrafficSwitchState.NotFlowing)
-        MockAutoReplayRepository.getStatus() returns Future.successful(Some(AutoReplayRepoStatus(true, None)))
+        MockAutoReplayRepository.getStatus() returns Future.successful(Some(AutoReplayRepoStatus(true)))
         MockEntryDeclarationRepo.totalUndeliveredMessages(now) returns Future.successful(0)
         MockTrafficSwitchService.startTrafficFlow returns Future.successful(())
         service.replay().futureValue shouldBe false
       }
 
       "Not replay if enabled but there are no undelivered submissions" in {
-        MockAutoReplayRepository.getStatus() returns Future.successful(Some(AutoReplayRepoStatus(true, None)))
+        MockAutoReplayRepository.getStatus() returns Future.successful(Some(AutoReplayRepoStatus(true)))
         MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(TrafficSwitchState.Flowing)
         MockEntryDeclarationRepo.totalUndeliveredMessages(now) returns Future.successful(0)
         service.replay().futureValue shouldBe false
       }
 
       "Not replay undelivered submissions if not enabled" in {
-        MockAutoReplayRepository.getStatus() returns Future.successful(Some(AutoReplayRepoStatus(false, None)))
+        MockAutoReplayRepository.getStatus() returns Future.successful(Some(AutoReplayRepoStatus(false)))
         service.replay().futureValue shouldBe false
       }
 

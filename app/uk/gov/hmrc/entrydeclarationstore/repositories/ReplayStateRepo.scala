@@ -33,22 +33,24 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 trait ReplayStateRepo {
+  def list(count: Option[Int]): Future[List[ReplayState]]
   def lookupState(replayId: String): Future[Option[ReplayState]]
+  def setState(replayState: ReplayState): Future[Unit]
   def lookupIdOfLatest: Future[Option[String]]
-  def setState(replayId: String, replayState: ReplayState): Future[Unit]
+  def mostRecentByTrigger(trigger: ReplayTrigger): Future[Option[ReplayState]]
   def insert(replayId: String, trigger: ReplayTrigger, totalToReplay: Int, startTime: Instant): Future[Unit]
   def incrementCounts(replayId: String, successesToAdd: Int, failuresToAdd: Int): Future[Boolean]
-  def setCompleted(replayId: String, endTime: Instant): Future[Boolean]
+  def setCompleted(replayId: String, completed: Boolean, endTime: Instant): Future[Boolean]
 }
 
 @Singleton
 class ReplayStateRepoImpl @Inject()
   (config: AppConfig)
   (implicit mongo: MongoComponent,
-   ec: ExecutionContext) extends PlayMongoRepository[ReplayStatePersisted](
+   ec: ExecutionContext) extends PlayMongoRepository[ReplayState](
   collectionName = "replayState",
   mongoComponent = mongo,
-  domainFormat = ReplayStatePersisted.format,
+  domainFormat = ReplayState.MongoImplicits.mongoFormat,
   indexes = Seq(IndexModel(ascending("replayId"),
                            IndexOptions()
                             .name("replayIdIndex")
@@ -58,7 +60,8 @@ class ReplayStateRepoImpl @Inject()
                             .name("expiryIndex")
                             .unique(false)
                             .expireAfter(config.replayStateLifetime.toSeconds, TimeUnit.SECONDS))),
-  extraCodecs = Seq(Codecs.playFormatCodec(MongoFormats.objectIdFormat)),
+  extraCodecs = Seq(Codecs.playFormatCodec(MongoFormats.objectIdFormat),
+                    Codecs.playFormatCodec(ReplayTrigger.formats)),
   replaceIndexes = true)
     with ReplayStateRepo {
 
@@ -71,6 +74,29 @@ class ReplayStateRepoImpl @Inject()
       .toFutureOption
       .map( _ => ())
 
+  def list(count: Option[Int]): Future[List[ReplayState]] =
+    Mdc
+      .preservingMdc(
+        collection
+          .withReadPreference(ReadPreference.primaryPreferred)
+          .find()
+          .sort(descending("startTime"))
+          .limit(count.getOrElse(Int.MaxValue))
+          .collect
+          .toFutureOption
+      )
+      .map(_.fold[List[ReplayState]](Nil)(_.toList))
+
+  def mostRecentByTrigger(trigger: ReplayTrigger): Future[Option[ReplayState]] =
+    Mdc
+      .preservingMdc(
+        collection
+          .withReadPreference(ReadPreference.primaryPreferred)
+          .find(equal("trigger", Codecs.toBson(trigger)))
+          .sort(descending("startTime"))
+          .headOption
+      )
+
   override def lookupState(replayId: String): Future[Option[ReplayState]] =
     Mdc
       .preservingMdc(
@@ -79,7 +105,6 @@ class ReplayStateRepoImpl @Inject()
           .find(equal("replayId", replayId))
           .headOption
       )
-      .map(_.map(_.toDomain))
 
   override def lookupIdOfLatest: Future[Option[String]] =
     Mdc
@@ -95,12 +120,12 @@ class ReplayStateRepoImpl @Inject()
         case _ => None
       }
 
-  override def setState(replayId: String, replayState: ReplayState): Future[Unit] =
+override def setState(replayState: ReplayState): Future[Unit] =
     Mdc
       .preservingMdc(
         collection
-          .findOneAndReplace(equal("replayId", replayId),
-                             ReplayStatePersisted.fromDomain(replayId, replayState),
+          .findOneAndReplace(equal("replayId", replayState.replayId),
+                             replayState,
                              FindOneAndReplaceOptions().upsert(true))
           .headOption
       )
@@ -110,7 +135,7 @@ class ReplayStateRepoImpl @Inject()
     Mdc
       .preservingMdc(
         collection
-          .insertOne(ReplayStatePersisted(replayId, startTime, totalToReplay, Some(trigger)))
+          .insertOne(ReplayState(replayId, startTime, totalToReplay, trigger))
           .toFutureOption
       )
       .map(_ => ())
@@ -128,12 +153,12 @@ class ReplayStateRepoImpl @Inject()
         result => result.map(_.getModifiedCount > 0).getOrElse(false)
       }
 
-  override def setCompleted(replayId: String, endTime: Instant): Future[Boolean] =
+  override def setCompleted(replayId: String, completed: Boolean, endTime: Instant): Future[Boolean] =
     Mdc
       .preservingMdc(
         collection
           .updateOne(equal("replayId", replayId),
-                    combine(set("completed", true), set("endTime", endTime)))
+                    combine(set("completed", completed), set("endTime", endTime)))
           .headOption
       )
       .map(_.map(_.getModifiedCount > 0).getOrElse(false))

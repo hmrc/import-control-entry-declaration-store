@@ -79,19 +79,21 @@ class AutoReplayStatusSpec extends AnyWordSpec {
   }
 
   "AutoReplayStatus with ReplayState" when {
-    val replayState: ReplayState = ReplayState(ReplayTrigger.Automatic, now, Some(now), true, 5, 0, 5)
+    val replayId = "replayId"
+    val replayState: ReplayState = ReplayState(replayId, now, 5, ReplayTrigger.Automatic, Some(true), Some(now), 5, 0)
     "On" must {
       val json = Json.parse("""
                               |{
                               |  "autoReplay": true,
                               |  "lastReplay": {
-                              |    "trigger": "Automatic",
+                              |    "replayId": "replayId",
                               |    "startTime": "2022-03-02T10:26:38.559Z",
-                              |    "endTime": "2022-03-02T10:26:38.559Z",
+                              |    "totalToReplay": 5,
+                              |    "trigger": "Automatic",
                               |    "completed": true,
+                              |    "endTime": "2022-03-02T10:26:38.559Z",
                               |    "successCount": 5,
-                              |    "failureCount": 0,
-                              |    "totalToReplay": 5
+                              |    "failureCount": 0
                               |  }
                               |}
                               |""".stripMargin)
@@ -111,18 +113,18 @@ class AutoReplayStatusSpec extends AnyWordSpec {
                               |{
                               |"autoReplay": false,
                               |  "lastReplay": {
-                              |    "trigger": "Automatic",
+                              |    "replayId":"replayId",
                               |    "startTime": "2022-03-02T10:26:38.559Z",
-                              |    "endTime": "2022-03-02T10:26:38.559Z",
+                              |    "totalToReplay": 5,
+                              |    "trigger": "Automatic",
                               |    "completed": true,
+                              |    "endTime": "2022-03-02T10:26:38.559Z",
                               |    "successCount": 5,
-                              |    "failureCount": 0,
-                              |    "totalToReplay": 5
+                              |    "failureCount": 0
                               |  }
                               |}
                               |""".stripMargin)
-
-      "serialize to JSON correctly" in {
+    "serialize to JSON correctly" in {
         val status: AutoReplayStatus = AutoReplayStatus.Off(Some(replayState))
         Json.toJson(status) shouldBe json
       }

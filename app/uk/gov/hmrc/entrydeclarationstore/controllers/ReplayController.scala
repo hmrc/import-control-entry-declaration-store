@@ -20,9 +20,9 @@ import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.entrydeclarationstore.models.ReplayLimit
 import uk.gov.hmrc.entrydeclarationstore.orchestrators.ReplayOrchestrator
-import uk.gov.hmrc.entrydeclarationstore.services.SubmissionReplayService
+import uk.gov.hmrc.entrydeclarationstore.services.{ReplayStateRetrievalService, SubmissionReplayService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-
+import uk.gov.hmrc.entrydeclarationstore.models.ReplayState.Implicits._
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -30,7 +30,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class ReplayController @Inject()(
   cc: ControllerComponents,
   replayOrchestrator: ReplayOrchestrator,
-  submissionReplayService: SubmissionReplayService
+  submissionReplayService: SubmissionReplayService,
+  replayService: ReplayStateRetrievalService
 )(implicit ec: ExecutionContext)
     extends BackendController(cc) {
 
@@ -44,6 +45,12 @@ class ReplayController @Inject()(
 
       case JsError(_) =>
         Future.successful(BadRequest)
+    }
+  }
+
+  def replays(count: Option[Int]): Action[AnyContent] = Action.async{ _ =>
+    replayService.replays(count).map{ replays =>
+      Ok(Json.toJson(replays))
     }
   }
 

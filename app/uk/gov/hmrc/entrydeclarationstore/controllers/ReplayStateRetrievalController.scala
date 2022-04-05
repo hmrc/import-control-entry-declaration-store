@@ -20,7 +20,7 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.entrydeclarationstore.services.ReplayStateRetrievalService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-
+import uk.gov.hmrc.entrydeclarationstore.models.ReplayState.Implicits._
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 

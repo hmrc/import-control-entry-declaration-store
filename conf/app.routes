@@ -21,6 +21,7 @@ GET         /import-control/traffic-switch                                      
 PUT         /import-control/traffic-switch/start                                          uk.gov.hmrc.entrydeclarationstore.controllers.TrafficSwitchController.startTrafficFlow
 
 GET         /import-control/replays/:replayId                                             uk.gov.hmrc.entrydeclarationstore.controllers.ReplayStateRetrievalController.retrieveReplayState(replayId)
+GET         /import-control/replays                                                       uk.gov.hmrc.entrydeclarationstore.controllers.ReplayController.replays(count: Option[Int])
 POST        /import-control/replays                                                       uk.gov.hmrc.entrydeclarationstore.controllers.ReplayController.startReplay
 
 GET         /import-control/auto-replay/status                                            uk.gov.hmrc.entrydeclarationstore.controllers.AutoReplayController.getStatus
