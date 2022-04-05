@@ -34,7 +34,7 @@ import ReplayInitializationResult._
 
 @Singleton
 class AutoReplayService @Inject()(
-  trafficeSwitchConfig: TrafficSwitchConfig,
+  trafficSwitchConfig: TrafficSwitchConfig,
   orchestrator: ReplayOrchestrator,
   repository: AutoReplayRepository,
   submissionsRepo: EntryDeclarationRepo,
@@ -51,8 +51,8 @@ class AutoReplayService @Inject()(
     _.fold[Future[AutoReplayStatus]](Future.successful(AutoReplayStatus.Unavailable)){ status =>
         mostRecentReplayState().map{ replay =>
           status match {
-            case AutoReplayRepoStatus(true, _) => AutoReplayStatus.On(replay)
-            case AutoReplayRepoStatus(false, _) => AutoReplayStatus.Off(replay)
+            case AutoReplayRepoStatus(true) => AutoReplayStatus.On(replay)
+            case AutoReplayRepoStatus(false) => AutoReplayStatus.Off(replay)
             case _ => AutoReplayStatus.Unavailable
           }
         }
@@ -68,22 +68,22 @@ class AutoReplayService @Inject()(
         logger.warn(s"Attempting to replay $undeliveredCount undelivered submissions ... ")
         val (initResult, replayResult) = orchestrator.startReplay(Some(undeliveredCount), ReplayTrigger.Automatic)
         replayResult.flatMap {
-          case Completed(replayed, successful, failures) =>
-            logger.warn(s"Succesfully replayed $successful undelivered submissions with $failures failures" )
+          case Completed(batches, successful, failures) =>
+            logger.warn(s"Succesfully replayed $batches batches containing $successful submissions and $failures failures" )
             if (failures > 0) logger.warn(s"Failed to auto-replay $failures submissions")
-            initResult.flatMap{
-              case Started(replayId) => repository.setLastReplay(Some(replayId)).map(_ => (true, Some((successful, failures))))
-              case running: AlreadyRunning => repository.setLastReplay(running.replayId).map(_ => (true, Some((successful, failures))))
+            initResult.map{
+              case Started(_) => (true, Some((successful, failures)))
+              case running: AlreadyRunning => (true, Some((successful, failures)))
             }
-          case Aborted(t, replayId) =>
+          case Aborted(t) =>
             logger.error(s"Replay aborted with error ${t.getMessage()}")
-            repository.setLastReplay(Some(replayId)).map(_ => (false, None))
+            Future.successful((false, None))
         }
       }
 
     def resetTrafficSwitchAndReplay(undeliveredCount: Int): Future[Boolean] =
       trafficSwitchService.startTrafficFlow.flatMap{_ =>
-        val testSubmissionCount: Int = Math.min(trafficeSwitchConfig.maxFailures, undeliveredCount)
+        val testSubmissionCount: Int = Math.min(trafficSwitchConfig.maxFailures, undeliveredCount)
         replaySubmissions(testSubmissionCount).flatMap{
           case (true, Some((successful, failures))) if successful >= failures =>
             logger.warn(s"Initial replay after Traffic Switch reset, succeeded $successful, failures $failures")
@@ -111,9 +111,9 @@ class AutoReplayService @Inject()(
 
   private def getServiceStatusIfEnabled()(implicit ec: ExecutionContext): Future[Option[(TrafficSwitchState, Int)]] =
     repository.getStatus().flatMap{
-      case Some(AutoReplayRepoStatus(true, _)) =>
-        trafficSwitchService.getTrafficSwitchState.flatMap{ trafficeSwitchState =>
-          submissionsRepo.totalUndeliveredMessages(clock.instant).map(count => Some((trafficeSwitchState, count)))
+      case Some(AutoReplayRepoStatus(true)) =>
+        trafficSwitchService.getTrafficSwitchState.flatMap{ trafficSwitchState =>
+          submissionsRepo.totalUndeliveredMessages(clock.instant).map(count => Some((trafficSwitchState, count)))
         }
       case _ => Future.successful(None)
     }

@@ -17,7 +17,6 @@
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
 import play.api.Logging
-import java.time.Instant
 import org.mongodb.scala._
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Updates._
@@ -28,13 +27,11 @@ import uk.gov.hmrc.play.http.logging.Mdc
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import uk.gov.hmrc.entrydeclarationstore.models._
-import org.mongodb.scala.bson.conversions.Bson
 
 trait AutoReplayRepository {
   def start(): Future[Unit]
   def stop(): Future[Unit]
   def getStatus(): Future[Option[AutoReplayRepoStatus]]
-  def setLastReplay(replayId: Option[String], when: Instant = Instant.now): Future[Option[AutoReplayRepoStatus]]
 }
 
 @Singleton
@@ -63,34 +60,12 @@ class AutoReplayRepositoryImpl @Inject()(
         .find(equal("_id", singletonId))
         .headOption
         .map{
-          case None => Some(AutoReplayRepoStatus(true, None))
+          case None => Some(AutoReplayRepoStatus(true))
           case status => status
         }
         .recover{
           case err =>
             logger.error(s"Error retrieving auto-replay status: $err")
-            None
-        }
-    )
-
-  def setLastReplay(replayId: Option[String], when: Instant = Instant.now): Future[Option[AutoReplayRepoStatus]] =
-    Mdc.preservingMdc(
-      collection
-        .findOneAndUpdate(
-          equal("_id", singletonId),
-          combine(
-            Vector(setOnInsert("autoReplay", true), set("lastReplay.when", when)) ++
-            replayId.fold[Vector[Bson]](Vector())(id => Vector(set("lastReplay.id", id))): _*),
-          FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
-        )
-        .headOption
-        .map{
-          case None => Some(AutoReplayRepoStatus(true, None))
-          case Some(status) => Some(status)
-        }
-        .recover{
-          case err =>
-            logger.error(s"Error attempting to update details of last auto-replay: $err")
             None
         }
     )

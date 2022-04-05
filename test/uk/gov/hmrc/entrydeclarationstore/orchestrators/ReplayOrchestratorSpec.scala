@@ -230,7 +230,7 @@ class ReplayOrchestratorSpec
 
         val (initResult, result) = replayOrchestrator.startReplay(None)
         initResult.futureValue shouldBe ReplayInitializationResult.Started(replayId)
-        result.futureValue     shouldBe ReplayResult.Aborted(databaseException, replayId)
+        result.futureValue     shouldBe ReplayResult.Aborted(databaseException)
 
         await(completeFuture)
       }
@@ -322,7 +322,7 @@ class ReplayOrchestratorSpec
 
           val (initResult, result) = replayOrchestrator.startReplay(None)
           initResult.futureValue shouldBe ReplayInitializationResult.Started(replayId)
-          result.futureValue     shouldBe ReplayResult.Aborted(databaseException, replayId)
+          result.futureValue     shouldBe ReplayResult.Aborted(databaseException)
 
           await(completeFuture)
         }
@@ -351,7 +351,7 @@ class ReplayOrchestratorSpec
             val (initResult, result) = replayOrchestrator.startReplay(None)
             initResult.futureValue shouldBe ReplayInitializationResult.Started(replayId)
             inside(result.futureValue) {
-              case ReplayResult.Aborted(e, replayId) => e.getMessage should include("Unable to replay batch")
+              case ReplayResult.Aborted(e) => e.getMessage should include("Unable to replay batch")
             }
 
             await(completeFuture)
