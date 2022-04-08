@@ -38,7 +38,7 @@ class AutoReplayScheduler @Inject()(
   private val exclusiveTimePeriodLock: TimePeriodLockService =
     TimePeriodLockService(lockProvider.lockRepository,
                           lockId = "auto_replay_lock",
-                          ttl = Duration(appConfig.autoReplayLockDuration .toMillis, TimeUnit.MILLISECONDS))
+                          ttl = Duration(appConfig.autoReplayLockDuration.toMillis, TimeUnit.MILLISECONDS))
 
   scheduler.scheduleWithFixedDelay(appConfig.autoReplayRunInterval, appConfig.autoReplayRunInterval) {
     () => exclusiveTimePeriodLock
