@@ -55,7 +55,9 @@ class ReplayOrchestrator @Inject()(
 
     val futureReplayResult = initResult.flatMap {
       case ReplayInitializationResult.Started(replayId) =>
-        startReplay(limit, replayStartTime, replayId)
+        startReplay(limit, replayStartTime, replayId).flatMap{result =>
+          replayLock.unlock(replayId).map(_ => result)
+        }
 
       case ReplayInitializationResult.AlreadyRunning(_) =>
         // It's a coding error if this is used...
