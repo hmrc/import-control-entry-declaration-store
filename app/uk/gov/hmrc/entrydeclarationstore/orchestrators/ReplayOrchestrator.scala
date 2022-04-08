@@ -60,8 +60,7 @@ class ReplayOrchestrator @Inject()(
         }
 
       case ReplayInitializationResult.AlreadyRunning(_) =>
-        // It's a coding error if this is used...
-        Future.failed(new RuntimeException("Replay already running"))
+        Future.successful(ReplayResult.Aborted(new RuntimeException("Replay already running")))
     }
 
     (initResult, futureReplayResult)

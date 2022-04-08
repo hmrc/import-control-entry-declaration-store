@@ -31,6 +31,7 @@ import scala.concurrent.ExecutionContext
 import java.time.Clock
 import ReplayResult._
 import ReplayInitializationResult._
+import scala.util.{Try, Success, Failure}
 
 @Singleton
 class AutoReplayService @Inject()(
@@ -66,19 +67,24 @@ class AutoReplayService @Inject()(
       if (undeliveredCount <= 0) Future.successful((false, Some((0, 0))))
       else {
         logger.warn(s"Attempting to replay $undeliveredCount undelivered submissions ... ")
-        val (initResult, replayResult) = orchestrator.startReplay(Some(undeliveredCount), ReplayTrigger.Automatic)
-        replayResult.flatMap {
-          case Completed(batches, successful, failures) =>
-            logger.warn(s"Succesfully replayed $batches batches containing $successful submissions and $failures failures" )
-            if (failures > 0) logger.warn(s"Failed to auto-replay $failures submissions")
-            initResult.map{
-              case Started(_) => (true, Some((successful, failures)))
-              case running: AlreadyRunning => (true, Some((successful, failures)))
+        Try(orchestrator.startReplay(Some(undeliveredCount), ReplayTrigger.Automatic)) match {
+          case Success((initResult, replayResult)) =>
+            replayResult.flatMap {
+              case Completed(batches, successful, failures) =>
+                logger.warn(s"Succesfully replayed $batches batches containing $successful submissions and $failures failures" )
+                if (failures > 0) logger.warn(s"Failed to auto-replay $failures submissions")
+                initResult.map{
+                  case Started(_) => (true, Some((successful, failures)))
+                  case running: AlreadyRunning => (true, Some((successful, failures)))
+                }
+              case Aborted(t) =>
+                logger.error(s"Replay aborted with error ${t.getMessage()}")
+                Future.successful((false, None))
             }
-          case Aborted(t) =>
-            logger.error(s"Replay aborted with error ${t.getMessage()}")
+          case Failure(_) =>
             Future.successful((false, None))
         }
+
       }
 
     def resetTrafficSwitchAndReplay(undeliveredCount: Int): Future[Boolean] =
