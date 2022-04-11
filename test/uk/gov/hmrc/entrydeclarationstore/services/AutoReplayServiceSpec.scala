@@ -83,7 +83,7 @@ class AutoReplayServiceSpec
 
     "replay" must {
       "replay undelivered submissions if enabled and there are undelivered submissions" in {
-        val result = (Future.successful(ReplayInitializationResult.Started("1")), Future.successful(ReplayResult.Completed(5, 0, 0)))
+        val result = (Future.successful(ReplayInitializationResult.Started("1")), Future.successful(ReplayResult.Completed(5, 5, 0)))
         MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(TrafficSwitchState.Flowing)
         MockAutoReplayRepository.getStatus() returns Future.successful(Some(AutoReplayRepoStatus(true)))
         MockEntryDeclarationRepo.totalUndeliveredMessages(now) returns Future.successful(5)
