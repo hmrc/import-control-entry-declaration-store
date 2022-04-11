@@ -30,7 +30,7 @@ import scala.util.Failure
 @Singleton
 class AutoReplayScheduler @Inject()(
   scheduler: Scheduler,
-  replayer: AutoReplayer,
+  autoReplayer: AutoReplayer,
   lockProvider: LockRepositoryProvider,
   appConfig: AppConfig
 )(implicit ec: ExecutionContext) extends Logging {
@@ -40,16 +40,20 @@ class AutoReplayScheduler @Inject()(
                           lockId = "auto_replay_lock",
                           ttl = Duration(appConfig.autoReplayLockDuration.toMillis, TimeUnit.MILLISECONDS))
 
-  scheduler.scheduleWithFixedDelay(appConfig.autoReplayRunInterval, appConfig.autoReplayRunInterval)(() => replay())
+  scheduler.scheduleWithFixedDelay(appConfig.autoReplayRunInterval, appConfig.autoReplayRunInterval)(() => autoReplay())
 
-  private def replay(): Future[Boolean] =
+  private def autoReplay(replayCount: Int = 0): Future[Boolean] = {
+    logger.warn(s"Running AutoReplay sequence with replayCount = $replayCount")
     exclusiveTimePeriodLock
-      .withRenewedLock(replayer.replay())
+      .withRenewedLock(autoReplayer.replay())
       .andThen {
         case Failure(e) => logger.error("Failed auto-replay scheduling", e)
       }
       .flatMap{
-        case Some(true) => replay()
-        case _ => Future.successful(false)
+        case Some(true) if replayCount < appConfig.maxConsecutiveAutoReplays => autoReplay(replayCount + 1)
+        case _ =>
+          logger.warn(s"AutoReplay sequence terminating on replayCount = $replayCount")
+          Future.successful(false)
       }
+  }
 }
