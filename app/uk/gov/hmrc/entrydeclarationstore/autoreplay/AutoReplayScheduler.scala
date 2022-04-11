@@ -24,7 +24,7 @@ import uk.gov.hmrc.mongo.lock._
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.repositories.LockRepositoryProvider
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Future, ExecutionContext}
 import scala.util.Failure
 
 @Singleton
@@ -40,11 +40,16 @@ class AutoReplayScheduler @Inject()(
                           lockId = "auto_replay_lock",
                           ttl = Duration(appConfig.autoReplayLockDuration.toMillis, TimeUnit.MILLISECONDS))
 
-  scheduler.scheduleWithFixedDelay(appConfig.autoReplayRunInterval, appConfig.autoReplayRunInterval) {
-    () => exclusiveTimePeriodLock
+  scheduler.scheduleWithFixedDelay(appConfig.autoReplayRunInterval, appConfig.autoReplayRunInterval)(() => replay())
+
+  private def replay(): Future[Boolean] =
+    exclusiveTimePeriodLock
       .withRenewedLock(replayer.replay())
       .andThen {
         case Failure(e) => logger.error("Failed auto-replay scheduling", e)
       }
-  }
+      .flatMap{
+        case Some(true) => replay()
+        case _ => Future.successful(false)
+      }
 }
