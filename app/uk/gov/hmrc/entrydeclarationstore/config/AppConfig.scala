@@ -221,7 +221,7 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
 
   lazy val autoReplayRunInterval: FiniteDuration = getFiniteDuration(config, "auto-replay.runInterval")
 
-  lazy val maxConsecutiveAutoReplays: Int = config.get[Int]("auto-replay.maxConsequtiveReplays")
+  lazy val maxConsecutiveAutoReplays: Int = config.get[Int]("auto-replay.maxConsecutiveReplays")
 
   private def fibonacciRetryDelays(conf: Configuration): List[FiniteDuration] =
     Retrying.fibonacciDelays(getFiniteDuration(conf, "initialDelay"), conf.get[Int]("numberOfRetries"))
