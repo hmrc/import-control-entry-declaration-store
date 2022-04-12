@@ -42,18 +42,16 @@ class AutoReplayScheduler @Inject()(
 
   scheduler.scheduleWithFixedDelay(appConfig.autoReplayRunInterval, appConfig.autoReplayRunInterval)(() => autoReplay())
 
-  private def autoReplay(replayCount: Int = 0): Future[Boolean] = {
+  private def autoReplay(replayCount: Int = 1): Future[Unit] = {
     logger.warn(s"Running AutoReplay sequence with replayCount = $replayCount")
     exclusiveTimePeriodLock
       .withRenewedLock(autoReplayer.replay())
-      .andThen {
-        case Failure(e) => logger.error("Failed auto-replay scheduling", e)
-      }
       .flatMap{
         case Some(true) if replayCount < appConfig.maxConsecutiveAutoReplays => autoReplay(replayCount + 1)
-        case _ =>
-          logger.warn(s"AutoReplay sequence terminating on replayCount = $replayCount")
-          Future.successful(false)
+        case _ => Future.successful(logger.warn(s"AutoReplay sequence terminating on replayCount = $replayCount"))
+      }
+      .andThen {
+        case Failure(e) => logger.error("Failed auto-replay scheduling", e)
       }
   }
 }
