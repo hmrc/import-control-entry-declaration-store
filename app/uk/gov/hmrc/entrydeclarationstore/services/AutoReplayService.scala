@@ -68,11 +68,11 @@ class AutoReplayService @Inject()(
         val (_, replayResult) = orchestrator.startReplay(Some(undeliveredCount), ReplayTrigger.Automatic)
         replayResult.map {
           case Completed(batches, successful, failures) =>
-            logger.warn(s"Succesfully replayed $batches batches containing $successful submissions and $failures failures" )
+            logger.warn(s"Successfully replayed $batches batches containing $successful submissions and $failures failures" )
             if (failures > 0) logger.warn(s"Failed to auto-replay $failures submissions")
             (successful > 0, Some((successful, failures)))
           case Aborted(t) =>
-            logger.error(s"Replay aborted with error ${t.getMessage()}")
+            logger.error(s"Replay aborted with error ${t.getMessage}")
             (false, None)
         }
       }

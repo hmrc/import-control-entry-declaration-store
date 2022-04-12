@@ -56,7 +56,7 @@ class SubmissionReplayService @Inject()(
         case Left(abort)   => Left(abort.error)
       }
       .recover {
-        case err => Left(BatchReplayError.MetadataRetrievalError)
+        case _ => Left(BatchReplayError.MetadataRetrievalError)
       }
 
   private def replaySubmissionId(submissionId: String, state: Counts)(
