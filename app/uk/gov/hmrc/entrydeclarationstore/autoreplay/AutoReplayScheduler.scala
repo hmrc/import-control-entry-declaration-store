@@ -24,13 +24,13 @@ import uk.gov.hmrc.mongo.lock._
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.repositories.LockRepositoryProvider
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Future, ExecutionContext}
 import scala.util.Failure
 
 @Singleton
 class AutoReplayScheduler @Inject()(
   scheduler: Scheduler,
-  replayer: AutoReplayer,
+  autoReplayer: AutoReplayer,
   lockProvider: LockRepositoryProvider,
   appConfig: AppConfig
 )(implicit ec: ExecutionContext) extends Logging {
@@ -40,9 +40,16 @@ class AutoReplayScheduler @Inject()(
                           lockId = "auto_replay_lock",
                           ttl = Duration(appConfig.autoReplayLockDuration.toMillis, TimeUnit.MILLISECONDS))
 
-  scheduler.scheduleWithFixedDelay(appConfig.autoReplayRunInterval, appConfig.autoReplayRunInterval) {
-    () => exclusiveTimePeriodLock
-      .withRenewedLock(replayer.replay())
+  scheduler.scheduleWithFixedDelay(appConfig.autoReplayRunInterval, appConfig.autoReplayRunInterval)(() => autoReplay())
+
+  private def autoReplay(replayCount: Int = 1): Future[Unit] = {
+    logger.warn(s"Running AutoReplay sequence with replayCount = $replayCount")
+    exclusiveTimePeriodLock
+      .withRenewedLock(autoReplayer.replay())
+      .flatMap{
+        case Some(true) if replayCount < appConfig.maxConsecutiveAutoReplays => autoReplay(replayCount + 1)
+        case _ => Future.successful(logger.warn(s"AutoReplay sequence terminating on replayCount = $replayCount"))
+      }
       .andThen {
         case Failure(e) => logger.error("Failed auto-replay scheduling", e)
       }

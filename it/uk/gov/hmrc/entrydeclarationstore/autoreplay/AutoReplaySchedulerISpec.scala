@@ -61,7 +61,7 @@ class AutoReplaySchedulerISpec
   private def newAutoReplayer: AutoReplayer =  new AutoReplayer{
     def replay()(implicit ec: ExecutionContext): Future[Boolean] = {
       autoReplayProbe.ref ! AutoReplay
-      Future.successful(true)
+      Future.successful(false)
     }
   }
 
@@ -73,7 +73,7 @@ class AutoReplaySchedulerISpec
     .configure("auto-replay.lockDuration" -> s"${lockDuration.toMillis} millis")
     .build()
 
-  "HousekeepingScheduler" must {
+  "AutoReplayScheduler" must {
     "repeatedly call replay (even though lock held)" in {
       virtualTime.advance(runInterval)
       autoReplayProbe.expectMsg(AutoReplay)

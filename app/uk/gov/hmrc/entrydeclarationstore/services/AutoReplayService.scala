@@ -19,7 +19,7 @@ package uk.gov.hmrc.entrydeclarationstore.services
 import play.api.Logging
 import uk.gov.hmrc.entrydeclarationstore.trafficswitch.TrafficSwitchConfig
 import uk.gov.hmrc.entrydeclarationstore.models.{ReplayResult, ReplayTrigger, AutoReplayStatus, AutoReplayRepoStatus}
-import uk.gov.hmrc.entrydeclarationstore.models.{ReplayInitializationResult, ReplayState, TrafficSwitchState}
+import uk.gov.hmrc.entrydeclarationstore.models.{ReplayState, TrafficSwitchState}
 import uk.gov.hmrc.entrydeclarationstore.repositories.{EntryDeclarationRepo, AutoReplayRepository}
 import uk.gov.hmrc.entrydeclarationstore.autoreplay.AutoReplayer
 import uk.gov.hmrc.entrydeclarationstore.orchestrators.ReplayOrchestrator
@@ -30,7 +30,6 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
 import java.time.Clock
 import ReplayResult._
-import ReplayInitializationResult._
 
 @Singleton
 class AutoReplayService @Inject()(
@@ -66,18 +65,15 @@ class AutoReplayService @Inject()(
       if (undeliveredCount <= 0) Future.successful((false, Some((0, 0))))
       else {
         logger.warn(s"Attempting to replay $undeliveredCount undelivered submissions ... ")
-        val (initResult, replayResult) = orchestrator.startReplay(Some(undeliveredCount), ReplayTrigger.Automatic)
-        replayResult.flatMap {
+        val (_, replayResult) = orchestrator.startReplay(Some(undeliveredCount), ReplayTrigger.Automatic)
+        replayResult.map {
           case Completed(batches, successful, failures) =>
-            logger.warn(s"Succesfully replayed $batches batches containing $successful submissions and $failures failures" )
+            logger.warn(s"Successfully replayed $batches batches containing $successful submissions and $failures failures" )
             if (failures > 0) logger.warn(s"Failed to auto-replay $failures submissions")
-            initResult.map{
-              case Started(_) => (true, Some((successful, failures)))
-              case running: AlreadyRunning => (true, Some((successful, failures)))
-            }
+            (successful > 0, Some((successful, failures)))
           case Aborted(t) =>
-            logger.error(s"Replay aborted with error ${t.getMessage()}")
-            Future.successful((false, None))
+            logger.error(s"Replay aborted with error ${t.getMessage}")
+            (false, None)
         }
       }
 
