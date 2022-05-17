@@ -53,22 +53,29 @@ class AuthService @Inject()(
 
   case object AuthFail extends AuthError
 
-  def authenticate(implicit hc: HeaderCarrier, headers: Headers): Future[Option[UserDetails]] =
+  def authenticate(csp: Boolean)(implicit hc: HeaderCarrier, headers: Headers): Future[Option[UserDetails]] =
     if (appConfig.nrsEnabled) {
-      doAuthenticate(nrsRetrievals, identityDataBuilder)
+      doAuthenticate(csp, nrsRetrievals, identityDataBuilder)
     } else {
-      doAuthenticate(EmptyRetrieval, (_: Unit) => None)
+      doAuthenticate(csp, EmptyRetrieval, (_: Unit) => None)
     }
 
-  private def doAuthenticate[A](retrieval: Retrieval[A], identityBuilder: A => Option[IdentityData])(
+  private def doAuthenticate[A](csp: Boolean, retrieval: Retrieval[A], identityBuilder: A => Option[IdentityData])(
     implicit hc: HeaderCarrier,
-    headers: Headers): Future[Option[UserDetails]] =
-    authCSP(retrieval, identityBuilder)
-      .recoverWith {
-        case AuthFail | NoClientId => authNonCSP(retrieval, identityBuilder)
-      }
-      .toOption
-      .value
+    headers: Headers): Future[Option[UserDetails]] = {
+    if(csp) {
+      authCSP(retrieval, identityBuilder)
+        .recoverWith {
+          case AuthFail | NoClientId => authNonCSP(retrieval, identityBuilder)
+        }
+        .toOption
+        .value
+    } else {
+      authNonCSP(retrieval, identityBuilder)
+        .toOption
+        .value
+    }
+  }
 
   private def authCSP[A](retrieval: Retrieval[A], identityBuilder: A => Option[IdentityData])(
     implicit hc: HeaderCarrier,
