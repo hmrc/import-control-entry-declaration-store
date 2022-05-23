@@ -66,14 +66,16 @@ class EntryDeclarationSubmissionController @Inject()(
     </ns:SuccessResponse>
   // @formatter:on
 
-  val postSubmission: Action[ByteString] = handleSubmission(None)
+  val postSubmissionExternal: Action[ByteString] = handleSubmission(None, true)
+  val postSubmission: Action[ByteString] = handleSubmission(None, false)
 
-  val postSubmissionTestOnly: Action[ByteString] = postSubmission
+  val postSubmissionTestOnly: Action[ByteString] = postSubmissionExternal
 
-  def putAmendment(mrn: String): Action[ByteString] = handleSubmission(Some(mrn))
+  def putAmendmentExternal(mrn: String): Action[ByteString] = handleSubmission(Some(mrn), true)
+  def putAmendment(mrn: String): Action[ByteString] = handleSubmission(Some(mrn), false)
 
-  private def handleSubmission(mrn: Option[String]) =
-    authorisedAction().async(parse.byteString) { implicit request =>
+  private def handleSubmission(mrn: Option[String], csp: Boolean) =
+    authorisedAction(csp).async(parse.byteString) { implicit request =>
       val receivedDateTime = Instant.now(clock)
 
       implicit val lc: LoggingContext = LoggingContext()
