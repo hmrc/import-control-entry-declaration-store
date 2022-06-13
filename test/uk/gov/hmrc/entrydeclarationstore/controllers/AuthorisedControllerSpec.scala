@@ -64,7 +64,7 @@ class AuthorisedControllerSpec
     class TestController extends AuthorisedController(cc) with Timer with Logging {
       override val authService: AuthService = mockAuthService
 
-      def action(): Action[AnyContent] = authorisedAction(true).async { userRequest =>
+      def action(): Action[AnyContent] = authorisedAction().async { userRequest =>
         userRequest.userDetails shouldBe userDetails
         Future.successful(Ok(Json.obj()))
       }
