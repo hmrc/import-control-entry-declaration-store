@@ -164,7 +164,7 @@ class AuthServiceSpec
               stubCSPAuth(cspRetrievalsNRSEnabled) returns Future.successful(cspIdentityDataRetrievalNRSEnabled)
 
               MockApiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId) returns Future.successful(Some(eori))
-              service.authenticate(true).futureValue shouldBe Some(
+              service.authenticate.futureValue shouldBe Some(
                 UserDetails(
                   eori,
                   ClientInfo(ClientType.CSP, clientId = Some(clientId), applicationId = Some(applicationId)),
@@ -178,7 +178,7 @@ class AuthServiceSpec
               stubCSPAuth(cspRetrievalsNRSEnabled) returns Future.successful(cspIdentityDataRetrievalNRSEnabled)
               MockApiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId) returns Future.successful(None)
 
-              service.authenticate(true).futureValue shouldBe None
+              service.authenticate.futureValue shouldBe None
             }
           }
         }
@@ -197,19 +197,6 @@ class AuthServiceSpec
             MockAppConfig.nrsEnabled returns true
           }
         }
-
-        "CSP flag is set to false" must {
-          "return EORI from enrolment when S&S enrolment detected" in {
-            MockAppConfig.nrsEnabled returns true
-            stubNonCSPAuth(nonCSPRetrievalNRSEnabled) returns Future.successful(
-              nonCSPRetrievalResultsNRSEnabled(
-                Enrolments(Set(validSSEnrolment(eori))))
-            )
-            service.authenticate(false).futureValue shouldBe Some(
-              UserDetails(eori, ClientInfo(ClientType.GGW), Some(identityData))
-            )
-          }
-        }
       }
 
       "NRS disabled" when {
@@ -220,7 +207,7 @@ class AuthServiceSpec
               stubCSPAuth(EmptyRetrieval) returns Future.successful(())
 
               MockApiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId) returns Future.successful(Some(eori))
-              service.authenticate(true).futureValue shouldBe Some(
+              service.authenticate.futureValue shouldBe Some(
                 UserDetails(
                   eori,
                   ClientInfo(ClientType.CSP, clientId = Some(clientId), applicationId = Some(applicationId)),
@@ -234,7 +221,7 @@ class AuthServiceSpec
               stubCSPAuth(EmptyRetrieval) returns Future.successful(())
               MockApiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId) returns Future.successful(None)
 
-              service.authenticate(true).futureValue shouldBe None
+              service.authenticate.futureValue shouldBe None
             }
           }
         }
@@ -253,19 +240,6 @@ class AuthServiceSpec
             MockAppConfig.nrsEnabled returns false
           }
         }
-
-        "CSP flag is set to false" must {
-          "return EORI from enrolment when S&S enrolment detected" in {
-            MockAppConfig.nrsEnabled returns false
-            stubNonCSPAuth(nonCSPRetrievalNRSDisabled) returns Future.successful(
-              nonCSPRetrievalResultsNRSDisabled(
-                Enrolments(Set(validSSEnrolment(eori))))
-            )
-            service.authenticate(false).futureValue shouldBe Some(
-              UserDetails(eori, ClientInfo(ClientType.GGW), None)
-            )
-          }
-        }
       }
     }
 
@@ -277,7 +251,7 @@ class AuthServiceSpec
         stubCSPAuth(EmptyRetrieval) returns Future.successful(())
 
         MockApiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId) returns Future.successful(Some(eori))
-        service.authenticate(true).futureValue shouldBe Some(
+        service.authenticate.futureValue shouldBe Some(
           UserDetails(eori, ClientInfo(ClientType.CSP, clientId = Some(clientId), applicationId = None), None))
       }
     }
@@ -289,7 +263,7 @@ class AuthServiceSpec
           stubScenario()
           stubNonCSPAuth(nonCSPRetrievalNRSDisabled) returns Future.successful(nonCSPRetrievalResultsNRSDisabled(
             Enrolments(Set(validSSEnrolment(eori)))))
-          service.authenticate(true).futureValue shouldBe Some(UserDetails(eori, ClientInfo(ClientType.GGW), None))
+          service.authenticate.futureValue shouldBe Some(UserDetails(eori, ClientInfo(ClientType.GGW), None))
         }
       }
 
@@ -298,7 +272,7 @@ class AuthServiceSpec
           stubScenario()
           stubNonCSPAuth(nonCSPRetrievalNRSDisabled) returns Future.successful(nonCSPRetrievalResultsNRSDisabled(
             Enrolments(Set(validSSEnrolment(eori).copy(identifiers = Nil)))))
-          service.authenticate(true).futureValue shouldBe None
+          service.authenticate.futureValue shouldBe None
         }
 
         "no S&S enrolment in authorization header" in {
@@ -311,26 +285,26 @@ class AuthServiceSpec
                   identifiers       = Seq(EnrolmentIdentifier(identifier, eori)),
                   state             = "Activated",
                   delegatedAuthRule = None)))))
-          service.authenticate(true).futureValue shouldBe None
+          service.authenticate.futureValue shouldBe None
         }
 
         "no enrolments at all in authorization header" in {
           stubScenario()
           stubNonCSPAuth(nonCSPRetrievalNRSDisabled) returns Future.successful(nonCSPRetrievalResultsNRSDisabled(Enrolments(Set.empty)))
-          service.authenticate(true).futureValue shouldBe None
+          service.authenticate.futureValue shouldBe None
         }
 
         "S&S enrolment not activated" in {
           stubScenario()
           stubNonCSPAuth(nonCSPRetrievalNRSDisabled) returns Future.successful(nonCSPRetrievalResultsNRSDisabled(
             Enrolments(Set(validSSEnrolment(eori).copy(state = "inactive")))))
-          service.authenticate(true).futureValue shouldBe None
+          service.authenticate.futureValue shouldBe None
         }
 
         "authorisation fails" in {
           stubScenario()
           stubNonCSPAuth(nonCSPRetrievalNRSDisabled) returns Future.failed(authException)
-          service.authenticate(true).futureValue shouldBe None
+          service.authenticate.futureValue shouldBe None
         }
       }
     }
@@ -342,7 +316,7 @@ class AuthServiceSpec
           stubScenario()
           stubNonCSPAuth(nonCSPRetrievalNRSEnabled) returns Future.successful(nonCSPRetrievalResultsNRSEnabled(
             Enrolments(Set(validSSEnrolment(eori)))))
-          service.authenticate(true).futureValue shouldBe Some(
+          service.authenticate.futureValue shouldBe Some(
             UserDetails(eori, ClientInfo(ClientType.GGW), Some(identityData)))
         }
       }
@@ -352,7 +326,7 @@ class AuthServiceSpec
           stubScenario()
           stubNonCSPAuth(nonCSPRetrievalNRSEnabled) returns Future.successful(nonCSPRetrievalResultsNRSEnabled(
             Enrolments(Set(validSSEnrolment(eori).copy(identifiers = Nil)))))
-          service.authenticate(true).futureValue shouldBe None
+          service.authenticate.futureValue shouldBe None
         }
 
         "no S&S enrolment in authorization header" in {
@@ -365,25 +339,25 @@ class AuthServiceSpec
                   identifiers       = Seq(EnrolmentIdentifier(identifier, eori)),
                   state             = "Activated",
                   delegatedAuthRule = None)))))
-          service.authenticate(true).futureValue shouldBe None
+          service.authenticate.futureValue shouldBe None
         }
         "no enrolments at all in authorization header" in {
           stubScenario()
           stubNonCSPAuth(nonCSPRetrievalNRSEnabled) returns Future.successful(nonCSPRetrievalResultsNRSEnabled(Enrolments(Set.empty)))
-          service.authenticate(true).futureValue shouldBe None
+          service.authenticate.futureValue shouldBe None
         }
 
         "S&S enrolment not activated" in {
           stubScenario()
           stubNonCSPAuth(nonCSPRetrievalNRSEnabled) returns Future.successful(nonCSPRetrievalResultsNRSEnabled(
             Enrolments(Set(validSSEnrolment(eori).copy(state = "inactive")))))
-          service.authenticate(true).futureValue shouldBe None
+          service.authenticate.futureValue shouldBe None
         }
 
         "authorisation fails" in {
           stubScenario()
           stubNonCSPAuth(nonCSPRetrievalNRSEnabled) returns Future.failed(authException)
-          service.authenticate(true).futureValue shouldBe None
+          service.authenticate.futureValue shouldBe None
         }
       }
     }

@@ -16,12 +16,10 @@ Run Integration Tests: `sbt it:test`
 
 ## API
 
-| Path | Supported Methods | Type     | Description                                                    |
-| ---------------------------------------------------------| ----------------- |----------|----------------------------------------------------------------|
-|```/```                                                   |        POST       | External | Endpoint for users to save IE315 xml to the database.          |
-|```/:mrn```                                               |        PUT        | External | Endpoint for users to save IE313 xml to the database.          |
-|```/import-control/declaration/submit```                  |        POST       | Internal | Endpoint for internal users to save IE315 xml to the database. |
-|```/import-control/amendment/submit/:mrn```               |        PUT        | Internal | Endpoint for internal users to save IE313 xml to the database. |
+| Path | Supported Methods | Type | Description |
+| ----------------------------------------------------------| ----------------- | -----| ------------|
+|```/```                                                    |        POST       | External | Endpoint for users to save IE315 xml to the database. |
+|```/:mrn```                                                |        PUT        | External | Endpoint for users to save IE313 xml to the database. |
 |```/import-control/entry-summary-declaration/:id```        |        GET        | Internal | Endpoint for C&IT to get an entry declaration from the database. |
 |```/import-control/amendment/acceptance-enrichment/:id```  |        GET        | Internal | Endpoint for [Decision microservice](https://github.com/hmrc/import-control-entry-declaration-decision) to get an acceptance enrichment from the amendment in the database. |
 |```/import-control/declaration/acceptance-enrichment/:id```|        GET        | Internal | Endpoint for [Decision microservice](https://github.com/hmrc/import-control-entry-declaration-decision) to get an acceptance enrichment from the declaration in the database. |
