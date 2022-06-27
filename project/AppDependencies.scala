@@ -11,7 +11,7 @@ object AppDependencies {
     "org.typelevel"                %% "cats-core"                 % "2.7.0",
     "org.scala-lang.modules"       %% "scala-xml"                 % "2.0.1",
     "com.lucidchart"               %% "xtract"                    % "2.2.1",
-    "org.codehaus.groovy"          %  "groovy-all"                % "3.0.10",
+    "org.codehaus.groovy"          %  "groovy"                    % "3.0.10",
     "com.chuusai"                  %% "shapeless"                 % "2.3.9",
     "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.13.2"
   )
