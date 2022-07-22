@@ -18,12 +18,11 @@ package uk.gov.hmrc.entrydeclarationstore.services
 
 import cats.data.EitherT
 import cats.implicits._
-import org.joda.time.LocalDate
 import play.api.Logging
 import play.api.mvc.Headers
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve._
-import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{allEnrolments, _}
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.ApiSubscriptionFieldsConnector
 import uk.gov.hmrc.entrydeclarationstore.nrs.IdentityData
@@ -31,6 +30,7 @@ import uk.gov.hmrc.entrydeclarationstore.reporting.{ClientInfo, ClientType}
 import uk.gov.hmrc.entrydeclarationstore.utils.CommonHeaders
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.LocalDate
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 

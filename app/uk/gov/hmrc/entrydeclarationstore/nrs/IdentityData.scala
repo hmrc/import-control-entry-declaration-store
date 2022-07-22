@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.entrydeclarationstore.nrs
 
-import org.joda.time.{DateTime, LocalDate}
 import play.api.libs.json.{Json, Writes}
 import uk.gov.hmrc.auth.core.retrieve._
 import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, CredentialRole, Enrolments}
-import uk.gov.hmrc.http.controllers.RestFormats
+import uk.gov.hmrc.entrydeclarationstore.models.InstantFormatter
+
+import java.time.{Instant, LocalDate}
 
 case class IdentityData(
   internalId: Option[String]       = None,
@@ -46,8 +47,8 @@ case class IdentityData(
   loginTimes: LoginTimes)
 
 object IdentityData {
-  implicit val dateTimeWrites: Writes[DateTime]          = RestFormats.dateTimeWrite
-  implicit val localDateTimeWrites: Writes[LocalDate]    = RestFormats.localDateWrite
+  implicit val localDateTimeWrites: Writes[LocalDate]    = Writes.DefaultLocalDateWrites
+  implicit val instantWrites: Writes[Instant]            = InstantFormatter.instantWrites
   implicit val credWrites: Writes[Credentials]           = Json.writes[Credentials]
   implicit val nameWrites: Writes[Name]                  = Json.writes[Name]
   implicit val agentInfoWrites: Writes[AgentInformation] = Json.writes[AgentInformation]

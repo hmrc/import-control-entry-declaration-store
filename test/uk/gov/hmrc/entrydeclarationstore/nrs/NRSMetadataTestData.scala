@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.nrs
 
-import org.joda.time.{DateTime, LocalDate}
+import java.time.LocalDate
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Headers
 import play.api.test.FakeRequest
@@ -24,7 +24,6 @@ import uk.gov.hmrc.auth.core.retrieve._
 import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, User}
 import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
 import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils._
-
 import java.time.Instant
 
 trait NRSMetadataTestData {
@@ -136,8 +135,8 @@ trait NRSMetadataTestData {
     affinityGroup      = Some(AffinityGroup.Individual),
     credentialStrength = Some("strong"),
     loginTimes = LoginTimes(
-      DateTime.parse("2016-11-27T09:00:00.000Z"),
-      Some(DateTime.parse("2016-11-01T12:00:00.000Z"))
+      Instant.parse("2016-11-27T09:00:00.000Z"),
+      Some(Instant.parse("2016-11-01T12:00:00.000Z"))
     )
   )
 
