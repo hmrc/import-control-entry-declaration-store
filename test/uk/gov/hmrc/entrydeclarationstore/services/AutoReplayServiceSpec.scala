@@ -123,7 +123,14 @@ class AutoReplayServiceSpec
         service.replay().futureValue shouldBe false
       }
 
+      "Auto-replay fails (and fate logged) when ReplayOrchestrator aborts" in {
+        val result = (Future.successful(ReplayInitializationResult.Started("1")), Future.successful(ReplayResult.Aborted(new Exception("Aborted"))))
+        MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(TrafficSwitchState.Flowing)
+        MockAutoReplayRepository.getStatus() returns Future.successful(Some(AutoReplayRepoStatus(true)))
+        MockEntryDeclarationRepo.totalUndeliveredMessages(now) returns Future.successful(5)
+        MockReplayOrchestrator.startReplay(Some(5), ReplayTrigger.Automatic) returns result
+        service.replay().futureValue shouldBe false
+      }
     }
-
   }
 }

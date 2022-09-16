@@ -72,7 +72,7 @@ class AutoReplayService @Inject()(
             if (failures > 0) logger.warn(s"Failed to auto-replay $failures submissions")
             (successful > 0, Some((successful, failures)))
           case Aborted(t) =>
-            logger.error(s"Replay aborted with error ${t.getMessage}")
+            logger.error(s"ReplayAborted: Replay aborted with error ${t.getMessage}")
             (false, None)
         }
       }
