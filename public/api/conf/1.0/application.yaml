@@ -1,4 +1,4 @@
-openapi: 3.0.0
+openapi: 3.0.3
 
 info:
   title: Safety and security import control entry summary declarations
@@ -6,10 +6,10 @@ info:
   version: '1.0'
 
 servers:
-- url: https://test-api.service.hmrc.gov.uk
-  description: Sandbox
-- url:  https://api.service.hmrc.gov.uk
-  description: Production
+  - url: https://test-api.service.hmrc.gov.uk
+    description: Sandbox
+  - url:  https://api.service.hmrc.gov.uk
+    description: Production
 
 paths:
   /customs/imports/declarations/:
@@ -27,7 +27,10 @@ paths:
         - $ref: '#/components/parameters/authorizationHeader'
       requestBody:
         description: |
-          The body of the request must conform to the CC315A schema:  \n[http://ics.dgtaxud.ec/CC315A](https://developer.service.hmrc.gov.uk/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/CC315A-v11-2.xsd).
+          The body of the request must conform to the CC315A schema:
+          
+          [http://ics.dgtaxud.ec/CC315A](https://developer.service.hmrc.gov.uk/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/CC315A-v11-2.xsd).
+          
           This schema imports a number of other schemas:
         
           * [http://ics.dgtaxud.ec/doc](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/doc-v11-2.xsd)
@@ -40,8 +43,6 @@ paths:
           A 400 (Bad Request) response will be returned for requests that fail validation. The response body
           (schema [http://www.govtalk.gov.uk/CM/errorresponse](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/errorresponse-v2.0.xsd))
           will contain the validation errors found in the request.
-        
-          This is an example request: HOW DO WE GET THE EXAMPLE TO SHOW?????
         content:
           application/xml:
             schema:
@@ -51,6 +52,9 @@ paths:
                   name: CC315A
                   attribute: false
                   wrapped: false
+            examples:
+              cc315RequestExample:
+                $ref: '#/components/examples/cc315RequestExample'
         required: true
       responses:
         '200':
@@ -66,17 +70,18 @@ paths:
                     attribute: false
                     wrapped: false
               examples:
-                example-1:
-                  description: |
-                    A success response (schema [http://www.hmrc.gov.uk/successresponse/2](https://developer.service.hmrc.gov.uk/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/SuccessResponse-v2-0.xsd)) contains the correlation ID used to track the submission.
-                  value:
-                      '<ns:SuccessResponse xmlns:xd="http://www.w3.org/2000/09/xmldsig#" xmlns:ns="http://www.hmrc.gov.uk/successresponse/2"
-                      xmlns="http://www.govtalk.gov.uk/enforcement/ICS/responsedata/7">
-                      <ns:ResponseData>
-                      <CorrelationId>87491122139921</CorrelationId>
-                      </ns:ResponseData>
-                      </ns:SuccessResponse>'
-
+                  validResponseExample:
+                    description: |
+                      A success response (schema [http://www.hmrc.gov.uk/successresponse/2](https://developer.service.hmrc.gov.uk/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/SuccessResponse-v2-0.xsd)) contains the correlation ID used to track the submission.
+                      This is an example response:
+                    value: |
+                        <ns:SuccessResponse xmlns:xd="http://www.w3.org/2000/09/xmldsig#" xmlns:ns="http://www.hmrc.gov.uk/successresponse/2"
+                        
+                        xmlns="http://www.govtalk.gov.uk/enforcement/ICS/responsedata/7">
+                          <ns:ResponseData>
+                            <CorrelationId>87491122139921</CorrelationId>
+                          </ns:ResponseData>
+                        </ns:SuccessResponse>
         '403':
           description: FORBIDDEN
           headers: {}
@@ -90,15 +95,15 @@ paths:
                     attribute: false
                     wrapped: false
               examples:
-                example-1:
-                  description: |
-                    The client is not authorised to make the ENS submission.
+                notAuthorisedExample:
+                  description: >
+                    The client is not authorised to make the ENS submission. 
                     This is normally because the EORI in the submission does not match the EORI under which the trader or CSP has been enroled.
-                  value:
-                    {
-                      "code": "FORBIDDEN",
-                      "message": "403 (Forbidden)"
-                    }
+                  value: |
+                    <error>
+                       <code>FORBIDDEN</code>
+                       <message>Permission denied</message>
+                    </error>
       deprecated: false
       security:
         - User-Restricted:
@@ -111,30 +116,31 @@ paths:
       summary: Amend an existing entry summary declaration (ENS)
       description: >
         This endpoint allows a developer to amend an existing ENS submission.
-
         You will need to provide the movement reference number when you created the original ENS.
-
         A correlation ID will be returned in the XML response.
       operationId: Amendanexistingentrysummarydeclaration(ENS)
       parameters:
-      - name: movement-reference-number
-        in: path
-        description: The Movement Reference Number obtained as part of a successful outcome for the ENS to be amended.
-        required: true
-        style: simple
-        schema:
-          type: string
-      - name: Content-Type
-        in: header
-        description: Specifies the format of the request body, which must be XML.
-        required: true
-        style: simple
-        schema:
-          enum:
-          - application/xml
-          type: string
+        - $ref: '#/components/parameters/movementRefNumber'
+        - $ref: '#/components/parameters/contentTypeHeader'
+        - $ref: '#/components/parameters/acceptHeader'
+        - $ref: '#/components/parameters/authorizationHeader'
       requestBody:
-        description: ''
+        description: |
+            The body of the request must conform to the CC313A schema:
+            [http://ics.dgtaxud.ec/CC313A](https://developer.service.hmrc.gov.uk/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/CC313A-v11-2.xsd).
+            
+            This schema imports a number of other schemas:
+
+            * [http://ics.dgtaxud.ec/doc](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/doc-v11-2.xsd)
+            * [http://ics.dgtaxud.ec/complex_ics](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/complex_types_ics-v11-2.xsd)
+            * [http://ics.dgtaxud.ec/simple](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/simple_types-v11-2.xsd)
+            * [http://ics.dgtaxud.ec/tcl](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/tcl-v11-2.xsd)
+
+            The body will be validated against this schema and against a number of business rules.
+
+            A 400 (Bad Request) response will be returned for requests that fail validation. The response body
+            (schema [http://www.govtalk.gov.uk/CM/errorresponse](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/errorresponse-v2.0.xsd))
+            will contain the validation errors found in the request.
         content:
           application/xml:
             schema:
@@ -144,10 +150,13 @@ paths:
                   name: CC313A
                   attribute: false
                   wrapped: false
+            examples:
+              cc313RequestExample:
+                $ref: '#/components/examples/cc313RequestExample'
         required: true
       responses:
         '200':
-          description: ''
+          description: OK
           headers: {}
           content:
             application/xml:
@@ -158,8 +167,22 @@ paths:
                     name: SuccessResponse
                     attribute: false
                     wrapped: false
+              examples:
+                validResponseExample:
+                  description: |
+                    A success response (schema [http://www.hmrc.gov.uk/successresponse/2](https://developer.service.hmrc.gov.uk/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/SuccessResponse-v2-0.xsd)) contains the correlation ID used to track the submission.
+                    This is an example response:
+
+                  value: |
+                    <ns:SuccessResponse xmlns:xd="http://www.w3.org/2000/09/xmldsig#" xmlns:ns="http://www.hmrc.gov.uk/successresponse/2"
+                    
+                    xmlns="http://www.govtalk.gov.uk/enforcement/ICS/responsedata/7">
+                      <ns:ResponseData>
+                        <CorrelationId>87491122139921</CorrelationId>
+                      </ns:ResponseData>
+                    </ns:SuccessResponse>
         '403':
-          description: ''
+          description: FORBIDDEN
           headers: {}
           content:
             application/xml:
@@ -170,6 +193,16 @@ paths:
                     name: errorResponse
                     attribute: false
                     wrapped: false
+              examples:
+                notAuthorisedExample:
+                  description: >
+                    The client is not authorised to make the ENS submission. 
+                    This is normally because the EORI in the submission does not match the EORI under which the trader or CSP has been enroled.
+                  value: |
+                    <error>
+                       <code>FORBIDDEN</code>
+                       <message>Permission denied</message>
+                    </error>
       deprecated: false
       security:
           - User-Restricted:
@@ -195,11 +228,11 @@ components:
       description: |
         Specifies the response format and the [version](/api-documentation/docs/reference-guide#versioning) of the API to be used.
         
-        For example: application/vnd.hmrc.1.0+json"
+        For example: application/vnd.hmrc.1.0+xml"
       schema:
         type: string
         enum: [
-          "application/vnd.hmrc.1.0+json"
+          "application/vnd.hmrc.1.0+xml"
         ]
       required: true
     authorizationHeader:
@@ -208,7 +241,7 @@ components:
       description: |
         An [OAuth 2.0 Bearer Token](/api-documentation/docs/authorisation/user-restricted-endpoints) with the write:import-control-system scope.
         
-        For example: Bearer bb7fed3fe10dd235a2ccda3d50fb"
+        For example: Bearer bb7fed3fe10dd235a2ccda3d50fb
       schema:
         type: string
         enum: [
@@ -229,6 +262,148 @@ components:
           "application/xml; charset=UTF-8"
         ]
       required: true
+    movementRefNumber:
+      name: movement-reference-number
+      in: path
+      description: The Movement Reference Number obtained as part of a successful outcome for the ENS to be amended.
+      style: simple
+      schema:
+        type: string
+      required: true
+  examples:
+    cc315RequestExample:
+      description: |
+        This is an example of a CC315A request:
+      value: |
+        
+        <ie:CC315A xmlns:ie="http://ics.dgtaxud.ec/CC315A">
+            <MesSenMES3>GB1234231/1234567890</MesSenMES3>
+            <DatOfPreMES9>091231</DatOfPreMES9>
+            <TimOfPreMES10>2359</TimOfPreMES10>
+            <MesIdeMES19>ABCD1234</MesIdeMES19>
+            <MesTypMES20>CC315A</MesTypMES20>
+            <HEAHEA>
+                <RefNumHEA4>ABCD1234</RefNumHEA4>
+                <TraModAtBorHEA76>4</TraModAtBorHEA76>
+                <TotNumOfIteHEA305>1</TotNumOfIteHEA305>
+                <TotNumOfPacHEA306>1</TotNumOfPacHEA306>
+                <TotGroMasHEA307>1.000</TotGroMasHEA307>
+                <DecPlaHEA394>EXAMPLE</DecPlaHEA394>
+                <ComRefNumHEA>ABC1234D</ComRefNumHEA>
+                <ConRefNumHEA>ABC1234D</ConRefNumHEA>
+                <PlaLoaGOOITE334>EXAMPLE</PlaLoaGOOITE334>
+                <PlaUnlGOOITE334>EXAMPLE</PlaUnlGOOITE334>
+                <DecDatTimHEA114>200912312359</DecDatTimHEA114>
+            </HEAHEA>
+            <TRACONCE1>
+                <TINCE159>GBab12</TINCE159>
+            </TRACONCE1>
+            <GOOITEGDS>
+                <IteNumGDS7>1</IteNumGDS7>
+                <PRODOCDC2>
+                    <DocTypDC21>AB12</DocTypDC21>
+                    <DocRefDC23>ABCDEF123456</DocRefDC23>
+                </PRODOCDC2>
+                <COMCODGODITM>
+                    <ComNomCMD1>1234</ComNomCMD1>
+                </COMCODGODITM>
+                <PACGS2>
+                    <KinOfPacGS23>VR</KinOfPacGS23>
+                </PACGS2>
+            </GOOITEGDS>
+            <ITI>
+                <CouOfRouCodITI1>AB</CouOfRouCodITI1>
+            </ITI>
+            <ITI>
+                <CouOfRouCodITI1>AB</CouOfRouCodITI1>
+            </ITI>
+            <PERLODSUMDEC>
+                <TINPLD1>GBCD12345EFG</TINPLD1>
+            </PERLODSUMDEC>
+            <CUSOFFFENT730>
+                <RefNumCUSOFFFENT731>ABCD1234</RefNumCUSOFFFENT731>
+                <ExpDatOfArrFIRENT733>200912312359</ExpDatOfArrFIRENT733>
+            </CUSOFFFENT730>
+        </ie:CC315A>
+    cc313RequestExample:
+      description: |
+        This is an example of a CC313A request:
+      value: |
+        
+        <ie:CC313A xmlns:ie="http://ics.dgtaxud.ec/CC313A">
+          <MesSenMES3>GBCD1234/1234567890</MesSenMES3>
+          <DatOfPreMES9>030211</DatOfPreMES9>
+          <TimOfPreMES10>0123</TimOfPreMES10>
+          <MesIdeMES19>ABC123</MesIdeMES19>
+          <MesTypMES20>CC313A</MesTypMES20>
+          <HEAHEA>
+            <DocNumHEA5>12AB3C4D5E6F7G8H90</DocNumHEA5>
+            <TraModAtBorHEA76>1</TraModAtBorHEA76>
+            <IdeOfMeaOfTraCroHEA85>12345678</IdeOfMeaOfTraCroHEA85>
+            <TotNumOfIteHEA305>2</TotNumOfIteHEA305>
+            <TotNumOfPacHEA306>84</TotNumOfPacHEA306>
+            <AmdPlaHEA598>ABC123</AmdPlaHEA598>
+            <SpeCirIndHEA1>E</SpeCirIndHEA1>
+            <TraChaMetOfPayHEA1>A</TraChaMetOfPayHEA1>
+            <ComRefNumHEA>ABC123</ComRefNumHEA>
+            <ConRefNumHEA>XFER123-456</ConRefNumHEA>
+            <PlaLoaGOOITE334>ABC123</PlaLoaGOOITE334>
+            <PlaLoaGOOITE334LNG>en</PlaLoaGOOITE334LNG>
+            <PlaUnlGOOITE334>ABC123</PlaUnlGOOITE334>
+            <CodPlUnHEA357LNG>en</CodPlUnHEA357LNG>
+            <DatTimAmeHEA113>200302111234</DatTimAmeHEA113>
+          </HEAHEA>
+          <TRACONCO1>
+            <NamCO17>ABC123</NamCO17>
+            <StrAndNumCO122>ABC123</StrAndNumCO122>
+            <PosCodCO123>ABC123</PosCodCO123>
+            <CitCO124>ABC123</CitCO124>
+            <CouCO125>EN</CouCO125>
+            <NADLNGCO>en</NADLNGCO>
+          </TRACONCO1>
+          <TRACONCE1>
+            <TINCE159>GB^</TINCE159>
+          </TRACONCE1>
+          <GOOITEGDS>
+            <IteNumGDS7>1</IteNumGDS7>
+            <GooDesGDS23>ABC123</GooDesGDS23>
+            <SPEMENMT2>
+              <AddInfCodMT23>12345</AddInfCodMT23>
+            </SPEMENMT2>
+            <PACGS2>
+              <KinOfPacGS23>AA</KinOfPacGS23>
+              <NumOfPacGS24>42</NumOfPacGS24>
+              <MarNumOfPacGSL21>ABC123</MarNumOfPacGSL21>
+              <MarNumOfPacGSL21LNG>en</MarNumOfPacGSL21LNG>
+            </PACGS2>
+          </GOOITEGDS>
+          <GOOITEGDS>
+            <IteNumGDS7>2</IteNumGDS7>
+            <GooDesGDS23>ABC123</GooDesGDS23>
+            <SPEMENMT2>
+              <AddInfCodMT23>12345</AddInfCodMT23>
+            </SPEMENMT2>
+            <PACGS2>
+              <KinOfPacGS23>AA</KinOfPacGS23>
+              <NumOfPacGS24>42</NumOfPacGS24>
+              <MarNumOfPacGSL21>ABC123</MarNumOfPacGSL21>
+              <MarNumOfPacGSL21LNG>en</MarNumOfPacGSL21LNG>
+            </PACGS2>
+          </GOOITEGDS>
+          <ITI>
+            <CouOfRouCodITI1>EN</CouOfRouCodITI1>
+          </ITI>
+          <ITI>
+            <CouOfRouCodITI1>EN</CouOfRouCodITI1>
+          </ITI>
+          <PERLODSUMDEC>
+            <TINPLD1>GBABC</TINPLD1>
+          </PERLODSUMDEC>
+          <CUSOFFFENT730>
+            <RefNumCUSOFFFENT731>AB3C4D5F</RefNumCUSOFFFENT731>
+            <ExpDatOfArrFIRENT733>200302111234</ExpDatOfArrFIRENT733>
+          </CUSOFFFENT730>
+        </ie:CC313A>
   schemas:
     errorResponse:
       title: errorResponse
@@ -237,6 +412,10 @@ components:
       type: object
       properties:
         code:
+          description: The error code
+          type: string
+        message:
+          description: The error message
           type: string
     CC313A:
       title: CC313A
