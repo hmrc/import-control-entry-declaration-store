@@ -17,28 +17,31 @@ paths:
       tags:
       - customs
       summary: Submit a new entry summary declaration (ENS)
-      description: "This endpoint allows a developer to create a new entry summary (IE315) declaration.  \nA correlation ID is returned in the XML response.\n"
+      description: | 
+        This endpoint allows a developer to create a new entry summary (IE315) declaration.  
+        A correlation ID is returned in the XML response.
       operationId: Submitanewentrysummarydeclaration(ENS)
       parameters:
         - $ref: '#/components/parameters/contentTypeHeader'
         - $ref: '#/components/parameters/acceptHeader'
         - $ref: '#/components/parameters/authorizationHeader'
       requestBody:
-        description: "The body of the request must conform to the CC315A schema:  \n[http://ics.dgtaxud.ec/CC315A](https://developer.service.hmrc.gov.uk/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/CC315A-v11-2.xsd).\n
-        \nThis schema imports a number of other schemas:
+        description: |
+          The body of the request must conform to the CC315A schema:  \n[http://ics.dgtaxud.ec/CC315A](https://developer.service.hmrc.gov.uk/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/CC315A-v11-2.xsd).
+          This schema imports a number of other schemas:
         
-        \n* [http://ics.dgtaxud.ec/doc](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/doc-v11-2.xsd)
-        \n* [http://ics.dgtaxud.ec/complex_ics](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/complex_types_ics-v11-2.xsd)
-        \n* [http://ics.dgtaxud.ec/simple](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/simple_types-v11-2.xsd)
-        \n* [http://ics.dgtaxud.ec/tcl](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/tcl-v11-2.xsd)\n
+          * [http://ics.dgtaxud.ec/doc](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/doc-v11-2.xsd)
+          * [http://ics.dgtaxud.ec/complex_ics](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/complex_types_ics-v11-2.xsd)
+          * [http://ics.dgtaxud.ec/simple](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/simple_types-v11-2.xsd)
+          * [http://ics.dgtaxud.ec/tcl](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/tcl-v11-2.xsd)
         
-        \nThe body will be validated against this schema and against a number of business rules.\n
+          The body will be validated against this schema and against a number of business rules.
         
-        \nA 400 (Bad Request) response will be returned for requests that fail validation. The response body
-        (schema [http://www.govtalk.gov.uk/CM/errorresponse](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/errorresponse-v2.0.xsd))
-        will contain the validation errors found in the request.\n
+          A 400 (Bad Request) response will be returned for requests that fail validation. The response body
+          (schema [http://www.govtalk.gov.uk/CM/errorresponse](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/errorresponse-v2.0.xsd))
+          will contain the validation errors found in the request.
         
-        \nThis is an example request: HOW DO WE GET THE EXAMPLE TO SHOW?????"
+          This is an example request: HOW DO WE GET THE EXAMPLE TO SHOW?????
         content:
           application/xml:
             schema:
@@ -64,7 +67,8 @@ paths:
                     wrapped: false
               examples:
                 example-1:
-                  description: "A success response (schema [http://www.hmrc.gov.uk/successresponse/2](https://developer.service.hmrc.gov.uk/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/SuccessResponse-v2-0.xsd)) contains the correlation ID used to track the submission."
+                  description: |
+                    A success response (schema [http://www.hmrc.gov.uk/successresponse/2](https://developer.service.hmrc.gov.uk/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/SuccessResponse-v2-0.xsd)) contains the correlation ID used to track the submission.
                   value:
                       '<ns:SuccessResponse xmlns:xd="http://www.w3.org/2000/09/xmldsig#" xmlns:ns="http://www.hmrc.gov.uk/successresponse/2"
                       xmlns="http://www.govtalk.gov.uk/enforcement/ICS/responsedata/7">
@@ -87,8 +91,9 @@ paths:
                     wrapped: false
               examples:
                 example-1:
-                  description: "The client is not authorised to make the ENS submission.\n
-                  \nThis is normally because the EORI in the submission does not match the EORI under which the trader or CSP has been enroled."
+                  description: |
+                    The client is not authorised to make the ENS submission.
+                    This is normally because the EORI in the submission does not match the EORI under which the trader or CSP has been enroled.
                   value:
                     {
                       "code": "FORBIDDEN",
@@ -187,8 +192,10 @@ components:
     acceptHeader:
       name: Accept
       in: header
-      description: "Specifies the response format and the [version](/api-documentation/docs/reference-guide#versioning) of the API to be used.\n
-        \nFor example: application/vnd.hmrc.1.0+json"
+      description: |
+        Specifies the response format and the [version](/api-documentation/docs/reference-guide#versioning) of the API to be used.
+        
+        For example: application/vnd.hmrc.1.0+json"
       schema:
         type: string
         enum: [
@@ -198,8 +205,10 @@ components:
     authorizationHeader:
       name: Authorization
       in: header
-      description: "An [OAuth 2.0 Bearer Token](/api-documentation/docs/authorisation/user-restricted-endpoints) with the write:import-control-system scope.\n
-        \nFor example: Bearer bb7fed3fe10dd235a2ccda3d50fb"
+      description: |
+        An [OAuth 2.0 Bearer Token](/api-documentation/docs/authorisation/user-restricted-endpoints) with the write:import-control-system scope.
+        
+        For example: Bearer bb7fed3fe10dd235a2ccda3d50fb"
       schema:
         type: string
         enum: [
@@ -209,8 +218,10 @@ components:
     contentTypeHeader:
       name: Content-Type
       in: header
-      description: "Specifies the format of the request body, which must be XML.\n
-        \nFor example: application/xml; charset=UTF-8 "
+      description: |
+        Specifies the format of the request body, which must be XML.
+        
+        For example: application/xml; charset=UTF-8
       style: simple
       schema:
         type: string
