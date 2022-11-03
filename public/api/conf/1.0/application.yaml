@@ -47,7 +47,7 @@ paths:
           application/xml:
             schema:
               allOf:
-              - $ref: '#/components/schemas/CC315A'
+              - $ref: '#/components/schemas/request315'
               - xml:
                   name: CC315A
                   attribute: false
@@ -145,7 +145,7 @@ paths:
           application/xml:
             schema:
               allOf:
-              - $ref: '#/components/schemas/CC313A'
+              - $ref: '#/components/schemas/request313'
               - xml:
                   name: CC313A
                   attribute: false
@@ -565,8 +565,7 @@ components:
             attribute: false
             wrapped: false
         TimOfPreMES10:
-          type: integer
-          format: int32
+          type: string
           xml:
             name: TimOfPreMES10
             namespace: ''
@@ -675,8 +674,8 @@ components:
             attribute: false
             wrapped: false
         ExpDatOfArrFIRENT733:
-          type: integer
-          format: int64
+          type: string
+          format: date-time
           xml:
             name: ExpDatOfArrFIRENT733
             namespace: ''
@@ -868,8 +867,8 @@ components:
             attribute: false
             wrapped: false
         DecDatTimHEA114:
-          type: integer
-          format: int64
+          type: string
+          format: date-time
           xml:
             name: DecDatTimHEA114
             namespace: ''
@@ -916,8 +915,7 @@ components:
             attribute: false
             wrapped: false
         IdeOfMeaOfTraCroHEA85:
-          type: integer
-          format: int32
+          type: string
           xml:
             name: IdeOfMeaOfTraCroHEA85
             namespace: ''
@@ -1003,8 +1001,8 @@ components:
             attribute: false
             wrapped: false
         DatTimAmeHEA113:
-          type: integer
-          format: int64
+          type: string
+          format: date-time
           xml:
             name: DatTimAmeHEA113
             namespace: ''
@@ -1165,8 +1163,7 @@ components:
       type: object
       properties:
         AddInfCodMT23:
-          type: integer
-          format: int32
+          type: string
           xml:
             name: AddInfCodMT23
             namespace: ''
@@ -1271,6 +1268,46 @@ components:
             wrapped: false
       xml:
         name: TRACONCO1
+        namespace: ''
+        attribute: false
+        wrapped: false
+    request315:
+      title: CC315A(request)
+      required:
+        - CC315A
+      type: object
+      properties:
+        CC315A:
+          allOf:
+            - $ref: '#/components/schemas/CC315A'
+            - xml:
+                name: CC315A
+                namespace: http://ics.dgtaxud.ec/CC315A
+                prefix: ie
+                attribute: false
+                wrapped: false
+      xml:
+        name: request
+        namespace: ''
+        attribute: false
+        wrapped: false
+    request313:
+      title: CC313A(request)
+      required:
+        - CC313A
+      type: object
+      properties:
+        CC313A:
+          allOf:
+            - $ref: '#/components/schemas/CC313A'
+            - xml:
+                name: CC313A
+                namespace: http://ics.dgtaxud.ec/CC313A
+                prefix: ie
+                attribute: false
+                wrapped: false
+      xml:
+        name: request
         namespace: ''
         attribute: false
         wrapped: false
