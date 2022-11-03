@@ -18,3 +18,7 @@ This API allows you to:
 * create a new ENS submission
 * amend an existing ENS submission
 
+## Changelog
+
+All service changes can be found within our Wiki page located [here](https://github.com/hmrc/import-control-entry-declaration-store/wiki/Changelog).
+
