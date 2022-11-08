@@ -37,12 +37,12 @@ Run Integration Tests: `sbt it:test`
 |```/import-control/test-only/traffic-switch/reset```      |        PUT        | Test | Endpoint to reset the traffic switch to initial state. |
 
 ## API Reference / Documentation 
-For more information on external API endpoints see the RAML at [Developer Hub]("https://developer.service.hmrc.gov.uk/api-documentation/docs/api/service/import-control-entry-declaration-store/1.0") or using the endpoint below
+For more information on external API endpoints see the YAML at [Developer Hub]("https://developer.service.hmrc.gov.uk/api-documentation/docs/api/service/import-control-entry-declaration-store/1.0") or using the endpoint below
 
-|Path                          | Supported Methods | Description |
-| -----------------------------| ----------------- | ----------- |
-|```/api/conf/:version/*file```|        GET        | /api/conf/1.0/application.raml |
-|```/api/conf/:version/rules/315.md```|        GET        | Returns ENS (315) Level 2 validation rules as markdown |
+|Path                          | Supported Methods | Description                                                          |
+| -----------------------------| ----------------- |----------------------------------------------------------------------|
+|```/api/conf/:version/*file```|        GET        | /api/conf/1.0/application.yaml                                       |
+|```/api/conf/:version/rules/315.md```|        GET        | Returns ENS (315) Level 2 validation rules as markdown               |
 |```/api/conf/:version/rules/313.md```|        GET        | Returns new ENS amendment (313) Level 2 validation rules as markdown |
 
 ## License
