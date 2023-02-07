@@ -21,7 +21,7 @@ import cats.implicits._
 import play.api.http.Status.BAD_REQUEST
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, EisConnector}
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
-import uk.gov.hmrc.entrydeclarationstore.models.{BatchReplayError, BatchReplayResult, ReplayMetadata, UndeliveredCounts}
+import uk.gov.hmrc.entrydeclarationstore.models.{Counts, BatchReplayError, BatchReplayResult, Abort, ReplayMetadata, UndeliveredCounts}
 import uk.gov.hmrc.entrydeclarationstore.reporting.{ReportSender, SubmissionSentToEIS}
 import uk.gov.hmrc.entrydeclarationstore.repositories.{EntryDeclarationRepo, MetadataLookupError}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -38,25 +38,22 @@ class SubmissionReplayService @Inject()(
   reportSender: ReportSender,
   clock: Clock)(implicit ec: ExecutionContext) {
 
-  case class Abort(error: BatchReplayError)
-  case class Counts(successCount: Int, failureCount: Int)
-
   def getUndeliveredCounts: Future[UndeliveredCounts] = entryDeclarationRepo.getUndeliveredCounts
 
-  def replaySubmissions(submissionIds: Seq[String])(implicit hc: HeaderCarrier): Future[Either[BatchReplayError, BatchReplayResult]] =
+  def replaySubmissions(submissionIds: Seq[String])(implicit hc: HeaderCarrier): Future[Either[Abort, BatchReplayResult]] =
     submissionIds
       .foldLeft(Future.successful(Counts(0, 0).asRight[Abort]): Future[Either[Abort, Counts]]) { (acc, submissionId) =>
         acc.flatMap {
-          case Right(counts)              => replaySubmissionId(submissionId, counts)
-          case abort: Left[Abort, Counts] => Future.successful(abort)
+          case Right(counts) => replaySubmissionId(submissionId, counts)
+          case abort         => Future.successful(abort)
         }
       }
       .map {
         case Right(counts) => Right(BatchReplayResult(counts.successCount, counts.failureCount))
-        case Left(abort)   => Left(abort.error)
+        case Left(abort)   => Left(abort)
       }
       .recover {
-        case _ => Left(BatchReplayError.MetadataRetrievalError)
+        case _ => Left(Abort(BatchReplayError.MetadataRetrievalError))
       }
 
   private def replaySubmissionId(submissionId: String, state: Counts)(
@@ -75,10 +72,13 @@ class SubmissionReplayService @Inject()(
         Counts(state.successCount, state.failureCount + 1)
       }
     }
-    result.value
+    result.value.map{
+      case Left(error) => Left(Abort(error, state))
+      case Right(result) => Right(result)
+    }
   }
 
-  private def doMetadataLookup(submissionId: String): Future[Either[Abort, Option[ReplayMetadata]]] = {
+  private def doMetadataLookup(submissionId: String): Future[Either[BatchReplayError, Option[ReplayMetadata]]] = {
     implicit val lc: LoggingContext = LoggingContext(submissionId = Some(submissionId))
 
     ContextLogger.info(s"Replaying submission $submissionId")
@@ -91,11 +91,11 @@ class SubmissionReplayService @Inject()(
         case Left(MetadataLookupError.DataFormatError)  => Right(None)
       }
       .recover {
-        case _ => Left(Abort(BatchReplayError.MetadataRetrievalError))
+        case _ => Left(BatchReplayError.MetadataRetrievalError)
       }
   }
 
-  private def doEisSubmit(optionReplayMetadata: Option[ReplayMetadata], submissionId: String)(implicit hc: HeaderCarrier): Future[Either[Abort, Boolean]] =
+  private def doEisSubmit(optionReplayMetadata: Option[ReplayMetadata], submissionId: String)(implicit hc: HeaderCarrier): Future[Either[BatchReplayError, Boolean]] =
     optionReplayMetadata match {
       case Some(replayMetadata) =>
         implicit val lc: LoggingContext = LoggingContext(
@@ -112,10 +112,10 @@ class SubmissionReplayService @Inject()(
             replayError match {
               case None                                            => Right(true)
               case Some(EISSendFailure.ErrorResponse(BAD_REQUEST)) => Right(false)
-              case Some(_)                                         => Left(Abort(BatchReplayError.EISSubmitError))
+              case Some(_)                                         => Left(BatchReplayError.EISSubmitError)
             }
           } else {
-            Left(Abort(BatchReplayError.EISEventError))
+            Left(BatchReplayError.EISEventError)
           }
         }
       case None => Future.successful(Right(false))

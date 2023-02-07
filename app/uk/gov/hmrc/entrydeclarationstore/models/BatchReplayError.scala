@@ -23,3 +23,6 @@ object BatchReplayError {
   case object EISSubmitError extends BatchReplayError
   case object EISEventError extends BatchReplayError
 }
+
+case class Counts(successCount: Int, failureCount: Int)
+case class Abort(error: BatchReplayError, counts: Counts = Counts(0,0))

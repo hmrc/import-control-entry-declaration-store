@@ -88,7 +88,7 @@ class AutoReplayServiceSpec
         MockAutoReplayRepository.getStatus() returns Future.successful(Some(AutoReplayRepoStatus(true)))
         MockEntryDeclarationRepo.totalUndeliveredMessages(now) returns Future.successful(5)
         MockReplayOrchestrator.startReplay(Some(5), ReplayTrigger.Automatic) returns result
-        service.replay().futureValue shouldBe true
+        service.replay(1).futureValue shouldBe true
       }
 
       "reset TS and replay undelivered submissions if enabled and there are undelivered submissions" in {
@@ -100,7 +100,7 @@ class AutoReplayServiceSpec
         MockTrafficSwitchService.startTrafficFlow returns Future.successful(())
         MockReplayOrchestrator.startReplay(Some(TrafficSwitchMaxFailures), ReplayTrigger.Automatic) returns result1
         MockReplayOrchestrator.startReplay(Some(2), ReplayTrigger.Automatic) returns result2
-        service.replay().futureValue shouldBe true
+        service.replay(1).futureValue shouldBe true
       }
 
       "reset TS and not if enabled and there are no undelivered submissions" in {
@@ -108,19 +108,19 @@ class AutoReplayServiceSpec
         MockAutoReplayRepository.getStatus() returns Future.successful(Some(AutoReplayRepoStatus(true)))
         MockEntryDeclarationRepo.totalUndeliveredMessages(now) returns Future.successful(0)
         MockTrafficSwitchService.startTrafficFlow returns Future.successful(())
-        service.replay().futureValue shouldBe false
+        service.replay(1).futureValue shouldBe false
       }
 
       "Not replay if enabled but there are no undelivered submissions" in {
         MockAutoReplayRepository.getStatus() returns Future.successful(Some(AutoReplayRepoStatus(true)))
         MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(TrafficSwitchState.Flowing)
         MockEntryDeclarationRepo.totalUndeliveredMessages(now) returns Future.successful(0)
-        service.replay().futureValue shouldBe false
+        service.replay(1).futureValue shouldBe false
       }
 
       "Not replay undelivered submissions if not enabled" in {
         MockAutoReplayRepository.getStatus() returns Future.successful(Some(AutoReplayRepoStatus(false)))
-        service.replay().futureValue shouldBe false
+        service.replay(1).futureValue shouldBe false
       }
 
       "Auto-replay fails (and fate logged) when ReplayOrchestrator aborts" in {
@@ -129,7 +129,7 @@ class AutoReplayServiceSpec
         MockAutoReplayRepository.getStatus() returns Future.successful(Some(AutoReplayRepoStatus(true)))
         MockEntryDeclarationRepo.totalUndeliveredMessages(now) returns Future.successful(5)
         MockReplayOrchestrator.startReplay(Some(5), ReplayTrigger.Automatic) returns result
-        service.replay().futureValue shouldBe false
+        service.replay(1).futureValue shouldBe false
       }
     }
   }

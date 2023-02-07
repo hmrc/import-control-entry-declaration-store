@@ -58,7 +58,7 @@ class AutoReplayService @Inject()(
     }
   }
 
-  def replay()(implicit ec: ExecutionContext): Future[Boolean] = {
+  def replay(replaySequenceCount: Int)(implicit ec: ExecutionContext): Future[Boolean] = {
     implicit val defaultHeaderCarrier: HeaderCarrier = HeaderCarrier(otherHeaders = DefaultOtherHeaders)
 
     def replaySubmissions(undeliveredCount: Int): Future[(Boolean, Option[(Int, Int)])] =
@@ -96,7 +96,7 @@ class AutoReplayService @Inject()(
         }
       }
 
-    logger.info(s"Checking for undelivered submissions ...")
+    logger.info(s"AutoReplay (sequenceCount=$replaySequenceCount), Checking for undelivered submissions ...")
     getServiceStatusIfEnabled().flatMap{
       _.fold(Future.successful(false)){
         case (TrafficSwitchState.NotFlowing, undeliveredCount) => resetTrafficSwitchAndReplay(undeliveredCount)
