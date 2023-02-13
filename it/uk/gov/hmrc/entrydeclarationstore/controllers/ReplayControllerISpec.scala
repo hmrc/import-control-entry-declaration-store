@@ -301,6 +301,77 @@ class ReplayControllerISpec
         }
       }
 
+      "some submissions cannot be replayed (multiple batches)" must {
+        "replay those that can" in {
+          val numDeclarations = 16
+          val failEvery       = 3
+          val numFailures     = numDeclarations / failEvery
+          val submissionIds   = (1 to numDeclarations).map(_ => createEntryDeclarationInError())
+
+          await(entryDeclarationRepo.totalUndeliveredMessages(Instant.now)) shouldBe numDeclarations
+
+          submissionIds.zipWithIndex.foreach {
+            case (id, i) =>
+              val status = if ((i+1) % failEvery == 0) BAD_REQUEST else ACCEPTED
+
+              willSubmitMetadataToEis(id, status)
+          }
+
+          val replayId = startReplay()
+          totalToReplay(replayId) shouldBe numDeclarations
+
+          eventually {
+            await(entryDeclarationRepo.totalUndeliveredMessages(Instant.now)) shouldBe numFailures
+
+            val replayState = getReplayState(replayId)
+
+            replayState.completed     shouldBe Some(true)
+            replayState.failureCount  shouldBe numFailures
+            replayState.totalToReplay shouldBe numDeclarations
+            replayState.successCount  shouldBe numDeclarations - numFailures
+          }
+        }
+      }
+
+      // "some submissions cannot be replayed because EIS disconnects (large number of replays)" must {
+      //   "abort the replay" in {
+      //     val submissionIds1 = createEntryDeclarationInError()
+      //     val submissionIds2 = createEntryDeclarationInError()
+      //     val submissionIds3 = createEntryDeclarationInError()
+      //     val submissionIds4 = createEntryDeclarationInError()
+      //     val submissionIds5 = createEntryDeclarationInError()
+      //     val submissionIds6 = createEntryDeclarationInError()
+      //     val submissionIds7 = createEntryDeclarationInError()
+      //     val submissionIds8 = createEntryDeclarationInError()
+
+      //     await(entryDeclarationRepo.totalUndeliveredMessages(Instant.now)) shouldBe 8
+
+      //     willSubmitMetadataToEis(submissionIds1, ACCEPTED)
+      //     willSubmitMetadataToEis(submissionIds2, ACCEPTED)
+      //     willSubmitMetadataToEis(submissionIds3, ACCEPTED)
+      //     willSubmitMetadataToEis(submissionIds4, ACCEPTED)
+      //     willSubmitMetadataToEis(submissionIds5, ACCEPTED)
+      //     willSubmitMetadataToEis(submissionIds6, ACCEPTED)
+      //     //willSubmitMetadataToEisFault(submissionIds7)
+      //     willSubmitMetadataToEis(submissionIds8, ACCEPTED)
+
+
+      //     val replayId = startReplay()
+      //     totalToReplay(replayId) shouldBe 8
+
+      //     eventually {
+      //       val replayState = getReplayState(replayId)
+      //       replayState.completed shouldBe Some(false)
+
+      //       // Should have replayed one successfully
+      //       // (but note that we don't have information about the number of
+      //       // successes/failures because the batch as a whole failed)
+      //       await(entryDeclarationRepo.totalUndeliveredMessages(Instant.now)) shouldBe 2
+      //     }
+      //   }
+      // }
+
+
       "a replay is already in progress" must {
         "return ACCEPT with the latest replayId" in {
           val submissionId1 = createEntryDeclarationInError()

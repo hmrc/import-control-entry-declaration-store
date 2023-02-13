@@ -141,7 +141,7 @@ class SubmissionReplayServiceSpec
               .lookupMetadata(submissionIds.head)
               .returns(Future.failed(new Exception("abc")))
 
-            service.replaySubmissions(submissionIds).futureValue shouldBe Left(BatchReplayError.MetadataRetrievalError)
+            service.replaySubmissions(submissionIds).futureValue shouldBe Left(Abort(BatchReplayError.MetadataRetrievalError))
           }
         }
       }
@@ -186,7 +186,7 @@ class SubmissionReplayServiceSpec
               .sendReport(submissionSentToEISReport(subId1, Some(eisSendFailure)))
               .returns(Future.successful((): Unit))
 
-            service.replaySubmissions(submissionIds).futureValue shouldBe Left(BatchReplayError.EISSubmitError)
+            service.replaySubmissions(submissionIds).futureValue shouldBe Left(Abort(BatchReplayError.EISSubmitError))
           }
           "EISSendFailure is TrafficSwitchNotFlowing" in abortEisSendFailure(EISSendFailure.TrafficSwitchNotFlowing)
           "EISSendFailure is ExceptionThrown" in abortEisSendFailure(EISSendFailure.ExceptionThrown)
@@ -211,7 +211,7 @@ class SubmissionReplayServiceSpec
           MockReportSender.sendReport(report) returns Future.failed(new IOException)
           MockEntryDeclarationRepo.setEisSubmissionSuccess(subId1, Instant.now(clock)) returns Future.successful(true)
 
-          service.replaySubmissions(submissionIds).futureValue shouldBe Left(BatchReplayError.EISEventError)
+          service.replaySubmissions(submissionIds).futureValue shouldBe Left(Abort(BatchReplayError.EISEventError))
         }
       }
     }
