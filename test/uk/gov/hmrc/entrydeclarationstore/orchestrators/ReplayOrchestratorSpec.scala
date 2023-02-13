@@ -222,8 +222,8 @@ class ReplayOrchestratorSpec
         MockIdGenerator.generateUuid() returns replayId
 
         MockEntryDeclarationRepo.totalUndeliveredMessages(time) returns Future.successful(totalUndelivered)
-
         MockReplayStateRepo.insert(replayId, ReplayTrigger.Manual, totalUndelivered, time) returns Future.unit
+
         MockEntryDeclarationRepo.getUndeliveredSubmissionIds(time, None) returns Source.failed(databaseException)
 
         val completeFuture = willSetCompletedAndUnlock(false)
@@ -317,7 +317,6 @@ class ReplayOrchestratorSpec
 
           MockReplayStateRepo.incrementCounts(replayId, successesToAdd = 123, failuresToAdd = 321) returns Future
             .failed(databaseException)
-
           val completeFuture = willSetCompletedAndUnlock(false)
 
           val (initResult, result) = replayOrchestrator.startReplay(None)
@@ -337,6 +336,7 @@ class ReplayOrchestratorSpec
             val submissionIds = (1 to 10).map(i => s"subId$i")
             MockAppConfig.replayBatchSize returns 2
             MockReplayLock.renew(replayId) returns Future.unit
+            MockReplayStateRepo.incrementCounts(replayId, 0, 0) returns Future.successful(true)
 
             MockEntryDeclarationRepo.totalUndeliveredMessages(time) returns Future.successful(submissionIds.length)
             willGetUndeliverablesAndInitState(None, submissionIds: _*)

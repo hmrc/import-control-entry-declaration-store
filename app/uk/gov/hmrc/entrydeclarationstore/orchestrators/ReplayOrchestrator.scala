@@ -103,8 +103,9 @@ class ReplayOrchestrator @Inject()(
           replayStateRepo.incrementCounts(replayId, counts.successCount, counts.failureCount).map((_, counts))
         case Left(Abort(err, counts)) =>
           logger.error(s"Unable to complete replay of batch ($counts), $err, throwing RuntimeException")
-          replayStateRepo.incrementCounts(replayId, counts.successCount, counts.failureCount)
-                         .map(throw new RuntimeException(s"Unable to replay batch $err"))
+          replayStateRepo
+            .incrementCounts(replayId, counts.successCount, counts.failureCount)
+            .map(throw new RuntimeException(s"Unable to replay batch $err"))
       }
       .fold[(Int, Int, Int)]((0,0,0))((c, r) => (c._1 + 1, c._2 + r._2.successCount, c._3 + r._2.failureCount))
       .map { totals =>

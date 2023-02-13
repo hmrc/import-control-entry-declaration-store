@@ -59,9 +59,7 @@ class SubmissionReplayService @Inject()(
     implicit hc: HeaderCarrier): Future[Either[Abort, Counts]] = {
     implicit val lc: LoggingContext = LoggingContext(submissionId = Some(submissionId))
 
-    {
-      println(s" *** REPLAYING $submissionId")
-      for {
+    {for {
       replayMetadata <- EitherT(doMetadataLookup(submissionId))
       sendSuccess    <- EitherT(doEisSubmit(replayMetadata, submissionId))
     } yield {
@@ -73,10 +71,11 @@ class SubmissionReplayService @Inject()(
         Counts(state.successCount, state.failureCount + 1)
       }
     }}.value.map{
-      case Left(error) => Left(Abort(error, state))
+      case Left(error) => Left(Abort(error, Counts(state.successCount, state.failureCount + 1)))
       case Right(result) => Right(result)
     }.recover {
-        case _ => Left(Abort(BatchReplayError.MetadataRetrievalError, state))
+      case e => Left(Abort(BatchReplayError.MetadataRetrievalError,
+                           Counts(state.successCount, state.failureCount + 1)))
     }
 
   }
