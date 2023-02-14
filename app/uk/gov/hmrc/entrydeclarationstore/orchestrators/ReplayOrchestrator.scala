@@ -20,7 +20,7 @@ import akka.stream.Materializer
 import akka.stream.scaladsl.Sink
 import play.api.Logging
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
-import uk.gov.hmrc.entrydeclarationstore.models.{ReplayInitializationResult, ReplayResult, ReplayTrigger}
+import uk.gov.hmrc.entrydeclarationstore.models.{Abort, ReplayInitializationResult, ReplayResult, ReplayTrigger}
 import uk.gov.hmrc.entrydeclarationstore.repositories.{EntryDeclarationRepo, ReplayStateRepo}
 import uk.gov.hmrc.entrydeclarationstore.services.SubmissionReplayService
 import uk.gov.hmrc.entrydeclarationstore.utils.IdGenerator
@@ -87,7 +87,7 @@ class ReplayOrchestrator @Inject()(
 
   private def startReplay(limit: Option[Int], replayStartTime: Instant, replayId: String)(
     implicit hc: HeaderCarrier): Future[ReplayResult] = {
-    logger.info(s"Starting replay for replayId $replayId")
+    logger.info(s"Starting replay (ID=$replayId)")
 
     submissionStateRepo
       .getUndeliveredSubmissionIds(replayStartTime, limit)
@@ -100,23 +100,22 @@ class ReplayOrchestrator @Inject()(
       }
       .mapAsync(parallelism = 1) {
         case Right(counts) =>
+          replayStateRepo.incrementCounts(replayId, counts.successCount, counts.failureCount).map((_, counts))
+        case Left(Abort(err, counts)) =>
+          logger.error(s"Unable to complete replay of batch ($counts), $err, throwing RuntimeException")
           replayStateRepo
             .incrementCounts(replayId, counts.successCount, counts.failureCount)
-            .map((_, counts))
-        case Left(error) =>
-          throw new RuntimeException(s"Unable to replay batch $error")
+            .map(throw new RuntimeException(s"Unable to replay batch $err"))
       }
-      .fold[(Int, Int, Int)]((0,0,0)) { (c, r) =>
-        (c._1 + 1, c._2 + r._2.successCount, c._3 + r._2.failureCount)
-      }
+      .fold[(Int, Int, Int)]((0,0,0))((c, r) => (c._1 + 1, c._2 + r._2.successCount, c._3 + r._2.failureCount))
       .map { totals =>
-        logger.info(s"Completed replay of ${totals._1} batches")
+        logger.info(s"Completed replay($replayId) of ${totals._1} batches, success ${totals._2}, failed ${totals._3}")
         setCompleteAndUnlock(replayId, true)
         ReplayResult.Completed(totals._1, totals._2, totals._3)
       }
       .recover {
         case NonFatal(e) =>
-          logger.error("Replay aborted", e)
+          logger.error("Replay aborted $e", e)
           setCompleteAndUnlock(replayId, false)
           ReplayResult.Aborted(e)
       }

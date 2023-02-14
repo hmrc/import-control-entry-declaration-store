@@ -8,9 +8,9 @@ object AppDependencies {
     "com.github.java-json-tools"   %  "json-schema-validator"     % "2.2.14",
     "uk.gov.hmrc.mongo"            %% "hmrc-mongo-play-28"        % "0.73.0",
     "uk.gov.hmrc"                  %% "bootstrap-backend-play-28" % bootstrapVersion,
-    "org.typelevel"                %% "cats-core"                 % "2.8.0",
+    "org.typelevel"                %% "cats-core"                 % "2.9.0",
     "org.scala-lang.modules"       %% "scala-xml"                 % "2.1.0",
-    "com.lucidchart"               %% "xtract"                    % "2.2.1",
+    "com.lucidchart"               %% "xtract"                    % "2.3.0",
     "org.codehaus.groovy"          %  "groovy"                    % "3.0.13",
     "com.chuusai"                  %% "shapeless"                 % "2.3.10",
     "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.13.4"

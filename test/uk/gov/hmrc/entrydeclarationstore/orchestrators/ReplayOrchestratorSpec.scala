@@ -30,7 +30,7 @@ import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.api.test.Injecting
 import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
-import uk.gov.hmrc.entrydeclarationstore.models.{BatchReplayError, BatchReplayResult, ReplayInitializationResult, ReplayResult, ReplayTrigger}
+import uk.gov.hmrc.entrydeclarationstore.models.{Abort, BatchReplayError, BatchReplayResult, ReplayInitializationResult, ReplayResult, ReplayTrigger}
 import uk.gov.hmrc.entrydeclarationstore.repositories.{MockEntryDeclarationRepo, MockReplayStateRepo}
 import uk.gov.hmrc.entrydeclarationstore.services.MockSubmissionReplayService
 import uk.gov.hmrc.entrydeclarationstore.utils.MockIdGenerator
@@ -222,8 +222,8 @@ class ReplayOrchestratorSpec
         MockIdGenerator.generateUuid() returns replayId
 
         MockEntryDeclarationRepo.totalUndeliveredMessages(time) returns Future.successful(totalUndelivered)
-
         MockReplayStateRepo.insert(replayId, ReplayTrigger.Manual, totalUndelivered, time) returns Future.unit
+
         MockEntryDeclarationRepo.getUndeliveredSubmissionIds(time, None) returns Source.failed(databaseException)
 
         val completeFuture = willSetCompletedAndUnlock(false)
@@ -317,7 +317,6 @@ class ReplayOrchestratorSpec
 
           MockReplayStateRepo.incrementCounts(replayId, successesToAdd = 123, failuresToAdd = 321) returns Future
             .failed(databaseException)
-
           val completeFuture = willSetCompletedAndUnlock(false)
 
           val (initResult, result) = replayOrchestrator.startReplay(None)
@@ -337,6 +336,7 @@ class ReplayOrchestratorSpec
             val submissionIds = (1 to 10).map(i => s"subId$i")
             MockAppConfig.replayBatchSize returns 2
             MockReplayLock.renew(replayId) returns Future.unit
+            MockReplayStateRepo.incrementCounts(replayId, 0, 0) returns Future.successful(true)
 
             MockEntryDeclarationRepo.totalUndeliveredMessages(time) returns Future.successful(submissionIds.length)
             willGetUndeliverablesAndInitState(None, submissionIds: _*)
@@ -344,7 +344,7 @@ class ReplayOrchestratorSpec
             willReplayBatchAndUpdateState(submissionIds.slice(0, 2): _*)
 
             // Fails with next batch
-            MockSubmissionReplayService.replaySubmissions(submissionIds.slice(2, 4)) returns Future.successful(Left(error))
+            MockSubmissionReplayService.replaySubmissions(submissionIds.slice(2, 4)) returns Future.successful(Left(Abort(error)))
 
             val completeFuture = willSetCompletedAndUnlock(false)
 
@@ -371,7 +371,7 @@ class ReplayOrchestratorSpec
             .replaySubmissions(Seq(submissionId))
             .onCall { _ =>
               replayBatchCalled.success(())
-              Promise[Either[BatchReplayError, BatchReplayResult]].future
+              Promise[Either[Abort, BatchReplayResult]].future
             }
 
           val (initResult, _) = replayOrchestrator.startReplay(None)

@@ -59,7 +59,7 @@ class AutoReplaySchedulerISpec
     await(lockRepositoryProvider.removeAll)
 
   private def newAutoReplayer: AutoReplayer =  new AutoReplayer{
-    def replay()(implicit ec: ExecutionContext): Future[Boolean] = {
+    def replay(replaySequenceCount: Int)(implicit ec: ExecutionContext): Future[Boolean] = {
       autoReplayProbe.ref ! AutoReplay
       Future.successful(false)
     }

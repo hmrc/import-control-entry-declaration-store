@@ -301,6 +301,72 @@ class ReplayControllerISpec
         }
       }
 
+      "Muliple batches with ISE triggering replay abort" must {
+        "replay those that can" in {
+          val numDeclarations = 18
+          val failAt          = 13
+          val numFailures     = numDeclarations - (failAt - 1)
+          val submissionIds   = (1 to numDeclarations).map(_ => createEntryDeclarationInError())
+
+          await(entryDeclarationRepo.totalUndeliveredMessages(Instant.now)) shouldBe numDeclarations
+
+          submissionIds.reverse.zipWithIndex.foreach {
+            case (id, i) =>
+              val status = if ((i + 1) == failAt) INTERNAL_SERVER_ERROR else ACCEPTED
+              willSubmitMetadataToEis(id, status)
+          }
+
+          val replayId = startReplay()
+          totalToReplay(replayId) shouldBe numDeclarations
+
+          eventually {
+            await(entryDeclarationRepo.totalUndeliveredMessages(Instant.now)) shouldBe numFailures
+
+            val replayState = getReplayState(replayId)
+
+            replayState.completed     shouldBe Some(false)
+            replayState.failureCount  shouldBe 1
+            replayState.totalToReplay shouldBe numDeclarations
+            replayState.successCount  shouldBe numDeclarations - numFailures
+          }
+        }
+      }
+
+      "Muliple batches with ISE triggering replay abort with earlier failures" must {
+        "replay those that can" in {
+          val numDeclarations = 15
+          val failAt          = 12
+          val failEvery       = 7
+          val numFailures     = numDeclarations - failAt - 1
+          val numUntried      = numDeclarations - failAt
+          val submissionIds   = (1 to numDeclarations).map(_ => createEntryDeclarationInError())
+
+          await(entryDeclarationRepo.totalUndeliveredMessages(Instant.now)) shouldBe numDeclarations
+
+          submissionIds.reverse.zipWithIndex.foreach {
+            case (id, i) =>
+              val status = if ((i + 1) == failAt) INTERNAL_SERVER_ERROR
+                           else if ((i + 1) % failEvery == 0 ) BAD_REQUEST
+                           else ACCEPTED
+              willSubmitMetadataToEis(id, status)
+          }
+
+          val replayId = startReplay()
+          totalToReplay(replayId) shouldBe numDeclarations
+
+          eventually {
+            await(entryDeclarationRepo.totalUndeliveredMessages(Instant.now)) shouldBe (numFailures+numUntried)
+
+            val replayState = getReplayState(replayId)
+
+            replayState.completed     shouldBe Some(false)
+            replayState.failureCount  shouldBe 2
+            replayState.totalToReplay shouldBe numDeclarations
+            replayState.successCount  shouldBe numDeclarations - (numFailures+numUntried)
+          }
+        }
+      }
+
       "a replay is already in progress" must {
         "return ACCEPT with the latest replayId" in {
           val submissionId1 = createEntryDeclarationInError()
