@@ -312,7 +312,7 @@ class ReplayControllerISpec
 
           submissionIds.reverse.zipWithIndex.foreach {
             case (id, i) =>
-              val status = if ((i+1) == failAt) INTERNAL_SERVER_ERROR else ACCEPTED
+              val status = if ((i + 1) == failAt) INTERNAL_SERVER_ERROR else ACCEPTED
               willSubmitMetadataToEis(id, status)
           }
 
@@ -345,8 +345,8 @@ class ReplayControllerISpec
 
           submissionIds.reverse.zipWithIndex.foreach {
             case (id, i) =>
-              val status = if ((i+1) == failAt) INTERNAL_SERVER_ERROR
-                           else if ((i+1) % failEvery == 0 ) BAD_REQUEST
+              val status = if ((i + 1) == failAt) INTERNAL_SERVER_ERROR
+                           else if ((i + 1) % failEvery == 0 ) BAD_REQUEST
                            else ACCEPTED
               willSubmitMetadataToEis(id, status)
           }
