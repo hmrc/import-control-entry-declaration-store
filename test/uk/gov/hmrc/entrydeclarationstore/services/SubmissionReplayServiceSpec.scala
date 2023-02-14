@@ -187,7 +187,7 @@ class SubmissionReplayServiceSpec
               .returns(Future.successful((): Unit))
 
             service.replaySubmissions(submissionIds).futureValue match {
-              case Left(Abort(err, counts)) if err == BatchReplayError.EISSubmitError && counts.failureCount > 0 => succeed
+              case Left(Abort(BatchReplayError.EISSubmitError, Counts(_,f))) if f > 0 =>
               case _ => fail
             }
           }

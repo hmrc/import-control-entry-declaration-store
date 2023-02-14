@@ -51,9 +51,6 @@ class SubmissionReplayService @Inject()(
         case Right(counts) => Right(BatchReplayResult(counts.successCount, counts.failureCount))
         case Left(abort)   => Left(abort)
       }
-      .recover {
-        case _ => Left(Abort(BatchReplayError.MetadataRetrievalError))
-      }
 
   private def replaySubmissionId(submissionId: String, state: Counts)(
     implicit hc: HeaderCarrier): Future[Either[Abort, Counts]] = {
