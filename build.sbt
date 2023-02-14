@@ -1,6 +1,6 @@
 import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
-
+ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
 val appName = "import-control-entry-declaration-store"
 
 lazy val coverageSettings: Seq[Setting[_]] = {
@@ -43,11 +43,10 @@ lazy val microservice = Project(appName, file("."))
     resolvers += Resolver.jcenterRepo,
     PlayKeys.playDefaultPort := 9818
   )
-  .settings(publishingSettings: _*)
   .settings(coverageSettings: _*)
   .configs(IntegrationTest)
   .settings(integrationTestSettings(): _*)
-  .settings(resourceDirectory in IntegrationTest := baseDirectory.value / "test" / "resources")
+  .settings(IntegrationTest / resourceDirectory := baseDirectory.value / "test" / "resources")
   .settings(scalacOptions += "-Xlint:_,-missing-interpolator")
   .settings(
     scalacOptions += "-P:silencer:pathFilters=views;routes",
