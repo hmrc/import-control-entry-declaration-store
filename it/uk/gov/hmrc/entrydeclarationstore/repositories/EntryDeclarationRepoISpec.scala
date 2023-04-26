@@ -16,9 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
-import java.time.Instant
+import java.time.{Clock, Instant, ZoneId}
 import java.util.UUID
-
 import akka.stream.Materializer
 import akka.stream.scaladsl.Sink
 import org.scalatest.matchers.should.Matchers
@@ -49,6 +48,7 @@ class EntryDeclarationRepoISpec
 
   val housekeepingRunLimit: Int  = 20
   val housekeepingBatchSize: Int = 3
+  val clock: Clock = Clock.tickMillis(ZoneId.systemDefault())
 
   override lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
@@ -78,7 +78,7 @@ class EntryDeclarationRepoISpec
   val messageSender              = "messageSender"
   val messageRecipient           = "messageRecipient"
   val eori                       = "eori"
-  val receivedDateTime: Instant  = Instant.now
+  val receivedDateTime: Instant  = Instant.now(clock)
   val housekeepingAt: Instant    = receivedDateTime.plusMillis(defaultTtl.toMillis)
   val payload313: JsValue        = ResourceUtils.withInputStreamFor("jsons/313SpecificFields.json")(Json.parse)
   val payload315: JsValue        = ResourceUtils.withInputStreamFor("jsons/315NoOptional.json")(Json.parse)
@@ -174,7 +174,7 @@ class EntryDeclarationRepoISpec
 
     }
 
-    val eisSubmissionDateTime = Instant.now
+    val eisSubmissionDateTime = Instant.now(clock)
 
     "setting the eis submission as success" when {
       trait Scenario {
@@ -442,7 +442,7 @@ class EntryDeclarationRepoISpec
 
     "housekeepingAt" when {
       "searching by submissionId" must {
-        val time = Instant.now.plusSeconds(60)
+        val time = Instant.now(clock).plusSeconds(60)
 
         "be settable" in {
           await(repository.removeAll)
@@ -467,7 +467,7 @@ class EntryDeclarationRepoISpec
         }
       }
       "searching by eori and correlationId" must {
-        val time = Instant.now.plusSeconds(60)
+        val time = Instant.now(clock).plusSeconds(60)
 
         "be settable" in {
           await(repository.removeAll)
@@ -494,7 +494,7 @@ class EntryDeclarationRepoISpec
     }
 
     "housekeep" when {
-      val t0 = Instant.now
+      val t0 = Instant.now(clock)
 
       def populateDeclarations(numDecls: Int): Seq[EntryDeclarationModel] = {
         await(repository.removeAll)

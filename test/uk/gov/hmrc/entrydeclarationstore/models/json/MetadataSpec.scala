@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.models.json
 
-import java.time.Instant
-
+import java.time.{Clock, Instant, ZoneId}
 import com.lucidchart.open.xtract.ParseSuccess
 import org.scalatest.Inside
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
@@ -42,7 +41,8 @@ class MetadataSpec extends AnyWordSpec with Inside {
 
           val submissionId     = "submissionId"
           val correlationId    = "correlationId"
-          val receivedDateTime = Instant.now
+          val clock = Clock.tickMillis(ZoneId.systemDefault())
+          val receivedDateTime = Instant.now(clock)
 
           inside(
             Metadata

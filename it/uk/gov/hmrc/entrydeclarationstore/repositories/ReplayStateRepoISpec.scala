@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
-import java.time.Instant
-
+import java.time.{Clock, Instant, ZoneId}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfterAll, Inside}
@@ -25,7 +24,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits, Injecting}
 import play.api.{Application, Environment, Mode}
-import uk.gov.hmrc.entrydeclarationstore.models.{ReplayTrigger, ReplayState}
+import uk.gov.hmrc.entrydeclarationstore.models.{ReplayState, ReplayTrigger}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -42,6 +41,7 @@ class ReplayStateRepoISpec
     with Inside {
 
   lazy val repository: ReplayStateRepoImpl = inject[ReplayStateRepoImpl]
+  val clock: Clock = Clock.tickMillis(ZoneId.systemDefault())
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -55,7 +55,7 @@ class ReplayStateRepoISpec
     .build()
 
   val totalToReplay: Int       = 10
-  val startTime: Instant       = Instant.now
+  val startTime: Instant       = Instant.now(clock)
   val replayState: ReplayState = ReplayState(initialReplayId, startTime, totalToReplay, ReplayTrigger.Manual, None, None, 0, 0)
   "ReplayStateRepo" when {
     "inserting a replay state" must {
@@ -96,7 +96,7 @@ class ReplayStateRepoISpec
       }
     }
     "setting a replay to completed" must {
-      val endTime = Instant.now
+      val endTime = Instant.now(clock)
       "return update the replay and return true if the replay exists" in {
         await(repository.setCompleted(initialReplayId, true, endTime)) shouldBe true
         await(repository.lookupState(initialReplayId)) shouldBe Some(
@@ -109,7 +109,7 @@ class ReplayStateRepoISpec
 
     "putting the state" when {
       val otherReplayId = "someReplayId1"
-      val t1            = Instant.now
+      val t1            = Instant.now(clock)
 
       "no state for a replayId exists" must {
         "insert" in {
