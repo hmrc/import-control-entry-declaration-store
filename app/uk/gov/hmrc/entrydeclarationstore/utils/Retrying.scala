@@ -22,7 +22,7 @@ import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
 object Retrying {
-  private val fibonacci: Stream[Int] = 1 #:: fibonacci.scanLeft(1)(_ + _)
+  private val fibonacci: LazyList[Int] = 1 #:: fibonacci.scanLeft(1)(_ + _)
 
   def fibonacciDelays(initialDelay: FiniteDuration, numRetries: Int): List[FiniteDuration] =
     fibonacci.take(numRetries).map(i => i * initialDelay).toList

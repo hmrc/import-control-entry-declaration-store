@@ -45,7 +45,7 @@ class ReplayStateRepoISpec
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    await(repository.removeAll)
+    await(repository.removeAll())
   }
   val initialReplayId = "replayId"
 
@@ -135,14 +135,14 @@ class ReplayStateRepoISpec
     "looking up the latest replay" when {
       "no replay states exist" must {
         "return None" in {
-          await(repository.removeAll)
+          await(repository.removeAll())
           await(repository.lookupIdOfLatest) shouldBe None
         }
       }
 
       "an incomplete replay state exists" must {
         "return it" in {
-          await(repository.removeAll)
+          await(repository.removeAll())
           await(repository.insert(initialReplayId, ReplayTrigger.Manual, totalToReplay, startTime))
           await(repository.lookupIdOfLatest) shouldBe Some(initialReplayId)
         }
@@ -150,7 +150,7 @@ class ReplayStateRepoISpec
 
       "multiple replay states exist" must {
         "return the one with the latest start date" in {
-          await(repository.removeAll)
+          await(repository.removeAll())
           val num = 10
 
           val idsAndStarts = Random.shuffle((1 to num).map(i => (s"replayId-$i", startTime.plusSeconds(i))))
@@ -163,7 +163,7 @@ class ReplayStateRepoISpec
       }
 
       "return any if multiple have same start date" in {
-        await(repository.removeAll)
+        await(repository.removeAll())
 
         val replayId1 = "replayId-1"
         val replayId2 = "replayId-2"

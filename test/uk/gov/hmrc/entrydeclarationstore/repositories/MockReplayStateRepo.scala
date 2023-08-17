@@ -37,7 +37,7 @@ trait MockReplayStateRepo extends MockFactory {
       (mockReplayStateRepo.lookupState _).expects(replayId)
 
     def lookupIdOfLatest: CallHandler[Future[Option[String]]] =
-      (mockReplayStateRepo.lookupIdOfLatest _).expects
+      (() => mockReplayStateRepo.lookupIdOfLatest).expects()
 
     def insert(replayId: String, trigger: ReplayTrigger, totalToReplay: Int, startTime: Instant): CallHandler[Future[Unit]] =
       (mockReplayStateRepo.insert(_: String, _: ReplayTrigger, _: Int, _: Instant)).expects(replayId, trigger, totalToReplay, startTime)

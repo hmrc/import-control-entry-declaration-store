@@ -151,7 +151,7 @@ class TrafficSwitchActor(trafficSwitchConfig: TrafficSwitchConfig, stateActorFac
     }
 
   private def withTimeout[U](body: Unit => Future[U]): (Future[U], Cancellable) = {
-    val timeoutPromise = Promise[Nothing]
+    val timeoutPromise = Promise[Nothing]()
     val timer = context.system.scheduler
       .scheduleOnce(trafficSwitchConfig.callTimeout)(timeoutPromise.failure(timeoutEx))
 

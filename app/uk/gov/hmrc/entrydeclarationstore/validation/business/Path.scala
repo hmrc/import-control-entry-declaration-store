@@ -30,7 +30,7 @@ object Path {
       // Drop the leading '/' first...
       val pathElements = path.drop(1).split('/')
 
-      Absolute(pathElements)
+      Absolute(pathElements.toIndexedSeq)
     } else {
       val (numGenerations, pathElements) = {
         val allPathElements = path.split('/')
@@ -38,7 +38,7 @@ object Path {
         (allPathElements.takeWhile(_ == "..").length, allPathElements.dropWhile(_ == ".."))
       }
 
-      Relative(numGenerations, pathElements)
+      Relative(numGenerations, pathElements.toIndexedSeq)
     }
 
   def parseAbsolute(path: String): Path.Absolute =

@@ -67,7 +67,7 @@ class EntryDeclarationRepoISpec
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    await(repository.removeAll)
+    await(repository.removeAll())
   }
 
   val defaultTtl: FiniteDuration = 60.seconds
@@ -178,7 +178,7 @@ class EntryDeclarationRepoISpec
 
     "setting the eis submission as success" when {
       trait Scenario {
-        await(repository.removeAll)
+        await(repository.removeAll())
         await(repository.save(entryDeclaration313))
       }
 
@@ -204,7 +204,7 @@ class EntryDeclarationRepoISpec
 
     "setting the eis submission as failure" when {
       trait Scenario {
-        await(repository.removeAll)
+        await(repository.removeAll())
         await(repository.save(entryDeclaration313))
       }
 
@@ -230,7 +230,7 @@ class EntryDeclarationRepoISpec
 
     "looking up a submissionId from an eori & correlationId" when {
       trait Scenario {
-        await(repository.removeAll)
+        await(repository.removeAll())
         await(repository.save(entryDeclaration313))
       }
 
@@ -291,7 +291,7 @@ class EntryDeclarationRepoISpec
 
     "looking up an acceptance enrichment" when {
       trait Scenario {
-        await(repository.removeAll)
+        await(repository.removeAll())
         await(repository.save(entryDeclaration313))
         await(repository.save(entryDeclaration315))
         await(repository.setEisSubmissionSuccess(submissionId313, eisSubmissionDateTime))
@@ -318,7 +318,7 @@ class EntryDeclarationRepoISpec
     "looking up a rejection enrichment" when {
       "an amendment" when {
         trait Scenario {
-          await(repository.removeAll)
+          await(repository.removeAll())
           await(repository.save(entryDeclaration313))
         }
 
@@ -345,7 +345,7 @@ class EntryDeclarationRepoISpec
 
       "a declaration" when {
         trait Scenario {
-          await(repository.removeAll)
+          await(repository.removeAll())
           await(repository.save(entryDeclaration315))
         }
 
@@ -372,7 +372,7 @@ class EntryDeclarationRepoISpec
     "looking up metadata" when {
       "a IE313 submission with the submissionId exists in the database" must {
         trait Scenario {
-          await(repository.removeAll)
+          await(repository.removeAll())
           await(repository.save(entryDeclaration313))
         }
 
@@ -395,7 +395,7 @@ class EntryDeclarationRepoISpec
 
       "a IE315 submission with the submissionId exists in the database" must {
         trait Scenario {
-          await(repository.removeAll)
+          await(repository.removeAll())
           await(repository.save(entryDeclaration315))
         }
 
@@ -445,7 +445,7 @@ class EntryDeclarationRepoISpec
         val time = Instant.now(clock).plusSeconds(60)
 
         "be settable" in {
-          await(repository.removeAll)
+          await(repository.removeAll())
           await(repository.save(entryDeclaration313))                shouldBe true
           await(repository.setHousekeepingAt(submissionId313, time)) shouldBe true
 
@@ -456,7 +456,7 @@ class EntryDeclarationRepoISpec
         }
 
         "return true if no change is made" in {
-          await(repository.removeAll)
+          await(repository.removeAll())
           await(repository.save(entryDeclaration313))                shouldBe true
           await(repository.setHousekeepingAt(submissionId313, time)) shouldBe true
           await(repository.setHousekeepingAt(submissionId313, time)) shouldBe true
@@ -470,7 +470,7 @@ class EntryDeclarationRepoISpec
         val time = Instant.now(clock).plusSeconds(60)
 
         "be settable" in {
-          await(repository.removeAll)
+          await(repository.removeAll())
           await(repository.save(entryDeclaration313))                       shouldBe true
           await(repository.setHousekeepingAt(eori, correlationId313, time)) shouldBe true
 
@@ -481,7 +481,7 @@ class EntryDeclarationRepoISpec
         }
 
         "return true if no change is made" in {
-          await(repository.removeAll)
+          await(repository.removeAll())
           await(repository.save(entryDeclaration313))                       shouldBe true
           await(repository.setHousekeepingAt(eori, correlationId313, time)) shouldBe true
           await(repository.setHousekeepingAt(eori, correlationId313, time)) shouldBe true
@@ -497,7 +497,7 @@ class EntryDeclarationRepoISpec
       val t0 = Instant.now(clock)
 
       def populateDeclarations(numDecls: Int): Seq[EntryDeclarationModel] = {
-        await(repository.removeAll)
+        await(repository.removeAll())
         (1 to numDecls).map { _ =>
           val decl = randomEntryDeclaration()
           await(repository.save(decl)) shouldBe true
@@ -564,7 +564,7 @@ class EntryDeclarationRepoISpec
     "there are submissions in error (undelivered)" must {
 
       trait Scenario {
-        await(repository.removeAll)
+        await(repository.removeAll())
 
         def createSubmissions(number: Int, eisSubmissionState: EisSubmissionState): Seq[EntryDeclarationModel] =
           (0 until number).map { i =>
@@ -621,7 +621,7 @@ class EntryDeclarationRepoISpec
       }
 
       "allow geting total counts of submissionIds by transport mode when no undelivered" in new Scenario {
-        await(repository.removeAll)
+        await(repository.removeAll())
 
         await(repository.getUndeliveredCounts) shouldBe UndeliveredCounts(totalCount = 0, transportCounts = None)
       }

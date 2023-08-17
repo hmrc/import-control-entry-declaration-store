@@ -27,6 +27,6 @@ trait MockAuditHandler extends MockFactory {
 
   object MockAuditHandler {
     def audit(auditEvent: AuditEvent): CallHandler[Future[Unit]] =
-      (mockAuditHandler.audit(_: AuditEvent)(_: HeaderCarrier)) expects (auditEvent, *)
+      (mockAuditHandler.audit(_: AuditEvent)(_: HeaderCarrier)).expects(auditEvent, *)
   }
 }

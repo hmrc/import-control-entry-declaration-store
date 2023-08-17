@@ -166,7 +166,7 @@ class EntryDeclarationStoreSpec
         .returns(Future.successful(None))
 
       // Called async so wait on promise to be sure it's called...
-      val setEisSubmissionStateUpdated: Promise[Unit] = Promise[Unit]
+      val setEisSubmissionStateUpdated: Promise[Unit] = Promise[Unit]()
       MockEntryDeclarationRepo.setEisSubmissionSuccess(submissionId, Instant.now(clock)).onCall { _ =>
         setEisSubmissionStateUpdated.success(())
         Future.successful(true)
@@ -258,7 +258,7 @@ class EntryDeclarationStoreSpec
           .returns(Future.successful(Some(eisSendFailure)))
 
         // Called async so wait on promise to be sure it's called...
-        val setEisSubmissionStateUpdated: Promise[Unit] = Promise[Unit]
+        val setEisSubmissionStateUpdated: Promise[Unit] = Promise[Unit]()
         MockEntryDeclarationRepo.setEisSubmissionFailure(submissionId).onCall { _ =>
           setEisSubmissionStateUpdated.success(())
           Future.successful(true)
@@ -288,7 +288,7 @@ class EntryDeclarationStoreSpec
 
         MockEisConnector
           .submitMetadata(metadataWith(messageType, mrn), bypassTrafficSwitch = false)
-          .returns(Promise[Option[EISSendFailure]].future)
+          .returns(Promise[Option[EISSendFailure]]().future)
 
         entryDeclarationStore
           .handleSubmission(eori, payload, mrn, receivedDateTime, clientInfo, submissionId, correlationId, inputParams(mrn))
@@ -316,7 +316,7 @@ class EntryDeclarationStoreSpec
           .returns(Future.failed(new RuntimeException with NoStackTrace))
 
         // Called async so wait on promise to be sure it's called...
-        val setEisSubmissionStateUpdated: Promise[Unit] = Promise[Unit]
+        val setEisSubmissionStateUpdated: Promise[Unit] = Promise[Unit]()
         MockEntryDeclarationRepo.setEisSubmissionFailure(submissionId).onCall { _ =>
           setEisSubmissionStateUpdated.success(())
           Future.successful(true)

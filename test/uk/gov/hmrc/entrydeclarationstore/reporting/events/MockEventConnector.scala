@@ -28,6 +28,6 @@ trait MockEventConnector extends MockFactory {
 
   object MockEventConnector {
     def sendEvent(event: Event): CallHandler[Future[Unit]] =
-      (mockEventConnector.sendEvent(_: Event)(_: HeaderCarrier, _: LoggingContext)) expects (event, *, *)
+      (mockEventConnector.sendEvent(_: Event)(_: HeaderCarrier, _: LoggingContext)).expects(event, *, *)
   }
 }

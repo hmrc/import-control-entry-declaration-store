@@ -39,8 +39,8 @@ object LocalNode {
 
   private[business] def find(nodeSeq: NodeSeq, label: String): Seq[Node] =
     for {
-      node <- nodeSeq.toStream
-      c    <- node.child.toStream if c.label == label
+      node <- nodeSeq.to(LazyList)
+      c    <- node.child.to(LazyList) if c.label == label
     } yield c
 
   private[business] trait BaseLocalNodeImpl extends LocalNode {
@@ -60,11 +60,11 @@ object LocalNode {
 
     def text: String = contextNode.text
 
-    def children: Seq[LocalNode] = contextNode.child.collect { case e: Elem => e }.map(LocalNode.LocalNodeImpl(xml, _))
+    def children: Seq[LocalNode] = contextNode.child.collect { case e: Elem => e }.map(LocalNode.LocalNodeImpl(xml, _)).toSeq
 
     private def applyRelativePath(root: XmlWrapper, xml: Node, path: Path.Relative) =
       for {
-        ancestor <- root.findAncestor(path.numGenerations, xml).toStream
+        ancestor <- root.findAncestor(path.numGenerations, xml).to(LazyList)
         element  <- applyPathElements(ancestor, path.pathElements)
       } yield element
 
@@ -72,7 +72,7 @@ object LocalNode {
       applyPathElements(xml.root, path.pathElements)
 
     private def applyPathElements(from: Node, pathElements: Seq[Path.Element]) =
-      pathElements.foldLeft(Stream(from)) { (acc, element) =>
+      pathElements.foldLeft(LazyList(from)) { (acc, element) =>
         acc.flatMap(node => find(node, element.name))
       }
   }

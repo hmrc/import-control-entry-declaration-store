@@ -71,19 +71,19 @@ class ReplayStateRepoImpl @Inject()
   def removeAll(): Future[Unit] =
     collection
       .deleteMany(exists("_id"))
-      .toFutureOption
+      .toFutureOption()
       .map( _ => ())
 
   def list(count: Option[Int]): Future[List[ReplayState]] =
     Mdc
       .preservingMdc(
         collection
-          .withReadPreference(ReadPreference.primaryPreferred)
+          .withReadPreference(ReadPreference.primaryPreferred())
           .find()
           .sort(descending("startTime"))
           .limit(count.getOrElse(Int.MaxValue))
-          .collect
-          .toFutureOption
+          .collect()
+          .toFutureOption()
       )
       .map(_.fold[List[ReplayState]](Nil)(_.toList))
 
@@ -91,19 +91,19 @@ class ReplayStateRepoImpl @Inject()
     Mdc
       .preservingMdc(
         collection
-          .withReadPreference(ReadPreference.primaryPreferred)
+          .withReadPreference(ReadPreference.primaryPreferred())
           .find(equal("trigger", Codecs.toBson(trigger)))
           .sort(descending("startTime"))
-          .headOption
+          .headOption()
       )
 
   override def lookupState(replayId: String): Future[Option[ReplayState]] =
     Mdc
       .preservingMdc(
         collection
-          .withReadPreference(ReadPreference.primaryPreferred)
+          .withReadPreference(ReadPreference.primaryPreferred())
           .find(equal("replayId", replayId))
-          .headOption
+          .headOption()
       )
 
   override def lookupIdOfLatest: Future[Option[String]] =
@@ -113,7 +113,7 @@ class ReplayStateRepoImpl @Inject()
           .withReadPreference(ReadPreference.primaryPreferred())
           .find()
           .sort(descending("startTime"))
-          .headOption
+          .headOption()
       )
       .map{
         case Some(id) => Some(id.replayId)
@@ -127,7 +127,7 @@ override def setState(replayState: ReplayState): Future[Unit] =
           .findOneAndReplace(equal("replayId", replayState.replayId),
                              replayState,
                              FindOneAndReplaceOptions().upsert(true))
-          .headOption
+          .headOption()
       )
       .map(_ => ())
 
@@ -136,7 +136,7 @@ override def setState(replayState: ReplayState): Future[Unit] =
       .preservingMdc(
         collection
           .insertOne(ReplayState(replayId, startTime, totalToReplay, trigger))
-          .toFutureOption
+          .toFutureOption()
       )
       .map(_ => ())
 
@@ -147,7 +147,7 @@ override def setState(replayState: ReplayState): Future[Unit] =
           .updateOne(equal("replayId", replayId),
                      combine(inc("successCount", successesToAdd),
                              inc("failureCount", failuresToAdd)))
-          .toFutureOption
+          .toFutureOption()
       )
       .map{
         result => result.map(_.getModifiedCount > 0).getOrElse(false)
@@ -159,7 +159,7 @@ override def setState(replayState: ReplayState): Future[Unit] =
         collection
           .updateOne(equal("replayId", replayId),
                     combine(set("completed", completed), set("endTime", endTime)))
-          .headOption
+          .headOption()
       )
       .map(_.map(_.getModifiedCount > 0).getOrElse(false))
 }

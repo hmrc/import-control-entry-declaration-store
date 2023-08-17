@@ -107,16 +107,16 @@ class EisConnectorSpec
     val newUrl   = "/safetyandsecurity/newenssubmission/v1"
     val amendUrl = "/safetyandsecurity/amendsubmission/v1"
 
-    MockAppConfig.eisHost returns s"http://localhost:$port" anyNumberOfTimes ()
-    MockAppConfig.eisNewEnsUrlPath returns newUrl anyNumberOfTimes ()
-    MockAppConfig.eisAmendEnsUrlPath returns amendUrl anyNumberOfTimes ()
-    MockAppConfig.eisRetries returns retryDelays anyNumberOfTimes ()
-    MockAppConfig.eisRetryStatusCodes returns eisRetryStatusCodes anyNumberOfTimes ()
+    MockAppConfig.eisHost.returns(s"http://localhost:$port").anyNumberOfTimes()
+    MockAppConfig.eisNewEnsUrlPath.returns(newUrl).anyNumberOfTimes()
+    MockAppConfig.eisAmendEnsUrlPath.returns(amendUrl).anyNumberOfTimes ()
+    MockAppConfig.eisRetries.returns(retryDelays).anyNumberOfTimes ()
+    MockAppConfig.eisRetryStatusCodes.returns(eisRetryStatusCodes).anyNumberOfTimes ()
 
     private val trafficSwitchConfig: TrafficSwitchConfig =
       TrafficSwitchConfig(maxCallFailures, callTimeout, 1.minute, 1.minute)
 
-    MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(TrafficSwitchState.Flowing) anyNumberOfTimes ()
+    MockTrafficSwitchService.getTrafficSwitchState.returns(Future.successful(TrafficSwitchState.Flowing)).anyNumberOfTimes ()
 
     val trafficSwitch: TrafficSwitch =
       new TrafficSwitch(
@@ -147,7 +147,7 @@ class EisConnectorSpec
     val expectedHeader      = "expectedHeader"
     val expectedHeaderValue = "expectedHeaderValue"
     MockHeaderGenerator
-      .headersForEIS(submissionId) returns Seq(expectedHeader -> expectedHeaderValue) anyNumberOfTimes ()
+      .headersForEIS(submissionId).returns(Seq(expectedHeader -> expectedHeaderValue)).anyNumberOfTimes ()
 
     def requestBuilder(amendment: Boolean): MappingBuilder =
       if (amendment) {
@@ -320,8 +320,8 @@ class EisConnectorSpec
 
         checkTrafficFlowDoesNotStop(None)
 
-        MockPagerDutyLogger.logEISFailure never ()
-        MockPagerDutyLogger.logEISTrafficSwitchFlowStopped never ()
+        MockPagerDutyLogger.logEISFailure.never ()
+        MockPagerDutyLogger.logEISTrafficSwitchFlowStopped.never ()
       }
 
       "not stop traffic flow after 200 responses" in new Test {
@@ -330,7 +330,7 @@ class EisConnectorSpec
         val totalCalls: Int = checkTrafficFlowDoesNotStop(Some(EISSendFailure.ErrorResponse(OK)))
 
         MockPagerDutyLogger.logEISFailure repeated totalCalls
-        MockPagerDutyLogger.logEISTrafficSwitchFlowStopped never ()
+        MockPagerDutyLogger.logEISTrafficSwitchFlowStopped.never ()
       }
 
       "not stop traffic flow after 400 responses" in new Test {
@@ -339,7 +339,7 @@ class EisConnectorSpec
         val totalCalls: Int = checkTrafficFlowDoesNotStop(Some(EISSendFailure.ErrorResponse(BAD_REQUEST)))
 
         MockPagerDutyLogger.logEISFailure repeated totalCalls
-        MockPagerDutyLogger.logEISTrafficSwitchFlowStopped never ()
+        MockPagerDutyLogger.logEISTrafficSwitchFlowStopped.never ()
       }
 
       "stop traffic flow after multiple 4xx responses" in new Test {
@@ -389,7 +389,7 @@ class EisConnectorSpec
             bypassTrafficSwitch = true)
 
         MockPagerDutyLogger.logEISFailure repeated totalCalls
-        MockPagerDutyLogger.logEISTrafficSwitchFlowStopped never ()
+        MockPagerDutyLogger.logEISTrafficSwitchFlowStopped.never ()
       }
 
       "allow calls through even when the traffic switch is stopping traffic flow to EIS" in new Test {

@@ -77,16 +77,16 @@ class ReplayOrchestratorSpec
     clock)
 
   private def willSetCompletedAndUnlock(completed: Boolean): Future[Unit] = {
-    val completePromise = Promise[Unit]
+    val completePromise = Promise[Unit]()
     MockReplayStateRepo.setCompleted(replayId, completed, time).onCall { _ =>
       completePromise.trySuccess(())
       Future.successful(true)
     }
 
-    val unlockPromise = Promise[Unit]
+    val unlockPromise = Promise[Unit]()
     MockReplayLock.unlock(replayId).onCall { _ =>
       unlockPromise.trySuccess(())
-      Future.successful(Unit)
+      Future.successful(())
     }
 
     Future.sequence(Seq(completePromise.future, unlockPromise.future)).map(_ => ())
@@ -366,12 +366,12 @@ class ReplayOrchestratorSpec
           MockEntryDeclarationRepo.totalUndeliveredMessages(time) returns Future.successful(1)
           willGetUndeliverablesAndInitState(None, submissionId)
 
-          val replayBatchCalled = Promise[Unit]
+          val replayBatchCalled = Promise[Unit]()
           MockSubmissionReplayService
             .replaySubmissions(Seq(submissionId))
             .onCall { _ =>
               replayBatchCalled.success(())
-              Promise[Either[Abort, BatchReplayResult]].future
+              Promise[Either[Abort, BatchReplayResult]]().future
             }
 
           val (initResult, _) = replayOrchestrator.startReplay(None)

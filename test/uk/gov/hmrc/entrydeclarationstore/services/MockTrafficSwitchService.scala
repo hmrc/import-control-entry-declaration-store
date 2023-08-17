@@ -27,19 +27,19 @@ trait MockTrafficSwitchService extends MockFactory {
 
   object MockTrafficSwitchService {
     def resetTrafficSwitch: CallHandler[Future[Unit]] =
-      mockTrafficSwitchService.resetTrafficSwitch _ expects ()
+      (() => mockTrafficSwitchService.resetTrafficSwitch).expects()
 
     def stopTrafficFlow: CallHandler[Future[Unit]] =
-      mockTrafficSwitchService.stopTrafficFlow _ expects ()
+      (() => mockTrafficSwitchService.stopTrafficFlow).expects()
 
     def startTrafficFlow: CallHandler[Future[Unit]] =
-      mockTrafficSwitchService.startTrafficFlow _ expects ()
+      (() => mockTrafficSwitchService.startTrafficFlow).expects()
 
     def getTrafficSwitchStatus: CallHandler[Future[TrafficSwitchStatus]] =
-      mockTrafficSwitchService.getTrafficSwitchStatus _ expects ()
+      (() => mockTrafficSwitchService.getTrafficSwitchStatus).expects()
 
     def getTrafficSwitchState: CallHandler[Future[TrafficSwitchState]] =
-      mockTrafficSwitchService.getTrafficSwitchState _ expects ()
+      (() => mockTrafficSwitchService.getTrafficSwitchState).expects()
   }
 
 }

@@ -60,7 +60,7 @@ class HousekeepingRepoImpl @Inject()(
   def removeAll(): Future[Unit] =
     collection
       .deleteMany(exists("_id"))
-      .toFutureOption
+      .toFutureOption()
       .map( _ => ())
 
   override def enableHousekeeping(value: Boolean): Future[Unit] =
@@ -68,7 +68,7 @@ class HousekeepingRepoImpl @Inject()(
 
   private def turnOn() =
     Mdc
-      .preservingMdc(collection.deleteOne(equal("_id", singletonId)).toFutureOption)
+      .preservingMdc(collection.deleteOne(equal("_id", singletonId)).toFutureOption())
       .andThen {
         case Success(_) => logger.warn("Housekeeping turned on")
       }
@@ -79,7 +79,7 @@ class HousekeepingRepoImpl @Inject()(
       .preservingMdc(
         collection
           .updateOne(equal("_id", singletonId), set("_id", singletonId), UpdateOptions().upsert(true))
-          .toFutureOption
+          .toFutureOption()
       )
       .andThen {
         case Success(_) => logger.warn("Housekeeping turned off")
@@ -88,7 +88,7 @@ class HousekeepingRepoImpl @Inject()(
 
   override def getHousekeepingStatus: Future[HousekeepingStatus] =
     Mdc
-      .preservingMdc(collection.countDocuments(equal("_id", singletonId)).toFutureOption)
+      .preservingMdc(collection.countDocuments(equal("_id", singletonId)).toFutureOption())
       .map{
         case Some(n) => HousekeepingStatus(n == 0)
         case _ => HousekeepingStatus(false)

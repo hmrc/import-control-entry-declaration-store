@@ -30,7 +30,7 @@ trait MockEntryDeclarationRetrievalService extends MockFactory {
     def retrieveSubmissionIdAndReceivedDateTime(
       eori: String,
       correlationId: String): CallHandler[Future[Option[SubmissionIdLookupResult]]] =
-      mockEntryDeclarationRetrievalService.retrieveSubmissionIdAndReceivedDateTime _ expects (eori, correlationId)
+      (mockEntryDeclarationRetrievalService.retrieveSubmissionIdAndReceivedDateTime(_: String, _: String)).expects(eori, correlationId)
     def retrieveSubmission(submissionId: String): CallHandler[Future[Option[JsValue]]] =
       mockEntryDeclarationRetrievalService.retrieveSubmission _ expects submissionId
   }

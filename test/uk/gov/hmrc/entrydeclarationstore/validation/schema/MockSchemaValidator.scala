@@ -25,7 +25,7 @@ trait MockSchemaValidator extends MockFactory {
 
   object MockSchemaValidator {
     def validate(schemaType: SchemaType, rawPayload: RawPayload): CallHandler[SchemaValidationResult] =
-      (mockSchemaValidator.validate(_: SchemaType, _: RawPayload)) expects (schemaType, rawPayload)
+      (mockSchemaValidator.validate(_: SchemaType, _: RawPayload)).expects(schemaType, rawPayload)
   }
 
 }

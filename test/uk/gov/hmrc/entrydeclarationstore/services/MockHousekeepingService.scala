@@ -30,16 +30,16 @@ trait MockHousekeepingService extends MockFactory {
       mockHousekeepingService.enableHousekeeping _ expects value
 
     def getHousekeepingStatus: CallHandler[Future[HousekeepingStatus]] =
-      mockHousekeepingService.getHousekeepingStatus _ expects ()
+      (() => mockHousekeepingService.getHousekeepingStatus).expects()
 
     def setShortTtl(submissionId: String): CallHandler[Future[Boolean]] =
       (mockHousekeepingService.setShortTtl(_: String)) expects submissionId
 
     def setShortTtl(eori: String, correlationId: String): CallHandler[Future[Boolean]] =
-      (mockHousekeepingService.setShortTtl(_: String, _: String)) expects (eori, correlationId)
+      (mockHousekeepingService.setShortTtl(_: String, _: String)).expects(eori, correlationId)
 
     def housekeep(): CallHandler[Future[Boolean]] =
-      mockHousekeepingService.housekeep _ expects ()
+      (() => mockHousekeepingService.housekeep()).expects()
   }
 
 }

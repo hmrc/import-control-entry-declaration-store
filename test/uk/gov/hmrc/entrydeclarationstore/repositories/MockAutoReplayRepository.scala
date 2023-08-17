@@ -26,12 +26,12 @@ trait MockAutoReplayRepository extends MockFactory {
 
   object MockAutoReplayRepository {
     def start(): CallHandler[Future[Unit]] =
-      mockAutoReplayRepository.start _ expects ()
+      (() => mockAutoReplayRepository.start()).expects()
 
     def stop(): CallHandler[Future[Unit]] =
-      mockAutoReplayRepository.stop _ expects ()
+      (() => mockAutoReplayRepository.stop()).expects()
 
     def getStatus(): CallHandler[Future[Option[AutoReplayRepoStatus]]] =
-      mockAutoReplayRepository.getStatus _ expects ()
+      (() => mockAutoReplayRepository.getStatus()).expects()
   }
 }

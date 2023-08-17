@@ -29,9 +29,9 @@ class AutoReplayController @Inject()(cc: ControllerComponents, service: AutoRepl
   implicit ec: ExecutionContext)
   extends BackendController(cc) with Logging {
 
-  def start(): Action[AnyContent] = Action.async { _ => service.start.map(_ => NoContent)}
+  def start(): Action[AnyContent] = Action.async { _ => service.start().map(_ => NoContent)}
 
-  def stop(): Action[AnyContent] = Action.async { _ => service.stop.map(_ => NoContent)}
+  def stop(): Action[AnyContent] = Action.async { _ => service.stop().map(_ => NoContent)}
 
-  def getStatus: Action[AnyContent] = Action.async { _ => service.getStatus.map(status => Ok(Json.toJson(status)))}
+  def getStatus: Action[AnyContent] = Action.async { _ => service.getStatus().map(status => Ok(Json.toJson(status)))}
 }

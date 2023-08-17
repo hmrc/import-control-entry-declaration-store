@@ -331,7 +331,7 @@ class EntryDeclarationSubmissionControllerSpec
             .handleSubmission(eori, rawPayload, mrn, now, clientInfo, submissionId, correlationId, inputParams(mrn))
             .returns(Future.successful(Right(SuccessResponse("12345678901234", "3216783621-123873821-12332"))))
 
-          val nrsPromise = Promise[Option[NRSResponse]]
+          val nrsPromise = Promise[Option[NRSResponse]]()
           MockNRSService.submit(nrsSubmission) returns nrsPromise.future
 
           val result: Future[Result] = handler(fakeRequest(xmlPayload))

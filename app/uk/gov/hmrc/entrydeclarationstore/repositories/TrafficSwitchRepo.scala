@@ -76,7 +76,7 @@ class TrafficSwitchRepoImpl @Inject()(
           ),
           UpdateOptions().upsert(true)
           )
-        .toFutureOption
+        .toFutureOption()
     )
 
   private def stopTrafficFlow =
@@ -91,7 +91,7 @@ class TrafficSwitchRepoImpl @Inject()(
             ),
             FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER).bypassDocumentValidation(false)
           )
-          .toFutureOption
+          .toFutureOption()
       )
 
   private def startTrafficFlow =
@@ -106,25 +106,25 @@ class TrafficSwitchRepoImpl @Inject()(
             ),
             FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER).bypassDocumentValidation(false)
           )
-          .toFutureOption
+          .toFutureOption()
       )
 
   override def getTrafficSwitchStatus: Future[TrafficSwitchStatus] =
     Mdc
       .preservingMdc(
         collection
-          .withReadPreference(ReadPreference.primaryPreferred)
+          .withReadPreference(ReadPreference.primaryPreferred())
           .find(equal("_id", singletonId))
-          .headOption
+          .headOption()
       )
       .map(_.getOrElse(defaultStatus))
 
   override def resetToDefault: Future[Unit] =
-    Mdc.preservingMdc(removeAll)
+    Mdc.preservingMdc(removeAll())
 
   def removeAll(): Future[Unit] =
     collection
       .deleteMany(exists("_id"))
-      .toFutureOption
+      .toFutureOption()
       .map( _ => ())
 }

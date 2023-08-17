@@ -58,9 +58,9 @@ class AutoReplayServiceSpec
       "get using the repo" in {
         val status = Some(AutoReplayRepoStatus(true))
 
-        MockAutoReplayRepository.getStatus returns Future.successful(status)
+        MockAutoReplayRepository.getStatus() returns Future.successful(status)
         MockReplayStateRetrievalService.mostRecentByTrigger(ReplayTrigger.Automatic) returns Future.successful(None)
-        service.getStatus.futureValue shouldBe AutoReplayStatus.On(None)
+        service.getStatus().futureValue shouldBe AutoReplayStatus.On(None)
       }
     }
 

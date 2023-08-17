@@ -28,6 +28,6 @@ trait MockNRSConnector extends MockFactory {
 
   object MockNRSConnector {
     def submit(nrsSubmission: NRSSubmission): CallHandler[Future[Either[NRSSubmisionFailure, NRSResponse]]] =
-      (mockNRSConnector.submit(_: NRSSubmission)(_: HeaderCarrier, _: LoggingContext)) expects (nrsSubmission, *, *)
+      (mockNRSConnector.submit(_: NRSSubmission)(_: HeaderCarrier, _: LoggingContext)).expects(nrsSubmission, *, *)
   }
 }
