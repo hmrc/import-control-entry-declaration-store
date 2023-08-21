@@ -27,7 +27,12 @@ import java.time.Instant
 
 import uk.gov.hmrc.entrydeclarationstore.models.json.Parties
 
-case class SubmissionHandledData(identityData: Option[IdentityData], eori: String, name: Option[Name], country: Option[String], enrolments: Option[Enrolments], parties: Option[Parties])
+case class SubmissionHandledData(
+                                  identityData: Option[IdentityData],
+                                  eori: String, name: Option[Name],
+                                  country: Option[String],
+                                  enrolments: Option[Enrolments],
+                                  parties: Option[Parties])
 
 object SubmissionHandledData {
   implicit val nameWrites: Writes[Name]              = Json.writes[Name]

@@ -30,9 +30,9 @@ trait MockTrafficSwitchRepo extends MockFactory {
       mockTrafficSwitchRepo.setTrafficSwitchState _ expects value
 
     def getTrafficSwitchStatus: CallHandler[Future[TrafficSwitchStatus]] =
-      mockTrafficSwitchRepo.getTrafficSwitchStatus _ expects ()
+      (() => mockTrafficSwitchRepo.getTrafficSwitchStatus).expects()
 
     def resetToDefault: CallHandler[Future[Unit]] =
-      mockTrafficSwitchRepo.resetToDefault _ expects ()
+      (() => mockTrafficSwitchRepo.resetToDefault).expects()
   }
 }

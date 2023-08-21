@@ -24,5 +24,5 @@ import uk.gov.hmrc.mongo.play.json.formats.MongoFormats.Implicits.objectIdFormat
 case class EntryObjectId(_id: ObjectId)
 
 object EntryObjectId {
-  implicit val formats: Format[EntryObjectId] = Json.format[EntryObjectId] 
+  implicit val formats: Format[EntryObjectId] = Json.format[EntryObjectId]
 }

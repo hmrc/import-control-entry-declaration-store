@@ -50,7 +50,7 @@ class ReplayLockISpec
   val lock: ReplayLock                               = inject[ReplayLock]
 
   override def beforeAll(): Unit =
-    lockRepositoryProvider.removeAll.futureValue
+    lockRepositoryProvider.removeAll().futureValue
 
   val replayId = "someReplayId"
 
@@ -66,7 +66,7 @@ class ReplayLockISpec
 
     "unlocked" must {
       trait Scenario {
-        lockRepositoryProvider.removeAll.futureValue
+        lockRepositoryProvider.removeAll().futureValue
       }
 
       "allow lock" in new Scenario {
@@ -87,7 +87,7 @@ class ReplayLockISpec
 
     "locked" must {
       trait Scenario {
-        lockRepositoryProvider.removeAll.futureValue
+        lockRepositoryProvider.removeAll().futureValue
         lock.lock(replayId).futureValue
       }
 

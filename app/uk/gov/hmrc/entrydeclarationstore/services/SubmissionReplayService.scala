@@ -93,7 +93,8 @@ class SubmissionReplayService @Inject()(
       }
   }
 
-  private def doEisSubmit(optionReplayMetadata: Option[ReplayMetadata], submissionId: String)(implicit hc: HeaderCarrier): Future[Either[BatchReplayError, Boolean]] =
+  private def doEisSubmit(optionReplayMetadata: Option[ReplayMetadata], submissionId: String)
+                         (implicit hc: HeaderCarrier): Future[Either[BatchReplayError, Boolean]] =
     optionReplayMetadata match {
       case Some(replayMetadata) =>
         implicit val lc: LoggingContext = LoggingContext(

@@ -188,7 +188,7 @@ class SubmissionReplayServiceSpec
 
             service.replaySubmissions(submissionIds).futureValue match {
               case Left(Abort(BatchReplayError.EISSubmitError, Counts(_,f))) if f > 0 =>
-              case _ => fail
+              case _ => fail()
             }
           }
           "EISSendFailure is TrafficSwitchNotFlowing" in abortEisSendFailure(EISSendFailure.TrafficSwitchNotFlowing)
@@ -216,7 +216,7 @@ class SubmissionReplayServiceSpec
 
           service.replaySubmissions(submissionIds).futureValue match {
             case Left(Abort(err, counts)) if err == BatchReplayError.EISEventError && counts.failureCount > 0 => succeed
-            case _ => fail
+            case _ => fail()
           }
         }
       }

@@ -58,7 +58,7 @@ class AutoReplayRepositoryImpl @Inject()(
     Mdc.preservingMdc(
       collection
         .find(equal("_id", singletonId))
-        .headOption
+        .headOption()
         .map{
           case None => Some(AutoReplayRepoStatus(true))
           case status => status
@@ -74,7 +74,7 @@ class AutoReplayRepositoryImpl @Inject()(
     Mdc.preservingMdc{
       collection
         .updateOne(equal("_id", singletonId), set("autoReplay", true), UpdateOptions().upsert(true))
-        .toFutureOption
+        .toFutureOption()
         .map(_ => ())
         .recover{
           case err => logger.error(s"Error attempting to start auto-replay: $err")
@@ -85,7 +85,7 @@ class AutoReplayRepositoryImpl @Inject()(
     Mdc.preservingMdc{
       collection
         .updateOne(equal("_id", singletonId), set("autoReplay", false), UpdateOptions().upsert(true))
-        .toFutureOption
+        .toFutureOption()
         .map(_ => ())
         .recover{
           case err => logger.error(s"Error attempting to stop auto-replay: $err")

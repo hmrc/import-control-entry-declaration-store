@@ -247,11 +247,11 @@ class SchemaValidatorSpec extends AnyWordSpec with Inside {
         }
 
         "infer the encoding when encoded in UTF-16BE with byte order marking" in {
-          inferTheEncodingFrom((byteOrderMark + xmlString).getBytes("UTF-16BE"))
+          inferTheEncodingFrom(s"$byteOrderMark$xmlString".getBytes("UTF-16BE"))
         }
 
         "infer the encoding when encoded in UTF-16LE with byte order marking" in {
-          inferTheEncodingFrom((byteOrderMark + xmlString).getBytes("UTF-16LE"))
+          inferTheEncodingFrom(s"$byteOrderMark$xmlString".getBytes("UTF-16LE"))
         }
       }
 

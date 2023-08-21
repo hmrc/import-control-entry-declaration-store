@@ -56,7 +56,7 @@ class AutoReplaySchedulerISpec
   val lockRepositoryProvider: LockRepositoryProvider = inject[LockRepositoryProvider]
 
   override def beforeAll(): Unit =
-    await(lockRepositoryProvider.removeAll)
+    await(lockRepositoryProvider.removeAll())
 
   private def newAutoReplayer: AutoReplayer =  new AutoReplayer{
     def replay(replaySequenceCount: Int)(implicit ec: ExecutionContext): Future[Boolean] = {

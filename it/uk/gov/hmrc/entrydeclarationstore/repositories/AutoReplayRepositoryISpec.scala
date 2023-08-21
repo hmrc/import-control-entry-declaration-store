@@ -36,12 +36,12 @@ class AutoReplayRepositoryISpec
     "off indicator document is not present" when {
 
       trait Scenario {
-        await(repository.removeAll)
+        await(repository.removeAll())
       }
 
       "getAutoReplayStatus" must {
         "return state as on" in new Scenario {
-          await(repository.getStatus) shouldBe Some(AutoReplayRepoStatus(true))
+          await(repository.getStatus()) shouldBe Some(AutoReplayRepoStatus(true))
         }
       }
 
@@ -49,8 +49,8 @@ class AutoReplayRepositoryISpec
         "do nothing" in new Scenario {
           await(repository.start())
 
-          await(repository.getStatus) shouldBe Some(AutoReplayRepoStatus(true))
-          await(repository.collection.countDocuments.toFuture)                 shouldBe 1
+          await(repository.getStatus()) shouldBe Some(AutoReplayRepoStatus(true))
+          await(repository.collection.countDocuments().toFuture())                 shouldBe 1
         }
       }
 
@@ -58,21 +58,21 @@ class AutoReplayRepositoryISpec
         "add off indicator document" in new Scenario {
           await(repository.stop())
 
-          await(repository.getStatus) shouldBe Some(AutoReplayRepoStatus(false))
-          await(repository.collection.countDocuments.toFuture)                 shouldBe 1
+          await(repository.getStatus()) shouldBe Some(AutoReplayRepoStatus(false))
+          await(repository.collection.countDocuments().toFuture())                 shouldBe 1
         }
       }
     }
 
     "database has off indicator document" when {
       trait Scenario {
-        await(repository.removeAll)
+        await(repository.removeAll())
         await(repository.stop())
       }
 
       "getAutoReplayStatus" must {
         "report state as off" in new Scenario {
-          await(repository.getStatus) shouldBe Some(AutoReplayRepoStatus(false))
+          await(repository.getStatus()) shouldBe Some(AutoReplayRepoStatus(false))
         }
       }
 
@@ -80,8 +80,8 @@ class AutoReplayRepositoryISpec
         "do nothing" in new Scenario {
           await(repository.stop())
 
-          await(repository.getStatus) shouldBe Some(AutoReplayRepoStatus(false))
-          await(repository.collection.countDocuments.toFuture)                 shouldBe 1
+          await(repository.getStatus()) shouldBe Some(AutoReplayRepoStatus(false))
+          await(repository.collection.countDocuments().toFuture())                 shouldBe 1
         }
       }
 
@@ -89,8 +89,8 @@ class AutoReplayRepositoryISpec
         "remove the off indicator document" in new Scenario {
           await(repository.start())
 
-          await(repository.getStatus) shouldBe Some(AutoReplayRepoStatus(true))
-          await(repository.collection.countDocuments.toFuture)                 shouldBe 1
+          await(repository.getStatus()) shouldBe Some(AutoReplayRepoStatus(true))
+          await(repository.collection.countDocuments().toFuture())                 shouldBe 1
         }
       }
     }

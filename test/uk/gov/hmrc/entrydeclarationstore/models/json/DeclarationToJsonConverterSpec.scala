@@ -47,7 +47,7 @@ class DeclarationToJsonConverterSpec extends AnyWordSpec with Inside {
           case Right(ie315) =>
             ie315                                          shouldBe json
             declarationToJsonConverter.validateJson(ie315) shouldBe true
-          case Left(_) => fail
+          case Left(_) => fail()
         }
       }
       "work for xml with all optional fields" in {
@@ -57,7 +57,7 @@ class DeclarationToJsonConverterSpec extends AnyWordSpec with Inside {
           case Right(ie315) =>
             ie315                                          shouldBe json
             declarationToJsonConverter.validateJson(ie315) shouldBe true
-          case Left(_) => fail
+          case Left(_) => fail()
         }
       }
     }
@@ -74,7 +74,7 @@ class DeclarationToJsonConverterSpec extends AnyWordSpec with Inside {
           case Right(ie313) =>
             ie313                                          shouldBe json
             declarationToJsonConverter.validateJson(ie313) shouldBe true
-          case Left(_) => fail
+          case Left(_) => fail()
         }
       }
     }

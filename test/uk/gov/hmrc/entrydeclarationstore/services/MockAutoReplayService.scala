@@ -27,16 +27,16 @@ trait MockAutoReplayService extends MockFactory {
 
   object MockAutoReplayService {
     def start(): CallHandler[Future[Unit]] =
-      mockAutoReplayService.start _ expects ()
+      (() => mockAutoReplayService.start()).expects()
 
     def stop(): CallHandler[Future[Unit]] =
-      mockAutoReplayService.stop _ expects ()
+      (() => mockAutoReplayService.stop()).expects ()
 
     def getStatus(): CallHandler[Future[AutoReplayStatus]] =
       (mockAutoReplayService.getStatus()(_: ExecutionContext)) expects (*)
 
     def replay(replaySequenceCount: Int): CallHandler[Future[Boolean]] =
-      (mockAutoReplayService.replay(_: Int)(_: ExecutionContext)) expects (replaySequenceCount, *)
+      (mockAutoReplayService.replay(_: Int)(_: ExecutionContext)).expects(replaySequenceCount, *)
 
   }
 }

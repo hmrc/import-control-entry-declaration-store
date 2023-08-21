@@ -24,12 +24,12 @@ trait MockIdGenerator extends MockFactory {
 
   object MockIdGenerator {
     def generateCorrelationId: CallHandler[String] =
-      mockIdGenerator.generateCorrelationId _ expects ()
+      (() => mockIdGenerator.generateCorrelationId).expects ()
 
     def generateSubmissionId: CallHandler[String] =
-      mockIdGenerator.generateSubmissionId _ expects ()
+      (() => mockIdGenerator.generateSubmissionId).expects ()
 
     def generateUuid(): CallHandler[String] =
-      (mockIdGenerator.generateUuid _).expects()
+      (() => mockIdGenerator.generateUuid).expects()
   }
 }

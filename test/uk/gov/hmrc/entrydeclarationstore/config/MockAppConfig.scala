@@ -26,64 +26,64 @@ trait MockAppConfig extends MockFactory {
   val mockAppConfig: AppConfig = mock[AppConfig]
 
   object MockAppConfig {
-    def appName: CallHandler[String] = mockAppConfig.appName _ expects ()
+    def appName: CallHandler[String] = (() => mockAppConfig.appName).expects()
 
-    def apiSubscriptionFieldsHost: CallHandler[String] = mockAppConfig.apiSubscriptionFieldsHost _ expects ()
+    def apiSubscriptionFieldsHost: CallHandler[String] = (() => mockAppConfig.apiSubscriptionFieldsHost).expects()
 
-    def apiGatewayContext: CallHandler[String] = mockAppConfig.apiGatewayContext _ expects ()
+    def apiGatewayContext: CallHandler[String] = (() => mockAppConfig.apiGatewayContext).expects()
 
-    def apiStatus: CallHandler[String] = mockAppConfig.apiStatus _ expects ()
+    def apiStatus: CallHandler[String] = (() => mockAppConfig.apiStatus).expects()
 
-    def apiEndpointsEnabled: CallHandler[Boolean] = mockAppConfig.apiEndpointsEnabled _ expects ()
+    def apiEndpointsEnabled: CallHandler[Boolean] = (() => mockAppConfig.apiEndpointsEnabled).expects()
 
-    def eventsHost: CallHandler[String] = mockAppConfig.eventsHost _ expects ()
+    def eventsHost: CallHandler[String] = (() => mockAppConfig.eventsHost).expects()
 
-    def eisHost: CallHandler[String] = mockAppConfig.eisHost _ expects ()
+    def eisHost: CallHandler[String] = (() => mockAppConfig.eisHost).expects()
 
-    def eisNewEnsUrlPath: CallHandler[String] = mockAppConfig.eisNewEnsUrlPath _ expects ()
+    def eisNewEnsUrlPath: CallHandler[String] = (() => mockAppConfig.eisNewEnsUrlPath).expects()
 
-    def eisAmendEnsUrlPath: CallHandler[String] = mockAppConfig.eisAmendEnsUrlPath _ expects ()
+    def eisAmendEnsUrlPath: CallHandler[String] = (() => mockAppConfig.eisAmendEnsUrlPath).expects()
 
-    def eisBearerToken: CallHandler[String] = mockAppConfig.eisBearerToken _ expects ()
+    def eisBearerToken: CallHandler[String] = (() => mockAppConfig.eisBearerToken).expects()
 
-    def eisInboundBearerToken: CallHandler[String] = mockAppConfig.eisInboundBearerToken _ expects ()
+    def eisInboundBearerToken: CallHandler[String] = (() => mockAppConfig.eisInboundBearerToken).expects()
 
-    def eisEnvironment: CallHandler[String] = mockAppConfig.eisEnvironment _ expects ()
+    def eisEnvironment: CallHandler[String] = (() => mockAppConfig.eisEnvironment).expects()
 
-    def eisRetries: CallHandler[List[FiniteDuration]] = mockAppConfig.eisRetries _ expects ()
+    def eisRetries: CallHandler[List[FiniteDuration]] = (() => mockAppConfig.eisRetries).expects()
 
-    def eisRetryStatusCodes: CallHandler[Set[Int]] = mockAppConfig.eisRetryStatusCodes _ expects ()
+    def eisRetryStatusCodes: CallHandler[Set[Int]] = (() => mockAppConfig.eisRetryStatusCodes).expects()
 
-    def xmlFormatConfig: CallHandler[XmlFormatConfig] = mockAppConfig.xmlFormatConfig _ expects ()
+    def xmlFormatConfig: CallHandler[XmlFormatConfig] = (() => mockAppConfig.xmlFormatConfig).expects()
 
     def validateXMLtoJsonTransformation: CallHandler[Boolean] =
-      mockAppConfig.validateXMLtoJsonTransformation _ expects ()
+      (() => mockAppConfig.validateXMLtoJsonTransformation).expects()
 
-    def defaultTtl: CallHandler[FiniteDuration] = mockAppConfig.defaultTtl _ expects ()
+    def defaultTtl: CallHandler[FiniteDuration] = (() => mockAppConfig.defaultTtl).expects()
 
-    def shortTtl: CallHandler[FiniteDuration] = mockAppConfig.shortTtl _ expects ()
+    def shortTtl: CallHandler[FiniteDuration] = (() => mockAppConfig.shortTtl).expects()
 
-    def businessRules313: CallHandler[Seq[String]] = mockAppConfig.businessRules313 _ expects ()
+    def businessRules313: CallHandler[Seq[String]] = (() => mockAppConfig.businessRules313).expects()
 
-    def businessRules315: CallHandler[Seq[String]] = mockAppConfig.businessRules315 _ expects ()
+    def businessRules315: CallHandler[Seq[String]] = (() => mockAppConfig.businessRules315).expects()
 
-    def headerAllowlist: CallHandler[Seq[String]] = mockAppConfig.headerAllowlist _ expects ()
+    def headerAllowlist: CallHandler[Seq[String]] = (() => mockAppConfig.headerAllowlist).expects()
 
-    def logSubmissionPayloads: CallHandler[Boolean] = mockAppConfig.logSubmissionPayloads _ expects ()
+    def logSubmissionPayloads: CallHandler[Boolean] = (() => mockAppConfig.logSubmissionPayloads).expects()
 
     //NRS config items
-    def nrsBaseUrl: CallHandler[String] = mockAppConfig.nrsBaseUrl _ expects ()
+    def nrsBaseUrl: CallHandler[String] = (() => mockAppConfig.nrsBaseUrl).expects()
 
-    def nrsApiKey: CallHandler[String] = mockAppConfig.nrsApiKey _ expects ()
+    def nrsApiKey: CallHandler[String] = (() => mockAppConfig.nrsApiKey).expects()
 
-    def nrsRetries: CallHandler[List[FiniteDuration]] = mockAppConfig.nrsRetries _ expects ()
+    def nrsRetries: CallHandler[List[FiniteDuration]] = (() => mockAppConfig.nrsRetries).expects()
 
-    def nrsEnabled: CallHandler[Boolean] = mockAppConfig.nrsEnabled _ expects ()
+    def nrsEnabled: CallHandler[Boolean] = (() => mockAppConfig.nrsEnabled).expects()
 
-    def replayBatchSize: CallHandler[Int] = (mockAppConfig.replayBatchSize _).expects
+    def replayBatchSize: CallHandler[Int] = (() => mockAppConfig.replayBatchSize).expects()
 
-    def autoReplayLockDuration: CallHandler[FiniteDuration] = mockAppConfig.autoReplayLockDuration _ expects ()
-    def autoReplayRunInterval: CallHandler[FiniteDuration] = mockAppConfig.autoReplayRunInterval _ expects ()
+    def autoReplayLockDuration: CallHandler[FiniteDuration] = (() => mockAppConfig.autoReplayLockDuration).expects()
+    def autoReplayRunInterval: CallHandler[FiniteDuration] = (() => mockAppConfig.autoReplayRunInterval).expects()
 
   }
 

@@ -77,7 +77,7 @@ class ReplayControllerISpec
     wireMockServer.stop()
 
   override def beforeEach(): Unit = {
-    await(entryDeclarationRepo.removeAll)
+    await(entryDeclarationRepo.removeAll())
     wireMockServer.resetAll()
   }
 

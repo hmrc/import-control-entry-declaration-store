@@ -65,9 +65,11 @@ object Metadata extends InstantFormatter {
   def dateTime(date: String, time: String): String = {
     val formattedDate = date match {
       case dateRegex(year, month, day) => s"20$year-$month-$day"
+      case _ => date
     }
     val formattedTime = time match {
       case timeRegex(hour, minute) => s"T$hour:$minute:00.000Z"
+      case _ => time
     }
     formattedDate + formattedTime
   }

@@ -99,7 +99,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
   def removeAll(): Future[Unit] =
     collection
       .deleteMany(exists("_id"))
-      .toFutureOption
+      .toFutureOption()
       .map( _ => ())
 
   def find(submissionId: String): Future[Option[EntryDeclarationPersisted]] =
@@ -115,7 +115,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
   def updateModeOfTransport(submissionId: String, modeOfTransport: String): Future[Unit] =
     collection
       .updateOne(equal("submissionId", submissionId), set("payload.itinerary.modeOfTransportAtBorder", modeOfTransport))
-      .toFutureOption
+      .toFutureOption()
       .map(_ => ())
   //
   // End of Test support FNs
@@ -127,7 +127,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
       .preservingMdc(
         collection
           .insertOne(entryDeclarationPersisted)
-          .toFutureOption
+          .toFutureOption()
       )
       .map(_.map(_.wasAcknowledged).getOrElse(false))
       .recover {
@@ -141,7 +141,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
     Mdc
       .preservingMdc(
         collection
-          .withReadPreference(ReadPreference.primaryPreferred)
+          .withReadPreference(ReadPreference.primaryPreferred())
           .find[BsonValue](and(equal("eori", eori), equal("correlationId", correlationId)))
           .projection(fields(include("submissionId", "receivedDateTime", "housekeepingAt", "eisSubmissionDateTime", "eisSubmissionState"), excludeId()))
           .headOption()
@@ -162,7 +162,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
     Mdc
       .preservingMdc(
         collection
-          .withReadPreference(ReadPreference.primaryPreferred)
+          .withReadPreference(ReadPreference.primaryPreferred())
           .find[BsonValue](equal("submissionId", submissionId))
           .projection(fields(include("payload"), excludeId()))
           .headOption()
@@ -179,7 +179,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
               set("eisSubmissionState", mongoFormatString(EisSubmissionState.Sent))
             )
           )
-          .toFutureOption
+          .toFutureOption()
           .recover {
             case e =>
               ContextLogger.error(s"Unable to set eis submission success for entry declaration", e)
@@ -200,7 +200,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
             equal("submissionId", submissionId),
             set("eisSubmissionState", mongoFormatString(EisSubmissionState.Error))
           )
-          .toFutureOption
+          .toFutureOption()
       )
       .map {
         case Some(result: UpdateResult) if result.getModifiedCount > 0 =>
@@ -221,7 +221,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
           .withReadPreference(ReadPreference.primaryPreferred())
           .find[BsonValue](equal("submissionId", submissionId))
           .projection(fields(include("eisSubmissionDateTime", "payload"), excludeId()))
-          .headOption
+          .headOption()
       )
       .map(_.map{bson =>
           val result = Codecs.fromBson[EntryDeclarationPayload](bson)
@@ -232,7 +232,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
     Mdc
       .preservingMdc(
         collection
-          .withReadPreference(ReadPreference.primaryPreferred)
+          .withReadPreference(ReadPreference.primaryPreferred())
           .find[BsonValue](equal("submissionId", submissionId))
           .projection(fields(include("eisSubmissionDateTime",
                                      "payload.parties.declarant",
@@ -240,7 +240,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
                                      "payload.itinerary.officeOfFirstEntry.reference",
                                      "payload.amendment.movementReferenceNumber",
                                      "payload.amendment.dateTime"), excludeId()))
-          .headOption
+          .headOption()
       )
       .map(_.map{bson =>
           val result = Codecs.fromBson[EntryDeclarationPayload](bson)
@@ -252,10 +252,10 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
     Mdc
       .preservingMdc(
         collection
-          .withReadPreference(ReadPreference.primaryPreferred)
+          .withReadPreference(ReadPreference.primaryPreferred())
           .find[BsonValue](equal("submissionId", submissionId))
           .projection(fields(include("eisSubmissionDateTime"), excludeId()))
-          .headOption
+          .headOption()
       )
       .map( _.map{bson =>
           val drer: DeclarationRejectionEnrichmenResult = Codecs.fromBson[DeclarationRejectionEnrichmenResult](bson)
@@ -267,9 +267,9 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
     Mdc
       .preservingMdc(
         collection
-          .withReadPreference(ReadPreference.primaryPreferred)
+          .withReadPreference(ReadPreference.primaryPreferred())
           .find(equal("submissionId", submissionId))
-          .headOption
+          .headOption()
       )
       .map{
         case None =>
@@ -305,7 +305,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
       .preservingMdc(
         collection
           .updateOne(query, set("housekeepingAt", time))
-          .toFutureOption
+          .toFutureOption()
       )
       .map(_.map(_.getMatchedCount > 0).getOrElse(false))
 
@@ -323,7 +323,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
       }
       .mapAsync(1) { deletions =>
         collection.bulkWrite(deletions.map(oid => DeleteManyModel(equal("_id", Codecs.fromBson[EntryObjectId](oid)._id))))
-          .toFutureOption
+          .toFutureOption()
           .map(_.map(_.getDeletedCount).getOrElse(0))
           .recover{
             case _ =>
@@ -354,7 +354,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
                  groupTransportType,
                  groupIntoArray)
           )
-          .headOption
+          .headOption()
       )
       .map {
         case Some(bson) => (Codecs.fromBson[UndeliveredCounts](bson)).sorted

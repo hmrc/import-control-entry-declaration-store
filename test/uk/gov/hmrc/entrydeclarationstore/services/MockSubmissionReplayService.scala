@@ -29,9 +29,9 @@ trait MockSubmissionReplayService extends MockFactory {
   object MockSubmissionReplayService {
     def replaySubmissions(
       submissionIds: Seq[String]): CallHandler[Future[Either[Abort, BatchReplayResult]]] =
-      (mockSubmissionReplayService.replaySubmissions(_: Seq[String])(_: HeaderCarrier)) expects (submissionIds, *)
+      (mockSubmissionReplayService.replaySubmissions(_: Seq[String])(_: HeaderCarrier)).expects(submissionIds, *)
 
     def getUndeliveredCounts: CallHandler[Future[UndeliveredCounts]] =
-      (mockSubmissionReplayService.getUndeliveredCounts _).expects
+      (() => mockSubmissionReplayService.getUndeliveredCounts).expects()
   }
 }

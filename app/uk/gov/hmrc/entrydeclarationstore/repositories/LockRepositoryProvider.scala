@@ -26,6 +26,6 @@ class LockRepositoryProvider @Inject()(implicit val lockRepository: MongoLockRep
   def removeAll(): Future[Unit] =
     lockRepository.collection
       .deleteMany(exists("_id"))
-      .toFutureOption
+      .toFutureOption()
       .map( _ => ())
 }

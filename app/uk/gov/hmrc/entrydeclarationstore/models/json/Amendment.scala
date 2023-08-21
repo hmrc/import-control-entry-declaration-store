@@ -38,5 +38,6 @@ object Amendment {
 
   def datetimeFormatter(datetime: String): String = datetime match {
     case datetimeRegex(year, month, day, hour, minute) => s"$year-$month-${day}T$hour:$minute:00.000Z"
+    case _ => datetime
   }
 }

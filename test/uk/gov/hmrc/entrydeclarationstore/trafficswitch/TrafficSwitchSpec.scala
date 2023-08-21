@@ -75,7 +75,7 @@ class TrafficSwitchSpec
     def throwException: Future[Nothing] = Future.failed(e)
 
     def trafficSwitch(trafficSwitchConfig: TrafficSwitchConfig = defaultConfig): TrafficSwitch = {
-      MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(TrafficSwitchState.Flowing) noMoreThanOnce ()
+      MockTrafficSwitchService.getTrafficSwitchState.returns(Future.successful(TrafficSwitchState.Flowing)).noMoreThanOnce()
       new TrafficSwitch(trafficSwitchActorFactory(trafficSwitchConfig), trafficSwitchConfig)
     }
 
@@ -111,7 +111,7 @@ class TrafficSwitchSpec
       "throw TimeoutException on call timeout" in new Test {
         val ts: TrafficSwitch = trafficSwitch(shortTimeoutConfig)
 
-        val promise: Promise[String] = Promise[String]
+        val promise: Promise[String] = Promise[String]()
 
         val result: Future[String] = ts.withTrafficSwitch(promise.future, exceptionAsFailure)
 
@@ -132,7 +132,7 @@ class TrafficSwitchSpec
       "set state to not flowing after max timeouts" in new Test {
         val ts: TrafficSwitch = trafficSwitch(shortTimeoutConfig)
 
-        val promise: Promise[String] = Promise[String]
+        val promise: Promise[String] = Promise[String]()
 
         MockTrafficSwitchService.stopTrafficFlow returns Future.successful(unit)
 
@@ -147,8 +147,8 @@ class TrafficSwitchSpec
       }
 
       "failsafe timeout (ask timeout) if repo takes ages to initialize traffic switch actor" in new Test {
-        val promise: Promise[TrafficSwitchState] = Promise[TrafficSwitchState]
-        MockTrafficSwitchService.getTrafficSwitchState returns promise.future anyNumberOfTimes ()
+        val promise: Promise[TrafficSwitchState] = Promise[TrafficSwitchState]()
+        MockTrafficSwitchService.getTrafficSwitchState.returns(promise.future).anyNumberOfTimes ()
 
         val ts = new TrafficSwitch(trafficSwitchActorFactory(shortTimeoutConfig), shortTimeoutConfig)
 
@@ -156,7 +156,7 @@ class TrafficSwitchSpec
       }
 
       "continue to work when exception actually thrown by call" in new Test {
-        MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(TrafficSwitchState.Flowing) anyNumberOfTimes ()
+        MockTrafficSwitchService.getTrafficSwitchState.returns(Future.successful(TrafficSwitchState.Flowing)).anyNumberOfTimes()
         val ts = new TrafficSwitch(trafficSwitchActorFactory(shortTimeoutConfig), shortTimeoutConfig)
 
         // Will probably fail with a timeout - the crucial thing is that CB will continue to accept calls
@@ -182,7 +182,7 @@ class TrafficSwitchSpec
       "start flowing when the state is manually changed to flowing" in new Test {
         val ts: TrafficSwitch = trafficSwitchNotFlowing(defaultConfig.copy(notFlowingStateRefreshPeriod = 50.millis))
 
-        MockTrafficSwitchService.getTrafficSwitchState returns Future.successful(TrafficSwitchState.Flowing) anyNumberOfTimes ()
+        MockTrafficSwitchService.getTrafficSwitchState.returns(Future.successful(TrafficSwitchState.Flowing)).anyNumberOfTimes()
 
         eventually {
           ts.withTrafficSwitch(sayHi, exceptionAsFailure).futureValue shouldBe "hi"

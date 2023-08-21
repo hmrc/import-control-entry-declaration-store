@@ -56,8 +56,8 @@ class AuditHandlerSpec extends AnyWordSpec with MockFactory with MockAppConfig w
     "audit with the correct audit event" in {
 
       val eventCapture: CaptureOne[ExtendedDataEvent] = CaptureOne[ExtendedDataEvent]()
-      (mockAuditConnector.sendExtendedEvent(_: ExtendedDataEvent)(_: HeaderCarrier, _: ExecutionContext)) expects (capture(
-        eventCapture), hc, *) returns Future.successful(AuditResult.Success)
+      (mockAuditConnector.sendExtendedEvent(_: ExtendedDataEvent)(_: HeaderCarrier, _: ExecutionContext)).expects(capture(
+        eventCapture), hc, *).returns(Future.successful(AuditResult.Success))
 
       auditHandler.audit(event)
 

@@ -45,7 +45,7 @@ class HousekeepingRepoISpec
     "off indicator document is not present" when {
 
       trait Scenario {
-        await(repository.removeAll)
+        await(repository.removeAll())
       }
 
       "getHousekeepingStatus" must {
@@ -59,7 +59,7 @@ class HousekeepingRepoISpec
           await(repository.enableHousekeeping(true))
 
           await(repository.getHousekeepingStatus) shouldBe HousekeepingStatus(on = true)
-          await(repository.collection.countDocuments.toFuture)                 shouldBe 0
+          await(repository.collection.countDocuments().toFuture())                 shouldBe 0
         }
       }
 
@@ -68,14 +68,14 @@ class HousekeepingRepoISpec
           await(repository.enableHousekeeping(false))
 
           await(repository.getHousekeepingStatus) shouldBe HousekeepingStatus(on = false)
-          await(repository.collection.countDocuments.toFuture)                 shouldBe 1
+          await(repository.collection.countDocuments().toFuture())                 shouldBe 1
         }
       }
     }
 
     "database has off indicator document" when {
       trait Scenario {
-        await(repository.removeAll)
+        await(repository.removeAll())
         await(repository.enableHousekeeping(false))
       }
 
@@ -90,7 +90,7 @@ class HousekeepingRepoISpec
           await(repository.enableHousekeeping(false))
 
           await(repository.getHousekeepingStatus) shouldBe HousekeepingStatus(on = false)
-          await(repository.collection.countDocuments.toFuture)                 shouldBe 1
+          await(repository.collection.countDocuments().toFuture())                 shouldBe 1
         }
       }
 
@@ -99,7 +99,7 @@ class HousekeepingRepoISpec
           await(repository.enableHousekeeping(true))
 
           await(repository.getHousekeepingStatus) shouldBe HousekeepingStatus(on = true)
-          await(repository.collection.countDocuments.toFuture)                 shouldBe 0
+          await(repository.collection.countDocuments().toFuture())                 shouldBe 0
         }
       }
     }

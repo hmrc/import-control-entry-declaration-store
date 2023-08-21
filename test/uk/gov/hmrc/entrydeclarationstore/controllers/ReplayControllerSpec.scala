@@ -44,7 +44,7 @@ class ReplayControllerSpec extends AnyWordSpec with MockReplayOrchestrator with 
 
   val fakeRequest: FakeRequest[JsValue] = FakeRequest().withBody(replayJson)
 
-  val ignoredReplayResultFuture: Future[ReplayResult] = Promise[ReplayResult].future
+  val ignoredReplayResultFuture: Future[ReplayResult] = Promise[ReplayResult]().future
 
   "ReplayController startReplay" must {
     "return Accepted with Started" when {

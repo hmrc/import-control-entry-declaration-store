@@ -19,7 +19,7 @@ package uk.gov.hmrc.entrydeclarationstore.utils
 import java.io.InputStream
 import java.net.URL
 import java.util.Collections
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object ResourceUtils {
   def resourceList(directoryName: String): Seq[String] = {
@@ -62,6 +62,6 @@ object ResourceUtils {
 
   def asByteArray(resourceName: String): Array[Byte] =
     withInputStreamFor(resourceName) { is =>
-      Stream.continually(is.read).takeWhile(_ != -1).map(_.toByte).toArray
+      LazyList.continually(is.read).takeWhile(_ != -1).map(_.toByte).toArray
     }
 }

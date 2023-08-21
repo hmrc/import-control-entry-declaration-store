@@ -156,7 +156,7 @@ class TrafficSwitchActorSpec
       "increment failure count on call timeout (before call completes)" in new Test {
         trafficSwitchActor ! TrafficSwitchActor.SetState(TrafficSwitchState.Flowing)
 
-        val promise: Promise[String] = Promise[String]
+        val promise: Promise[String] = Promise[String]()
         trafficSwitchActor ! TrafficSwitchActor.MakeCall(_ => promise.future, exceptionAsFailure)
 
         expectMsgType[Status.Failure].cause shouldBe a[TimeoutException]
@@ -263,7 +263,7 @@ class TrafficSwitchActorSpec
       "allow calls started when flowing to complete normally" in new Test {
         trafficSwitchActor ! TrafficSwitchActor.SetState(TrafficSwitchState.Flowing)
 
-        val promise: Promise[String] = Promise[String]
+        val promise: Promise[String] = Promise[String]()
         trafficSwitchActor ! TrafficSwitchActor.MakeCall(_ => promise.future, exceptionAsFailure)
 
         trafficSwitchActor ! TrafficSwitchActor.SetState(TrafficSwitchState.NotFlowing)
@@ -278,7 +278,7 @@ class TrafficSwitchActorSpec
       "allow calls for failed futures throwing exceptions started when flowing to complete normally" in new Test {
         trafficSwitchActor ! TrafficSwitchActor.SetState(TrafficSwitchState.Flowing)
 
-        val promise: Promise[String] = Promise[String]
+        val promise: Promise[String] = Promise[String]()
         trafficSwitchActor ! TrafficSwitchActor.MakeCall(_ => promise.future, exceptionAsFailure)
 
         trafficSwitchActor ! TrafficSwitchActor.SetState(TrafficSwitchState.NotFlowing)

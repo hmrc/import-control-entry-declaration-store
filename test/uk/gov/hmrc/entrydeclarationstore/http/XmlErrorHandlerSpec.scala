@@ -61,7 +61,8 @@ class XmlErrorHandlerSpec
           eventType       = is("ResourceNotFound"),
           transactionName = is("Unexpected error"),
           request         = is(requestHeader),
-          detail          = is(Map("transactionFailureReason" -> notFoundException.getMessage))
+          detail          = is(Map("transactionFailureReason" -> notFoundException.getMessage)),
+          truncationLog   = any[uk.gov.hmrc.play.audit.model.TruncationLog]
         )(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
@@ -84,7 +85,8 @@ class XmlErrorHandlerSpec
           eventType       = is("ClientError"),
           transactionName = is("Unexpected error"),
           request         = is(requestHeader),
-          detail          = is(Map("transactionFailureReason" -> authorisationException.getMessage))
+          detail          = is(Map("transactionFailureReason" -> authorisationException.getMessage)),
+          truncationLog   = any[uk.gov.hmrc.play.audit.model.TruncationLog]
         )(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
@@ -109,7 +111,8 @@ class XmlErrorHandlerSpec
           eventType       = is("ServerInternalError"),
           transactionName = is("Unexpected error"),
           request         = is(requestHeader),
-          detail          = is(Map("transactionFailureReason" -> exception.getMessage))
+          detail          = is(Map("transactionFailureReason" -> exception.getMessage)),
+          truncationLog   = any[uk.gov.hmrc.play.audit.model.TruncationLog]
         )(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
@@ -134,7 +137,8 @@ class XmlErrorHandlerSpec
           eventType       = is("ServerValidationError"),
           transactionName = is("Unexpected error"),
           request         = is(requestHeader),
-          detail          = is(Map("transactionFailureReason" -> exception.getMessage))
+          detail          = is(Map("transactionFailureReason" -> exception.getMessage)),
+          truncationLog   = any[uk.gov.hmrc.play.audit.model.TruncationLog]
         )(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
@@ -160,7 +164,8 @@ class XmlErrorHandlerSpec
           eventType       = is("ServerInternalError"),
           transactionName = is("Unexpected error"),
           request         = is(requestHeader),
-          detail          = is(Map("transactionFailureReason" -> exception.getMessage))
+          detail          = is(Map("transactionFailureReason" -> exception.getMessage)),
+          truncationLog   = any[uk.gov.hmrc.play.audit.model.TruncationLog]
         )(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
@@ -190,7 +195,8 @@ class XmlErrorHandlerSpec
           eventType       = is("ServerInternalError"),
           transactionName = is("Unexpected error"),
           request         = is(requestHeader),
-          detail          = is(Map("transactionFailureReason" -> exception.getMessage))
+          detail          = is(Map("transactionFailureReason" -> exception.getMessage)),
+          truncationLog   = any[uk.gov.hmrc.play.audit.model.TruncationLog]
         )(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
@@ -218,7 +224,8 @@ class XmlErrorHandlerSpec
           eventType       = is("ServerInternalError"),
           transactionName = is("Unexpected error"),
           request         = is(requestHeader),
-          detail          = is(Map("transactionFailureReason" -> exception.getMessage))
+          detail          = is(Map("transactionFailureReason" -> exception.getMessage)),
+          truncationLog   = any[uk.gov.hmrc.play.audit.model.TruncationLog]
         )(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
@@ -245,10 +252,10 @@ class XmlErrorHandlerSpec
         )
       }
 
-      def withCaptureOfLoggingFrom(loggerLike: LoggerLike)(body: (=> List[ILoggingEvent]) => Unit) {
+      def withCaptureOfLoggingFrom(loggerLike: LoggerLike)(body: (=> List[ILoggingEvent]) => Unit): Unit = {
         import ch.qos.logback.classic.{Logger => LogbackLogger}
 
-        import scala.collection.JavaConverters._
+        import scala.jdk.CollectionConverters._
 
         val logger   = loggerLike.logger.asInstanceOf[LogbackLogger]
         val appender = new ListAppender[ILoggingEvent]()
@@ -299,7 +306,8 @@ class XmlErrorHandlerSpec
             eventType       = is("ServerValidationError"),
             transactionName = is("Request bad format exception"),
             request         = is(requestHeader),
-            detail          = is(Map.empty)
+            detail          = is(Map.empty),
+            truncationLog   = any[uk.gov.hmrc.play.audit.model.TruncationLog]
           )(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
@@ -323,7 +331,8 @@ class XmlErrorHandlerSpec
             eventType       = is("ResourceNotFound"),
             transactionName = is("Resource Endpoint Not Found"),
             request         = is(requestHeader),
-            detail          = is(Map.empty)
+            detail          = is(Map.empty),
+            truncationLog   = any[uk.gov.hmrc.play.audit.model.TruncationLog]
           )(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
@@ -351,7 +360,8 @@ class XmlErrorHandlerSpec
               eventType       = is("ClientError"),
               transactionName = is(s"A client error occurred, status: $statusCode"),
               request         = is(requestHeader),
-              detail          = is(Map.empty)
+              detail          = is(Map.empty),
+            truncationLog   = any[uk.gov.hmrc.play.audit.model.TruncationLog]
             )(any[HeaderCarrier]))
           .thenReturn(createdDataEvent)
 

@@ -32,7 +32,7 @@ trait MockValidationHandler extends MockFactory {
       eori: String,
       mrn: Option[String]): CallHandler[Either[ErrorWrapper[_], NodeSeq]] =
       (mockValidationHandler
-        .handleValidation(_: RawPayload, _: String, _: Option[String])(_: LoggingContext)) expects (payload, eori, mrn, *)
+        .handleValidation(_: RawPayload, _: String, _: Option[String])(_: LoggingContext)).expects(payload, eori, mrn, *)
   }
 
 }

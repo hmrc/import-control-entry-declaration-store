@@ -76,7 +76,7 @@ class HeaderGeneratorSpec extends AnyWordSpec with Matchers with HeaderNames wit
     "include allowListed headers" in {
       MockAppConfig.eisBearerToken returns authToken
       MockAppConfig.eisEnvironment returns env
-      MockAppConfig.headerAllowlist returns Seq("latencyInMs", "testHeader") anyNumberOfTimes ()
+      MockAppConfig.headerAllowlist.returns(Seq("latencyInMs", "testHeader")).anyNumberOfTimes ()
       implicit val hc: HeaderCarrier =
         HeaderCarrier(extraHeaders = Seq("TESTHEADER" -> "test", "denylistheader" -> "200", "latencyInMs" -> "100"))
       val headers = testHeaderGenerator.headersForEIS(submissionId).toMap

@@ -84,16 +84,16 @@ class TrafficSwitchServiceSpec extends AnyWordSpec with ScalaFutures with MockRe
       "call the Traffic Switch Repo" in new Setup {
         val state: TrafficSwitchState = TrafficSwitchState.Flowing
         mockSetTrafficSwitch(state, Some(trafficSwitchStatus(state)))
-        MockReportSender.sendReport(TrafficStarted(timeDifference)) returns Future.successful((): Unit) noMoreThanOnce()
+        MockReportSender.sendReport(TrafficStarted(timeDifference)).returns(Future.successful((): Unit)).noMoreThanOnce()
         val result: Future[Unit] = trafficSwitchService.startTrafficFlow
 
         result.futureValue shouldBe expectedResult.futureValue
       }
       "not wait for report to send" in new Setup {
-        val promise: Promise[Unit] = Promise[Unit]
+        val promise: Promise[Unit] = Promise[Unit]()
         val state: TrafficSwitchState = TrafficSwitchState.Flowing
         mockSetTrafficSwitch(state, Some(trafficSwitchStatus(state)))
-        MockReportSender.sendReport(TrafficStarted(timeDifference)) returns promise.future noMoreThanOnce()
+        MockReportSender.sendReport(TrafficStarted(timeDifference)).returns(promise.future).noMoreThanOnce()
         val result: Future[Unit] = trafficSwitchService.startTrafficFlow
 
         result.futureValue shouldBe expectedResult.futureValue

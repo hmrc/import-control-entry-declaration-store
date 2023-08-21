@@ -30,6 +30,6 @@ trait MockHousekeepingRepo extends MockFactory {
       mockHousekeepingRepo.enableHousekeeping _ expects value
 
     def getHousekeepingStatus: CallHandler[Future[HousekeepingStatus]] =
-      mockHousekeepingRepo.getHousekeepingStatus _ expects ()
+      (() => mockHousekeepingRepo.getHousekeepingStatus).expects()
   }
 }
