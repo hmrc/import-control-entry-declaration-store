@@ -265,9 +265,6 @@
         "grossMass": {"$ref": "#/definitions/mass"},
         "goodsItems": {"$ref": "#/definitions/goodsItems"}
       },
-      "required": [
-        "numberOfItems"
-      ],
       "additionalProperties": false
     },
     "goodsItems": {

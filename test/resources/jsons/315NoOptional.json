@@ -20,7 +20,6 @@
     "place": "declarationplace"
   },
   "goods": {
-    "numberOfItems": 1,
     "goodsItems": [
       {
         "itemNumber": "1"
