@@ -38,7 +38,7 @@ class SubmissionHandledSpec extends AnyWordSpec with NRSMetadataTestData {
     Metadata("", "", "", MessageType.IE315, "", "", ""),
     None,
     Parties(None, None, Trader(None, None,None, None), None, None, None),
-    Goods(1,None, None, None, None),
+    Goods(Some(1),None, None, None, None),
     Itinerary("", None, None, None, None, None, None, OfficeOfFirstEntry("", ""), None),
     None
   )

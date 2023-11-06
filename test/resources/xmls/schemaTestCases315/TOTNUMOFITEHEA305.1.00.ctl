@@ -2,8 +2,4 @@
 <!--
   Test case control file
   -->
-<err:ErrorResponse xmlns:err="http://www.govtalk.gov.uk/CM/errorresponse" xmlns:dsl="http://decisionsoft.com/rim/errorExtension" SchemaVersion="2.0">
-  <err:Error>
-    <err:Text>[TOTNUMOFITEHEA305] is absent</err:Text>
-  </err:Error>
-</err:ErrorResponse>
+<err:ErrorResponse xmlns:err="http://www.govtalk.gov.uk/CM/errorresponse" xmlns:dsl="http://decisionsoft.com/rim/errorExtension" SchemaVersion="2.0"/>
