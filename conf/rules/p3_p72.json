@@ -69,7 +69,7 @@
       "errorCode": "8116"
     },
     {
-      "test": "number('TotNumOfIteHEA305') == count('../GOOITEGDS')",
+      "test": "not('TotNumOfIteHEA305') || (number('TotNumOfIteHEA305') == count('../GOOITEGDS'))",
       "localErrorMessage": "[Total number of items] should equal the number of [Goods item] present.",
       "errorMessage": "[Total number of items] must equal the number of [Goods item] present.",
       "errorCode": "8206"

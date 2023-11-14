@@ -23,7 +23,7 @@ import play.api.libs.json.{Json, Writes}
 import uk.gov.hmrc.entrydeclarationstore.utils.ReaderUtils
 
 case class Goods(
-  numberOfItems: Int,
+  numberOfItems: Option[Int],
   numberOfPackages: Option[Int],
   grossMass: Option[String],
   seals: Option[Seq[Seal]],
@@ -31,7 +31,7 @@ case class Goods(
 )
 object Goods extends ReaderUtils {
   implicit val reader: XmlReader[Goods] = (
-    (__ \ "HEAHEA" \ "TotNumOfIteHEA305").read[Int],
+    (__ \ "HEAHEA" \ "TotNumOfIteHEA305").read[Int].optional,
     (__ \ "HEAHEA" \ "TotNumOfPacHEA306").read[Int].optional,
     (__ \ "HEAHEA" \ "TotGroMasHEA307").read[String].optional,
     (__ \ "SEAID529").read[Seq[Seal]].mapToNoneIfEmpty,
