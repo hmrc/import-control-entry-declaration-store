@@ -16,8 +16,7 @@
   },
   "declaration": {
     "localReferenceNumber": "refnum",
-    "dateTime": "2003-02-11T12:34:00.000Z",
-    "place": "declarationplace"
+    "dateTime": "2003-02-11T12:34:00.000Z"
   },
   "goods": {
     "goodsItems": [
