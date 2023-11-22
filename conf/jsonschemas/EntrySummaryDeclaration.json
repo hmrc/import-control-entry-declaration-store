@@ -55,7 +55,7 @@
         "dateTime": {"$ref": "#/definitions/dateTime"},
         "officeOfLodgement":{"$ref": "#/definitions/customsOffice"}
       },
-      "required": ["localReferenceNumber","place","dateTime"],
+      "required": ["localReferenceNumber", "dateTime"],
       "additionalProperties": false
     },
     "amendment": {
@@ -66,7 +66,7 @@
         "language": {"$ref": "#/definitions/languageCode"},
         "dateTime": {"$ref": "#/definitions/dateTime"}
       },
-      "required": ["movementReferenceNumber","place","dateTime"],
+      "required": ["movementReferenceNumber","dateTime"],
       "additionalProperties": false
     },
     "specificCircumstancesIndicator":{
