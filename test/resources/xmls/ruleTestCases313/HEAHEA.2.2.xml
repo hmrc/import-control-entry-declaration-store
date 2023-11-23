@@ -3,7 +3,7 @@
 
 <!--
   Test case data file
-  Test case for rule   : [Total number of packages] should be present if [Packages] is present
+  Test case for rule   : [Total number of packages] should be present if [Packages] is present ** This rule no longer applies, test left in for completeness
   Specifically testing : [Total number of packages] is present, [Packages] is absent
   Expected result      : Error against another rule-->
 <!--The following node should cause an error (code: 8688)--><ie:CC313A xmlns:ie="http://ics.dgtaxud.ec/CC313A">
