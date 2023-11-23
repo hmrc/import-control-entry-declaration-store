@@ -13,7 +13,7 @@
   <TimOfPreMES10>2359</TimOfPreMES10>
   <MesIdeMES19>ABCD1234</MesIdeMES19>
   <MesTypMES20>CC313A</MesTypMES20>
-  <!--The following node should cause an error (code: 8108)--><HEAHEA>
+  <HEAHEA>
     <DocNumHEA5>12AB1A2B3CD456EFG2</DocNumHEA5>
     <TraModAtBorHEA76>3</TraModAtBorHEA76>
     <IdeOfMeaOfTraCroHEA85>exampleValue</IdeOfMeaOfTraCroHEA85>
