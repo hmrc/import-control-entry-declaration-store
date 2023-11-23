@@ -51,12 +51,6 @@
       "errorCode": "8115"
     },
     {
-      "test": "not('TotNumOfPacHEA306') || exists('../GOOITEGDS/PACGS2')",
-      "localErrorMessage": "[Total number of packages] should not be present if not ( [Packages] )",
-      "errorMessage": "If the data group 'Packages' is not used then 'Total number of packages' cannot be used. (C582)",
-      "errorCode": "8116"
-    },
-    {
       "test": "not('TotNumOfIteHEA305') || (number('TotNumOfIteHEA305') == count('../GOOITEGDS'))",
       "localErrorMessage": "[Total number of items] should equal the number of [Goods item] present.",
       "errorMessage": "[Total number of items] must equal the number of [Goods item] present.",
@@ -67,12 +61,6 @@
       "localErrorMessage": "[Total number of items] should not have leading zeros",
       "errorMessage": "The 'Total Number of Items' field must not have leading zeros.",
       "errorCode": "8671"
-    },
-    {
-      "test": "not('TotNumOfPacHEA306') || (number('TotNumOfPacHEA306') == sum('../GOOITEGDS/PACGS2/NumOfPacGS24') + sum('../GOOITEGDS/PACGS2/NumOfPieGS25') + countEquals('../GOOITEGDS/PACGS2/KinOfPacGS23', 'VQ') + countEquals('../GOOITEGDS/PACGS2/KinOfPacGS23', 'VG') + countEquals('../GOOITEGDS/PACGS2/KinOfPacGS23', 'VL') + countEquals('../GOOITEGDS/PACGS2/KinOfPacGS23', 'VY') + countEquals('../GOOITEGDS/PACGS2/KinOfPacGS23', 'VR') + countEquals('../GOOITEGDS/PACGS2/KinOfPacGS23', 'VS') + countEquals('../GOOITEGDS/PACGS2/KinOfPacGS23', 'VO'))",
-      "localErrorMessage": "[Total number of packages] is equal to the sum of all [Number of packages] + all [Number of pieces] + a value of ‘1’ for each declared ‘bulk’.",
-      "errorMessage": "The 'Total Number of Packages' is equal to the sum of all 'Number of Packages' + all 'Number of pieces' + a value of '1' for each declared 'bulk' (R105)",
-      "errorCode": "8117"
     },
     {
       "test": "trim('TotNumOfPacHEA306').take(1) != '0' || trim('TotNumOfPacHEA306').length() <= 1",
