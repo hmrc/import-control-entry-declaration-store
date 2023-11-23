@@ -9,12 +9,6 @@
       "errorCode": "8107"
     },
     {
-      "test": "not('../GOOITEGDS/PACGS2') || exists('TotNumOfPacHEA306')",
-      "localErrorMessage": "[Total number of packages] should be present if [Packages] is present",
-      "errorMessage": "Total number of packages' (box 6) is required if data group 'Packages' is used (C582)",
-      "errorCode": "8109"
-    },
-    {
       "test": "!(trim('SpeCirIndHEA1') == 'C') || !(number('TraModAtBorHEA76') == 1 || number('TraModAtBorHEA76') == 2 || number('TraModAtBorHEA76') == 4 || number('TraModAtBorHEA76') == 8 || number('TraModAtBorHEA76') == 10 || number('TraModAtBorHEA76') == 11)",
       "localErrorMessage": "IF first digit of [Specific circumstance indicator] is 'C' THEN [Transport mode at border] cannot be '1', '2', '4', '8', '10' or '11'.",
       "errorMessage": "If first digit of 'Specific Circumstance Indicator' is 'C' THEN 'Transport Mode at Border' cannot be '1', '2', '4', '8', '10' or '11' (C529)",
