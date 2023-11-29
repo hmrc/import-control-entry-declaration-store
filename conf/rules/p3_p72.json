@@ -9,12 +9,6 @@
       "errorCode": "8107"
     },
     {
-      "test": "exists('NatOfMeaOfTraCroHEA87') || !((trim('TraModAtBorHEA76') == '3' || trim('TraModAtBorHEA76') == '10' || trim('TraModAtBorHEA76') == '11') && exists('IdeOfMeaOfTraCroHEA85'))",
-      "localErrorMessage": "[Nationality of means of transport crossing border] should be present if ([Transport mode at border] equals 3, 10 or 11) and [Identity of means of transport crossing border]",
-      "errorMessage": "Nationality of means of transport crossing border' should be present if ('Transport mode at border' (box 25) = '3' or 'Transport mode at border' (box 25) = '10' or 'Transport mode at border' (box 25) = '11') and 'Identity crossing border' is present (C024)",
-      "errorCode": "8108"
-    },
-    {
       "test": "not('../GOOITEGDS/PACGS2') || exists('TotNumOfPacHEA306')",
       "localErrorMessage": "[Total number of packages] should be present if [Packages] is present",
       "errorMessage": "Total number of packages' (box 6) is required if data group 'Packages' is used (C582)",
