@@ -36,5 +36,6 @@ object AppDependencies {
     "com.typesafe.akka"      %% "akka-stream"                % akkaVersion      % "test, it",
     "com.typesafe.akka"      %% "akka-serialization-jackson" % akkaVersion      % "test, it"
   )
-  
+
+  val itDependencies: Seq[ModuleID] = Seq()
 }
