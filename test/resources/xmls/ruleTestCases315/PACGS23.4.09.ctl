@@ -31,11 +31,5 @@
     <err:Text>The fields 'Number of Packages (box 31)' and 'Number of Pieces (box31)' cannot be used if 'Kind of Packages (box31)' indicates 'BULK' (UNECE rec 21 : 'VQ', 'VG', 'VL', 'VY', 'VR', 'VS' or 'VO') (C062)</err:Text>
     <err:Location>/ie:CC315A[1]/GOOITEGDS[1]/PACGS2[3]</err:Location>
   </err:Error>
-  <err:Error>
-    <err:RaisedBy>ChRIS</err:RaisedBy>
-    <err:Number>8117</err:Number>
-    <err:Type>business</err:Type>
-    <err:Text>The 'Total Number of Packages' is equal to the sum of all 'Number of Packages' + all 'Number of pieces' + a value of '1' for each declared 'bulk' (R105)</err:Text>
-    <err:Location>/ie:CC315A[1]/HEAHEA[1]</err:Location>
-  </err:Error>
+
 </err:ErrorResponse>
