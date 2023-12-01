@@ -43,8 +43,6 @@ lazy val microservice = Project(appName, file("."))
     PlayKeys.playDefaultPort := 9818
   )
   .settings(coverageSettings: _*)
-  .configs(IntegrationTest)
-//  .settings(IntegrationTest / resourceDirectory := baseDirectory.value / "test" / "resources")
   .settings(
     scalacOptions += "-Xlint:_,-missing-interpolator",
     scalacOptions += "-Wconf:src=routes/.*:s",
