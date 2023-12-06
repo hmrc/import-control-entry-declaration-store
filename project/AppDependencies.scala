@@ -19,22 +19,23 @@ object AppDependencies {
   )
 
   val test: Seq[ModuleID] = Seq(
-    "uk.gov.hmrc"            %% "bootstrap-test-play-28"     % bootstrapVersion % "test, it",
-    "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-28"    % mongoVersion     % "test, it",
-    "com.typesafe.play"      %% "play-test"                  % current          % "test, it",
-    "org.scalamock"          %% "scalamock"                  % "5.2.0"          % "test, it",
-    "org.scalacheck"         %% "scalacheck"                 % "1.17.0"         % "test, it",
-    "com.github.tomakehurst" %  "wiremock-jre8"              % "2.35.0"         % "test, it",
-    "org.mockito"            %  "mockito-core"               % "5.4.0"          % "test, it",
-    "org.mockito"            %% "mockito-scala"              % "1.17.14"        % "test, it",
-    "org.mockito"            %% "mockito-scala-scalatest"    % "1.17.14"        % "test, it",
-    "com.miguno.akka"        %% "akka-mock-scheduler"        % "0.5.5"          % "test, it",
-    "com.typesafe.akka"      %% "akka-testkit"               % akkaVersion      % "test, it",
-    "com.typesafe.akka"      %% "akka-actor-typed"           % akkaVersion      % "test, it",
-    "com.typesafe.akka"      %% "akka-slf4j"                 % akkaVersion      % "test, it",
-    "com.typesafe.akka"      %% "akka-protobuf-v3"           % akkaVersion      % "test, it",
-    "com.typesafe.akka"      %% "akka-stream"                % akkaVersion      % "test, it",
-    "com.typesafe.akka"      %% "akka-serialization-jackson" % akkaVersion      % "test, it"
-  )
-  
+    "uk.gov.hmrc"            %% "bootstrap-test-play-28"     % bootstrapVersion,
+    "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-28"    % mongoVersion,
+    "com.typesafe.play"      %% "play-test"                  % current,
+    "org.scalamock"          %% "scalamock"                  % "5.2.0",
+    "org.scalacheck"         %% "scalacheck"                 % "1.17.0",
+    "com.github.tomakehurst" %  "wiremock-jre8"              % "2.35.0",
+    "org.mockito"            %  "mockito-core"               % "5.4.0",
+    "org.mockito"            %% "mockito-scala"              % "1.17.14",
+    "org.mockito"            %% "mockito-scala-scalatest"    % "1.17.14",
+    "com.miguno.akka"        %% "akka-mock-scheduler"        % "0.5.5",
+    "com.typesafe.akka"      %% "akka-testkit"               % akkaVersion,
+    "com.typesafe.akka"      %% "akka-actor-typed"           % akkaVersion,
+    "com.typesafe.akka"      %% "akka-slf4j"                 % akkaVersion,
+    "com.typesafe.akka"      %% "akka-protobuf-v3"           % akkaVersion,
+    "com.typesafe.akka"      %% "akka-stream"                % akkaVersion,
+    "com.typesafe.akka"      %% "akka-serialization-jackson" % akkaVersion
+  ).map(_ % Test)
+
+  val itDependencies: Seq[ModuleID] = Seq()
 }

@@ -1,7 +1,10 @@
-import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
+import uk.gov.hmrc.DefaultBuildSettings
 
 ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
 val appName = "import-control-entry-declaration-store"
+
+ThisBuild / majorVersion := 0
+ThisBuild / scalaVersion := "2.13.8"
 
 lazy val coverageSettings: Seq[Setting[_]] = {
   import scoverage.ScoverageKeys
@@ -35,18 +38,19 @@ lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin, ScalafmtCorePlugin)
   .disablePlugins(JUnitXmlReportPlugin)
   .settings(
-    scalaVersion := "2.13.8",
-    majorVersion := 0,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     resolvers += Resolver.jcenterRepo,
     PlayKeys.playDefaultPort := 9818
   )
   .settings(coverageSettings: _*)
-  .configs(IntegrationTest)
-  .settings(integrationTestSettings(): _*)
-  .settings(IntegrationTest / resourceDirectory := baseDirectory.value / "test" / "resources")
   .settings(
     scalacOptions += "-Xlint:_,-missing-interpolator",
     scalacOptions += "-Wconf:src=routes/.*:s",
     scalacOptions += "-Wconf:cat=unused-imports&src=html/.*:s"
   )
+
+lazy val it = project
+  .enablePlugins(PlayScala)
+  .dependsOn(microservice % "test->test") // the "test->test" allows reusing test code and test dependencies
+  .settings(DefaultBuildSettings.itSettings)
+  .settings(libraryDependencies ++= AppDependencies.itDependencies)
