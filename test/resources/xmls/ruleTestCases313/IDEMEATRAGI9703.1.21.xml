@@ -13,7 +13,7 @@
   <TimOfPreMES10>2359</TimOfPreMES10>
   <MesIdeMES19>ABCD1234</MesIdeMES19>
   <MesTypMES20>CC313A</MesTypMES20>
-  <!--The following node should cause an error (code: 8112)--><!--The following node should cause an error (code: 8117)--><!--The following node should cause an error (code: 8118)--><!--The following node should cause an error (code: 8206)--><HEAHEA>
+  <!--The following node should cause an error (code: 8112)--><!--The following node should cause an error (code: 8118)--><!--The following node should cause an error (code: 8206)--><HEAHEA>
     <DocNumHEA5>12AB1A2B3CD456EFG2</DocNumHEA5>
     <TraModAtBorHEA76>4</TraModAtBorHEA76>
     <TotNumOfIteHEA305>3</TotNumOfIteHEA305>

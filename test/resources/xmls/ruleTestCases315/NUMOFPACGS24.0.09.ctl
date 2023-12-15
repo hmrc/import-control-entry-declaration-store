@@ -10,11 +10,5 @@
     <err:Text>The 'Number of Packages' field within 'Packages' must not contain leading zeros.</err:Text>
     <err:Location>/ie:CC315A[1]/GOOITEGDS[1]/PACGS2[1]/NumOfPacGS24[1]</err:Location>
   </err:Error>
-  <err:Error>
-    <err:RaisedBy>ChRIS</err:RaisedBy>
-    <err:Number>8117</err:Number>
-    <err:Type>business</err:Type>
-    <err:Text>The 'Total Number of Packages' is equal to the sum of all 'Number of Packages' + all 'Number of pieces' + a value of '1' for each declared 'bulk' (R105)</err:Text>
-    <err:Location>/ie:CC315A[1]/HEAHEA[1]</err:Location>
-  </err:Error>
+
 </err:ErrorResponse>

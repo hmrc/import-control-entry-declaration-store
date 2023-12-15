@@ -5,7 +5,7 @@
   Test case data file
   Test case for rule   : [Total number of packages] should not be present if not ( [Packages] )
   Specifically testing : [Total number of packages] is absent, [Packages] is present
-  Expected result      : Error against another rule-->
+  Expected result      : Valid against schema and schematron-->
 <ie:CC315A xmlns:ie="http://ics.dgtaxud.ec/CC315A">
   <MesSenMES3>GBCD1234/1234567890</MesSenMES3>
   <MesRecMES6>GBCD1234</MesRecMES6>

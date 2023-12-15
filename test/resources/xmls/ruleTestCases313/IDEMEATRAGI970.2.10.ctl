@@ -10,13 +10,7 @@
     <err:Text>Identity of Means of Transport at Border (ex Box 21)' can not be used if 'Identity crossing border (box 21)' is present OR 'Transport Mode at Border (box 25)' = '4' (C019)</err:Text>
     <err:Location>/ie:CC313A[1]/GOOITEGDS[1]/IDEMEATRAGI970[1]</err:Location>
   </err:Error>
-  <err:Error>
-    <err:RaisedBy>ChRIS</err:RaisedBy>
-    <err:Number>8117</err:Number>
-    <err:Type>business</err:Type>
-    <err:Text>The 'Total Number of Packages' is equal to the sum of all 'Number of Packages' + all 'Number of pieces' + a value of '1' for each declared 'bulk' (R105)</err:Text>
-    <err:Location>/ie:CC313A[1]/HEAHEA[1]</err:Location>
-  </err:Error>
+
   <err:Error>
     <err:RaisedBy>ChRIS</err:RaisedBy>
     <err:Number>8206</err:Number>
