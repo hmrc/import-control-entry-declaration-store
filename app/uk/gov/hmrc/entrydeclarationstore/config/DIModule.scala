@@ -74,9 +74,20 @@ class DIModule extends AbstractModule {
   def ruleValidator315(appConfig: AppConfig): RuleValidator =
     ruleValidator("/ie:CC315A", appConfig.businessRules315)
 
+  @Named("ruleValidator315New")
+  @Provides
+  def ruleValidator315New(appConfig: AppConfig): RuleValidator =
+    ruleValidator("/ie:CC315A", appConfig.businessRules315)
+
+
   @Named("ruleValidator313")
   @Provides
   def ruleValidator313(appConfig: AppConfig): RuleValidator =
+    ruleValidator("/ie:CC313A", appConfig.businessRules313)
+
+  @Named("ruleValidator313New")
+  @Provides
+  def ruleValidator313New(appConfig: AppConfig): RuleValidator =
     ruleValidator("/ie:CC313A", appConfig.businessRules313)
 
   private def ruleValidator(elementBase: String, ruleResourceNames: Seq[String]): RuleValidator = {

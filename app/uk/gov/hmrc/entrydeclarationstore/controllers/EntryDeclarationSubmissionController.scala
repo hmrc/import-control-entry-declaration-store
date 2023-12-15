@@ -20,6 +20,7 @@ import akka.util.ByteString
 import com.kenshoo.play.metrics.Metrics
 import play.api.Logging
 import play.api.mvc.{Action, ControllerComponents}
+import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
 import uk.gov.hmrc.entrydeclarationstore.nrs.{NRSMetadata, NRSService, NRSSubmission}
@@ -30,8 +31,8 @@ import uk.gov.hmrc.entrydeclarationstore.utils.SubmissionUtils.extractSubmission
 import uk.gov.hmrc.entrydeclarationstore.utils.{IdGenerator, Timer}
 import uk.gov.hmrc.entrydeclarationstore.validation.{EORIMismatchError, MRNMismatchError, ValidationErrors, ValidationHandler}
 import uk.gov.hmrc.http.HeaderCarrier
-import java.time.{Clock, Instant}
 
+import java.time.{Clock, Instant}
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.entrydeclarationstore.models.json.{DeclarationToJsonConverter, InputParameters}
 
@@ -49,6 +50,7 @@ class EntryDeclarationSubmissionController @Inject()(
   nrsService: NRSService,
   reportSender: ReportSender,
   clock: Clock,
+  appConfig: AppConfig,
   override val metrics: Metrics
 )(implicit ec: ExecutionContext)
     extends AuthorisedController(cc)
@@ -87,7 +89,11 @@ class EntryDeclarationSubmissionController @Inject()(
 
       val model = for {
         xml <- xml
-        model <- declarationToJsonConverter.convertToModel(xml, input)
+        model <- if(appConfig.optionalFieldsFeature) {
+          declarationToJsonConverter.convertToModelNew(xml, input)
+        } else {
+          declarationToJsonConverter.convertToModel(xml, input)
+        }
       }
         yield model
 
