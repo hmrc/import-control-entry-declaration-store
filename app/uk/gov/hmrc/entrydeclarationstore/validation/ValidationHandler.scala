@@ -69,9 +69,6 @@ class ValidationHandlerImpl @Inject()(
       def logSchemaErrors(errs: ValidationErrors): Unit =
         ContextLogger.info(s"Schema validation errors found. Num errs=${errs.errors.length}")
 
-//      val schemaType =
-//        if (mrn.isDefined) SchemaTypeE313 else SchemaTypeE315
-
       val schemaType = (mrn.isDefined, appConfig.optionalFieldsFeature) match {
         case (true, false) => SchemaTypeE313
         case (false, false) => SchemaTypeE315
@@ -108,8 +105,6 @@ class ValidationHandlerImpl @Inject()(
 
   private def validateRules(payload: NodeSeq, mrn: Option[String])(implicit lc: LoggingContext) =
     time("Rule validation", "handleSubmission.validateRules") {
-//      val validationResult =
-//        if (mrn.isDefined) ruleValidator313.validate(payload) else ruleValidator315.validate(payload)
 
       val validationResult = (mrn.isDefined, appConfig.optionalFieldsFeature) match {
         case (true, false) => ruleValidator313.validate(payload)
