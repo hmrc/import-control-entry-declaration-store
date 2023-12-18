@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type='text/xsl' href='CC313A-testCaseViewer.xsl'?>
+
+<!--
+  Test case data file
+  Test case for rule   : [Notify party] is prohibited if this [Goods item] does not have an [Additional information coded] equal to '10600'
+  Specifically testing : Three instances of [Goods item], first with [Notify party] present; only third has [Additional information coded] equal to '10600'.
+  Expected result      : Error against this rule (code: 8620)-->
+<ie:CC313A xmlns:ie="http://ics.dgtaxud.ec/CC313A">
+  <MesSenMES3>GBCD1234/1234567890</MesSenMES3>
+  <MesRecMES6>GBCD1234</MesRecMES6>
+  <DatOfPreMES9>091231</DatOfPreMES9>
+  <TimOfPreMES10>2359</TimOfPreMES10>
+  <MesIdeMES19>ABCD1234</MesIdeMES19>
+  <MesTypMES20>CC313A</MesTypMES20>
+  <HEAHEA>
+    <DocNumHEA5>12AB1A2B3CD456EFG2</DocNumHEA5>
+    <TraModAtBorHEA76>2</TraModAtBorHEA76>
+    <TotNumOfIteHEA305>3</TotNumOfIteHEA305>
+    <TotNumOfPacHEA306>3</TotNumOfPacHEA306>
+    <TotGroMasHEA307>1.000</TotGroMasHEA307>
+    <AmdPlaHEA598>EXAMPLE PLACE</AmdPlaHEA598>
+    <AmdPlaHEA598LNG>AB</AmdPlaHEA598LNG>
+    <SpeCirIndHEA1>D</SpeCirIndHEA1>
+    <ComRefNumHEA>ABCDEFGH123456</ComRefNumHEA>
+    <PlaLoaGOOITE334>example</PlaLoaGOOITE334>
+    <PlaUnlGOOITE334>EXAMPLE</PlaUnlGOOITE334>
+    <DatTimAmeHEA113>200912312359</DatTimAmeHEA113>
+  </HEAHEA>
+  <!--The following node should cause an error (code: 8623)--><GOOITEGDS>
+    <IteNumGDS7>1</IteNumGDS7>
+    <SPEMENMT2>
+      <AddInfCodMT23>AB123</AddInfCodMT23>
+    </SPEMENMT2>
+    <COMCODGODITM>
+      <ComNomCMD1>1234</ComNomCMD1>
+    </COMCODGODITM>
+    <IDEMEATRAGI970>
+      <IdeMeaTraGIMEATRA971>asdf</IdeMeaTraGIMEATRA971>
+    </IDEMEATRAGI970>
+    <PACGS2>
+      <KinOfPacGS23>VR</KinOfPacGS23>
+      <MarNumOfPacGSL21>example value</MarNumOfPacGSL21>
+    </PACGS2>
+    <!--The following node should cause an error (code: 8620)--><PRTNOT640>
+      <TINPRTNOT641>GBab12</TINPRTNOT641>
+    </PRTNOT640>
+  </GOOITEGDS>
+  <!--The following node should cause an error (code: 8623)--><GOOITEGDS>
+    <IteNumGDS7>2</IteNumGDS7>
+    <SPEMENMT2>
+      <AddInfCodMT23>AB123</AddInfCodMT23>
+    </SPEMENMT2>
+    <COMCODGODITM>
+      <ComNomCMD1>1234</ComNomCMD1>
+    </COMCODGODITM>
+    <IDEMEATRAGI970>
+      <IdeMeaTraGIMEATRA971>asdf</IdeMeaTraGIMEATRA971>
+    </IDEMEATRAGI970>
+    <PACGS2>
+      <KinOfPacGS23>VR</KinOfPacGS23>
+      <MarNumOfPacGSL21>example value</MarNumOfPacGSL21>
+    </PACGS2>
+    
+  </GOOITEGDS>
+  <!--The following node should cause an error (code: 8622)--><GOOITEGDS>
+    <IteNumGDS7>3</IteNumGDS7>
+    <SPEMENMT2>
+      <AddInfCodMT23>10600</AddInfCodMT23>
+    </SPEMENMT2>
+    <COMCODGODITM>
+      <ComNomCMD1>1234</ComNomCMD1>
+    </COMCODGODITM>
+    <IDEMEATRAGI970>
+      <IdeMeaTraGIMEATRA971>asdf</IdeMeaTraGIMEATRA971>
+    </IDEMEATRAGI970>
+    <PACGS2>
+      <KinOfPacGS23>VR</KinOfPacGS23>
+      <MarNumOfPacGSL21>example value</MarNumOfPacGSL21>
+    </PACGS2>
+    
+  </GOOITEGDS>
+  <ITI>
+    <CouOfRouCodITI1>AB</CouOfRouCodITI1>
+  </ITI>
+  <ITI>
+    <CouOfRouCodITI1>AB</CouOfRouCodITI1>
+  </ITI>
+  <PERLODSUMDEC>
+    <TINPLD1>GBCD12345EFG</TINPLD1>
+  </PERLODSUMDEC>
+  <CUSOFFFENT730>
+    <RefNumCUSOFFFENT731>ABCD1234</RefNumCUSOFFFENT731>
+    <ExpDatOfArrFIRENT733>200912312359</ExpDatOfArrFIRENT733>
+  </CUSOFFFENT730>
+</ie:CC313A>
+

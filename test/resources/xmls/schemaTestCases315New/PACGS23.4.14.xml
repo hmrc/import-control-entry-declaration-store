@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type='text/xsl' href='CC315A-testCaseViewer.xsl'?>
+
+<!--
+  Test case data file
+  Test case for rule   : In case the value of a MESSAGE.GOODS ITEM.PACKAGES.Number of Packages is ‘0’ then there should exist at least one GOODS ITEM with the same 'Marks and Numbers of Packages', and 'Number of Packages' with value greater than ‘0’
+  Specifically testing : Three instances of [Packages] within one [Goods item]: The first [Marks and numbers of packages (long)] is absent; the second [Marks and numbers of packages (long)] is ''; they are not considered to match, so the first [Number of packages] being zero causes an error.
+  Expected result      : Schema invalid-->
+<ie:CC315A xmlns:ie="http://ics.dgtaxud.ec/CC315A">
+  <MesSenMES3>GBCD1234/1234567890</MesSenMES3>
+  <MesRecMES6>GBCD1234</MesRecMES6>
+  <DatOfPreMES9>091231</DatOfPreMES9>
+  <TimOfPreMES10>2359</TimOfPreMES10>
+  <MesIdeMES19>ABCD1234</MesIdeMES19>
+  <MesTypMES20>CC315A</MesTypMES20>
+  <HEAHEA>
+    <RefNumHEA4>ABCD1234</RefNumHEA4>
+    <TraModAtBorHEA76>2</TraModAtBorHEA76>
+    <TotNumOfIteHEA305>1</TotNumOfIteHEA305>
+    <TotNumOfPacHEA306>3</TotNumOfPacHEA306>
+    <TotGroMasHEA307>1.000</TotGroMasHEA307>
+    <DecPlaHEA394>EXAMPLE</DecPlaHEA394>
+    <SpeCirIndHEA1>D</SpeCirIndHEA1>
+    <ComRefNumHEA>ABCDEFGH123456</ComRefNumHEA>
+    <PlaLoaGOOITE334>EXAMPLE</PlaLoaGOOITE334>
+    <PlaUnlGOOITE334>EXAMPLE</PlaUnlGOOITE334>
+    <DecDatTimHEA114>200912312359</DecDatTimHEA114>
+  </HEAHEA>
+  <GOOITEGDS>
+    <IteNumGDS7>1</IteNumGDS7>
+    <COMCODGODITM>
+      <ComNomCMD1>1234</ComNomCMD1>
+    </COMCODGODITM>
+    <TRACONCE2>
+      <TINCE259>GBab12</TINCE259>
+    </TRACONCE2>
+    <IDEMEATRAGI970>
+      <IdeMeaTraGIMEATRA971>asdf</IdeMeaTraGIMEATRA971>
+    </IDEMEATRAGI970>
+    <PACGS2>
+      <KinOfPacGS23>VQ</KinOfPacGS23>
+      <NumOfPacGS24>0</NumOfPacGS24>
+    </PACGS2>
+    <PACGS2>
+      <KinOfPacGS23>VQ</KinOfPacGS23>
+      <NumOfPacGS24>1</NumOfPacGS24>
+      <MarNumOfPacGSL21/>
+    </PACGS2>
+    <PACGS2>
+      <KinOfPacGS23>VQ</KinOfPacGS23>
+      <NumOfPacGS24>1</NumOfPacGS24>
+      <MarNumOfPacGSL21>asdfghj</MarNumOfPacGSL21>
+    </PACGS2>
+  </GOOITEGDS>
+  <ITI>
+    <CouOfRouCodITI1>AB</CouOfRouCodITI1>
+  </ITI>
+  <ITI>
+    <CouOfRouCodITI1>AB</CouOfRouCodITI1>
+  </ITI>
+  <PERLODSUMDEC>
+    <TINPLD1>GBCD12345EFG</TINPLD1>
+  </PERLODSUMDEC>
+  <CUSOFFFENT730>
+    <RefNumCUSOFFFENT731>ABCD1234</RefNumCUSOFFFENT731>
+    <ExpDatOfArrFIRENT733>200912312359</ExpDatOfArrFIRENT733>
+  </CUSOFFFENT730>
+</ie:CC315A>
+
