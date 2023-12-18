@@ -50,7 +50,6 @@ class EntryDeclarationSubmissionController @Inject()(
   nrsService: NRSService,
   reportSender: ReportSender,
   clock: Clock,
-  appConfig: AppConfig,
   override val metrics: Metrics
 )(implicit ec: ExecutionContext)
     extends AuthorisedController(cc)
@@ -87,15 +86,11 @@ class EntryDeclarationSubmissionController @Inject()(
 
       val xml = validationHandler.handleValidation(rawPayload, request.userDetails.eori, mrn)
 
+      // when enabling optionalFields in prod, update this to use new model
       val model = for {
         xml <- xml
-        model <- if(appConfig.optionalFieldsFeature) {
-          declarationToJsonConverter.convertToModelNew(xml, input)
-        } else {
-          declarationToJsonConverter.convertToModel(xml, input)
-        }
-      }
-        yield model
+        model <- declarationToJsonConverter.convertToModel(xml, input)
+        } yield model
 
       service
         .handleSubmission(request.userDetails.eori, rawPayload, mrn, receivedDateTime, request.userDetails.clientInfo, submissionId, correlationId, input)

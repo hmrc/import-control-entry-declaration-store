@@ -156,11 +156,21 @@ class EntryDeclarationStoreImpl @Inject()(
   private def convertToJson(xml: NodeSeq, inputParameters: InputParameters)(
     implicit lc: LoggingContext): Either[ErrorWrapper[_], JsValue] =
     time("Json conversion", "handleSubmission.convertToJson") {
-      declarationToJsonConverter.convertToJson(xml, inputParameters)
+      if(appConfig.optionalFieldsFeature) {
+        declarationToJsonConverter.convertToJsonNew(xml, inputParameters)
+      } else {
+        declarationToJsonConverter.convertToJson(xml, inputParameters)
+      }
     }
 
   private def validateJson(json: JsValue)(implicit lc: LoggingContext): Unit =
-    if (appConfig.validateXMLtoJsonTransformation) declarationToJsonConverter.validateJson(json)
+    if (appConfig.validateXMLtoJsonTransformation) {
+      if(appConfig.optionalFieldsFeature) {
+        declarationToJsonConverter.validateJsonNew(json)
+      } else {
+        declarationToJsonConverter.validateJson(json)
+      }
+    }
 
   private def sendSubmissionReceivedReport(
     input: InputParameters,

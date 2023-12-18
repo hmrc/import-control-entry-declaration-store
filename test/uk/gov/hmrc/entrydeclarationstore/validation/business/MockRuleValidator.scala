@@ -25,6 +25,8 @@ import scala.xml.NodeSeq
 trait MockRuleValidator extends MockFactory {
   val mockRuleValidator313: RuleValidator = mock[RuleValidator]
   val mockRuleValidator315: RuleValidator = mock[RuleValidator]
+  val mockRuleValidator313New: RuleValidator = mock[RuleValidator]
+  val mockRuleValidator315New: RuleValidator = mock[RuleValidator]
 
   case class MockRuleValidator(mockRuleValidator: RuleValidator) {
     def validate(payload: NodeSeq): CallHandler[Either[ValidationErrors, Unit]] =
@@ -33,4 +35,6 @@ trait MockRuleValidator extends MockFactory {
 
   val MockRuleValidator313: MockRuleValidator = MockRuleValidator(mockRuleValidator313)
   val MockRuleValidator315: MockRuleValidator = MockRuleValidator(mockRuleValidator315)
+  val MockRuleValidator313New: MockRuleValidator = MockRuleValidator(mockRuleValidator313)
+  val MockRuleValidator315New: MockRuleValidator = MockRuleValidator(mockRuleValidator315)
 }

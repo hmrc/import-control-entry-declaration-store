@@ -85,6 +85,8 @@ trait MockAppConfig extends MockFactory {
     def autoReplayLockDuration: CallHandler[FiniteDuration] = (() => mockAppConfig.autoReplayLockDuration).expects()
     def autoReplayRunInterval: CallHandler[FiniteDuration] = (() => mockAppConfig.autoReplayRunInterval).expects()
 
+    def optionalFieldsEnabled: CallHandler[Boolean] = (() => mockAppConfig.optionalFieldsFeature).expects()
+
   }
 
 }

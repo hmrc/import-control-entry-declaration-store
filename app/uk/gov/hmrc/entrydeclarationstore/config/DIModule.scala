@@ -77,7 +77,7 @@ class DIModule extends AbstractModule {
   @Named("ruleValidator315New")
   @Provides
   def ruleValidator315New(appConfig: AppConfig): RuleValidator =
-    ruleValidator("/ie:CC315A", appConfig.businessRules315)
+    ruleValidator("/ie:CC315A", appConfig.businessRules315New)
 
 
   @Named("ruleValidator313")
@@ -88,7 +88,7 @@ class DIModule extends AbstractModule {
   @Named("ruleValidator313New")
   @Provides
   def ruleValidator313New(appConfig: AppConfig): RuleValidator =
-    ruleValidator("/ie:CC313A", appConfig.businessRules313)
+    ruleValidator("/ie:CC313A", appConfig.businessRules313New)
 
   private def ruleValidator(elementBase: String, ruleResourceNames: Seq[String]): RuleValidator = {
     val rules = ruleResourceNames.map { resource =>

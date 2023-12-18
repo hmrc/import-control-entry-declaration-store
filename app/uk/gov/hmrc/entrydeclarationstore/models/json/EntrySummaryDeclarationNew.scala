@@ -40,18 +40,18 @@ object EntrySummaryDeclarationNew {
       __.read[Metadata],
       __.read[Declaration].optional,
       __.read[Parties],
-      __.read[Goods],
+      __.read[GoodsNew],
       __.read[Itinerary],
-      (__ \ "HEAHEA").read[Amendment].optional
+      (__ \ "HEAHEA").read[AmendmentNew].optional
       ).mapN(
       (
         specialCircummstancesIndicator: Option[String],
         metadata: Metadata,
         declaration: Option[Declaration],
         parties: Parties,
-        goods: Goods,
+        goods: GoodsNew,
         itinerary: Itinerary,
-        amendment: Option[Amendment]
+        amendment: Option[AmendmentNew]
       ) =>
         EntrySummaryDeclarationNew(
           input.submissionId,

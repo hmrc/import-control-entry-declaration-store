@@ -1,24 +1,12 @@
 {
   "element": "/HEAHEA",
-  "name": "p3_p72",
+  "name": "p3_p72_New",
   "asserts": [
     {
       "test": "!(number('TraModAtBorHEA76') == 1 || number('TraModAtBorHEA76') == 8) || exists('IdeOfMeaOfTraCroHEA85')",
       "localErrorMessage": "[Identity of means of transport crossing border] should be present if ([Transport mode at border] equals 1) or ([Transport mode at border] equals '8')",
       "errorMessage": "Identity of means of transport crossing border' should be present if 'Transport mode at border' equals '1' or 'Transport mode at border' equals '8' (C017)",
       "errorCode": "8107"
-    },
-    {
-      "test": "exists('NatOfMeaOfTraCroHEA87') || !((trim('TraModAtBorHEA76') == '3' || trim('TraModAtBorHEA76') == '10' || trim('TraModAtBorHEA76') == '11') && exists('IdeOfMeaOfTraCroHEA85'))",
-      "localErrorMessage": "[Nationality of means of transport crossing border] should be present if ([Transport mode at border] equals 3, 10 or 11) and [Identity of means of transport crossing border]",
-      "errorMessage": "Nationality of means of transport crossing border' should be present if ('Transport mode at border' (box 25) = '3' or 'Transport mode at border' (box 25) = '10' or 'Transport mode at border' (box 25) = '11') and 'Identity crossing border' is present (C024)",
-      "errorCode": "8108"
-    },
-    {
-      "test": "not('../GOOITEGDS/PACGS2') || exists('TotNumOfPacHEA306')",
-      "localErrorMessage": "[Total number of packages] should be present if [Packages] is present",
-      "errorMessage": "Total number of packages' (box 6) is required if data group 'Packages' is used (C582)",
-      "errorCode": "8109"
     },
     {
       "test": "!(trim('SpeCirIndHEA1') == 'C') || !(number('TraModAtBorHEA76') == 1 || number('TraModAtBorHEA76') == 2 || number('TraModAtBorHEA76') == 4 || number('TraModAtBorHEA76') == 8 || number('TraModAtBorHEA76') == 10 || number('TraModAtBorHEA76') == 11)",
@@ -63,13 +51,7 @@
       "errorCode": "8115"
     },
     {
-      "test": "not('TotNumOfPacHEA306') || exists('../GOOITEGDS/PACGS2')",
-      "localErrorMessage": "[Total number of packages] should not be present if not ( [Packages] )",
-      "errorMessage": "If the data group 'Packages' is not used then 'Total number of packages' cannot be used. (C582)",
-      "errorCode": "8116"
-    },
-    {
-      "test": "number('TotNumOfIteHEA305') == count('../GOOITEGDS')",
+      "test": "not('TotNumOfIteHEA305') || (number('TotNumOfIteHEA305') == count('../GOOITEGDS'))",
       "localErrorMessage": "[Total number of items] should equal the number of [Goods item] present.",
       "errorMessage": "[Total number of items] must equal the number of [Goods item] present.",
       "errorCode": "8206"
@@ -79,12 +61,6 @@
       "localErrorMessage": "[Total number of items] should not have leading zeros",
       "errorMessage": "The 'Total Number of Items' field must not have leading zeros.",
       "errorCode": "8671"
-    },
-    {
-      "test": "not('TotNumOfPacHEA306') || (number('TotNumOfPacHEA306') == sum('../GOOITEGDS/PACGS2/NumOfPacGS24') + sum('../GOOITEGDS/PACGS2/NumOfPieGS25') + countEquals('../GOOITEGDS/PACGS2/KinOfPacGS23', 'VQ') + countEquals('../GOOITEGDS/PACGS2/KinOfPacGS23', 'VG') + countEquals('../GOOITEGDS/PACGS2/KinOfPacGS23', 'VL') + countEquals('../GOOITEGDS/PACGS2/KinOfPacGS23', 'VY') + countEquals('../GOOITEGDS/PACGS2/KinOfPacGS23', 'VR') + countEquals('../GOOITEGDS/PACGS2/KinOfPacGS23', 'VS') + countEquals('../GOOITEGDS/PACGS2/KinOfPacGS23', 'VO'))",
-      "localErrorMessage": "[Total number of packages] is equal to the sum of all [Number of packages] + all [Number of pieces] + a value of ‘1’ for each declared ‘bulk’.",
-      "errorMessage": "The 'Total Number of Packages' is equal to the sum of all 'Number of Packages' + all 'Number of pieces' + a value of '1' for each declared 'bulk' (R105)",
-      "errorCode": "8117"
     },
     {
       "test": "trim('TotNumOfPacHEA306').take(1) != '0' || trim('TotNumOfPacHEA306').length() <= 1",

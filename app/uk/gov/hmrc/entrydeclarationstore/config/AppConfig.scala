@@ -66,7 +66,11 @@ trait AppConfig {
 
   def businessRules315: Seq[String]
 
+  def businessRules315New: Seq[String]
+
   def businessRules313: Seq[String]
+
+  def businessRules313New: Seq[String]
 
   def headerAllowlist: Seq[String]
 
@@ -169,7 +173,11 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
 
   lazy val businessRules315: Seq[String] = config.get[Seq[String]]("businessRules315")
 
+  lazy val businessRules315New: Seq[String] = config.get[Seq[String]]("businessRules315New")
+
   lazy val businessRules313: Seq[String] = config.get[Seq[String]]("businessRules313")
+
+  lazy val businessRules313New: Seq[String] = config.get[Seq[String]]("businessRules313New")
 
   lazy val headerAllowlist: Seq[String] = config.get[Seq[String]]("bootstrap.http.headersAllowlist")
 
