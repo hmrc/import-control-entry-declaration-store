@@ -24,7 +24,7 @@ import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, RawPayload}
 import uk.gov.hmrc.entrydeclarationstore.utils.{Timer, XmlFormatConfig}
 import uk.gov.hmrc.entrydeclarationstore.validation.business.RuleValidator
-import uk.gov.hmrc.entrydeclarationstore.validation.schema.{SchemaTypeE313, SchemaTypeE315, SchemaValidationResult, SchemaValidator}
+import uk.gov.hmrc.entrydeclarationstore.validation.schema.{SchemaTypeE313, SchemaTypeE315, SchemaTypeE313New, SchemaTypeE315New, SchemaValidationResult, SchemaValidator}
 
 import javax.inject.{Inject, Named}
 import scala.xml.NodeSeq
@@ -37,7 +37,9 @@ trait ValidationHandler {
 class ValidationHandlerImpl @Inject()(
   schemaValidator: SchemaValidator,
   @Named("ruleValidator313") ruleValidator313: RuleValidator,
+  @Named("ruleValidator313New") ruleValidator313New: RuleValidator,
   @Named("ruleValidator315") ruleValidator315: RuleValidator,
+  @Named("ruleValidator315New") ruleValidator315New: RuleValidator,
   override val metrics: Metrics,
   appConfig: AppConfig)
     extends ValidationHandler
@@ -67,8 +69,13 @@ class ValidationHandlerImpl @Inject()(
       def logSchemaErrors(errs: ValidationErrors): Unit =
         ContextLogger.info(s"Schema validation errors found. Num errs=${errs.errors.length}")
 
-      val schemaType =
-        if (mrn.isDefined) SchemaTypeE313 else SchemaTypeE315
+      val schemaType = (mrn.isDefined, appConfig.optionalFieldsFeature) match {
+        case (true, false) => SchemaTypeE313
+        case (false, false) => SchemaTypeE315
+        case (true, true) => SchemaTypeE313New
+        case (false, true) => SchemaTypeE315New
+      }
+
       val validationResult = schemaValidator.validate(schemaType, rawPayload)
 
       validationResult match {
@@ -98,8 +105,13 @@ class ValidationHandlerImpl @Inject()(
 
   private def validateRules(payload: NodeSeq, mrn: Option[String])(implicit lc: LoggingContext) =
     time("Rule validation", "handleSubmission.validateRules") {
-      val validationResult =
-        if (mrn.isDefined) ruleValidator313.validate(payload) else ruleValidator315.validate(payload)
+
+      val validationResult = (mrn.isDefined, appConfig.optionalFieldsFeature) match {
+        case (true, false) => ruleValidator313.validate(payload)
+        case (false, false) => ruleValidator315.validate(payload)
+        case (true, true) => ruleValidator313New.validate(payload)
+        case (false, true) => ruleValidator315New.validate(payload)
+      }
 
       validationResult.leftMap { errs =>
         ContextLogger.info(s"Business validation errors found. Num errs=${errs.errors.length}")

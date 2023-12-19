@@ -66,7 +66,11 @@ trait AppConfig {
 
   def businessRules315: Seq[String]
 
+  def businessRules315New: Seq[String]
+
   def businessRules313: Seq[String]
+
+  def businessRules313New: Seq[String]
 
   def headerAllowlist: Seq[String]
 
@@ -106,6 +110,8 @@ trait AppConfig {
   def autoReplayRunInterval: FiniteDuration
 
   def maxConsecutiveAutoReplays: Int
+
+  def optionalFieldsFeature: Boolean
 }
 
 @Singleton
@@ -167,7 +173,11 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
 
   lazy val businessRules315: Seq[String] = config.get[Seq[String]]("businessRules315")
 
+  lazy val businessRules315New: Seq[String] = config.get[Seq[String]]("businessRules315New")
+
   lazy val businessRules313: Seq[String] = config.get[Seq[String]]("businessRules313")
+
+  lazy val businessRules313New: Seq[String] = config.get[Seq[String]]("businessRules313New")
 
   lazy val headerAllowlist: Seq[String] = config.get[Seq[String]]("bootstrap.http.headersAllowlist")
 
@@ -222,6 +232,8 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
   lazy val autoReplayRunInterval: FiniteDuration = getFiniteDuration(config, "auto-replay.runInterval")
 
   lazy val maxConsecutiveAutoReplays: Int = config.get[Int]("auto-replay.maxConsecutiveReplays")
+
+  lazy val optionalFieldsFeature: Boolean = servicesConfig.getBoolean("feature.optionalFields")
 
   private def fibonacciRetryDelays(conf: Configuration): List[FiniteDuration] =
     Retrying.fibonacciDelays(getFiniteDuration(conf, "initialDelay"), conf.get[Int]("numberOfRetries"))

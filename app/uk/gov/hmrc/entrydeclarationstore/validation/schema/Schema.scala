@@ -36,6 +36,14 @@ case object SchemaTypeE313 extends SchemaType {
   private[validation] val schema = schemaFor("xsds/CC313A-v11-2.xsd")
 }
 
+case object SchemaTypeE313New extends SchemaType {
+  private[validation] val schema = schemaFor("xsds/CC313A-v11-2-New.xsd")
+}
+
 case object SchemaTypeE315 extends SchemaType {
   private[validation] val schema = schemaFor("xsds/CC315A-v11-2.xsd")
+}
+
+case object SchemaTypeE315New extends SchemaType {
+  private[validation] val schema = schemaFor("xsds/CC315A-v11-2-New.xsd")
 }

@@ -20,6 +20,7 @@ import akka.util.ByteString
 import com.kenshoo.play.metrics.Metrics
 import play.api.Logging
 import play.api.mvc.{Action, ControllerComponents}
+import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
 import uk.gov.hmrc.entrydeclarationstore.nrs.{NRSMetadata, NRSService, NRSSubmission}
@@ -30,8 +31,8 @@ import uk.gov.hmrc.entrydeclarationstore.utils.SubmissionUtils.extractSubmission
 import uk.gov.hmrc.entrydeclarationstore.utils.{IdGenerator, Timer}
 import uk.gov.hmrc.entrydeclarationstore.validation.{EORIMismatchError, MRNMismatchError, ValidationErrors, ValidationHandler}
 import uk.gov.hmrc.http.HeaderCarrier
-import java.time.{Clock, Instant}
 
+import java.time.{Clock, Instant}
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.entrydeclarationstore.models.json.{DeclarationToJsonConverter, InputParameters}
 
@@ -85,11 +86,11 @@ class EntryDeclarationSubmissionController @Inject()(
 
       val xml = validationHandler.handleValidation(rawPayload, request.userDetails.eori, mrn)
 
+      // when enabling optionalFields in prod, update this to use new model
       val model = for {
         xml <- xml
         model <- declarationToJsonConverter.convertToModel(xml, input)
-      }
-        yield model
+        } yield model
 
       service
         .handleSubmission(request.userDetails.eori, rawPayload, mrn, receivedDateTime, request.userDetails.clientInfo, submissionId, correlationId, input)

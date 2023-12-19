@@ -37,12 +37,24 @@ class SchemaValidatorISpec extends AnyWordSpec with GuiceOneAppPerSuite {
 
   val schemaValidator: SchemaValidator = app.injector.instanceOf[SchemaValidator]
 
-  "SchemaValidator for 315s" must {
-    validateAll(SchemaTypeE315, "xmls/schemaTestCases315/")
+  "SchemaValidator for 315s" when {
+    "optionalFields feature switch is set to false" must {
+      validateAll(SchemaTypeE315, "xmls/schemaTestCases315/")
+    }
+
+    "optionalFields feature switch is set to true" must {
+      validateAll(SchemaTypeE315New, "xmls/schemaTestCases315New/")
+    }
   }
 
-  "SchemaValidator for 313s" must {
-    validateAll(SchemaTypeE313, "xmls/schemaTestCases313/")
+  "SchemaValidator for 313s" when {
+    "optionalFields feature switch is set to false" must {
+      validateAll(SchemaTypeE313, "xmls/schemaTestCases313/")
+    }
+
+    "optionalFields feature switch is set to true" must {
+      validateAll(SchemaTypeE313New, "xmls/schemaTestCases313New/")
+    }
   }
 
   def validateAll(schemeType: SchemaType, directoryName: String): Unit = {

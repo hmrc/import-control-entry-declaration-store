@@ -1,0 +1,24 @@
+<ie:CC315A xmlns:ie="http://ics.dgtaxud.ec/CC315A">
+  <MesSenMES3>myeori/mybranch</MesSenMES3>
+  <DatOfPreMES9>030211</DatOfPreMES9>
+  <TimOfPreMES10>0123</TimOfPreMES10>
+  <MesIdeMES19>messageID</MesIdeMES19>
+  <MesTypMES20>CC315A</MesTypMES20>
+  <HEAHEA>
+    <RefNumHEA4>refnum</RefNumHEA4>
+    <TraModAtBorHEA76>2</TraModAtBorHEA76>
+    <TotNumOfIteHEA305>1</TotNumOfIteHEA305>
+    <DecPlaHEA394>declarationplace</DecPlaHEA394>
+    <DecDatTimHEA114>200302111234</DecDatTimHEA114>
+  </HEAHEA>
+  <GOOITEGDS>
+    <IteNumGDS7>1</IteNumGDS7>
+  </GOOITEGDS>
+  <PERLODSUMDEC>
+    <TINPLD1>YZ^</TINPLD1>
+  </PERLODSUMDEC>
+  <CUSOFFFENT730>
+    <RefNumCUSOFFFENT731>AB3C4D5E</RefNumCUSOFFFENT731>
+    <ExpDatOfArrFIRENT733>200302111234</ExpDatOfArrFIRENT733>
+  </CUSOFFFENT730>
+</ie:CC315A>

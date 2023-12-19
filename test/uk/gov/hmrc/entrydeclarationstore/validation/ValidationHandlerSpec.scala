@@ -39,8 +39,10 @@ class ValidationHandlerSpec extends AnyWordSpec with MockSchemaValidator with Mo
 
   val validationHandler = new ValidationHandlerImpl(
     mockSchemaValidator,
-    mockRuleValidator313,
-    mockRuleValidator315,
+    mockRuleValidator,
+    mockRuleValidator,
+    mockRuleValidator,
+    mockRuleValidator,
     mockedMetrics,
     mockAppConfig
   )
@@ -78,13 +80,15 @@ class ValidationHandlerSpec extends AnyWordSpec with MockSchemaValidator with Mo
   val errors: ValidationErrors = ValidationErrors(Seq(ValidationError("errText", "errType", "123", "errLocation")))
 
   def validationHandlerFor(schemaType: SchemaType, payload: NodeSeq, mrn: Option[String]): Unit = {
-    val ruleValidator = mrn.map(_ => MockRuleValidator313).getOrElse(MockRuleValidator315)
+//    val ruleValidator = mrn.map(_ => MockRuleValidator313).getOrElse(MockRuleValidator315)
 
     s"passed xml for $schemaType" when {
       "all valid" must {
         "return the payload" in {
+          MockAppConfig.optionalFieldsEnabled returns false
           MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Valid(payload)
-          ruleValidator.validate(payload) returns Right(())
+          MockAppConfig.optionalFieldsEnabled returns false
+          MockRuleValidator.validate(payload) returns Right(())
 
           validationHandler.handleValidation(RawPayload(payload), eori, mrn) shouldBe Right(payload)
         }
@@ -92,6 +96,7 @@ class ValidationHandlerSpec extends AnyWordSpec with MockSchemaValidator with Mo
 
       "xml is not schema valid" must {
         "return an error" in {
+          MockAppConfig.optionalFieldsEnabled returns false
           MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Invalid(payload, errors)
 
           validationHandler.handleValidation(RawPayload(payload), eori, mrn) shouldBe Left(ErrorWrapper(errors))
@@ -100,6 +105,7 @@ class ValidationHandlerSpec extends AnyWordSpec with MockSchemaValidator with Mo
 
       "xml is malformed" must {
         "return an error" in {
+          MockAppConfig.optionalFieldsEnabled returns false
           MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Malformed(errors)
 
           validationHandler.handleValidation(RawPayload(payload), eori, mrn) shouldBe Left(ErrorWrapper(errors))
@@ -108,8 +114,10 @@ class ValidationHandlerSpec extends AnyWordSpec with MockSchemaValidator with Mo
 
       "xml has business rule errors" must {
         "return an error" in {
+          MockAppConfig.optionalFieldsEnabled returns false
           MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Valid(payload)
-          ruleValidator.validate(payload) returns Left(errors)
+          MockAppConfig.optionalFieldsEnabled returns false
+          MockRuleValidator.validate(payload) returns Left(errors)
 
           validationHandler.handleValidation(RawPayload(payload), eori, mrn) shouldBe Left(ErrorWrapper(errors))
         }
@@ -122,6 +130,7 @@ class ValidationHandlerSpec extends AnyWordSpec with MockSchemaValidator with Mo
     payloadBuilder: Option[String] => NodeSeq,
     mrn: Option[String]): Unit = {
     def validate(payload: NodeSeq) = {
+      MockAppConfig.optionalFieldsEnabled returns false
       MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Valid(payload)
 
       validationHandler.handleValidation(RawPayload(payload), eori, mrn)
@@ -155,6 +164,7 @@ class ValidationHandlerSpec extends AnyWordSpec with MockSchemaValidator with Mo
     payloadBuilder: Option[String] => NodeSeq,
     mrn: Option[String]): Unit = {
     def validate(payload: NodeSeq) = {
+      MockAppConfig.optionalFieldsEnabled returns false
       MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Invalid(payload, errors)
 
       validationHandler.handleValidation(RawPayload(payload), eori, mrn)
@@ -203,6 +213,7 @@ class ValidationHandlerSpec extends AnyWordSpec with MockSchemaValidator with Mo
 
       "mrn does not match that in payload" must {
         "return an error" in {
+          MockAppConfig.optionalFieldsEnabled returns false
           MockSchemaValidator.validate(SchemaTypeE313, RawPayload(ie313payload())) returns Valid(ie313payload())
 
           validationHandler.handleValidation(RawPayload(ie313payload()), eori, Some("otherMrn")) shouldBe Left(

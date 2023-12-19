@@ -1,0 +1,102 @@
+{
+  "element": "/HEAHEA",
+  "name": "p3_p72_New",
+  "asserts": [
+    {
+      "test": "!(number('TraModAtBorHEA76') == 1 || number('TraModAtBorHEA76') == 8) || exists('IdeOfMeaOfTraCroHEA85')",
+      "localErrorMessage": "[Identity of means of transport crossing border] should be present if ([Transport mode at border] equals 1) or ([Transport mode at border] equals '8')",
+      "errorMessage": "Identity of means of transport crossing border' should be present if 'Transport mode at border' equals '1' or 'Transport mode at border' equals '8' (C017)",
+      "errorCode": "8107"
+    },
+    {
+      "test": "!(trim('SpeCirIndHEA1') == 'C') || !(number('TraModAtBorHEA76') == 1 || number('TraModAtBorHEA76') == 2 || number('TraModAtBorHEA76') == 4 || number('TraModAtBorHEA76') == 8 || number('TraModAtBorHEA76') == 10 || number('TraModAtBorHEA76') == 11)",
+      "localErrorMessage": "IF first digit of [Specific circumstance indicator] is 'C' THEN [Transport mode at border] cannot be '1', '2', '4', '8', '10' or '11'.",
+      "errorMessage": "If first digit of 'Specific Circumstance Indicator' is 'C' THEN 'Transport Mode at Border' cannot be '1', '2', '4', '8', '10' or '11' (C529)",
+      "errorCode": "8111"
+    },
+    {
+      "test": "!(trim('SpeCirIndHEA1') == 'D') || !(number('TraModAtBorHEA76') == 1 || number('TraModAtBorHEA76') == 3 || number('TraModAtBorHEA76') == 4 || number('TraModAtBorHEA76') == 8 || number('TraModAtBorHEA76') == 10 || number('TraModAtBorHEA76') == 11)",
+      "localErrorMessage": "IF first digit of [Specific circumstance indicator] is 'D' THEN [Transport mode at border] cannot be '1', '3', '4', '8', '10' or '11'.",
+      "errorMessage": "If first digit of 'Specific Circumstance Indicator' is 'D' THEN 'Transport Mode at Border' cannot be '1', '3', '4', '8', '10' or '11' (C529)",
+      "errorCode": "8112"
+    },
+    {
+      "test": "number('TraModAtBorHEA76') == 1 || number('TraModAtBorHEA76') == 2 || number('TraModAtBorHEA76') == 3 || number('TraModAtBorHEA76') == 4 || number('TraModAtBorHEA76') == 8 || number('TraModAtBorHEA76') == 10 || number('TraModAtBorHEA76') == 11",
+      "localErrorMessage": "[Transport mode at border] may only take the values '1', '2', '3', '4', '8', '10' or '11'",
+      "errorMessage": "[Transport mode at border] may only take the values '1', '2', '3', '4', '8', '10' or '11'",
+      "errorCode": "8689"
+    },
+    {
+      "test": "trim('TraModAtBorHEA76').take(1) != '0' || trim('TraModAtBorHEA76').length() <= 1",
+      "localErrorMessage": "[Transport mode at border] must not contain leading zeros",
+      "errorMessage": "[Transport mode at border] must not contain leading zeros",
+      "errorCode": "8690"
+    },
+    {
+      "test": "not('IdeOfMeaOfTraCroHEA85') || !(number('TraModAtBorHEA76') == 4)",
+      "localErrorMessage": "[Identity of means of transport crossing border] should not be present if [Transport mode at border] equals 4",
+      "errorMessage": "If 'Transport Mode at Border (box 25)' = '4' then 'Identity of means of transport crossing border' should not be present (C017)",
+      "errorCode": "8113"
+    },
+    {
+      "test": "!(number('TraModAtBorHEA76') == 1 || number('TraModAtBorHEA76') == 8) || not('IdeOfMeaOfTraCroHEA85') || applyRegex('IdeOfMeaOfTraCroHEA85', '\\\\s*[0-9]{7,8}\\\\s*')",
+      "localErrorMessage": "IF [Transport mode at border] = '1' or '8' THEN [Identity of means of transport crossing border] consists either of the International Maritime Organisation (IMO) ship identification number or of the European Vessel Identification Number (ENI)",
+      "errorMessage": "If 'Transport Mode at Border' = '1' or '8' Then 'Identity of means of transport crossing border' consists either of the International Maritime organisation (IMO) ship identification number (format n7 – leading '0' allowed) OR of the European Vessel Identification Number (ENI) (format n8 – leading '0' allowed) (C514)",
+      "errorCode": "8114"
+    },
+    {
+      "test": "not('NatOfMeaOfTraCroHEA87') || (number('TraModAtBorHEA76') == 3 || number('TraModAtBorHEA76') == 10 || number('TraModAtBorHEA76') == 11) && exists('IdeOfMeaOfTraCroHEA85')",
+      "localErrorMessage": "[Nationality of means of transport crossing border] should not be present if not ( ([Transport mode at border] equals 3 or [Transport mode at border] equals 10 or [Transport mode at border] equals 11) and [Identity of means of transport crossing border] )",
+      "errorMessage": "'Nationality of means of transport crossing border' should not be present if ('Transport mode at border (box 25)' does not = '3' and 'Transport mode at border (box 25)' does not = '10' and 'Transport mode at border (box 25)' does not = '11') and 'identity Crossing Border (box 21)' is not present (C024)",
+      "errorCode": "8115"
+    },
+    {
+      "test": "not('TotNumOfIteHEA305') || (number('TotNumOfIteHEA305') == count('../GOOITEGDS'))",
+      "localErrorMessage": "[Total number of items] should equal the number of [Goods item] present.",
+      "errorMessage": "[Total number of items] must equal the number of [Goods item] present.",
+      "errorCode": "8206"
+    },
+    {
+      "test": "trim('TotNumOfIteHEA305').take(1) != '0' || trim('TotNumOfIteHEA305').length() <= 1",
+      "localErrorMessage": "[Total number of items] should not have leading zeros",
+      "errorMessage": "The 'Total Number of Items' field must not have leading zeros.",
+      "errorCode": "8671"
+    },
+    {
+      "test": "trim('TotNumOfPacHEA306').take(1) != '0' || trim('TotNumOfPacHEA306').length() <= 1",
+      "localErrorMessage": "[Total number of packages] should not have leading zeros",
+      "errorMessage": "The 'Total Number of Packages' field must not have leading zeros.",
+      "errorCode": "8672"
+    },
+    {
+      "test": "not('TotGroMasHEA307') || (!getValue('TotGroMasHEA307').contains('+') && !getValue('TotGroMasHEA307').contains('-'))",
+      "localErrorMessage": "[Total gross mass] should not have a sign",
+      "errorMessage": "The 'Total Gross Mass' field has a decimal value and only a decimal point may be used. No other symbols are permitted as decimal separators.",
+      "errorCode": "8673"
+    },
+    {
+      "test": "!(number('TraModAtBorHEA76') == 4) || applyRegex('ConRefNumHEA','^\\\\s*([a-zA-Z0-9]{3}[0-9]{1,4}[a-zA-Z]?|[a-zA-Z0-9]{1,3}[0-9][a-zA-Z]?)\\\\s*$')",
+      "localErrorMessage": "IF [Transport mode at border] = '4' THEN [Conveyance reference number] consists of the (IATA) flight number",
+      "errorMessage": "If 'Transport Mode at Border = '4' Then 'Conveyance Reference Number' consists of the (IATA) flight number and has format an..8 of which an..3 is the mandatory prefix identifying the airline/operator: n..4 is the mandatory number of the flight and a1 is the optional suffix (TR0518)",
+      "errorCode": "8118"
+    },
+    {
+      "test": "trim('SpeCirIndHEA1') == 'C' || trim('SpeCirIndHEA1') == 'D' || trim('SpeCirIndHEA1') == 'E' || not('SpeCirIndHEA1')",
+      "localErrorMessage": "[Specific circumstance indicator] may only take the values ‘C’, ‘D’ or ‘E’",
+      "errorMessage": "[Specific circumstance indicator] may only take the values ‘C’, ‘D’ or ‘E’",
+      "errorCode": "8691"
+    },
+    {
+      "test": "!(number('TraModAtBorHEA76') == 1) || not('ConRefNumHEA') || applyRegex('ConRefNumHEA', '^(?!\\\\s*XFER).+\\\\s*$|^\\\\s*XFER[a-zA-Z0-9]+([:-][a-zA-Z0-9]+)?\\\\s*$')",
+      "localErrorMessage": "IF [Transport mode at border] = '1' AND [Conveyance reference number] begins with \"XFER\" THEN [Conveyance reference number] must consist of the letters \"XFER\" followed by one or more alphanumeric characters, which can optionally be followed by a separator (\":\" (colon) or \"-\" (hyphen)) and one or more alphanumeric characters.",
+      "errorMessage": "IF [Transport mode at border] = '1' AND [Conveyance reference number] begins with \"XFER\" THEN [Conveyance reference number] must consist of the letters \"XFER\" followed by one or more alphanumeric characters, which can optionally be followed by a separator (\":\" (colon) or \"-\" (hyphen)) and one or more alphanumeric characters (TR0519)",
+      "errorCode": "8685"
+    },
+    {
+      "test": "not('TotGroMasHEA307') || getValue('TotGroMasHEA307').contains('+') || exists('../GOOITEGDS/GroMasGDS46', {ContextHelper current, ContextHelper local ->    local.getValue('.').contains('+')}) || number('TotGroMasHEA307') * (1 + 0.0000000000000001 * count('../GOOITEGDS/GroMasGDS46')) + 0.0001 >= sum('../GOOITEGDS/GroMasGDS46')",
+      "localErrorMessage": "[Total gross mass] must be greater than or equal to the sum of [Gross mass]",
+      "errorMessage": "The [Total gross mass] total must be greater than or equal to the sum of all the [Gross mass] amounts (TR0812)",
+      "errorCode": "8686"
+    }
+  ]
+}

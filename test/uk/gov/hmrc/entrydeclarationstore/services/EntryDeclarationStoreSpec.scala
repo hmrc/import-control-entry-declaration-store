@@ -148,6 +148,7 @@ class EntryDeclarationStoreSpec
 
   def successfulSubmission(xmlPayload: NodeSeq, messageType: MessageType, movementRef: Option[String]): Unit =
     "return Right(SuccessResponse)" in new Test(xmlPayload, messageType, movementRef) {
+      MockAppConfig.optionalFieldsEnabled returns false
       MockAppConfig.validateXMLtoJsonTransformation.returns(false)
       MockValidationHandler.handleValidation(payload, eori, movementRef) returns Right(xmlPayload)
       MockDeclarationToJsonConverter.convertToJson(xmlPayload).returns(Right(jsonPayload))
@@ -204,6 +205,7 @@ class EntryDeclarationStoreSpec
     "Valid EntryDeclaration fails to save in the database" must {
       "return Left(FailureResponse)" in new Test {
         MockAppConfig.validateXMLtoJsonTransformation.returns(false)
+        MockAppConfig.optionalFieldsEnabled returns false
         MockValidationHandler.handleValidation(payload, eori, mrn) returns Right(xmlPayload)
         MockDeclarationToJsonConverter.convertToJson(xmlPayload).returns(Right(jsonPayload))
 
@@ -219,6 +221,7 @@ class EntryDeclarationStoreSpec
     "SubmissionReceived event fails to send" must {
       "return Left(FailureResponse)" in new Test {
         MockAppConfig.validateXMLtoJsonTransformation.returns(false)
+        MockAppConfig.optionalFieldsEnabled returns false
         MockValidationHandler.handleValidation(payload, eori, mrn) returns Right(xmlPayload)
         MockDeclarationToJsonConverter.convertToJson(xmlPayload).returns(Right(jsonPayload))
 
@@ -238,6 +241,7 @@ class EntryDeclarationStoreSpec
     "EIS submission fails" must {
       "still send report and set failure status in database" in new Test {
         MockAppConfig.validateXMLtoJsonTransformation.returns(false)
+        MockAppConfig.optionalFieldsEnabled returns false
         MockValidationHandler.handleValidation(payload, eori, mrn) returns Right(xmlPayload)
         MockDeclarationToJsonConverter.convertToJson(xmlPayload).returns(Right(jsonPayload))
 
@@ -275,6 +279,7 @@ class EntryDeclarationStoreSpec
     "declaration is processed successfully" must {
       "not wait for EIS submission to complete" in new Test {
         MockAppConfig.validateXMLtoJsonTransformation.returns(false)
+        MockAppConfig.optionalFieldsEnabled returns false
         MockValidationHandler.handleValidation(payload, eori, mrn) returns Right(xmlPayload)
         MockDeclarationToJsonConverter.convertToJson(xmlPayload).returns(Right(jsonPayload))
 
@@ -299,6 +304,7 @@ class EntryDeclarationStoreSpec
     "EIS submission results in a failed future" must {
       "still send report and set failure status in database" in new Test {
         MockAppConfig.validateXMLtoJsonTransformation.returns(false)
+        MockAppConfig.optionalFieldsEnabled returns false
         MockValidationHandler.handleValidation(payload, eori, mrn) returns Right(xmlPayload)
         MockDeclarationToJsonConverter.convertToJson(xmlPayload).returns(Right(jsonPayload))
 
