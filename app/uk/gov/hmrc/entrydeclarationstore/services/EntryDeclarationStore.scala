@@ -16,12 +16,9 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
-import java.time.{Clock, Instant}
-
 import cats.data.EitherT
 import cats.implicits._
-import com.kenshoo.play.metrics.Metrics
-import javax.inject.{Inject, Singleton}
+import com.codahale.metrics.MetricRegistry
 import play.api.Logging
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
@@ -35,6 +32,8 @@ import uk.gov.hmrc.entrydeclarationstore.utils._
 import uk.gov.hmrc.entrydeclarationstore.validation.ValidationHandler
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.{Clock, Instant}
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
@@ -60,7 +59,7 @@ class EntryDeclarationStoreImpl @Inject()(
   eisConnector: EisConnector,
   reportSender: ReportSender,
   clock: Clock,
-  override val metrics: Metrics,
+  override val metrics: MetricRegistry,
   appConfig: AppConfig
 )(implicit ec: ExecutionContext)
     extends EntryDeclarationStore

@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
-import com.kenshoo.play.metrics.Metrics
+import com.codahale.metrics.MetricRegistry
+import play.api.Logging
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.Housekeeper
 import uk.gov.hmrc.entrydeclarationstore.models.HousekeepingStatus
 import uk.gov.hmrc.entrydeclarationstore.repositories.{EntryDeclarationRepo, HousekeepingRepo}
 import uk.gov.hmrc.entrydeclarationstore.utils.Timer
-import play.api.Logging
 
 import java.time.Clock
 import javax.inject.{Inject, Singleton}
@@ -35,12 +35,12 @@ class HousekeepingService @Inject()(
   housekeepingRepo: HousekeepingRepo,
     clock: Clock,
   appConfig: AppConfig,
-  override val metrics: Metrics)(implicit ec: ExecutionContext)
+  override val metrics: MetricRegistry)(implicit ec: ExecutionContext)
     extends Housekeeper
     with Timer
     with Logging {
 
-  private lazy val numDeletedHistogram = metrics.defaultRegistry.histogram("housekeep-num-deleted")
+  private lazy val numDeletedHistogram = metrics.histogram("housekeep-num-deleted")
 
   def enableHousekeeping(value: Boolean): Future[Unit]  = housekeepingRepo.enableHousekeeping(value)
   def getHousekeepingStatus: Future[HousekeepingStatus] = housekeepingRepo.getHousekeepingStatus

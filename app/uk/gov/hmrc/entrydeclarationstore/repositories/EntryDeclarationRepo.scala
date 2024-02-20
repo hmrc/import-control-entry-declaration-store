@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
-import akka.NotUsed
-import akka.stream.Materializer
-import akka.stream.scaladsl.Source
+import org.apache.pekko.NotUsed
+import org.apache.pekko.stream.Materializer
+import org.apache.pekko.stream.scaladsl.Source
 import play.api.libs.json._
 import play.api.Logger
 import uk.gov.hmrc.mongo.play.json.formats.MongoFormats
@@ -38,6 +38,7 @@ import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationstore.models._
 import uk.gov.hmrc.play.http.logging.Mdc
+
 import java.time.Instant
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -129,7 +130,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
           .insertOne(entryDeclarationPersisted)
           .toFutureOption()
       )
-      .map(_.map(_.wasAcknowledged).getOrElse(false))
+      .map(_.exists(_.wasAcknowledged))
       .recover {
         case e =>
           ContextLogger.error(s"Unable to save entry declaration", e)
@@ -180,15 +181,15 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
             )
           )
           .toFutureOption()
-          .recover {
-            case e =>
-              ContextLogger.error(s"Unable to set eis submission success for entry declaration", e)
-              false
-          }
+
       )
       .map{
         case Some(result: UpdateResult) => result.getModifiedCount > 0
         case _ => false
+      }.recover {
+        case e =>
+          ContextLogger.error(s"Unable to set eis submission success for entry declaration", e)
+          false
       }
 
 
@@ -307,7 +308,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
           .updateOne(query, set("housekeepingAt", time))
           .toFutureOption()
       )
-      .map(_.map(_.getMatchedCount > 0).getOrElse(false))
+      .map(_.exists(_.getMatchedCount > 0))
 
   override def housekeep(now: Instant): Future[Int] =
     Mdc.preservingMdc(
@@ -357,7 +358,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
           .headOption()
       )
       .map {
-        case Some(bson) => (Codecs.fromBson[UndeliveredCounts](bson)).sorted
+        case Some(bson) => Codecs.fromBson[UndeliveredCounts](bson).sorted
         case None         => UndeliveredCounts(totalCount = 0, transportCounts = None)
       }
   }

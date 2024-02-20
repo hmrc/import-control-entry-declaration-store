@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.models
 
-import akka.util.ByteString
+import org.apache.pekko.util.ByteString
 
 import java.io.{ByteArrayInputStream, InputStream}
 import scala.xml.NodeSeq

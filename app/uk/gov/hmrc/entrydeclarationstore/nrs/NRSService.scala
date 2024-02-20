@@ -15,7 +15,7 @@
  */
 
 package uk.gov.hmrc.entrydeclarationstore.nrs
-import com.kenshoo.play.metrics.Metrics
+import com.codahale.metrics.MetricRegistry
 import play.api.Logging
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.utils.Timer
@@ -24,7 +24,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class NRSService @Inject()(nrsConnector: NRSConnector, override val metrics: Metrics)(implicit ec: ExecutionContext)
+class NRSService @Inject()(nrsConnector: NRSConnector, override val metrics: MetricRegistry)(implicit ec: ExecutionContext)
     extends Timer
     with Logging {
 

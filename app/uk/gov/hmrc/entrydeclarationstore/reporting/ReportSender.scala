@@ -15,8 +15,8 @@
  */
 
 package uk.gov.hmrc.entrydeclarationstore.reporting
+import com.codahale.metrics.MetricRegistry
 import com.google.inject.Inject
-import com.kenshoo.play.metrics.Metrics
 import play.api.Logging
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.reporting.audit.{AuditEvent, AuditHandler}
@@ -31,7 +31,7 @@ class ReportSender @Inject()(
   auditHandler: AuditHandler,
   eventConnector: EventConnector,
   clock: Clock,
-  override val metrics: Metrics)(implicit ec: ExecutionContext)
+  override val metrics: MetricRegistry)(implicit ec: ExecutionContext)
     extends Timer
     with Logging {
   def sendReport[R: EventSources](timestamp: Instant, report: R)(

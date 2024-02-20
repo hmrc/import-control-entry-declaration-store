@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.entrydeclarationstore.trafficswitch
 
-import akka.actor.{Actor, ActorRef, ActorRefFactory, Cancellable, Props, Stash, Status}
-import akka.event.LoggingReceive
-import akka.pattern.{CircuitBreakerOpenException, pipe}
+import org.apache.pekko.actor.{Actor, ActorRef, ActorRefFactory, Cancellable, Props, Stash, Status}
+import org.apache.pekko.event.LoggingReceive
+import org.apache.pekko.pattern.{CircuitBreakerOpenException, pipe}
 import play.api.libs.concurrent.InjectedActorSupport
 import uk.gov.hmrc.entrydeclarationstore.models.TrafficSwitchState
 import uk.gov.hmrc.entrydeclarationstore.services.TrafficSwitchService
