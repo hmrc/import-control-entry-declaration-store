@@ -25,7 +25,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 trait ReplayLock {
-  def lock(replayId: String): Future[Boolean]
+  def lock(replayId: String): Future[Option[Lock]]
   def renew(replayId: String): Future[Unit]
   def unlock(replayId: String): Future[Unit]
 }
@@ -38,7 +38,7 @@ class ReplayLockImpl @Inject()(repo: MongoLockRepository, appConfig: AppConfig)(
 
   private val lockId: String = "replay_lock"
 
-  def lock(replayId: String): Future[Boolean] = repo.takeLock(lockId, replayId, forceReleaseAfter)
+  def lock(replayId: String): Future[Option[Lock]] = repo.takeLock(lockId, replayId, forceReleaseAfter)
 
   def renew(replayId: String): Future[Unit] =
     repo.refreshExpiry(lockId, replayId, forceReleaseAfter).map(_ => ())
