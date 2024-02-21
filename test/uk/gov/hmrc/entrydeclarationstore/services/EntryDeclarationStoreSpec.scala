@@ -16,10 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
-import java.io.IOException
-import java.time.{Clock, Instant, ZoneOffset}
-
-import com.kenshoo.play.metrics.Metrics
+import com.codahale.metrics.MetricRegistry
 import org.scalatest.Inside
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers.{a, convertToAnyShouldWrapper}
@@ -32,10 +29,12 @@ import uk.gov.hmrc.entrydeclarationstore.models._
 import uk.gov.hmrc.entrydeclarationstore.models.json.{InputParameters, MockDeclarationToJsonConverter}
 import uk.gov.hmrc.entrydeclarationstore.reporting._
 import uk.gov.hmrc.entrydeclarationstore.repositories.MockEntryDeclarationRepo
-import uk.gov.hmrc.entrydeclarationstore.utils.{MockIdGenerator, MockMetrics, XmlFormatConfig}
+import uk.gov.hmrc.entrydeclarationstore.utils.{MockIdGenerator, XmlFormatConfig}
 import uk.gov.hmrc.entrydeclarationstore.validation._
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.io.IOException
+import java.time.{Clock, Instant, ZoneOffset}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, Promise}
 import scala.util.control.NoStackTrace
@@ -58,7 +57,7 @@ class EntryDeclarationStoreSpec
   val applicationId = "someAppId"
   implicit val hc: HeaderCarrier = HeaderCarrier(
     extraHeaders = Seq("x-client-id" -> clientId, "x-application-id" -> applicationId))
-  val mockedMetrics: Metrics = new MockMetrics
+  val metrics: MetricRegistry = new MetricRegistry()
 
   implicit val xmlFormatConfig: XmlFormatConfig = XmlFormatConfig(responseMaxErrors = 100)
 
@@ -72,7 +71,7 @@ class EntryDeclarationStoreSpec
     mockEisConnector,
     mockReportSender,
     clock,
-    mockedMetrics,
+    metrics,
     mockAppConfig
   )
 

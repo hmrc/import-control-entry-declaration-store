@@ -16,10 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationstore.orchestrators
 
-import java.time.{Clock, Instant, ZoneOffset}
-
-import akka.stream.Materializer
-import akka.stream.scaladsl.Source
+import org.apache.pekko.stream.Materializer
+import org.apache.pekko.stream.scaladsl.Source
 import org.scalatest.Inside
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers.{convertToAnyShouldWrapper, include}
@@ -30,12 +28,14 @@ import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.api.test.Injecting
 import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
-import uk.gov.hmrc.entrydeclarationstore.models.{Abort, BatchReplayError, BatchReplayResult, ReplayInitializationResult, ReplayResult, ReplayTrigger}
+import uk.gov.hmrc.entrydeclarationstore.models._
 import uk.gov.hmrc.entrydeclarationstore.repositories.{MockEntryDeclarationRepo, MockReplayStateRepo}
 import uk.gov.hmrc.entrydeclarationstore.services.MockSubmissionReplayService
 import uk.gov.hmrc.entrydeclarationstore.utils.MockIdGenerator
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.mongo.lock.Lock
 
+import java.time.{Clock, Instant, ZoneOffset}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, Promise}
 import scala.util.control.NoStackTrace
@@ -66,6 +66,7 @@ class ReplayOrchestratorSpec
   val clock: Clock  = Clock.fixed(time, ZoneOffset.UTC)
   val BatchSuccesses = 123
   val BatchFailures = 321
+  val lock = Lock("id", "owner", time, time.plusMillis(60000))
 
   val replayOrchestrator = new ReplayOrchestrator(
     mockIdGenerator,
@@ -93,7 +94,7 @@ class ReplayOrchestratorSpec
   }
 
   private def willGetUndeliverablesAndInitState(replayLimit: Option[Int], submissionIds: String*) = {
-    MockReplayLock.lock(replayId) returns Future.successful(true)
+    MockReplayLock.lock(replayId) returns Future.successful(Some(lock))
     MockIdGenerator.generateUuid() returns replayId
 
     // totalToReplay should always be the same as the number of ids in the source
@@ -193,7 +194,7 @@ class ReplayOrchestratorSpec
 
     "determining the number of undelivered messages during initialization fails with a database exception" must {
       "return a failed future with the exception" in {
-        MockReplayLock.lock(replayId) returns Future.successful(true)
+        MockReplayLock.lock(replayId) returns Future.successful(Some(lock))
         MockIdGenerator.generateUuid() returns replayId
         MockEntryDeclarationRepo.totalUndeliveredMessages(time) returns Future.failed(databaseException)
 
@@ -203,7 +204,7 @@ class ReplayOrchestratorSpec
 
     "inserting a replay state document during initialization fails with a database exception" must {
       "return a failed future with the exception" in {
-        MockReplayLock.lock(replayId) returns Future.successful(true)
+        MockReplayLock.lock(replayId) returns Future.successful(Some(lock))
         MockIdGenerator.generateUuid() returns replayId
 
         MockEntryDeclarationRepo.totalUndeliveredMessages(time) returns Future.successful(1)
@@ -218,7 +219,7 @@ class ReplayOrchestratorSpec
         val totalUndelivered = 1
         MockAppConfig.replayBatchSize returns 1
 
-        MockReplayLock.lock(replayId) returns Future.successful(true)
+        MockReplayLock.lock(replayId) returns Future.successful(Some(lock))
         MockIdGenerator.generateUuid() returns replayId
 
         MockEntryDeclarationRepo.totalUndeliveredMessages(time) returns Future.successful(totalUndelivered)
@@ -385,7 +386,7 @@ class ReplayOrchestratorSpec
     "a replay is already in progress" must {
       "return AlreadyRunning with the latest replayId" in {
         MockIdGenerator.generateUuid() returns replayId
-        MockReplayLock.lock(replayId) returns Future.successful(false)
+        MockReplayLock.lock(replayId) returns Future.successful(None)
         MockReplayStateRepo.lookupIdOfLatest returns Future.successful(Some("otherId"))
 
         val (initResult, _) = replayOrchestrator.startReplay(None)
@@ -394,7 +395,7 @@ class ReplayOrchestratorSpec
 
       "return AlreadyRunning without the latest replayId if it cannot be determined" in {
         MockIdGenerator.generateUuid() returns replayId
-        MockReplayLock.lock(replayId) returns Future.successful(false)
+        MockReplayLock.lock(replayId) returns Future.successful(None)
         MockReplayStateRepo.lookupIdOfLatest returns Future.successful(None)
 
         val (initResult, _) = replayOrchestrator.startReplay(None)

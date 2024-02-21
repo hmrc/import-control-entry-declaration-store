@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationstore.trafficswitch
 
-import akka.actor.{ActorRef, ActorSystem, PoisonPill}
-import akka.testkit.{TestKit, TestProbe}
+import org.apache.pekko.actor.{ActorRef, ActorSystem, PoisonPill}
+import org.apache.pekko.testkit.{TestKit, TestProbe}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.wordspec.AnyWordSpecLike
 import uk.gov.hmrc.entrydeclarationstore.models.TrafficSwitchState

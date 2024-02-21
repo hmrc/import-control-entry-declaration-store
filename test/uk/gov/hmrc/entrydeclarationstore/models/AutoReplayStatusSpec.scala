@@ -18,13 +18,14 @@ package uk.gov.hmrc.entrydeclarationstore.models
 
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
+
 import java.time.Instant
-import play.api.libs.json.Json
+import play.api.libs.json.{Format, Json}
 
 class AutoReplayStatusSpec extends AnyWordSpec {
   val now: Instant = Instant.parse("2022-03-02T10:26:38.559Z")
 
-  implicit val formats = AutoReplayStatus.format
+  implicit val formats: Format[AutoReplayStatus] = AutoReplayStatus.format
   "AutoReplayStatus" when {
     "On" must {
       val json = Json.parse("""

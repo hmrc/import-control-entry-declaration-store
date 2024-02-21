@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationstore.utils
 
-import akka.actor.Scheduler
-import com.miguno.akka.testing.VirtualTime
+import com.github.pjfanning.pekko.scheduler.mock.VirtualTime
+import org.apache.pekko.actor.Scheduler
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
 
