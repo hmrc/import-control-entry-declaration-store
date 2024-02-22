@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.entrydeclarationstore.housekeeping
 
-import akka.actor.{ActorSystem, Scheduler}
-import akka.testkit.{TestKit, TestProbe}
-import com.miguno.akka.testing.VirtualTime
+import com.github.pjfanning.pekko.scheduler.mock.VirtualTime
+import org.apache.pekko.actor.{ActorSystem, Scheduler}
+import org.apache.pekko.testkit.{TestKit, TestProbe}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.Eventually
 import org.scalatest.time.{Milliseconds, Span}
