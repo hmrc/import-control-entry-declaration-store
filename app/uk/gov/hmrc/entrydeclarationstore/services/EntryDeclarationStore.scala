@@ -20,7 +20,7 @@ import cats.data.EitherT
 import cats.implicits._
 import com.codahale.metrics.MetricRegistry
 import play.api.Logging
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, EisConnector}
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
@@ -106,6 +106,8 @@ class EntryDeclarationStoreImpl @Inject()(
         _ <- EitherT(
               sendSubmissionReceivedReport(input, eori, entryDeclarationAsJson, rawPayload, transportMode, clientInfo))
       } yield {
+        println(s"\nXML:\n${xmlPayload}\n")
+        println(s"\nJSON:\n${Json.prettyPrint(entryDeclarationAsJson)}\n")
         submitToEIS(input, eori, transportMode, receivedDateTime)
         reportMetrics(MessageType(amendment = mrn.isDefined), clientInfo.clientType, transportMode, rawPayload.length)
         SuccessResponse(entryDeclaration.correlationId, entryDeclaration.submissionId)
