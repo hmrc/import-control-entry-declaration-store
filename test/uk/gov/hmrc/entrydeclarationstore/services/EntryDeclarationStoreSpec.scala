@@ -145,8 +145,8 @@ class EntryDeclarationStoreSpec
     MockAppConfig.logSubmissionPayloads returns false
   }
 
-  def successfulSubmission(xmlPayload: NodeSeq, messageType: MessageType, movementRef: Option[String]): Unit =
-    "return Right(SuccessResponse)" in new Test(xmlPayload, messageType, movementRef) {
+  def successfulSubmission(xml: NodeSeq, msgType: MessageType, movementRef: Option[String]): Unit =
+    "return Right(SuccessResponse)" in new Test(xml, msgType, movementRef) {
       MockAppConfig.optionalFieldsEnabled returns false
       MockAppConfig.validateXMLtoJsonTransformation.returns(false)
       MockValidationHandler.handleValidation(payload, eori, movementRef) returns Right(xmlPayload)

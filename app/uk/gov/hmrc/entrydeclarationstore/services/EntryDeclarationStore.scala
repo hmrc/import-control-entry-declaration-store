@@ -106,8 +106,6 @@ class EntryDeclarationStoreImpl @Inject()(
         _ <- EitherT(
               sendSubmissionReceivedReport(input, eori, entryDeclarationAsJson, rawPayload, transportMode, clientInfo))
       } yield {
-        println(s"\nXML:\n${xmlPayload}\n")
-        println(s"\nJSON:\n${Json.prettyPrint(entryDeclarationAsJson)}\n")
         submitToEIS(input, eori, transportMode, receivedDateTime)
         reportMetrics(MessageType(amendment = mrn.isDefined), clientInfo.clientType, transportMode, rawPayload.length)
         SuccessResponse(entryDeclaration.correlationId, entryDeclaration.submissionId)
