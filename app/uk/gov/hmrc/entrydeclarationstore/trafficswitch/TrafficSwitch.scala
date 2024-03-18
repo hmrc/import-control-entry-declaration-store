@@ -16,11 +16,10 @@
 
 package uk.gov.hmrc.entrydeclarationstore.trafficswitch
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.pattern.ask
-import akka.util.Timeout
+import org.apache.pekko.actor.{ActorRef, ActorSystem}
+import org.apache.pekko.pattern.ask
+import org.apache.pekko.util.Timeout
 import uk.gov.hmrc.entrydeclarationstore.trafficswitch.TrafficSwitchActor.{CallResult, MakeCall}
-
 import javax.inject.Inject
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}

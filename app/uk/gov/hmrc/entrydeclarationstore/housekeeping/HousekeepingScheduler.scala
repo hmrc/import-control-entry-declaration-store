@@ -16,13 +16,15 @@
 
 package uk.gov.hmrc.entrydeclarationstore.housekeeping
 
-import akka.actor.Scheduler
+import org.apache.pekko.actor.Scheduler
+
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.Duration
 import play.api.Logging
 import uk.gov.hmrc.mongo.lock._
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.repositories.LockRepositoryProvider
+
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 import scala.util.Failure

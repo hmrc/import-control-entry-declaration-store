@@ -16,10 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationstore.utils
 
-import java.util.concurrent.TimeUnit
-
-import akka.actor.{ActorSystem, Scheduler}
 import com.google.common.base.Stopwatch
+import org.apache.pekko.actor.{ActorSystem, Scheduler}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
@@ -30,6 +28,7 @@ import play.api.test.Injecting
 import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
 
+import java.util.concurrent.TimeUnit
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, TimeoutException}
 import scala.util.control.NoStackTrace

@@ -16,15 +16,15 @@
 
 package uk.gov.hmrc.entrydeclarationstore.utils
 
-import com.kenshoo.play.metrics.Metrics
+import com.codahale.metrics.MetricRegistry
 import uk.gov.hmrc.entrydeclarationstore.models.MessageType
 import uk.gov.hmrc.entrydeclarationstore.reporting.ClientType
 
 trait MetricsReporter {
-  val metrics: Metrics
+  val metrics: MetricRegistry
 
   private def incrementCounter(reportedMetric: String): Unit =
-    metrics.defaultRegistry.counter(reportedMetric).inc()
+    metrics.counter(reportedMetric).inc()
 
   private def reportNoOfMessagesPerMessageType(messageType: MessageType): Unit = {
     val reportedMetric = s"messageType.$messageType.counter"
@@ -43,7 +43,7 @@ trait MetricsReporter {
 
   private def reportSizeOfMessage(size: Long): Unit = {
     val reportedMetric = "message.size"
-    metrics.defaultRegistry.histogram(reportedMetric).update(size)
+    metrics.histogram(reportedMetric).update(size)
   }
 
   def reportMetrics(messageType: MessageType, clientType: ClientType, transportMode: String, size: Long): Unit = {

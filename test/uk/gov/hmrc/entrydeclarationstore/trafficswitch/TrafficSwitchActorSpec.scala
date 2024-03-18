@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.entrydeclarationstore.trafficswitch
 
-import akka.actor.{ActorRef, ActorRefFactory, ActorSystem, Status}
-import akka.pattern.CircuitBreakerOpenException
-import akka.testkit.{ImplicitSender, TestKit, TestProbe}
+import org.apache.pekko.actor.{ActorRef, ActorRefFactory, ActorSystem, Status}
+import org.apache.pekko.pattern.CircuitBreakerOpenException
+import org.apache.pekko.testkit.{ImplicitSender, TestKit, TestProbe}
 import org.scalatest.matchers.should.Matchers.{a, convertToAnyShouldWrapper}
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.{BeforeAndAfterAll, Inside}

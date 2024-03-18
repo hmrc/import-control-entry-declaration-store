@@ -23,19 +23,27 @@ import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
 import uk.gov.hmrc.entrydeclarationstore.validation.{ValidationError, ValidationErrors}
 
+import javax.xml.parsers.SAXParserFactory
 import scala.xml.XML
 
 class SchemaValidatorSpec extends AnyWordSpec with Inside {
 
   val validator = new SchemaValidator()
+  val factory = SAXParserFactory.newInstance()
 
   "Schema validator" when {
     "Validating a E313" when {
 
+      factory.setNamespaceAware(true)
+      factory.setSchema(SchemaTypeE313.schema)
+      val saxParser = factory.newSAXParser()
+
       "passed valid sample" must {
+
         "return Valid containing the parsed xml" in {
+
           val resourceName       = "xmls/CC313A-schemaValidSample-v11-2.xml"
-          val xml                = XML.load(ResourceUtils.url(resourceName))
+          val xml                = XML.withSAXParser(saxParser).load(ResourceUtils.url(resourceName))
           val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
           validator.validate(SchemaTypeE313, rawXml) shouldBe SchemaValidationResult.Valid(xml)
@@ -44,8 +52,9 @@ class SchemaValidatorSpec extends AnyWordSpec with Inside {
 
       "passed invalid sample" must {
         "return Invalid containing the xml and the ValidationErrors" in {
+
           val resourceName       = "xmls/CC313A-schemaInvalidSample-v11-2.xml"
-          val xml                = XML.load(ResourceUtils.url(resourceName))
+          val xml                = XML.withSAXParser(saxParser).load(ResourceUtils.url(resourceName))
           val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
           validator.validate(SchemaTypeE313, rawXml) shouldBe SchemaValidationResult.Invalid(
@@ -84,8 +93,9 @@ class SchemaValidatorSpec extends AnyWordSpec with Inside {
 
       "passed valid E315" must {
         "return Invalid containing the xml and the ValidationErrors" in {
+
           val resourceName       = "xmls/CC315A-schemaValidSample-v11-2.xml"
-          val xml                = XML.load(ResourceUtils.url(resourceName))
+          val xml                = XML.withSAXParser(saxParser).load(ResourceUtils.url(resourceName))
           val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
           validator.validate(SchemaTypeE313, rawXml) shouldBe SchemaValidationResult.Invalid(
@@ -105,8 +115,9 @@ class SchemaValidatorSpec extends AnyWordSpec with Inside {
 
       "passed a declaration with an envelope and body" must {
         "return Invalid containing the xml and the ValidationErrors" in {
+
           val resourceName       = "xmls/CC313A-schemaValidSampleWithEnvelope-v11-2.xml"
-          val xml                = XML.load(ResourceUtils.url(resourceName))
+          val xml                = XML.withSAXParser(saxParser).load(ResourceUtils.url(resourceName))
           val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
           validator.validate(SchemaTypeE313, rawXml) shouldBe SchemaValidationResult.Invalid(
@@ -126,10 +137,16 @@ class SchemaValidatorSpec extends AnyWordSpec with Inside {
     }
 
     "Validating a E315" when {
+
+      factory.setNamespaceAware(true)
+      factory.setSchema(SchemaTypeE315.schema)
+      val saxParser = factory.newSAXParser()
+
       "passed valid sample" must {
         "return Valid containing the parsed xml" in {
+
           val resourceName       = "xmls/CC315A-schemaValidSample-v11-2.xml"
-          val xml                = XML.load(ResourceUtils.url(resourceName))
+          val xml                = XML.withSAXParser(saxParser)load(ResourceUtils.url(resourceName))
           val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
           validator.validate(SchemaTypeE315, rawXml) shouldBe SchemaValidationResult.Valid(xml)
@@ -138,8 +155,9 @@ class SchemaValidatorSpec extends AnyWordSpec with Inside {
 
       "passed invalid sample" must {
         "return Invalid containing the xml and the ValidationErrors" in {
+
           val resourceName       = "xmls/CC315A-schemaInvalidSample-v11-2.xml"
-          val xml                = XML.load(ResourceUtils.url(resourceName))
+          val xml                = XML.withSAXParser(saxParser).load(ResourceUtils.url(resourceName))
           val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
           validator.validate(SchemaTypeE315, rawXml) shouldBe SchemaValidationResult.Invalid(
@@ -178,8 +196,9 @@ class SchemaValidatorSpec extends AnyWordSpec with Inside {
 
       "passed valid E313" must {
         "return Invalid containing the xml and the ValidationErrors" in {
+
           val resourceName       = "xmls/CC313A-schemaValidSample-v11-2.xml"
-          val xml                = XML.load(ResourceUtils.url(resourceName))
+          val xml                = XML.withSAXParser(saxParser).load(ResourceUtils.url(resourceName))
           val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
           validator.validate(SchemaTypeE315, rawXml) shouldBe SchemaValidationResult.Invalid(
@@ -199,8 +218,9 @@ class SchemaValidatorSpec extends AnyWordSpec with Inside {
 
       "passed a declaration with an envelope and body" must {
         "return Invalid containing the xml and the ValidationErrors" in {
+
           val resourceName       = "xmls/CC315A-schemaValidSampleWithEnvelope-v11-2.xml"
-          val xml                = XML.load(ResourceUtils.url(resourceName))
+          val xml                = XML.withSAXParser(saxParser).load(ResourceUtils.url(resourceName))
           val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
           validator.validate(SchemaTypeE315, rawXml) shouldBe SchemaValidationResult.Invalid(

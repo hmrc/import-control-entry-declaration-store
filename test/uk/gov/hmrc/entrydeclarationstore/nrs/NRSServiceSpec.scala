@@ -16,12 +16,11 @@
 
 package uk.gov.hmrc.entrydeclarationstore.nrs
 
-import com.kenshoo.play.metrics.Metrics
+import com.codahale.metrics.MetricRegistry
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
-import uk.gov.hmrc.entrydeclarationstore.utils.MockMetrics
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -29,7 +28,7 @@ import scala.concurrent.Future
 
 class NRSServiceSpec extends AnyWordSpec with MockNRSConnector with NRSMetadataTestData with ScalaFutures {
 
-  val metrics: Metrics = new MockMetrics
+  val metrics: MetricRegistry = new MetricRegistry()
 
   val service = new NRSService(mockNRSConnector, metrics)
 

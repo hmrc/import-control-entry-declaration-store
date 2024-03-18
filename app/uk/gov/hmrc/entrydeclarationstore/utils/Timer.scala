@@ -17,7 +17,6 @@
 package uk.gov.hmrc.entrydeclarationstore.utils
 
 import com.codahale.metrics._
-import com.kenshoo.play.metrics.Metrics
 import play.api.Logging
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -28,7 +27,7 @@ trait Timer {
   val defaultTimerGroup: String = "timer"
   type Metric = String
 
-  val metrics: Metrics
+  val metrics: MetricRegistry
   def timeFuture[A](name: String, metric: Metric, timerGroup: String = defaultTimerGroup)(block: => Future[A])(
     implicit ec: ExecutionContext): Future[A] = {
     val timer = startTimer(metric, timerGroup)
@@ -42,7 +41,7 @@ trait Timer {
   }
 
   protected def startTimer(metric: Metric, timerGroup: String): Timer.Context =
-    metrics.defaultRegistry.timer(s"$metric-$timerGroup").time()
+    metrics.timer(s"$metric-$timerGroup").time()
 
   protected def stopAndLog[A](name: String, timer: Timer.Context): Unit = {
     val timeMillis = timer.stop() / 1000000

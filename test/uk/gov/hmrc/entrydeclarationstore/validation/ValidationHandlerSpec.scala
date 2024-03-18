@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.entrydeclarationstore.validation
 
-import com.kenshoo.play.metrics.Metrics
+import com.codahale.metrics.MetricRegistry
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, RawPayload}
-import uk.gov.hmrc.entrydeclarationstore.utils.{MockMetrics, XmlFormatConfig}
+import uk.gov.hmrc.entrydeclarationstore.utils.XmlFormatConfig
 import uk.gov.hmrc.entrydeclarationstore.validation.business.MockRuleValidator
 import uk.gov.hmrc.entrydeclarationstore.validation.schema.SchemaValidationResult._
 import uk.gov.hmrc.entrydeclarationstore.validation.schema._
@@ -31,7 +31,7 @@ import scala.xml.NodeSeq
 
 class ValidationHandlerSpec extends AnyWordSpec with MockSchemaValidator with MockRuleValidator with MockAppConfig {
 
-  val mockedMetrics: Metrics      = new MockMetrics
+  val metrics: MetricRegistry = new MetricRegistry()
   implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
 
   implicit val xmlFormatConfig: XmlFormatConfig = XmlFormatConfig(responseMaxErrors = 100)
@@ -43,7 +43,7 @@ class ValidationHandlerSpec extends AnyWordSpec with MockSchemaValidator with Mo
     mockRuleValidator,
     mockRuleValidator,
     mockRuleValidator,
-    mockedMetrics,
+    metrics,
     mockAppConfig
   )
 

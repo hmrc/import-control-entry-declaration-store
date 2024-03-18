@@ -16,15 +16,17 @@
 
 package uk.gov.hmrc.entrydeclarationstore.autoreplay
 
-import akka.actor.Scheduler
+import org.apache.pekko.actor.Scheduler
+
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.Duration
 import play.api.Logging
 import uk.gov.hmrc.mongo.lock._
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.repositories.LockRepositoryProvider
+
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Failure
 
 @Singleton

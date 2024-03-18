@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.utils
 
-import com.kenshoo.play.metrics.Metrics
+import com.codahale.metrics.MetricRegistry
 import org.scalatest.matchers.should.Matchers.{be, convertToAnyShouldWrapper}
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Logging
@@ -26,7 +26,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class TimerSpec extends AnyWordSpec with Timer with Logging {
-  val metrics: Metrics = new MockMetrics
+  val metrics: MetricRegistry = new MetricRegistry()
 
   var timeMs: Long = _
 

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
-import com.kenshoo.play.metrics.Metrics
+import com.codahale.metrics.MetricRegistry
 import play.api.Logging
 import uk.gov.hmrc.entrydeclarationstore.models.{AcceptanceEnrichment, AmendmentRejectionEnrichment, DeclarationRejectionEnrichment}
 import uk.gov.hmrc.entrydeclarationstore.repositories.EntryDeclarationRepo
@@ -25,7 +25,7 @@ import uk.gov.hmrc.entrydeclarationstore.utils.Timer
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class EnrichmentService @Inject()(entryDeclarationRepo: EntryDeclarationRepo, override val metrics: Metrics)(
+class EnrichmentService @Inject()(entryDeclarationRepo: EntryDeclarationRepo, override val metrics: MetricRegistry)(
   implicit ec: ExecutionContext)
     extends Timer
     with Logging {

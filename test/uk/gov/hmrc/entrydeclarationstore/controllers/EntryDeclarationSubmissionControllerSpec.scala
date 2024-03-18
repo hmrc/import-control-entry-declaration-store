@@ -16,10 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
-import java.time.{Clock, Instant, ZoneOffset}
-
-import akka.util.ByteString
-import com.kenshoo.play.metrics.Metrics
+import com.codahale.metrics.MetricRegistry
+import org.apache.pekko.util.ByteString
 import org.scalatest.matchers.should.Matchers.{contain, convertToAnyShouldWrapper}
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.MimeTypes
@@ -28,17 +26,18 @@ import play.api.mvc.{Request, Result}
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
-import uk.gov.hmrc.entrydeclarationstore.models.json.{EntrySummaryDeclaration, Goods, InputParameters, Itinerary, Metadata, MockDeclarationToJsonConverter, OfficeOfFirstEntry, Parties, Trader}
-import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, MessageType, RawPayload, ServerError, SuccessResponse}
+import uk.gov.hmrc.entrydeclarationstore.models.json._
+import uk.gov.hmrc.entrydeclarationstore.models._
 import uk.gov.hmrc.entrydeclarationstore.nrs._
 import uk.gov.hmrc.entrydeclarationstore.reporting._
 import uk.gov.hmrc.entrydeclarationstore.services._
 import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils._
 import uk.gov.hmrc.entrydeclarationstore.utils.SubmissionUtils.extractSubmissionHandledDetails
-import uk.gov.hmrc.entrydeclarationstore.utils.{MockIdGenerator, MockMetrics, XmlFormatConfig, XmlFormats}
-import uk.gov.hmrc.entrydeclarationstore.validation.{EORIMismatchError, MRNMismatchError, MockValidationHandler, ValidationError, ValidationErrors}
+import uk.gov.hmrc.entrydeclarationstore.utils.{MockIdGenerator, XmlFormatConfig, XmlFormats}
+import uk.gov.hmrc.entrydeclarationstore.validation._
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.{Clock, Instant, ZoneOffset}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, Promise}
 import scala.xml.{XML => _, _}
@@ -59,7 +58,7 @@ class EntryDeclarationSubmissionControllerSpec
   val submissionId           = "3216783621-123873821-12332"
   val mrn                    = "mrn"
   val clientInfo: ClientInfo = ClientInfo(ClientType.CSP, None, None)
-  implicit val hc = HeaderCarrier()
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   implicit val xmlFormatConfig: XmlFormatConfig = XmlFormatConfig(responseMaxErrors = 100)
 
@@ -94,7 +93,7 @@ class EntryDeclarationSubmissionControllerSpec
 
   private def fakeRequest(xml: NodeSeq) = FakeRequest().withBody(ByteString.fromString(xml.toString))
 
-  val mockedMetrics: Metrics = new MockMetrics
+  val mockedMetrics: MetricRegistry = new MetricRegistry()
 
   val now: Instant = Instant.now
   val clock: Clock = Clock.fixed(now, ZoneOffset.UTC)

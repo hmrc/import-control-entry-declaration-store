@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationstore.connectors
 
-import akka.actor.Scheduler
-import akka.pattern.CircuitBreakerOpenException
+import org.apache.pekko.actor.Scheduler
+import org.apache.pekko.pattern.CircuitBreakerOpenException
 import play.api.http.Status
 import play.api.http.Status._
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig

@@ -70,8 +70,8 @@ class ReplayLockISpec
       }
 
       "allow lock" in new Scenario {
-        lock.lock(replayId).futureValue shouldBe true
-        isLockedTo(replayId)            shouldBe true
+        lock.lock(replayId).futureValue.isDefined shouldBe true
+        isLockedTo(replayId)                      shouldBe true
       }
 
       "ignore renew" in new Scenario {
@@ -92,7 +92,7 @@ class ReplayLockISpec
       }
 
       "not allow lock again" in new Scenario {
-        lock.lock(replayId).futureValue shouldBe false
+        lock.lock(replayId).futureValue shouldBe None
         isLockedTo(replayId)            shouldBe true
       }
 

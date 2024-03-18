@@ -17,14 +17,14 @@
 package uk.gov.hmrc.entrydeclarationstore.validation
 
 import cats.implicits._
-import com.kenshoo.play.metrics.Metrics
+import com.codahale.metrics.MetricRegistry
 import play.api.Logging
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, RawPayload}
 import uk.gov.hmrc.entrydeclarationstore.utils.{Timer, XmlFormatConfig}
 import uk.gov.hmrc.entrydeclarationstore.validation.business.RuleValidator
-import uk.gov.hmrc.entrydeclarationstore.validation.schema.{SchemaTypeE313, SchemaTypeE315, SchemaTypeE313New, SchemaTypeE315New, SchemaValidationResult, SchemaValidator}
+import uk.gov.hmrc.entrydeclarationstore.validation.schema._
 
 import javax.inject.{Inject, Named}
 import scala.xml.NodeSeq
@@ -40,7 +40,7 @@ class ValidationHandlerImpl @Inject()(
   @Named("ruleValidator313New") ruleValidator313New: RuleValidator,
   @Named("ruleValidator315") ruleValidator315: RuleValidator,
   @Named("ruleValidator315New") ruleValidator315New: RuleValidator,
-  override val metrics: Metrics,
+  override val metrics: MetricRegistry,
   appConfig: AppConfig)
     extends ValidationHandler
     with Timer

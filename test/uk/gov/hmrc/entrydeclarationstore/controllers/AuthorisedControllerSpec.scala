@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
-import com.kenshoo.play.metrics.Metrics
+import com.codahale.metrics.MetricRegistry
 import org.scalamock.matchers.ArgCapture.CaptureOne
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
@@ -31,7 +31,7 @@ import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.entrydeclarationstore.nrs.NRSMetadataTestData
 import uk.gov.hmrc.entrydeclarationstore.reporting.{ClientInfo, ClientType}
 import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, MockAuthService, UserDetails}
-import uk.gov.hmrc.entrydeclarationstore.utils.{MockMetrics, Timer}
+import uk.gov.hmrc.entrydeclarationstore.utils.Timer
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 
 import scala.concurrent.Future
@@ -69,7 +69,7 @@ class AuthorisedControllerSpec
         Future.successful(Ok(Json.obj()))
       }
 
-      override val metrics: Metrics = new MockMetrics
+      override val metrics: MetricRegistry = new MetricRegistry()
     }
 
     lazy val controller = new TestController()

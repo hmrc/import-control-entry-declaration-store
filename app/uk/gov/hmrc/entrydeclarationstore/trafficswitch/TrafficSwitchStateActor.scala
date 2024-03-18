@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.entrydeclarationstore.trafficswitch
 
-import akka.actor.{Actor, ActorRef, ActorRefFactory, Props, Status, Timers}
-import akka.event.LoggingReceive
-import akka.pattern.pipe
+import org.apache.pekko.actor.{Actor, ActorRef, ActorRefFactory, Props, Status, Timers}
+import org.apache.pekko.event.LoggingReceive
+import org.apache.pekko.pattern.pipe
 import play.api.Logging
 import uk.gov.hmrc.entrydeclarationstore.models.TrafficSwitchState
 import uk.gov.hmrc.entrydeclarationstore.services.TrafficSwitchService

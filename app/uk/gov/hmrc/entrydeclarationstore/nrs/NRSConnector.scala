@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationstore.nrs
 
-import akka.actor.Scheduler
+import org.apache.pekko.actor.Scheduler
 import play.api.http.Status
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}

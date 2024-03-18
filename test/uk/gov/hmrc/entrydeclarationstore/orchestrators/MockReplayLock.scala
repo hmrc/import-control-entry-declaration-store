@@ -18,6 +18,7 @@ package uk.gov.hmrc.entrydeclarationstore.orchestrators
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
+import uk.gov.hmrc.mongo.lock.Lock
 
 import scala.concurrent.Future
 
@@ -25,7 +26,7 @@ trait MockReplayLock extends MockFactory {
   val mockReplayLock: ReplayLock = mock[ReplayLock]
 
   object MockReplayLock {
-    def lock(replayId: String): CallHandler[Future[Boolean]] =
+    def lock(replayId: String): CallHandler[Future[Option[Lock]]] =
       (mockReplayLock.lock(_: String)).expects(replayId)
 
     def renew(replayId: String): CallHandler[Future[Unit]] =
