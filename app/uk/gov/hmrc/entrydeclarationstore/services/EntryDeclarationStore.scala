@@ -20,7 +20,7 @@ import cats.data.EitherT
 import cats.implicits._
 import com.codahale.metrics.MetricRegistry
 import play.api.Logging
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.JsValue
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, EisConnector}
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
