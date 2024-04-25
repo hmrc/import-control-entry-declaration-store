@@ -779,10 +779,8 @@ components:
       required:
       - RefNumHEA4
       - TraModAtBorHEA76
-      - TotNumOfIteHEA305
       - TotNumOfPacHEA306
       - TotGroMasHEA307
-      - DecPlaHEA394
       - ComRefNumHEA
       - ConRefNumHEA
       - PlaLoaGOOITE334
@@ -882,9 +880,7 @@ components:
       - DocNumHEA5
       - TraModAtBorHEA76
       - IdeOfMeaOfTraCroHEA85
-      - TotNumOfIteHEA305
       - TotNumOfPacHEA306
-      - AmdPlaHEA598
       - SpeCirIndHEA1
       - TraChaMetOfPayHEA1
       - ComRefNumHEA
