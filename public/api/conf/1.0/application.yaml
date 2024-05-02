@@ -432,12 +432,6 @@ components:
         prefix: ie
         attribute: false
         wrapped: false
-      xml:
-        name: CC313A
-        namespace: http://ics.dgtaxud.ec/CC313A
-        prefix: ie
-        attribute: false
-        wrapped: false
     CC315A:
       title: CC315A
       required:
