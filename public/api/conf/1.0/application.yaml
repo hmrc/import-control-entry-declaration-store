@@ -55,6 +55,10 @@ paths:
             examples:
               cc315RequestExample:
                 $ref: '#/components/examples/cc315RequestExample'
+              cc315FullRequestExample:
+                $ref: '#/components/examples/cc315FullRequestExample'
+              cc315ReducedRequestExample:
+                $ref: '#/components/examples/cc315ReducedRequestExample'
         required: true
       responses:
         '200':
@@ -145,6 +149,8 @@ paths:
             examples:
               cc313RequestExample:
                 $ref: '#/components/examples/cc313RequestExample'
+              cc313ReducedRequestExample:
+                $ref: '#/components/examples/cc313ReducedRequestExample'
         required: true
       responses:
         '200':
@@ -262,11 +268,23 @@ components:
     cc315RequestExample:
       description: |
         This is an example of a CC315A request:
+      externalValue: './examples/validSubmission.xml'
+    cc315FullRequestExample:
+      description: |
+        This is a full example of a CC315A request:
       externalValue: './examples/CC315A_full.xml'
+    cc315ReducedRequestExample:
+      description: |
+        This is a reduced example of a CC315A request:
+      externalValue: './examples/CC315A_reduced.xml'
     cc313RequestExample:
       description: |
         This is an example of a CC313A request:
       externalValue: './examples/validAmendment.xml'
+    cc313ReducedRequestExample:
+      description: |
+        This is a reduced example of a CC313A request:
+      externalValue: './examples/CC313A_reduced.xml'
   schemas:
     forbiddenResponse:
       title: Forbidden
