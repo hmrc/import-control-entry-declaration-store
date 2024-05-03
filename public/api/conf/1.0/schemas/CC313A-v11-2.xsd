@@ -216,7 +216,7 @@
           </xs:documentation>
         </xs:annotation>
       </xs:element>
-      <xs:element name="TotNumOfIteHEA305" type="simple:Numeric_Max5">
+      <xs:element minOccurs="0" name="TotNumOfIteHEA305" type="simple:Numeric_Max5">
         <xs:annotation>
           <xs:documentation>
             <doc:description value="Total number of items"/>
@@ -240,7 +240,7 @@
           </xs:documentation>
         </xs:annotation>
       </xs:element>
-      <xs:element name="AmdPlaHEA598" type="simple:Alphanumeric_Max35">
+      <xs:element minOccurs="0" name="AmdPlaHEA598" type="simple:Alphanumeric_Max35">
         <xs:annotation>
           <xs:documentation>
             <doc:description value="Amendment place"/>
