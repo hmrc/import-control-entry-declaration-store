@@ -29,7 +29,7 @@ paths:
         description: |
           The body of the request must conform to the CC315A schema:
           
-          [http://ics.dgtaxud.ec/CC315A](https://developer.service.hmrc.gov.uk/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/CC315A-v11-2.xsd).
+          [http://ics.dgtaxud.ec/CC315A](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/CC315A-v11-2.xsd).
           
           This schema imports a number of other schemas:
         
