@@ -720,6 +720,27 @@ components:
             namespace: ''
             attribute: false
             wrapped: false
+        IdeOfMeaOfTraCroHEA85:
+          type: string
+          xml:
+            name: IdeOfMeaOfTraCroHEA85
+            namespace: ''
+            attribute: false
+            wrapped: false
+        IdeOfMeaOfTraCroHEA85LNG:
+          type: string
+          xml:
+            name: IdeOfMeaOfTraCroHEA85LNG
+            namespace: ''
+            attribute: false
+            wrapped: false
+        NatOfMeaOfTraCroHEA87:
+          type: string
+          xml:
+            name: NatOfMeaOfTraCroHEA87
+            namespace: ''
+            attribute: false
+            wrapped: false
         TotNumOfIteHEA305:
           type: integer
           format: int32
@@ -750,6 +771,27 @@ components:
             namespace: ''
             attribute: false
             wrapped: false
+        DecPlaHEA394LNG:
+          type: string
+          xml:
+            name: DecPlaHEA394LNG
+            namespace: ''
+            attribute: false
+            wrapped: false
+        SpeCirIndHEA1:
+          type: string
+          xml:
+            name: SpeCirIndHEA1
+            namespace: ''
+            attribute: false
+            wrapped: false
+        TraChaMetOfPayHEA1:
+          type: string
+          xml:
+            name: TraChaMetOfPayHEA1
+            namespace: ''
+            attribute: false
+            wrapped: false
         ComRefNumHEA:
           type: string
           xml:
@@ -771,10 +813,24 @@ components:
             namespace: ''
             attribute: false
             wrapped: false
+        PlaLoaGOOITE334LNG:
+          type: string
+          xml:
+            name: PlaLoaGOOITE334LNG
+            namespace: ''
+            attribute: false
+            wrapped: false
         PlaUnlGOOITE334:
           type: string
           xml:
             name: PlaUnlGOOITE334
+            namespace: ''
+            attribute: false
+            wrapped: false
+        CodPlUnHEA357LNG:
+          type: string
+          xml:
+            name: CodPlUnHEA357LNG
             namespace: ''
             attribute: false
             wrapped: false
@@ -796,14 +852,11 @@ components:
       required:
       - DocNumHEA5
       - TraModAtBorHEA76
-      - IdeOfMeaOfTraCroHEA85
-      - TraChaMetOfPayHEA1
+      - TotGroMasHEA307
       - ComRefNumHEA
       - ConRefNumHEA
       - PlaLoaGOOITE334
-      - PlaLoaGOOITE334LNG
       - PlaUnlGOOITE334
-      - CodPlUnHEA357LNG
       - DatTimAmeHEA113
       type: object
       properties:
@@ -856,6 +909,13 @@ components:
           format: int32
           xml:
             name: TotNumOfPacHEA306
+            namespace: ''
+            attribute: false
+            wrapped: false
+        TotGroMasHEA307:
+          type: number
+          xml:
+            name: TotGroMasHEA307
             namespace: ''
             attribute: false
             wrapped: false
