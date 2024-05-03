@@ -123,7 +123,7 @@ paths:
       requestBody:
         description: |
             The body of the request must conform to the CC313A schema:
-            [http://ics.dgtaxud.ec/CC313A](https://developer.service.hmrc.gov.uk/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/CC313A-v11-2.xsd).
+            [http://ics.dgtaxud.ec/CC313A](/api-documentation/docs/api/download/import-control-entry-declaration-store/1.0/schemas/CC313A-v11-2.xsd).
             
             This schema imports a number of other schemas:
 
