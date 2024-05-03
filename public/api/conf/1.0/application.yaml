@@ -926,6 +926,13 @@ components:
             namespace: ''
             attribute: false
             wrapped: false
+        AmdPlaHEA598LNG:
+          type: string
+          xml:
+            name: AmdPlaHEA598LNG
+            namespace: ''
+            attribute: false
+            wrapped: false
         SpeCirIndHEA1:
           type: string
           xml:
