@@ -2,7 +2,7 @@ import play.core.PlayVersion.current
 import sbt._
 
 object AppDependencies {
-  val bootstrapVersion = "8.5.0"
+  val bootstrapVersion = "9.0.0"
   val pekkoVersion = "1.0.2"
   val mongoVersion = "1.8.0"
 
