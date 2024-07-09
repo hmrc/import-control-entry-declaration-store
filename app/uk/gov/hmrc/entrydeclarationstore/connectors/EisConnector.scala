@@ -20,6 +20,7 @@ import org.apache.pekko.actor.Scheduler
 import org.apache.pekko.pattern.CircuitBreakerOpenException
 import play.api.http.Status
 import play.api.http.Status._
+import play.api.libs.json.Json
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.helpers.HeaderGenerator
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
@@ -27,7 +28,8 @@ import uk.gov.hmrc.entrydeclarationstore.models.EntryDeclarationMetadata
 import uk.gov.hmrc.entrydeclarationstore.trafficswitch.TrafficSwitch
 import uk.gov.hmrc.entrydeclarationstore.utils.{Delayer, PagerDutyLogger, Retrying}
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future, TimeoutException}
@@ -42,11 +44,11 @@ trait EisConnector {
 
 @Singleton
 class EisConnectorImpl @Inject()(
-  client: HttpClient,
-  trafficSwitch: TrafficSwitch,
-  appConfig: AppConfig,
-  pagerDutyLogger: PagerDutyLogger,
-  headerGenerator: HeaderGenerator)(implicit val ec: ExecutionContext, val scheduler: Scheduler)
+                                  client: HttpClientV2,
+                                  trafficSwitch: TrafficSwitch,
+                                  appConfig: AppConfig,
+                                  pagerDutyLogger: PagerDutyLogger,
+                                  headerGenerator: HeaderGenerator)(implicit val ec: ExecutionContext, val scheduler: Scheduler)
     extends EisConnector
     with Retrying
     with Delayer {
@@ -74,15 +76,13 @@ class EisConnectorImpl @Inject()(
   private def putAmendment(metadata: EntryDeclarationMetadata, headers: Seq[(String, String)])(
     implicit lc: LoggingContext): Future[HttpResponse] = {
     ContextLogger.info(s"sending PUT request to $amendUrl")
-    client
-      .PUT[EntryDeclarationMetadata, HttpResponse](amendUrl, metadata, headers)
+    client.put(url"$amendUrl").withBody(Json.toJson(metadata)).setHeader(headers : _*).execute[HttpResponse]
   }
 
   private def postNew(metadata: EntryDeclarationMetadata, headers: Seq[(String, String)])(
     implicit lc: LoggingContext): Future[HttpResponse] = {
     ContextLogger.info(s"sending POST request to $newUrl")
-    client
-      .POST[EntryDeclarationMetadata, HttpResponse](newUrl, metadata, headers)
+    client.post(url"$newUrl").withBody(Json.toJson(metadata)).setHeader(headers: _*).execute[HttpResponse]
   }
 
   private[connectors] def submit(bypassTrafficSwitch: Boolean)(code: => Future[HttpResponse])(

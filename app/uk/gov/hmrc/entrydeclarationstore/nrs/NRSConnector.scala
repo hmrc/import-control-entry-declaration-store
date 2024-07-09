@@ -22,12 +22,14 @@ import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationstore.utils.{Delayer, Retrying}
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 import scala.util.{Success, Try}
+import play.api.libs.json.Json
 
 trait NRSConnector {
   def submit(nrsSubmission: NRSSubmission)(
@@ -36,7 +38,7 @@ trait NRSConnector {
 }
 
 @Singleton
-class NRSConnectorImpl @Inject()(httpClient: HttpClient, appConfig: AppConfig)(
+class NRSConnectorImpl @Inject()(httpClient: HttpClientV2, appConfig: AppConfig)(
   implicit val scheduler: Scheduler,
   val ec: ExecutionContext)
     extends NRSConnector
@@ -59,8 +61,8 @@ class NRSConnectorImpl @Inject()(httpClient: HttpClient, appConfig: AppConfig)(
       ContextLogger.info(s"Attempt $attemptNumber NRS submission: sending POST request to $url")
 
       httpClient
-        .POST[NRSSubmission, HttpResponse](url, nrsSubmission, Seq("X-API-Key" -> apiKey))
-        .map { response =>
+        .post(url"$url").withBody(Json.toJson(nrsSubmission)).setHeader("X-API-Key" -> apiKey).execute[HttpResponse]
+          .map { response =>
           val status = response.status
 
           if (Status.isSuccessful(status)) {

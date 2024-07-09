@@ -42,7 +42,8 @@ import uk.gov.hmrc.entrydeclarationstore.models.{EntryDeclarationMetadata, Messa
 import uk.gov.hmrc.entrydeclarationstore.services.MockTrafficSwitchService
 import uk.gov.hmrc.entrydeclarationstore.trafficswitch.{TrafficSwitch, TrafficSwitchActor, TrafficSwitchConfig}
 import uk.gov.hmrc.entrydeclarationstore.utils.MockPagerDutyLogger
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.HeaderCarrier
 
 import java.io.IOException
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -73,7 +74,7 @@ class EisConnectorSpec
     )
     .build()
 
-  val httpClient: HttpClient            = inject[HttpClient]
+  val httpClient: HttpClientV2            = inject[HttpClientV2]
   implicit val actorSystem: ActorSystem = inject[ActorSystem]
   implicit val scheduler: Scheduler     = actorSystem.scheduler
 
