@@ -62,10 +62,6 @@ class DIModule extends AbstractModule {
   }
 
   @Provides
-  def akkaScheduler(actorSystem: ActorSystem): Scheduler =
-    actorSystem.scheduler
-
-  @Provides
   def eisTrafficSwitchConfig(appConfig: AppConfig): TrafficSwitchConfig =
     appConfig.eisTrafficSwitchConfig
 
