@@ -62,6 +62,10 @@ class DIModule extends AbstractModule {
   }
 
   @Provides
+  def pekkoScheduler(actorSystem: ActorSystem): Scheduler =
+    actorSystem.scheduler
+
+  @Provides
   def eisTrafficSwitchConfig(appConfig: AppConfig): TrafficSwitchConfig =
     appConfig.eisTrafficSwitchConfig
 
