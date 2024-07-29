@@ -62,7 +62,7 @@ class DIModule extends AbstractModule {
   }
 
   @Provides
-  def akkaScheduler(actorSystem: ActorSystem): Scheduler =
+  def pekkoScheduler(actorSystem: ActorSystem): Scheduler =
     actorSystem.scheduler
 
   @Provides

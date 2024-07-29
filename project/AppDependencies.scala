@@ -23,7 +23,6 @@ object AppDependencies {
     "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-30"     % mongoVersion,
     "org.scalamock"          %% "scalamock"                   % "5.2.0",
     "org.scalacheck"         %% "scalacheck"                  % "1.18.0",
-    "org.wiremock"           %  "wiremock"                    % "3.8.0",
     "org.mockito"            %  "mockito-core"                % "5.12.0",
     "org.mockito"            %% "mockito-scala"               % "1.17.37",
     "com.github.pjfanning"   %% "pekko-mock-scheduler"        % "0.6.0",
