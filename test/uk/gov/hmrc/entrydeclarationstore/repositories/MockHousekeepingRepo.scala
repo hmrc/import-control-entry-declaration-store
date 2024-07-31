@@ -18,11 +18,12 @@ package uk.gov.hmrc.entrydeclarationstore.repositories
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 import uk.gov.hmrc.entrydeclarationstore.models.HousekeepingStatus
 
 import scala.concurrent.Future
 
-trait MockHousekeepingRepo extends MockFactory {
+trait MockHousekeepingRepo extends TestSuite with MockFactory {
   val mockHousekeepingRepo: HousekeepingRepo = mock[HousekeepingRepo]
 
   object MockHousekeepingRepo {

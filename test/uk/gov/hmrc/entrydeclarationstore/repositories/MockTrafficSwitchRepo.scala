@@ -18,11 +18,12 @@ package uk.gov.hmrc.entrydeclarationstore.repositories
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 import uk.gov.hmrc.entrydeclarationstore.models.{TrafficSwitchState, TrafficSwitchStatus}
 
 import scala.concurrent.Future
 
-trait MockTrafficSwitchRepo extends MockFactory {
+trait MockTrafficSwitchRepo extends TestSuite with MockFactory {
   val mockTrafficSwitchRepo: TrafficSwitchRepo = mock[TrafficSwitchRepo]
 
   object MockTrafficSwitchRepo {

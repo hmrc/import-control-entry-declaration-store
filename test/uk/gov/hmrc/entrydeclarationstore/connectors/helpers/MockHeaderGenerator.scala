@@ -18,9 +18,10 @@ package uk.gov.hmrc.entrydeclarationstore.connectors.helpers
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 import uk.gov.hmrc.http.HeaderCarrier
 
-trait MockHeaderGenerator extends MockFactory {
+trait MockHeaderGenerator extends TestSuite with MockFactory {
   val mockHeaderGenerator: HeaderGenerator = mock[HeaderGenerator]
 
   object MockHeaderGenerator {

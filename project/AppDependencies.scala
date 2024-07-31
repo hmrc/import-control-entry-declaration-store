@@ -2,9 +2,9 @@ import play.core.PlayVersion.current
 import sbt._
 
 object AppDependencies {
-  val bootstrapVersion = "9.0.0"
+  val bootstrapVersion = "9.1.0"
   val pekkoVersion = "1.0.3"
-  val mongoVersion = "2.1.0"
+  val mongoVersion = "2.2.0"
 
   val compile: Seq[ModuleID] = Seq(
     "com.github.java-json-tools"   %  "json-schema-validator"     % "2.2.14",
@@ -21,7 +21,7 @@ object AppDependencies {
   val test: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"            %% "bootstrap-test-play-30"      % bootstrapVersion,
     "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-30"     % mongoVersion,
-    "org.scalamock"          %% "scalamock"                   % "5.2.0",
+    "org.scalamock"          %% "scalamock"                   % "6.0.0",
     "org.scalacheck"         %% "scalacheck"                  % "1.18.0",
     "org.mockito"            %  "mockito-core"                % "5.12.0",
     "org.mockito"            %% "mockito-scala"               % "1.17.37",
