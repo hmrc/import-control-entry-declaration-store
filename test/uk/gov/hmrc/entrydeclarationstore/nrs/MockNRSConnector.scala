@@ -18,12 +18,13 @@ package uk.gov.hmrc.entrydeclarationstore.nrs
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-trait MockNRSConnector extends MockFactory {
+trait MockNRSConnector extends TestSuite with MockFactory {
   val mockNRSConnector: NRSConnector = mock[NRSConnector]
 
   object MockNRSConnector {

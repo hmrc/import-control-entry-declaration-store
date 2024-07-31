@@ -18,13 +18,14 @@ package uk.gov.hmrc.entrydeclarationstore.reporting
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.Instant
 import scala.concurrent.Future
 
-trait MockReportSender extends MockFactory {
+trait MockReportSender extends TestSuite with MockFactory {
   val mockReportSender: ReportSender = mock[ReportSender]
 
   object MockReportSender {

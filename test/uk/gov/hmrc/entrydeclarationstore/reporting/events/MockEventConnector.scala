@@ -18,12 +18,13 @@ package uk.gov.hmrc.entrydeclarationstore.reporting.events
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-trait MockEventConnector extends MockFactory {
+trait MockEventConnector extends TestSuite with MockFactory {
   val mockEventConnector: EventConnector = mock[EventConnector]
 
   object MockEventConnector {

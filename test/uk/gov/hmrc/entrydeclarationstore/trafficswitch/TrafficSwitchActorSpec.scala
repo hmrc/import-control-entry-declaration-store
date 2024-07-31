@@ -64,7 +64,7 @@ class TrafficSwitchActorSpec
       // Should now trip...
       trafficSwitchActor ! TrafficSwitchActor.MakeCall(throwException, exceptionAsFailure)
       inside(expectMsgType[Status.Failure]) {
-        case Status.Failure(e) => e shouldBe a[CircuitBreakerOpenException]
+        case Status.Failure(ex) => ex shouldBe a[CircuitBreakerOpenException]
       }
 
       stateProbe.expectMsg(TrafficSwitchStateActor.UpdateDatabaseToNotFlowing)
@@ -228,7 +228,7 @@ class TrafficSwitchActorSpec
         trafficSwitchActor ! TrafficSwitchActor.MakeCall(sayHi, exceptionAsFailure)
 
         inside(expectMsgType[Status.Failure]) {
-          case Status.Failure(e) => e shouldBe a[CircuitBreakerOpenException]
+          case Status.Failure(ex) => ex shouldBe a[CircuitBreakerOpenException]
         }
 
         trafficSwitchActor ! TrafficSwitchActor.GetInternalState
@@ -241,7 +241,7 @@ class TrafficSwitchActorSpec
         trafficSwitchActor ! TrafficSwitchActor.MakeCall(sayHi, exceptionAsFailure)
 
         inside(expectMsgType[Status.Failure]) {
-          case Status.Failure(e) => e shouldBe a[CircuitBreakerOpenException]
+          case Status.Failure(ex) => ex shouldBe a[CircuitBreakerOpenException]
         }
 
         trafficSwitchActor ! TrafficSwitchActor.SetState(TrafficSwitchState.Flowing)

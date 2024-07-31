@@ -18,11 +18,12 @@ package uk.gov.hmrc.entrydeclarationstore.config
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 import uk.gov.hmrc.entrydeclarationstore.utils.XmlFormatConfig
 
 import scala.concurrent.duration.FiniteDuration
 
-trait MockAppConfig extends MockFactory {
+trait MockAppConfig extends TestSuite with MockFactory {
   val mockAppConfig: AppConfig = mock[AppConfig]
 
   object MockAppConfig {

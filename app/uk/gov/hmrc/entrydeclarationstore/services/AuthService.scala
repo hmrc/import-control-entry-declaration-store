@@ -139,12 +139,12 @@ class AuthService @Inject()(
       case affGroup ~ inId ~ exId ~ agCode ~ creds
             ~ confLevel ~ ni ~ saRef ~ nme ~ dob
             ~ eml ~ agInfo ~ groupId ~ credRole
-            ~ mdtpInfo ~ itmpName ~ itmpDob ~ itmpAddress ~ credStrength ~ enrolments ~ logins =>
+            ~ mdtpInfo ~ tmpName ~ itmpDob ~ tmpAddress ~ credStrength ~ enrolments ~ logins =>
         // @formatter:off
         Some(IdentityData(
           inId, exId, agCode, creds, confLevel, ni, saRef, nme, dob,
-          eml, agInfo, groupId, credRole, mdtpInfo, itmpName, itmpDob,
-          itmpAddress, affGroup, credStrength, enrolments, logins
+          eml, agInfo, groupId, credRole, mdtpInfo, tmpName, itmpDob,
+          tmpAddress, affGroup, credStrength, enrolments, logins
         ))
       // @formatter:on
     }

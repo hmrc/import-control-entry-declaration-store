@@ -18,12 +18,13 @@ package uk.gov.hmrc.entrydeclarationstore.services
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 import uk.gov.hmrc.entrydeclarationstore.models.{Abort, BatchReplayResult, UndeliveredCounts}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-trait MockSubmissionReplayService extends MockFactory {
+trait MockSubmissionReplayService extends TestSuite with MockFactory {
   val mockSubmissionReplayService: SubmissionReplayService = mock[SubmissionReplayService]
 
   object MockSubmissionReplayService {

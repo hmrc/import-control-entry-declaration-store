@@ -18,13 +18,14 @@ package uk.gov.hmrc.entrydeclarationstore.models.json
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.ErrorWrapper
 
 import scala.xml.NodeSeq
 
-trait MockDeclarationToJsonConverter extends MockFactory {
+trait MockDeclarationToJsonConverter extends TestSuite with MockFactory {
   val mockDeclarationToJsonConverter: DeclarationToJsonConverter = mock[DeclarationToJsonConverter]
 
   object MockDeclarationToJsonConverter {
