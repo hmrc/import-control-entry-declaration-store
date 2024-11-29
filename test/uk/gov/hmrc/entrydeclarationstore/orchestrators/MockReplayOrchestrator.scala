@@ -17,14 +17,14 @@
 package uk.gov.hmrc.entrydeclarationstore.orchestrators
 
 import org.scalamock.handlers.CallHandler
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.TestSuite
+import org.scalamock.scalatest.AsyncMockFactory
+import org.scalatest.AsyncTestSuite
 import uk.gov.hmrc.entrydeclarationstore.models.{ReplayInitializationResult, ReplayResult, ReplayTrigger}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-trait MockReplayOrchestrator extends TestSuite with MockFactory {
+trait MockReplayOrchestrator extends AsyncTestSuite with AsyncMockFactory {
   val mockReplayOrchestrator: ReplayOrchestrator = mock[ReplayOrchestrator]
 
   object MockReplayOrchestrator {

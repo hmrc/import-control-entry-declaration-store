@@ -17,13 +17,13 @@
 package uk.gov.hmrc.entrydeclarationstore.services
 
 import org.scalamock.handlers.CallHandler
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.TestSuite
+import org.scalamock.scalatest.AsyncMockFactory
+import org.scalatest.AsyncTestSuite
 import uk.gov.hmrc.entrydeclarationstore.models.{AcceptanceEnrichment, AmendmentRejectionEnrichment, DeclarationRejectionEnrichment}
 
 import scala.concurrent.Future
 
-trait MockEnrichmentService extends TestSuite with MockFactory {
+trait MockEnrichmentService extends AsyncTestSuite with AsyncMockFactory {
   val mockEnrichmentService: EnrichmentService = mock[EnrichmentService]
 
   object MockEnrichmentService {

@@ -25,7 +25,6 @@ import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.entrydeclarationstore.models.AutoReplayStatus
 import uk.gov.hmrc.entrydeclarationstore.services.MockAutoReplayService
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class AutoReplayControllerSpec extends AnyWordSpec with MockAutoReplayService {

@@ -17,13 +17,13 @@
 package uk.gov.hmrc.entrydeclarationstore.validation.business
 
 import org.scalamock.handlers.CallHandler
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.TestSuite
+import org.scalamock.scalatest.AsyncMockFactory
+import org.scalatest.AsyncTestSuite
 import uk.gov.hmrc.entrydeclarationstore.validation.ValidationErrors
 
 import scala.xml.NodeSeq
 
-trait MockRuleValidator extends TestSuite with MockFactory {
+trait MockRuleValidator extends AsyncTestSuite with AsyncMockFactory {
   val mockRuleValidator: RuleValidator = mock[RuleValidator]
 
   case class MockRuleValidatorImpl(mockRuleValidator: RuleValidator) {

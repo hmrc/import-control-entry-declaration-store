@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.entrydeclarationstore.reporting
 
-import java.time.{Duration, Instant}
-
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
+
+import java.time.{Duration, Instant}
 
 class TrafficStartedSpec extends AnyWordSpec {
 

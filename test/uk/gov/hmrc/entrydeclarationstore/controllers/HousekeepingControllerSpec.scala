@@ -25,7 +25,6 @@ import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.entrydeclarationstore.models.HousekeepingStatus
 import uk.gov.hmrc.entrydeclarationstore.services.MockHousekeepingService
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class HousekeepingControllerSpec extends AnyWordSpec with MockHousekeepingService {

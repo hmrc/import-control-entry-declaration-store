@@ -25,7 +25,6 @@ import uk.gov.hmrc.entrydeclarationstore.models.{AcceptanceEnrichment, Amendment
 import uk.gov.hmrc.entrydeclarationstore.repositories.MockEntryDeclarationRepo
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class EnrichmentServiceSpec extends AnyWordSpec with MockEntryDeclarationRepo with ScalaFutures {

@@ -17,14 +17,14 @@
 package uk.gov.hmrc.entrydeclarationstore.nrs
 
 import org.scalamock.handlers.CallHandler
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.TestSuite
+import org.scalamock.scalatest.AsyncMockFactory
+import org.scalatest.AsyncTestSuite
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-trait MockNRSService extends TestSuite with MockFactory {
+trait MockNRSService extends AsyncTestSuite with AsyncMockFactory {
   val mockNRSService: NRSService = mock[NRSService]
 
   object MockNRSService {

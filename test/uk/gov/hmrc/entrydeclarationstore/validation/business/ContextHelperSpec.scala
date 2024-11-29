@@ -16,14 +16,13 @@
 
 package uk.gov.hmrc.entrydeclarationstore.validation.business
 
-import java.lang
-
 import groovy.lang.Closure
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.entrydeclarationstore.validation.business.Assert.CompilationContext
 import uk.gov.hmrc.entrydeclarationstore.validation.business.AssertEvaluator.ContextHelper
 
+import java.lang
 import scala.xml.Node
 
 class ContextHelperSpec extends AnyWordSpec {

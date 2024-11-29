@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.entrydeclarationstore.http
 
-import java.io.IOException
-
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -28,6 +26,8 @@ import play.api.test.Helpers.{GET, _}
 import play.api.test.{FakeRequest, Injecting}
 import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.entrydeclarationstore.housekeeping.HousekeepingScheduler
+
+import java.io.IOException
 
 class XmlOrJsonErrorHandlerSpec extends AnyWordSpec with GuiceOneAppPerSuite with Injecting {
 

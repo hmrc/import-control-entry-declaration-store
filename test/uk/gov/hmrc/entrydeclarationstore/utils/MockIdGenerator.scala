@@ -17,10 +17,10 @@
 package uk.gov.hmrc.entrydeclarationstore.utils
 
 import org.scalamock.handlers.CallHandler
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.TestSuite
+import org.scalamock.scalatest.AsyncMockFactory
+import org.scalatest.AsyncTestSuite
 
-trait MockIdGenerator extends TestSuite with MockFactory {
+trait MockIdGenerator extends AsyncTestSuite with AsyncMockFactory {
   val mockIdGenerator: IdGenerator = mock[IdGenerator]
 
   object MockIdGenerator {

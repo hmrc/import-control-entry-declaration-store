@@ -17,14 +17,14 @@
 package uk.gov.hmrc.entrydeclarationstore.services
 
 import org.scalamock.handlers.CallHandler
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.TestSuite
+import org.scalamock.scalatest.AsyncMockFactory
+import org.scalatest.AsyncTestSuite
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.entrydeclarationstore.models.SubmissionIdLookupResult
 
 import scala.concurrent.Future
 
-trait MockEntryDeclarationRetrievalService extends TestSuite with MockFactory {
+trait MockEntryDeclarationRetrievalService extends AsyncTestSuite with AsyncMockFactory {
   val mockEntryDeclarationRetrievalService: EntryDeclarationRetrievalService = mock[EntryDeclarationRetrievalService]
 
   object MockEntryDeclarationRetrievalService {

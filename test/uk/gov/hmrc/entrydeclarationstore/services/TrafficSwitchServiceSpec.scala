@@ -16,9 +16,6 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
-import java.time.temporal.ChronoUnit
-import java.time.{Duration, Instant}
-
 import org.scalamock.handlers.CallHandler
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
@@ -29,7 +26,8 @@ import uk.gov.hmrc.entrydeclarationstore.reporting.{MockReportSender, TrafficSta
 import uk.gov.hmrc.entrydeclarationstore.repositories.MockTrafficSwitchRepo
 import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import java.time.temporal.ChronoUnit
+import java.time.{Duration, Instant}
 import scala.concurrent.{Future, Promise}
 
 class TrafficSwitchServiceSpec extends AnyWordSpec with ScalaFutures with MockReportSender with MockTrafficSwitchRepo {

@@ -17,11 +17,11 @@
 package uk.gov.hmrc.entrydeclarationstore.utils
 
 import org.scalamock.handlers.CallHandler
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.TestSuite
+import org.scalamock.scalatest.AsyncMockFactory
+import org.scalatest.AsyncTestSuite
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 
-trait MockPagerDutyLogger extends TestSuite with MockFactory {
+trait MockPagerDutyLogger extends AsyncTestSuite with AsyncMockFactory {
   val mockPagerDutyLogger: PagerDutyLogger = stub[PagerDutyLogger]
 
   object MockPagerDutyLogger {
