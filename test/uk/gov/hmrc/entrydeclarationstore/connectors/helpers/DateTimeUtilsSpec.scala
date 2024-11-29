@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.entrydeclarationstore.connectors.helpers
 
-import java.time._
-import java.time.format.DateTimeFormatter
-import java.util.Locale
-
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.Inspectors
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+
+import java.time._
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 class DateTimeUtilsSpec extends AnyWordSpec with Matchers with Inspectors {
 

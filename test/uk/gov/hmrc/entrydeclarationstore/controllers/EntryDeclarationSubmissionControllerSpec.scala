@@ -26,8 +26,8 @@ import play.api.mvc.{Request, Result}
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
-import uk.gov.hmrc.entrydeclarationstore.models.json._
 import uk.gov.hmrc.entrydeclarationstore.models._
+import uk.gov.hmrc.entrydeclarationstore.models.json._
 import uk.gov.hmrc.entrydeclarationstore.nrs._
 import uk.gov.hmrc.entrydeclarationstore.reporting._
 import uk.gov.hmrc.entrydeclarationstore.services._
@@ -38,7 +38,6 @@ import uk.gov.hmrc.entrydeclarationstore.validation._
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.{Clock, Instant, ZoneOffset}
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, Promise}
 import scala.xml.{XML => _, _}
 

@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.entrydeclarationstore.nrs
 
-import java.time.LocalDate
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Headers
 import play.api.test.FakeRequest
@@ -24,7 +23,8 @@ import uk.gov.hmrc.auth.core.retrieve._
 import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, User}
 import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
 import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils._
-import java.time.Instant
+
+import java.time.{Instant, LocalDate}
 
 trait NRSMetadataTestData {
 
