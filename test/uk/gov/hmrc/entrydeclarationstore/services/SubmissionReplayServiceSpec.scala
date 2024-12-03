@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.entrydeclarationstore.services
 
+import java.io.IOException
+import java.time.{Clock, Instant, ZoneOffset}
+
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
@@ -26,8 +29,7 @@ import uk.gov.hmrc.entrydeclarationstore.reporting.{MockReportSender, Submission
 import uk.gov.hmrc.entrydeclarationstore.repositories.{MetadataLookupError, MockEntryDeclarationRepo}
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.io.IOException
-import java.time.{Clock, Instant, ZoneOffset}
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class SubmissionReplayServiceSpec

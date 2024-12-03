@@ -17,13 +17,13 @@
 package uk.gov.hmrc.entrydeclarationstore.services
 
 import org.scalamock.handlers.CallHandler
-import org.scalamock.scalatest.AsyncMockFactory
-import org.scalatest.AsyncTestSuite
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 import uk.gov.hmrc.entrydeclarationstore.models.{ReplayState, ReplayTrigger}
 
 import scala.concurrent.Future
 
-trait MockReplayStateRetrievalService extends AsyncTestSuite with AsyncMockFactory {
+trait MockReplayStateRetrievalService extends TestSuite with MockFactory {
   val mockReplayStateRetrievalService: ReplayStateRetrievalService = mock[ReplayStateRetrievalService]
 
   object MockReplayStateRetrievalService {

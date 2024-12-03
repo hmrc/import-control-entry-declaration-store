@@ -17,13 +17,13 @@
 package uk.gov.hmrc.entrydeclarationstore.services
 
 import org.scalamock.handlers.CallHandler
-import org.scalamock.scalatest.AsyncMockFactory
-import org.scalatest.AsyncTestSuite
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 import uk.gov.hmrc.entrydeclarationstore.models.{TrafficSwitchState, TrafficSwitchStatus}
 
 import scala.concurrent.Future
 
-trait MockTrafficSwitchService extends AsyncTestSuite with AsyncMockFactory {
+trait MockTrafficSwitchService extends TestSuite with MockFactory {
   val mockTrafficSwitchService: TrafficSwitchService = mock[TrafficSwitchService]
 
   object MockTrafficSwitchService {

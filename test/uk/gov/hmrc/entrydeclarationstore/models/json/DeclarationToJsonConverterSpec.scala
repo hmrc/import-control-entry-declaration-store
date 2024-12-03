@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationstore.models.json
 
+import java.time.Instant
+
 import org.scalatest.Inside
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
@@ -24,7 +26,6 @@ import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, ServerError}
 import uk.gov.hmrc.entrydeclarationstore.utils.ResourceUtils
 
-import java.time.Instant
 import scala.xml.{Elem, XML}
 
 class DeclarationToJsonConverterSpec extends AnyWordSpec with Inside {

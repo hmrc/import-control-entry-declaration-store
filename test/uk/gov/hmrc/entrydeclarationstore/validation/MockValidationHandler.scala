@@ -17,14 +17,14 @@
 package uk.gov.hmrc.entrydeclarationstore.validation
 
 import org.scalamock.handlers.CallHandler
-import org.scalamock.scalatest.AsyncMockFactory
-import org.scalatest.AsyncTestSuite
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, RawPayload}
 
 import scala.xml.NodeSeq
 
-trait MockValidationHandler extends AsyncTestSuite with AsyncMockFactory {
+trait MockValidationHandler extends TestSuite with MockFactory {
   val mockValidationHandler: ValidationHandler = mock[ValidationHandler]
 
   object MockValidationHandler {

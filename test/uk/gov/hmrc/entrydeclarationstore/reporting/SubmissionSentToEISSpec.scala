@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.entrydeclarationstore.reporting
 
+import java.time.Instant
+
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.entrydeclarationstore.connectors.EISSendFailure
 import uk.gov.hmrc.entrydeclarationstore.models.MessageType
-
-import java.time.Instant
 
 class SubmissionSentToEISSpec extends AnyWordSpec {
 

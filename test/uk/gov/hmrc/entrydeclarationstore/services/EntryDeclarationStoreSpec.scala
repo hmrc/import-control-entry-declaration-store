@@ -35,6 +35,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import java.io.IOException
 import java.time.{Clock, Instant, ZoneOffset}
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, Promise}
 import scala.util.control.NoStackTrace
 import scala.xml.NodeSeq

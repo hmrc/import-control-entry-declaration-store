@@ -26,6 +26,7 @@ import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.entrydeclarationstore.models.{AcceptanceEnrichment, AmendmentRejectionEnrichment, DeclarationRejectionEnrichment}
 import uk.gov.hmrc.entrydeclarationstore.services.MockEnrichmentService
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class EnrichmentControllerSpec extends AnyWordSpec with MockEnrichmentService {

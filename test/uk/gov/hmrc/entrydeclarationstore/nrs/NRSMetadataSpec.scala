@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.entrydeclarationstore.nrs
 
+import java.time.Instant
+
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
 import play.api.mvc.Headers
 import play.api.test.FakeRequest
-
-import java.time.Instant
 
 class NRSMetadataSpec extends AnyWordSpec with NRSMetadataTestData {
   "NRSMetadata" must {
