@@ -17,13 +17,12 @@
 package uk.gov.hmrc.entrydeclarationstore.orchestrators
 
 import org.scalamock.handlers.CallHandler
-import org.scalamock.scalatest.AsyncMockFactory
-import org.scalatest.AsyncTestSuite
+import uk.gov.hmrc.entrydeclarationstore.utils.TestHarness
 import uk.gov.hmrc.mongo.lock.Lock
 
 import scala.concurrent.Future
 
-trait MockReplayLock extends AsyncTestSuite with AsyncMockFactory {
+trait MockReplayLock extends TestHarness {
   val mockReplayLock: ReplayLock = mock[ReplayLock]
 
   object MockReplayLock {

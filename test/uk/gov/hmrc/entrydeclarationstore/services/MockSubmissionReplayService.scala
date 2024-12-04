@@ -17,14 +17,13 @@
 package uk.gov.hmrc.entrydeclarationstore.services
 
 import org.scalamock.handlers.CallHandler
-import org.scalamock.scalatest.AsyncMockFactory
-import org.scalatest.AsyncTestSuite
 import uk.gov.hmrc.entrydeclarationstore.models.{Abort, BatchReplayResult, UndeliveredCounts}
+import uk.gov.hmrc.entrydeclarationstore.utils.TestHarness
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-trait MockSubmissionReplayService extends AsyncTestSuite with AsyncMockFactory {
+trait MockSubmissionReplayService extends TestHarness {
   val mockSubmissionReplayService: SubmissionReplayService = mock[SubmissionReplayService]
 
   object MockSubmissionReplayService {

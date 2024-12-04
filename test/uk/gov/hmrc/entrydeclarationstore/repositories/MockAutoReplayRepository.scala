@@ -17,13 +17,12 @@
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
 import org.scalamock.handlers.CallHandler
-import org.scalamock.scalatest.AsyncMockFactory
-import org.scalatest.AsyncTestSuite
 import uk.gov.hmrc.entrydeclarationstore.models.AutoReplayRepoStatus
+import uk.gov.hmrc.entrydeclarationstore.utils.TestHarness
 
 import scala.concurrent.Future
 
-trait MockAutoReplayRepository extends AsyncTestSuite with AsyncMockFactory {
+trait MockAutoReplayRepository extends TestHarness {
   val mockAutoReplayRepository: AutoReplayRepository = mock[AutoReplayRepository]
 
   object MockAutoReplayRepository {

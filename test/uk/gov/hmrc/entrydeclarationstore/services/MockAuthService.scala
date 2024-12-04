@@ -18,14 +18,13 @@ package uk.gov.hmrc.entrydeclarationstore.services
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.matchers.ArgCapture.CaptureOne
-import org.scalamock.scalatest.AsyncMockFactory
-import org.scalatest.AsyncTestSuite
 import play.api.mvc.Headers
+import uk.gov.hmrc.entrydeclarationstore.utils.TestHarness
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-trait MockAuthService extends AsyncTestSuite with AsyncMockFactory {
+trait MockAuthService extends TestHarness {
   val mockAuthService: AuthService = mock[AuthService]
 
   object MockAuthService {

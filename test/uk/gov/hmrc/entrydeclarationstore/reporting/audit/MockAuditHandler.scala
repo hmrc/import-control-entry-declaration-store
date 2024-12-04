@@ -17,13 +17,12 @@
 package uk.gov.hmrc.entrydeclarationstore.reporting.audit
 
 import org.scalamock.handlers.CallHandler
-import org.scalamock.scalatest.AsyncMockFactory
-import org.scalatest.AsyncTestSuite
+import uk.gov.hmrc.entrydeclarationstore.utils.TestHarness
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-trait MockAuditHandler extends AsyncTestSuite with AsyncMockFactory {
+trait MockAuditHandler extends TestHarness {
   val mockAuditHandler: AuditHandler = mock[AuditHandler]
 
   object MockAuditHandler {
