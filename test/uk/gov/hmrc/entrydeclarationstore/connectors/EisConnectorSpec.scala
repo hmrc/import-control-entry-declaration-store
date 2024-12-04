@@ -46,8 +46,8 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.io.IOException
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import java.util.concurrent.Executors
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 
 class EisConnectorSpec
@@ -85,6 +85,8 @@ class EisConnectorSpec
     HeaderCarrier(extraHeaders = Seq(extraHeader -> "someValue"), otherHeaders = Seq(otherHeader -> "someOtherValue"))
 
   implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
+
+  implicit val singleThreadEC: ExecutionContext = ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor())
 
   private val wireMockServer = new WireMockServer(WireMockConfiguration.wireMockConfig().dynamicPort())
 
