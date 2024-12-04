@@ -28,6 +28,7 @@ import uk.gov.hmrc.entrydeclarationstore.reporting.events.{Event, EventCode, Moc
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.{Clock, Duration, Instant, ZoneOffset}
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.control.NoStackTrace
 

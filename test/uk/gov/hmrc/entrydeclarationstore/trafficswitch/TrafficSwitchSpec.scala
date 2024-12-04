@@ -31,6 +31,7 @@ import uk.gov.hmrc.entrydeclarationstore.models.TrafficSwitchState
 import uk.gov.hmrc.entrydeclarationstore.services.MockTrafficSwitchService
 
 import java.util.concurrent.atomic.AtomicBoolean
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.{FiniteDuration, _}
 import scala.concurrent.{Future, Promise, TimeoutException}
 import scala.util.Try

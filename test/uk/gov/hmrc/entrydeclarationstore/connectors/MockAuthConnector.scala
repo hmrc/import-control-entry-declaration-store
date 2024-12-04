@@ -17,8 +17,8 @@
 package uk.gov.hmrc.entrydeclarationstore.connectors
 
 import org.scalamock.handlers.CallHandler
-import org.scalamock.scalatest.AsyncMockFactory
-import org.scalatest.AsyncTestSuite
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.auth.core.authorise._
 import uk.gov.hmrc.auth.core.retrieve.Retrieval
@@ -26,7 +26,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait MockAuthConnector extends AsyncTestSuite with AsyncMockFactory {
+trait MockAuthConnector extends TestSuite with MockFactory {
   val mockAuthConnector: AuthConnector = mock[AuthConnector]
 
   object MockAuthConnector {

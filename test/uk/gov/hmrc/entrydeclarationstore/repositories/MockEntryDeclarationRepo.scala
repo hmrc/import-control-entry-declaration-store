@@ -19,8 +19,8 @@ package uk.gov.hmrc.entrydeclarationstore.repositories
 import org.apache.pekko.NotUsed
 import org.apache.pekko.stream.scaladsl.Source
 import org.scalamock.handlers.CallHandler
-import org.scalamock.scalatest.AsyncMockFactory
-import org.scalatest.AsyncTestSuite
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models._
@@ -28,7 +28,7 @@ import uk.gov.hmrc.entrydeclarationstore.models._
 import java.time.Instant
 import scala.concurrent.Future
 
-trait MockEntryDeclarationRepo extends AsyncTestSuite with AsyncMockFactory {
+trait MockEntryDeclarationRepo extends TestSuite with MockFactory {
   val mockEntryDeclarationRepo: EntryDeclarationRepo = mock[EntryDeclarationRepo]
 
   object MockEntryDeclarationRepo {

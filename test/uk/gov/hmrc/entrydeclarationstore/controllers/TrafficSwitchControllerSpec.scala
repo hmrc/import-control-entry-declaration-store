@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.entrydeclarationstore.controllers
 
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.MimeTypes
@@ -25,8 +28,7 @@ import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.entrydeclarationstore.models.{TrafficSwitchState, TrafficSwitchStatus}
 import uk.gov.hmrc.entrydeclarationstore.services.MockTrafficSwitchService
 
-import java.time.Instant
-import java.time.temporal.ChronoUnit
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class TrafficSwitchControllerSpec extends AnyWordSpec with MockTrafficSwitchService {

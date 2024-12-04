@@ -24,9 +24,11 @@ import play.api.test.{FakeRequest, Helpers}
 import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.entrydeclarationstore.models.{ReplayInitializationResult, ReplayResult, TransportCount, UndeliveredCounts}
 import uk.gov.hmrc.entrydeclarationstore.orchestrators.MockReplayOrchestrator
-import uk.gov.hmrc.entrydeclarationstore.services.{MockReplayStateRetrievalService, MockSubmissionReplayService}
+import uk.gov.hmrc.entrydeclarationstore.services.MockSubmissionReplayService
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, Promise}
+import uk.gov.hmrc.entrydeclarationstore.services.MockReplayStateRetrievalService
 
 class ReplayControllerSpec extends AnyWordSpec with MockReplayOrchestrator with MockSubmissionReplayService with MockReplayStateRetrievalService {
   val controller =

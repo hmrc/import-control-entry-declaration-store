@@ -23,6 +23,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.http.HeaderCarrier
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class NRSServiceSpec extends AnyWordSpec with MockNRSConnector with NRSMetadataTestData with ScalaFutures {

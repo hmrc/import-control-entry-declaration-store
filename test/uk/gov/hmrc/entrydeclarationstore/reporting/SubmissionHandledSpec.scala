@@ -19,12 +19,12 @@ package uk.gov.hmrc.entrydeclarationstore.reporting
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsObject, Json}
-import uk.gov.hmrc.entrydeclarationstore.models.MessageType
-import uk.gov.hmrc.entrydeclarationstore.models.json._
 import uk.gov.hmrc.entrydeclarationstore.nrs.NRSMetadataTestData
 import uk.gov.hmrc.entrydeclarationstore.utils.SubmissionUtils
-
 import java.time.Instant
+
+import uk.gov.hmrc.entrydeclarationstore.models.MessageType
+import uk.gov.hmrc.entrydeclarationstore.models.json.{EntrySummaryDeclaration, Goods, Itinerary, Metadata, OfficeOfFirstEntry, Parties, Trader}
 
 class SubmissionHandledSpec extends AnyWordSpec with NRSMetadataTestData {
 
