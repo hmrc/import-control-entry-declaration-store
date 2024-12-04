@@ -17,12 +17,13 @@
 package uk.gov.hmrc.entrydeclarationstore.connectors
 
 import org.scalamock.handlers.CallHandler
-import uk.gov.hmrc.entrydeclarationstore.utils.TestHarness
+import org.scalamock.scalatest.AsyncMockFactory
+import org.scalatest.AsyncTestSuite
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-trait MockApiSubscriptionFieldsConnector extends TestHarness {
+trait MockApiSubscriptionFieldsConnector extends AsyncTestSuite with AsyncMockFactory {
   val mockApiSubscriptionFieldsConnector: ApiSubscriptionFieldsConnector = mock[ApiSubscriptionFieldsConnector]
 
   object MockApiSubscriptionFieldsConnector {

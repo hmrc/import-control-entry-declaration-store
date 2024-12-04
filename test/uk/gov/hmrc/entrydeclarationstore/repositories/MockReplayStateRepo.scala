@@ -17,13 +17,14 @@
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
 import org.scalamock.handlers.CallHandler
+import org.scalamock.scalatest.AsyncMockFactory
+import org.scalatest.AsyncTestSuite
 import uk.gov.hmrc.entrydeclarationstore.models.{ReplayState, ReplayTrigger}
-import uk.gov.hmrc.entrydeclarationstore.utils.TestHarness
 
 import java.time.Instant
 import scala.concurrent.Future
 
-trait MockReplayStateRepo extends TestHarness {
+trait MockReplayStateRepo extends AsyncTestSuite with AsyncMockFactory {
   val mockReplayStateRepo: ReplayStateRepo = mock[ReplayStateRepo]
 
   object MockReplayStateRepo {

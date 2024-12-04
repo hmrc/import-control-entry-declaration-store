@@ -58,6 +58,7 @@ class EntryDeclarationSubmissionControllerSpec
   val mrn                    = "mrn"
   val clientInfo: ClientInfo = ClientInfo(ClientType.CSP, None, None)
   implicit val hc: HeaderCarrier = HeaderCarrier()
+
   implicit val xmlFormatConfig: XmlFormatConfig = XmlFormatConfig(responseMaxErrors = 100)
 
   val xmlPayload: NodeSeq =

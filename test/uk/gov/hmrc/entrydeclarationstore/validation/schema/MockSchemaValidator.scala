@@ -17,10 +17,11 @@
 package uk.gov.hmrc.entrydeclarationstore.validation.schema
 
 import org.scalamock.handlers.CallHandler
+import org.scalamock.scalatest.AsyncMockFactory
+import org.scalatest.AsyncTestSuite
 import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
-import uk.gov.hmrc.entrydeclarationstore.utils.TestHarness
 
-trait MockSchemaValidator extends TestHarness {
+trait MockSchemaValidator extends AsyncTestSuite with AsyncMockFactory {
   val mockSchemaValidator: SchemaValidator = mock[SchemaValidator]
 
   object MockSchemaValidator {

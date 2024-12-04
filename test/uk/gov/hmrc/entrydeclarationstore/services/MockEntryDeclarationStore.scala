@@ -17,16 +17,17 @@
 package uk.gov.hmrc.entrydeclarationstore.services
 
 import org.scalamock.handlers.CallHandler
+import org.scalamock.scalatest.AsyncMockFactory
+import org.scalatest.AsyncTestSuite
 import uk.gov.hmrc.entrydeclarationstore.models.json.InputParameters
 import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, RawPayload, SuccessResponse}
 import uk.gov.hmrc.entrydeclarationstore.reporting.ClientInfo
-import uk.gov.hmrc.entrydeclarationstore.utils.TestHarness
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.Instant
 import scala.concurrent.Future
 
-trait MockEntryDeclarationStore extends TestHarness {
+trait MockEntryDeclarationStore extends AsyncTestSuite with AsyncMockFactory {
   val mockEntryDeclarationStore: EntryDeclarationStore = mock[EntryDeclarationStore]
 
   object MockEntryDeclarationStore {
