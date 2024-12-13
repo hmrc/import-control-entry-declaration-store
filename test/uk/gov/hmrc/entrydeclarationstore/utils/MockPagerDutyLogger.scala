@@ -20,13 +20,14 @@ import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.TestSuite
 import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
+import uk.gov.hmrc.http.HttpResponse
 
 trait MockPagerDutyLogger extends TestSuite with MockFactory {
   val mockPagerDutyLogger: PagerDutyLogger = stub[PagerDutyLogger]
 
   object MockPagerDutyLogger {
     def logEISFailure: CallHandler[Unit] =
-      (mockPagerDutyLogger.logEISFailure(_: Int)(_: LoggingContext)).verify(*, *)
+      (mockPagerDutyLogger.logEISFailure(_: HttpResponse)(_: LoggingContext)).verify(*, *)
 
     def logEISTimeout: CallHandler[Unit] =
       (mockPagerDutyLogger.logEISTimeout()(_: LoggingContext)).verify(*)

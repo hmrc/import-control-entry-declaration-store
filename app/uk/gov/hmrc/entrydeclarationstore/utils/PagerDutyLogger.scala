@@ -16,11 +16,13 @@
 
 package uk.gov.hmrc.entrydeclarationstore.utils
 
+import uk.gov.hmrc.entrydeclarationstore.exceptions.EISFailure
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
+import uk.gov.hmrc.http.HttpResponse
 
 class PagerDutyLogger {
-  def logEISFailure(statusCode: Int)(implicit lc: LoggingContext): Unit =
-    ContextLogger.error(s"Submission failed with status $statusCode")
+  def logEISFailure(response: HttpResponse)(implicit lc: LoggingContext): Unit =
+    ContextLogger.error(s"Submission failed with status ${response.status}", EISFailure(response.body))
 
   def logEISError(e: Throwable)(implicit lc: LoggingContext): Unit =
     ContextLogger.error(s"Submission failed with error", e)
