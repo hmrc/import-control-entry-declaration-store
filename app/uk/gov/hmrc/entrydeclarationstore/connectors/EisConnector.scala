@@ -95,7 +95,7 @@ class EisConnectorImpl @Inject()(
         if (status == ACCEPTED) {
           None
         } else {
-          pagerDutyLogger.logEISFailure(status)
+          pagerDutyLogger.logEISFailure(response)
           Some(EISSendFailure.ErrorResponse(status))
         }
       }
@@ -145,7 +145,7 @@ class EisConnectorImpl @Inject()(
   }
 
   private def logSendResult(response: HttpResponse, willRetry: Boolean)(implicit lc: LoggingContext): Unit = {
-    val retryInfo = if (willRetry) " will retry" else ""
+    val retryInfo = if (willRetry) " will retry again" else ""
 
     ContextLogger.info(s"Send to EIS returned status code: ${response.status}$retryInfo")
   }
