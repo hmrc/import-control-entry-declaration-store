@@ -14,26 +14,29 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.entrydeclarationstore.controllers
+package uk.gov.hmrc.entrydeclarationstore.controllers.testOnly
 
+import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
+import uk.gov.hmrc.entrydeclarationstore.controllers.EisInboundAuthorisedController
 import uk.gov.hmrc.entrydeclarationstore.services.EntryDeclarationRetrievalService
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton()
-class EntryDeclarationRetrievalController @Inject()(
+class TestEntryDeclarationRetrievalController @Inject()(
   cc: ControllerComponents,
   service: EntryDeclarationRetrievalService,
   appConfig: AppConfig)(implicit ec: ExecutionContext)
     extends EisInboundAuthorisedController(cc, appConfig) {
 
-  def getSubmission(id: String): Action[AnyContent] = authorisedAction.async { _ =>
-    service.retrieveSubmission(id).map {
-      case Some(payload) => Ok(payload)
-      case None          => NotFound
+  def retrieveDataFromMongo(eori: String, correlationId: String): Action[AnyContent] = Action.async { _ =>
+    service.retrieveSubmissionIdAndReceivedDateTime(eori, correlationId).map {
+      case Some(receivedSubmissionIdAndReceivedDateTime) =>
+        Ok(Json.toJson(receivedSubmissionIdAndReceivedDateTime))
+      case None => NotFound
     }
   }
 }
