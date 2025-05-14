@@ -9,12 +9,12 @@
 # !!!WARNING!!! Every route defined in this file MUST be prefixed with "/test-only/". This is because NGINX is blocking every uri containing the string "test-only" in production.
 # Failing to follow this rule may result in test routes deployed in production.
 
-GET        /import-control/test-only/submission-ids/:eori/:correlationId        uk.gov.hmrc.entrydeclarationstore.controllers.testOnly.TestEntryDeclarationRetrievalController.retrieveDataFromMongo(eori, correlationId)
-
-PUT        /import-control/test-only/traffic-switch/stop                        uk.gov.hmrc.entrydeclarationstore.controllers.testOnly.TestTrafficSwitchController.stopTrafficFlow
-PUT        /import-control/test-only/traffic-switch/reset                       uk.gov.hmrc.entrydeclarationstore.controllers.testOnly.TestTrafficSwitchController.resetTrafficSwitch
-
-POST       /test-only                                                           uk.gov.hmrc.entrydeclarationstore.controllers.testOnly.TestEntryDeclarationSubmissionController.postSubmissionTestOnly
-
 # Add all the application routes to the prod.routes file
 ->         /                          prod.Routes
+
+GET        /import-control/test-only/submission-ids/:eori/:correlationId        uk.gov.hmrc.entrydeclarationstore.controllers.testonly.TestEntryDeclarationRetrievalController.retrieveDataFromMongo(eori, correlationId)
+
+PUT        /import-control/test-only/traffic-switch/stop                        uk.gov.hmrc.entrydeclarationstore.controllers.testonly.TestTrafficSwitchController.stopTrafficFlow
+PUT        /import-control/test-only/traffic-switch/reset                       uk.gov.hmrc.entrydeclarationstore.controllers.testonly.TestTrafficSwitchController.resetTrafficSwitch
+
+POST       /test-only                                                           uk.gov.hmrc.entrydeclarationstore.controllers.testonly.TestEntryDeclarationSubmissionController.postSubmissionTestOnly

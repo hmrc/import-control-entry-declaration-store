@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.entrydeclarationstore.controllers.testOnly
+package uk.gov.hmrc.entrydeclarationstore.controllers.testonly
 
 import com.codahale.metrics.MetricRegistry
 import org.apache.pekko.util.ByteString

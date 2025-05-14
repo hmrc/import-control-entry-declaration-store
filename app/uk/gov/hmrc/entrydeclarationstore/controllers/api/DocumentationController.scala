@@ -31,8 +31,7 @@ import javax.inject.{Inject, Singleton}
 class DocumentationController @Inject()(
   cc: ControllerComponents,
   assets: Assets,
-  appConfig: AppConfig,
-  errorHandler: HttpErrorHandler)
+  appConfig: AppConfig)
     extends BackendController(cc) {
 
   def documentation(version: String, endpointName: String): Action[AnyContent] =

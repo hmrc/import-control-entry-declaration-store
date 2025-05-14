@@ -45,7 +45,7 @@ class DocumentationControllerSpec extends AnyWordSpec with MockAppConfig with In
   val errorHandler: HttpErrorHandler = inject[HttpErrorHandler]
 
   val documentationController =
-    new DocumentationController(Helpers.stubControllerComponents(), assets, mockAppConfig, errorHandler)
+    new DocumentationController(Helpers.stubControllerComponents(), assets, mockAppConfig)
 
   "api definition" must {
     def checkDefinition(apiStatus: String, enabled: Boolean): Assertion = {

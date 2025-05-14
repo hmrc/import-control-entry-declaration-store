@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.entrydeclarationstore.controllers.testOnly
+package uk.gov.hmrc.entrydeclarationstore.controllers.testonly
 
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
