@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.entrydeclarationstore.controllers
+package uk.gov.hmrc.entrydeclarationstore.controllers.testonly
 
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.http.HeaderNames
-import play.api.libs.json.{JsString, JsValue}
+import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
+import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.models.{EisSubmissionState, SubmissionIdLookupResult}
 import uk.gov.hmrc.entrydeclarationstore.services.MockEntryDeclarationRetrievalService
@@ -30,13 +30,13 @@ import uk.gov.hmrc.entrydeclarationstore.services.MockEntryDeclarationRetrievalS
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class EntryDeclarationRetrievalControllerSpec
+class TestEntryDeclarationRetrievalControllerSpec
     extends AnyWordSpec
     with MockEntryDeclarationRetrievalService
     with MockAppConfig {
 
-  private val controller: EntryDeclarationRetrievalController =
-    new EntryDeclarationRetrievalController(
+  private val controller: TestEntryDeclarationRetrievalController =
+    new TestEntryDeclarationRetrievalController(
       Helpers.stubControllerComponents(),
       mockEntryDeclarationRetrievalService,
       mockAppConfig)
@@ -50,48 +50,19 @@ class EntryDeclarationRetrievalControllerSpec
 
   val bearerToken: String = "bearerToken"
 
-  "EntryDeclarationRetrievalController" when {
-
-    "getting payload from submissionId" when {
-      val requestWithAuth = FakeRequest()
-        .withHeaders(HeaderNames.AUTHORIZATION -> s"Bearer $bearerToken")
-
+  "TestEntryDeclarationRetrievalController" when {
+    "getting submissionId from eori and correlationId" when {
       "id exists" must {
-        "return OK with the xml body" in {
-          val payload: JsValue = JsString("payload")
+        "return OK with the submissionId in a JSON object" in {
           MockEntryDeclarationRetrievalService
-            .retrieveSubmission(submissionId)
-            .returns(Future.successful(Some(payload)))
-          MockAppConfig.eisInboundBearerToken returns bearerToken
+            .retrieveSubmissionIdAndReceivedDateTime(eori, correlationId)
+            .returns(Future.successful(Some(submissionIdLookupResult)))
 
-          val result: Future[Result] = controller.getSubmission(submissionId)(requestWithAuth)
+          val result: Future[Result] = controller.retrieveDataFromMongo(eori, correlationId)(FakeRequest())
 
-          status(result) shouldBe OK
-
-          contentAsString(result) shouldBe payload.toString
-
-          contentType(result) shouldBe Some("application/json")
-        }
-      }
-
-      "id does not exist" must {
-        "return NOT_FOUND" in {
-          MockEntryDeclarationRetrievalService.retrieveSubmission(submissionId).returns(Future.successful(None))
-          MockAppConfig.eisInboundBearerToken returns bearerToken
-
-          val result: Future[Result] = controller.getSubmission(submissionId)(requestWithAuth)
-
-          status(result) shouldBe NOT_FOUND
-        }
-      }
-
-      "return 403" when {
-        "no authentication fails" in {
-          MockAppConfig.eisInboundBearerToken returns "differentBearerToken"
-
-          val result: Future[Result] = controller.getSubmission(submissionId)(requestWithAuth)
-
-          status(result) shouldBe FORBIDDEN
+          status(result)        shouldBe OK
+          contentAsJson(result) shouldBe Json.toJson(submissionIdLookupResult)
+          contentType(result)   shouldBe Some(MimeTypes.JSON)
         }
       }
     }
