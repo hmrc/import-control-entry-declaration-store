@@ -24,7 +24,7 @@ import uk.gov.hmrc.entrydeclarationstore.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationstore.models.RawPayload
 import uk.gov.hmrc.entrydeclarationstore.models.json.{DeclarationToJsonConverter, InputParameters}
 import uk.gov.hmrc.entrydeclarationstore.nrs.{NRSMetadata, NRSService, NRSSubmission}
-import uk.gov.hmrc.entrydeclarationstore.reporting.{FailureType, ReportSender, SubmissionHandled}
+import uk.gov.hmrc.entrydeclarationstore.reporting.{ClientInfo, FailureType, ReportSender, SubmissionHandled}
 import uk.gov.hmrc.entrydeclarationstore.services.{AuthService, EntryDeclarationStore}
 import uk.gov.hmrc.entrydeclarationstore.utils.ChecksumUtils._
 import uk.gov.hmrc.entrydeclarationstore.utils.SubmissionUtils.extractSubmissionHandledDetails
@@ -75,8 +75,9 @@ class EntryDeclarationSubmissionController @Inject()(
 
       implicit val lc: LoggingContext = LoggingContext()
 
+      val clientInfo: ClientInfo = request.userDetails.clientInfo
       val rawPayload = RawPayload(request.body, request.charset)
-      val correlationId          = idGenerator.generateCorrelationId
+      val correlationId          = idGenerator.generateCorrelationIdFor(clientInfo)
       val submissionId           = idGenerator.generateSubmissionId
       val input: InputParameters = InputParameters(mrn, submissionId, correlationId, receivedDateTime)
 

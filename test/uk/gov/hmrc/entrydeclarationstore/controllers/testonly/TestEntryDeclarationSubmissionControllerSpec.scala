@@ -275,7 +275,7 @@ class TestEntryDeclarationSubmissionControllerSpec
   def encodingEndpoint(mrn: Option[String], handler: Request[ByteString] => Future[Result]): Unit = {
     "pass to the service with a character encoding if one is present in the request" in {
       MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, None)))
-      MockIdGenerator.generateCorrelationId returns correlationId
+      MockIdGenerator.generateCorrelationIdFor(clientInfo) returns correlationId
       MockIdGenerator.generateSubmissionId returns submissionId
       MockValidationHandler.handleValidation(rawPayload.copy(encoding = Some("US-ASCII")), eori, mrn) returns Right(xmlPayload)
       MockDeclarationToJsonConverter.convertToModel(xmlPayload) returns Right(entrySummaryDeclaration)
@@ -372,7 +372,7 @@ class TestEntryDeclarationSubmissionControllerSpec
   }
 
   private def setupMocks(): Unit = {
-    MockIdGenerator.generateCorrelationId returns correlationId
+    MockIdGenerator.generateCorrelationIdFor(clientInfo) returns correlationId
     MockIdGenerator.generateSubmissionId returns submissionId
     MockValidationHandler.handleValidation(rawPayload, eori, None) returns Right(xmlPayload)
     MockDeclarationToJsonConverter.convertToModel(xmlPayload) returns Right(entrySummaryDeclaration)
