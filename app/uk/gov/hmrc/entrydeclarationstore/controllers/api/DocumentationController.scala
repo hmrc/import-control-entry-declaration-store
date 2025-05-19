@@ -17,7 +17,6 @@
 package uk.gov.hmrc.entrydeclarationstore.controllers.api
 
 import controllers.Assets
-import play.api.http.HttpErrorHandler
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
