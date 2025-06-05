@@ -16,16 +16,19 @@
 
 package uk.gov.hmrc.entrydeclarationstore.utils
 
-import org.scalamock.handlers.CallHandler
+import org.scalamock.handlers.{CallHandler, CallHandler1}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.TestSuite
+import uk.gov.hmrc.entrydeclarationstore.reporting.ClientInfo
 
 trait MockIdGenerator extends TestSuite with MockFactory {
   val mockIdGenerator: IdGenerator = mock[IdGenerator]
 
   object MockIdGenerator {
-    def generateCorrelationId: CallHandler[String] =
-      (() => mockIdGenerator.generateCorrelationId).expects ()
+
+    def generateCorrelationIdFor(clientInfo: ClientInfo): CallHandler1[ClientInfo, String] = {
+      (mockIdGenerator.generateCorrelationIdFor(_: ClientInfo)).expects(clientInfo)
+    }
 
     def generateSubmissionId: CallHandler[String] =
       (() => mockIdGenerator.generateSubmissionId).expects ()

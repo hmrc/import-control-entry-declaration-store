@@ -16,25 +16,47 @@
 
 package uk.gov.hmrc.entrydeclarationstore.utils
 
+import uk.gov.hmrc.entrydeclarationstore.reporting.ClientInfo
+import uk.gov.hmrc.entrydeclarationstore.reporting.ClientType.{CSP, GGW}
+
 import java.security.SecureRandom
 import java.util.UUID
 
 class IdGenerator {
 
-  private val idLength        = 14
+  private val idLength = 14
+
   private val numberGenerator = new SecureRandom()
 
-  def generateCorrelationId: String = {
-    val randomBytes = new Array[Byte](idLength)
-    numberGenerator.nextBytes(randomBytes)
-
-    correlationIdFrom(randomBytes)
+  def generateCorrelationIdFor(clientInfo: ClientInfo): String = {
+    val cspPrefixLength = ClientInfo.cspPrefixLength
+    clientInfo.clientType match {
+      case CSP =>
+        clientInfo.clientId match {
+          case Some(id) if id.length >= cspPrefixLength =>
+            val partialClientId: String = id.take(cspPrefixLength)
+            correlationIdFromRandomString(idLength - cspPrefixLength, Some(partialClientId))
+          case Some(_) =>
+            throw new RuntimeException("clientId too short for CSP user")
+          case None =>
+            throw new RuntimeException("Missing clientId for CSP user")
+        }
+      case GGW =>
+        correlationIdFromRandomString(idLength)
+    }
   }
 
   private val chars =
     "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".toCharArray
 
-  private[utils] def correlationIdFrom(bytes: Array[Byte]): String =
+  private def correlationIdFromRandomString(length: Int, suffix: Option[String] = None): String = {
+    val randomBytes = new Array[Byte](length)
+    numberGenerator.nextBytes(randomBytes)
+
+    randomStringFrom(randomBytes) + suffix.getOrElse("")
+  }
+
+  private[utils] def randomStringFrom(bytes: Array[Byte]): String =
     bytes.map { byte =>
       val index: Int = Math.floorMod(byte, chars.length)
       val char       = chars(index)
