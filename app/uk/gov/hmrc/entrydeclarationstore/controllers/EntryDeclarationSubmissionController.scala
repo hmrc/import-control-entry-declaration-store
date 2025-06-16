@@ -76,7 +76,7 @@ class EntryDeclarationSubmissionController @Inject()(
       implicit val lc: LoggingContext = LoggingContext()
 
       val rawPayload = RawPayload(request.body, request.charset)
-      val correlationId          = idGenerator.generateCorrelationId
+      val correlationId          = idGenerator.generateCorrelationIdFor(request.userDetails.clientInfo)
       val submissionId           = idGenerator.generateSubmissionId
       val input: InputParameters = InputParameters(mrn, submissionId, correlationId, receivedDateTime)
 

@@ -202,7 +202,7 @@ class EntryDeclarationSubmissionControllerSpec
     "The submission fails with EORIMismatch" must {
       "return 403 with platform standard xml error body" in {
         MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, None)))
-        MockIdGenerator.generateCorrelationId returns correlationId
+        MockIdGenerator.generateCorrelationIdFor(clientInfo) returns correlationId
         MockIdGenerator.generateSubmissionId returns submissionId
         MockValidationHandler.handleValidation(rawPayload, eori, mrn) returns Right(xmlPayload)
         MockDeclarationToJsonConverter.convertToModel(xmlPayload) returns Right(entrySummaryDeclaration)
@@ -222,7 +222,7 @@ class EntryDeclarationSubmissionControllerSpec
 
     "The submission fails with ValidationErrors" must {
       "Return BAD_REQUEST" in {
-        MockIdGenerator.generateCorrelationId returns correlationId
+        MockIdGenerator.generateCorrelationIdFor(clientInfo) returns correlationId
         MockIdGenerator.generateSubmissionId returns submissionId
         MockValidationHandler.handleValidation(rawPayload, eori, mrn) returns Right(xmlPayload)
         MockDeclarationToJsonConverter.convertToModel(xmlPayload) returns Right(entrySummaryDeclaration)
@@ -237,7 +237,7 @@ class EntryDeclarationSubmissionControllerSpec
         contentType(result) shouldBe Some("application/xml")
       }
       "Not submit to nrs even if enabled" in {
-        MockIdGenerator.generateCorrelationId returns correlationId
+        MockIdGenerator.generateCorrelationIdFor(clientInfo) returns correlationId
         MockIdGenerator.generateSubmissionId returns submissionId
         MockValidationHandler.handleValidation(rawPayload, eori, mrn) returns Right(xmlPayload)
         MockDeclarationToJsonConverter.convertToModel(xmlPayload) returns Right(entrySummaryDeclaration)
@@ -251,7 +251,7 @@ class EntryDeclarationSubmissionControllerSpec
 
     "The submission fails with a ServerError (e.g. database problem)" must {
       "Return INTERNAL_SERVER_ERROR" in {
-        MockIdGenerator.generateCorrelationId returns correlationId
+        MockIdGenerator.generateCorrelationIdFor(clientInfo) returns correlationId
         MockIdGenerator.generateSubmissionId returns submissionId
         MockValidationHandler.handleValidation(rawPayload, eori, mrn) returns Right(xmlPayload)
         MockDeclarationToJsonConverter.convertToModel(xmlPayload) returns Right(entrySummaryDeclaration)
@@ -266,7 +266,7 @@ class EntryDeclarationSubmissionControllerSpec
         contentType(result) shouldBe Some("application/xml")
       }
       "Not submit to nrs even if enabled" in {
-        MockIdGenerator.generateCorrelationId returns correlationId
+        MockIdGenerator.generateCorrelationIdFor(clientInfo) returns correlationId
         MockIdGenerator.generateSubmissionId returns submissionId
         MockValidationHandler.handleValidation(rawPayload, eori, mrn) returns Right(xmlPayload)
         MockDeclarationToJsonConverter.convertToModel(xmlPayload) returns Right(entrySummaryDeclaration)
@@ -283,7 +283,7 @@ class EntryDeclarationSubmissionControllerSpec
   def encodingEndpoint(mrn: Option[String], handler: Request[ByteString] => Future[Result]): Unit = {
     "pass to the service with a character encoding if one is present in the request" in {
       MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, None)))
-      MockIdGenerator.generateCorrelationId returns correlationId
+      MockIdGenerator.generateCorrelationIdFor(clientInfo) returns correlationId
       MockIdGenerator.generateSubmissionId returns submissionId
       MockValidationHandler.handleValidation(rawPayload.copy(encoding = Some("US-ASCII")), eori, mrn) returns Right(xmlPayload)
       MockDeclarationToJsonConverter.convertToModel(xmlPayload) returns Right(entrySummaryDeclaration)
@@ -301,7 +301,7 @@ class EntryDeclarationSubmissionControllerSpec
 
     "pass to the service without a character encoding if none is present in the request" in {
       MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, None)))
-      MockIdGenerator.generateCorrelationId returns correlationId
+      MockIdGenerator.generateCorrelationIdFor(clientInfo) returns correlationId
       MockIdGenerator.generateSubmissionId returns submissionId
       MockValidationHandler.handleValidation(rawPayload, eori, mrn) returns Right(xmlPayload)
       MockDeclarationToJsonConverter.convertToModel(xmlPayload) returns Right(entrySummaryDeclaration)
@@ -321,7 +321,7 @@ class EntryDeclarationSubmissionControllerSpec
       "nrs is enabled" must {
         "submit to NRS and not wait until NRS submission completes" in {
           MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, Some(identityData))))
-          MockIdGenerator.generateCorrelationId returns correlationId
+          MockIdGenerator.generateCorrelationIdFor(clientInfo) returns correlationId
           MockIdGenerator.generateSubmissionId returns submissionId
           MockValidationHandler.handleValidation(rawPayload, eori, mrn) returns Right(xmlPayload)
           MockDeclarationToJsonConverter.convertToModel(xmlPayload) returns Right(entrySummaryDeclaration)
@@ -342,7 +342,7 @@ class EntryDeclarationSubmissionControllerSpec
       "nrs is not enabled" must {
         "not submit to NRS" in {
           MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, None)))
-          MockIdGenerator.generateCorrelationId returns correlationId
+          MockIdGenerator.generateCorrelationIdFor(clientInfo) returns correlationId
           MockIdGenerator.generateSubmissionId returns submissionId
           MockValidationHandler.handleValidation(rawPayload, eori, mrn) returns Right(xmlPayload)
           MockDeclarationToJsonConverter.convertToModel(xmlPayload) returns Right(entrySummaryDeclaration)
@@ -364,7 +364,7 @@ class EntryDeclarationSubmissionControllerSpec
     "Return OK" when {
       "The submission is handled successfully" in {
         MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, None)))
-        MockIdGenerator.generateCorrelationId returns correlationId
+        MockIdGenerator.generateCorrelationIdFor(clientInfo) returns correlationId
         MockIdGenerator.generateSubmissionId returns submissionId
         MockValidationHandler.handleValidation(rawPayload, eori, None) returns Right(xmlPayload)
         MockDeclarationToJsonConverter.convertToModel(xmlPayload) returns Right(entrySummaryDeclaration)
@@ -395,7 +395,7 @@ class EntryDeclarationSubmissionControllerSpec
     "The submission is handled successfully" must {
       "Return OK" in {
         MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, None)))
-        MockIdGenerator.generateCorrelationId returns correlationId
+        MockIdGenerator.generateCorrelationIdFor(clientInfo) returns correlationId
         MockIdGenerator.generateSubmissionId returns submissionId
         MockValidationHandler.handleValidation(rawPayload, eori, Some(mrn)) returns Right(xmlPayload)
         MockDeclarationToJsonConverter.convertToModel(xmlPayload) returns Right(entrySummaryDeclaration)
@@ -417,7 +417,7 @@ class EntryDeclarationSubmissionControllerSpec
     "The MRN in the body doesnt match the MRN in URL" must {
       "Return MRNMismatch Bad Request error" in {
         MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, None)))
-        MockIdGenerator.generateCorrelationId returns correlationId
+        MockIdGenerator.generateCorrelationIdFor(clientInfo) returns correlationId
         MockIdGenerator.generateSubmissionId returns submissionId
         MockValidationHandler.handleValidation(rawPayload, eori, Some(mrn)) returns Right(xmlPayload)
         MockDeclarationToJsonConverter.convertToModel(xmlPayload) returns Right(entrySummaryDeclaration)
@@ -438,7 +438,7 @@ class EntryDeclarationSubmissionControllerSpec
 
       "Not submit to nrs even if enabled" in {
         MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, None)))
-        MockIdGenerator.generateCorrelationId returns correlationId
+        MockIdGenerator.generateCorrelationIdFor(clientInfo) returns correlationId
         MockIdGenerator.generateSubmissionId returns submissionId
         MockValidationHandler.handleValidation(rawPayload, eori, Some(mrn)) returns Right(xmlPayload)
         MockDeclarationToJsonConverter.convertToModel(xmlPayload) returns Right(entrySummaryDeclaration)
