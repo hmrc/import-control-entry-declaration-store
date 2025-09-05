@@ -700,8 +700,6 @@ components:
       - TotGroMasHEA307
       - ComRefNumHEA
       - ConRefNumHEA
-      - PlaLoaGOOITE334
-      - PlaUnlGOOITE334
       - DecDatTimHEA114
       type: object
       properties:
@@ -855,8 +853,6 @@ components:
       - TotGroMasHEA307
       - ComRefNumHEA
       - ConRefNumHEA
-      - PlaLoaGOOITE334
-      - PlaUnlGOOITE334
       - DatTimAmeHEA113
       type: object
       properties:
