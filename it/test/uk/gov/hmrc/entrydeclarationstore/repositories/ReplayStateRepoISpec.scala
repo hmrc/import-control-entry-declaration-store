@@ -160,6 +160,29 @@ class ReplayStateRepoISpec
 
           await(repository.lookupIdOfLatest) shouldBe Some(idOfLatest)
         }
+
+
+        "consider limits for returning lists of replay histories correctly" in {
+          await(repository.removeAll())
+          val num = 10
+
+          val idsAndStarts = (1 to num).map(i => (s"replayId-$i", startTime.plusSeconds(i)))
+
+          val replyStateList = idsAndStarts.map(elem => ReplayState(elem._1, elem._2, totalToReplay, ReplayTrigger.Manual)).toList
+
+          await(Future.traverse(idsAndStarts) { case (id, start) =>
+            repository.insert(id, ReplayTrigger.Manual, totalToReplay, start)
+          })
+
+          val count = 4
+          val resultWithLimit = await(repository.list(Some(count)))
+          resultWithLimit.size shouldBe count
+          resultWithLimit should contain allElementsOf(replyStateList.takeRight(4))
+
+          val resultNoLimit = await(repository.list(None))
+          resultNoLimit.size shouldBe 10
+          resultNoLimit should contain allElementsOf(replyStateList)
+        }
       }
 
       "return any if multiple have same start date" in {
