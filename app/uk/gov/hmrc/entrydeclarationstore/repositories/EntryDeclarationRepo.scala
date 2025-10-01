@@ -380,7 +380,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
         .find[BsonValue](undeliveredSubmissionsSelector(Some(receivedNoLaterThan)))
         .projection(fields(include("submissionId"), excludeId()))
         .sort(descending("receivedDateTime"))
-        .limit(limit.getOrElse(Int.MaxValue))
+        .limit(limit.getOrElse(0))
     )
     .map(Codecs.fromBson[SubmissionId](_).value)
     .mapMaterializedValue(_ => NotUsed)
