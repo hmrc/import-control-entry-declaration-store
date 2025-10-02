@@ -37,7 +37,7 @@ import org.mongodb.scala.bson.BsonDocument
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationstore.models._
-import uk.gov.hmrc.play.http.logging.Mdc
+import uk.gov.hmrc.mdc.Mdc
 
 import java.time.Instant
 import javax.inject.{Inject, Singleton}
