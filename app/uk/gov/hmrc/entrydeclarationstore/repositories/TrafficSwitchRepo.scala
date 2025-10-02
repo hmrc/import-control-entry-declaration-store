@@ -23,7 +23,7 @@ import org.mongodb.scala.model._
 import uk.gov.hmrc.mongo._
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 import uk.gov.hmrc.entrydeclarationstore.models.{TrafficSwitchState, TrafficSwitchStatus, InstantFormatter}
-import uk.gov.hmrc.play.http.logging.Mdc
+import uk.gov.hmrc.mdc.Mdc
 import java.time.Instant
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
