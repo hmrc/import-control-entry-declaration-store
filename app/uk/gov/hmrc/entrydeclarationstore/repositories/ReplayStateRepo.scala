@@ -26,7 +26,7 @@ import uk.gov.hmrc.mongo._
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.models.{ReplayTrigger, ReplayState}
-import uk.gov.hmrc.play.http.logging.Mdc
+import uk.gov.hmrc.mdc.Mdc
 import java.util.concurrent.TimeUnit
 import java.time.Instant
 import javax.inject.{Inject, Singleton}
@@ -81,7 +81,7 @@ class ReplayStateRepoImpl @Inject()
           .withReadPreference(ReadPreference.primaryPreferred())
           .find()
           .sort(descending("startTime"))
-          .limit(count.getOrElse(Int.MaxValue))
+          .limit(count.getOrElse(0))
           .collect()
           .toFutureOption()
       )

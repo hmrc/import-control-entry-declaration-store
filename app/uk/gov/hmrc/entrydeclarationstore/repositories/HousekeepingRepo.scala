@@ -18,14 +18,13 @@ package uk.gov.hmrc.entrydeclarationstore.repositories
 
 import play.api.Logger
 import uk.gov.hmrc.mongo.play.json.formats.MongoFormats
-import org.mongodb.scala._
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Updates._
 import org.mongodb.scala.model._
 import uk.gov.hmrc.mongo._
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 import uk.gov.hmrc.entrydeclarationstore.models.HousekeepingStatus
-import uk.gov.hmrc.play.http.logging.Mdc
+import uk.gov.hmrc.mdc.Mdc
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}

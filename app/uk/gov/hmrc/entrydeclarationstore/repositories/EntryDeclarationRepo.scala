@@ -37,7 +37,7 @@ import org.mongodb.scala.bson.BsonDocument
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationstore.models._
-import uk.gov.hmrc.play.http.logging.Mdc
+import uk.gov.hmrc.mdc.Mdc
 
 import java.time.Instant
 import javax.inject.{Inject, Singleton}
@@ -380,7 +380,7 @@ class EntryDeclarationRepoImpl @Inject()(appConfig: AppConfig)(
         .find[BsonValue](undeliveredSubmissionsSelector(Some(receivedNoLaterThan)))
         .projection(fields(include("submissionId"), excludeId()))
         .sort(descending("receivedDateTime"))
-        .limit(limit.getOrElse(Int.MaxValue))
+        .limit(limit.getOrElse(0))
     )
     .map(Codecs.fromBson[SubmissionId](_).value)
     .mapMaterializedValue(_ => NotUsed)

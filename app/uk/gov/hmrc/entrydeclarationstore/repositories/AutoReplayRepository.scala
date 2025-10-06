@@ -17,16 +17,16 @@
 package uk.gov.hmrc.entrydeclarationstore.repositories
 
 import play.api.Logging
-import org.mongodb.scala._
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Updates._
 import org.mongodb.scala.model._
 import uk.gov.hmrc.mongo._
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
-import uk.gov.hmrc.play.http.logging.Mdc
+
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import uk.gov.hmrc.entrydeclarationstore.models._
+import uk.gov.hmrc.mdc.Mdc
 
 trait AutoReplayRepository {
   def start(): Future[Unit]
