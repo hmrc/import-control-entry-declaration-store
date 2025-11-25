@@ -17,9 +17,9 @@
 import sbt.*
 
 object AppDependencies {
-  val bootstrapVersion = "10.2.0"
+  val bootstrapVersion = "10.4.0"
   val pekkoVersion = "1.1.5"
-  val mongoVersion = "2.9.0"
+  val mongoVersion = "2.10.0"
 
   val compile: Seq[ModuleID] = Seq(
     "com.github.java-json-tools"   %  "json-schema-validator"     % "2.2.14",
@@ -28,15 +28,15 @@ object AppDependencies {
     "org.typelevel"                %% "cats-core"                 % "2.13.0",
     "org.scala-lang.modules"       %% "scala-xml"                 % "2.4.0",
     "com.lucidchart"               %% "xtract"                    % "2.3.0",
-    "org.apache.groovy"             %  "groovy"                   % "5.0.1",
+    "org.apache.groovy"             %  "groovy"                   % "5.0.2",
     "com.chuusai"                  %% "shapeless"                 % "2.3.13",
-    "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.20.0"
+    "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.20.1"
   )
 
   val test: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"            %% "bootstrap-test-play-30"      % bootstrapVersion,
     "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-30"     % mongoVersion,
-    "org.scalamock"          %% "scalamock"                   % "7.5.0",
+    "org.scalamock"          %% "scalamock"                   % "7.5.2",
     "org.scalacheck"         %% "scalacheck"                  % "1.19.0",
     "org.mockito"            %  "mockito-core"                % "5.20.0",
     "org.mockito"            %% "mockito-scala"               % "2.0.0",
