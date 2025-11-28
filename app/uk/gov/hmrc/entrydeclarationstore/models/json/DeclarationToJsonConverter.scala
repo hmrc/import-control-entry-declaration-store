@@ -77,5 +77,5 @@ class DeclarationToJsonConverter {
     JsonSchemaValidator.validateJSONAgainstSchema(entrySummaryDeclaration)
 
   def validateJsonNew(entrySummaryDeclaration: JsValue)(implicit lc: LoggingContext): Boolean =
-    JsonSchemaValidator.validateJSONAgainstSchema(entrySummaryDeclaration, "jsonschemas/EntrySummaryDeclarationNew.json")
+    JsonSchemaValidator.validateJSONAgainstSchema(entrySummaryDeclaration, "conf/jsonschemas/EntrySummaryDeclarationNew.json")
 }
