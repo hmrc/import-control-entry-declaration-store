@@ -27,13 +27,14 @@ import java.io.FileInputStream
 object JsonSchemaValidator {
 
   private val factory = JsonSchemaFactory.byDefault()
+  val basePath: String = System.getProperty("user.dir")
 
   def validateJSONAgainstSchema(inputDoc: JsValue, schemaDoc: String = "conf/jsonschemas/EntrySummaryDeclaration.json")(
     implicit lc: LoggingContext): Boolean =
     try {
       val mapper: ObjectMapper     = new ObjectMapper()
       val inputJson: JsonNode      = mapper.readTree(inputDoc.toString())
-      val jsonSchema: JsonNode     = mapper.readTree(new FileInputStream(schemaDoc))
+      val jsonSchema: JsonNode     = mapper.readTree(new FileInputStream(s"$basePath/$schemaDoc"))
       val validator: JsonValidator = factory.getValidator
       val report: ProcessingReport = validator.validate(jsonSchema, inputJson)
       if (!report.isSuccess) {
