@@ -201,6 +201,19 @@ class EntryDeclarationStoreSpec
       }
     }
 
+    "Invalid EntryDeclaration json" must {
+      "return Left(FailureResponse)" in new Test {
+        MockAppConfig.validateXMLtoJsonTransformation.returns(true)
+        MockAppConfig.optionalFieldsEnabled.repeat(2).returns(false)
+        MockValidationHandler.handleValidation(payload, eori, mrn) returns Right(xmlPayload)
+        MockDeclarationToJsonConverter.convertToJson(xmlPayload).returns(Right(jsonPayload))
+        MockDeclarationToJsonConverter.validateJson(jsonPayload).returns(Left(ErrorWrapper(ServerError)))
+
+        entryDeclarationStore.handleSubmission(eori, payload, mrn, receivedDateTime, clientInfo, submissionId, correlationId, inputParams(mrn)).futureValue shouldBe
+          Left(ErrorWrapper(ServerError))
+      }
+    }
+
     "Valid EntryDeclaration fails to save in the database" must {
       "return Left(FailureResponse)" in new Test {
         MockAppConfig.validateXMLtoJsonTransformation.returns(false)
