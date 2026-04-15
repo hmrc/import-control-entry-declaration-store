@@ -73,9 +73,9 @@ class DeclarationToJsonConverter {
         Left(ErrorWrapper(ServerError))
     }
 
-  def validateJson(entrySummaryDeclaration: JsValue)(implicit lc: LoggingContext): Boolean =
+  def validateJson(entrySummaryDeclaration: JsValue)(implicit lc: LoggingContext): Either[ErrorWrapper[_], Unit] =
     JsonSchemaValidator.validateJSONAgainstSchema(entrySummaryDeclaration)
 
-  def validateJsonNew(entrySummaryDeclaration: JsValue)(implicit lc: LoggingContext): Boolean =
+  def validateJsonNew(entrySummaryDeclaration: JsValue)(implicit lc: LoggingContext): Either[ErrorWrapper[_], Unit] =
     JsonSchemaValidator.validateJSONAgainstSchema(entrySummaryDeclaration, "conf/jsonschemas/EntrySummaryDeclarationNew.json")
 }

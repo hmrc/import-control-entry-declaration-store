@@ -21,6 +21,7 @@ import com.github.fge.jsonschema.core.report.ProcessingReport
 import com.github.fge.jsonschema.main.{JsonSchemaFactory, JsonValidator}
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
+import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, ServerError}
 
 import java.io.FileInputStream
 
@@ -30,7 +31,7 @@ object JsonSchemaValidator {
   val basePath: String = System.getProperty("user.dir")
 
   def validateJSONAgainstSchema(inputDoc: JsValue, schemaDoc: String = "conf/jsonschemas/EntrySummaryDeclaration.json")(
-    implicit lc: LoggingContext): Boolean =
+    implicit lc: LoggingContext): Either[ErrorWrapper[_], Unit] =
     try {
       val mapper: ObjectMapper     = new ObjectMapper()
       val inputJson: JsonNode      = mapper.readTree(inputDoc.toString())
@@ -40,13 +41,14 @@ object JsonSchemaValidator {
       if (!report.isSuccess) {
         ContextLogger.debug(s"Failed to validate $inputDoc: $report")
         ContextLogger.error(s"Failed to validate JSON: $report")
+        Left(ErrorWrapper(ServerError))
+      } else {
+        Right(())
       }
-
-      report.isSuccess
     } catch {
       case e: Exception =>
         ContextLogger.debug(s"Failed to validate $inputDoc", e)
         ContextLogger.error(s"Failed to validate JSON", e)
-        false
+        Left(ErrorWrapper(ServerError))
     }
 }
