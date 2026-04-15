@@ -36,5 +36,9 @@ trait MockDeclarationToJsonConverter extends TestSuite with MockFactory {
     def convertToModel(xml: NodeSeq): CallHandler[Either[ErrorWrapper[_], EntrySummaryDeclaration]] =
       (mockDeclarationToJsonConverter
         .convertToModel(_: NodeSeq, _: InputParameters)(_: LoggingContext)).expects(xml, *, *)
+
+    def validateJson(entrySummaryDeclaration: JsValue): CallHandler[Either[ErrorWrapper[_], Unit]] =
+      (mockDeclarationToJsonConverter
+        .validateJson(_: JsValue)(_: LoggingContext)).expects(entrySummaryDeclaration, *)
   }
 }

@@ -20,12 +20,13 @@ import cats.data.EitherT
 import cats.implicits._
 import com.codahale.metrics.MetricRegistry
 import play.api.Logging
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsString, JsValue}
 import uk.gov.hmrc.entrydeclarationstore.config.AppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, EisConnector}
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationstore.models._
 import uk.gov.hmrc.entrydeclarationstore.models.json.{DeclarationToJsonConverter, InputParameters}
+import uk.gov.hmrc.entrydeclarationstore.nrs.NRSSubmisionFailure.ErrorResponse
 import uk.gov.hmrc.entrydeclarationstore.reporting.{ClientInfo, ReportSender, SubmissionReceived, SubmissionSentToEIS}
 import uk.gov.hmrc.entrydeclarationstore.repositories.EntryDeclarationRepo
 import uk.gov.hmrc.entrydeclarationstore.utils._
@@ -92,7 +93,7 @@ class EntryDeclarationStoreImpl @Inject()(
       val result = for {
         xmlPayload             <- EitherT.fromEither[Future](validationHandler.handleValidation(rawPayload, eori, mrn))
         entryDeclarationAsJson <- EitherT.fromEither[Future](convertToJson(xmlPayload, input))
-        _ = validateJson(entryDeclarationAsJson)
+        _ <- EitherT.fromEither[Future](validateJson(entryDeclarationAsJson))
         entryDeclaration = EntryDeclarationModel(
           correlationId    = correlationId,
           submissionId     = submissionId,
@@ -162,13 +163,15 @@ class EntryDeclarationStoreImpl @Inject()(
       }
     }
 
-  private def validateJson(json: JsValue)(implicit lc: LoggingContext): Unit =
+  private def validateJson(json: JsValue)(implicit lc: LoggingContext): Either[ErrorWrapper[_], Unit] =
     if (appConfig.validateXMLtoJsonTransformation) {
       if(appConfig.optionalFieldsFeature) {
         declarationToJsonConverter.validateJsonNew(json)
       } else {
         declarationToJsonConverter.validateJson(json)
       }
+    } else {
+      Right(())
     }
 
   private def sendSubmissionReceivedReport(
