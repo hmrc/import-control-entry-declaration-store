@@ -46,7 +46,7 @@ class DeclarationToJsonConverterSpec extends AnyWordSpec with Inside {
         inside(declarationToJsonConverter.convertToJson(xml, input)) {
           case Right(ie315) =>
             ie315                                          shouldBe json
-            declarationToJsonConverter.validateJson(ie315) shouldBe true
+            declarationToJsonConverter.validateJson(ie315) shouldBe Right(())
           case Left(_) => fail()
         }
       }
@@ -56,7 +56,7 @@ class DeclarationToJsonConverterSpec extends AnyWordSpec with Inside {
         inside(declarationToJsonConverter.convertToJson(xml, input)) {
           case Right(ie315) =>
             ie315                                          shouldBe json
-            declarationToJsonConverter.validateJson(ie315) shouldBe true
+            declarationToJsonConverter.validateJson(ie315) shouldBe Right(())
           case Left(_) => fail()
         }
       }
@@ -73,7 +73,7 @@ class DeclarationToJsonConverterSpec extends AnyWordSpec with Inside {
         inside(declarationToJsonConverter.convertToJson(xml, input)) {
           case Right(ie313) =>
             ie313                                          shouldBe json
-            declarationToJsonConverter.validateJson(ie313) shouldBe true
+            declarationToJsonConverter.validateJson(ie313) shouldBe Right(())
           case Left(_) => fail()
         }
       }
@@ -90,6 +90,12 @@ class DeclarationToJsonConverterSpec extends AnyWordSpec with Inside {
           <ie:CC315A xmlns:ie="http://ics.dgtaxud.ec/CC315A"></ie:CC315A>
         //@formatter:on
         declarationToJsonConverter.convertToJson(xml, input) shouldBe Left(ErrorWrapper(ServerError))
+      }
+    }
+    "for bad json validation" must {
+      "return Left(ServerError)" in {
+        val json: JsValue = ResourceUtils.withInputStreamFor("jsons/315NoOptionalBad.json")(Json.parse)
+        declarationToJsonConverter.validateJson(json) shouldBe Left(ErrorWrapper(ServerError))
       }
     }
   }
