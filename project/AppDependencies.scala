@@ -28,9 +28,9 @@ object AppDependencies {
     "org.typelevel"                %% "cats-core"                 % "2.13.0",
     "org.scala-lang.modules"       %% "scala-xml"                 % "2.4.0",
     "com.lucidchart"               %% "xtract"                    % "2.3.0",
-    "org.apache.groovy"             %  "groovy"                   % "5.0.2",
+    "org.apache.groovy"             %  "groovy"                   % "5.0.6",
     "com.chuusai"                  %% "shapeless"                 % "2.3.13",
-    "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.20.1"
+    "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.22.0"
   )
 
   val test: Seq[ModuleID] = Seq(
@@ -39,7 +39,7 @@ object AppDependencies {
     "org.scalamock"          %% "scalamock"                   % "7.5.5",
     "org.scalacheck"         %% "scalacheck"                  % "1.19.0",
     "org.mockito"            %  "mockito-core"                % "5.23.0",
-    "org.mockito"            %% "mockito-scala"               % "2.1.0",
+    "org.mockito"            %% "mockito-scala"               % "2.2.1",
     "com.github.pjfanning"   %% "pekko-mock-scheduler"        % "0.6.0",
     "org.apache.pekko"       %% "pekko-testkit"               % pekkoVersion,
     "org.apache.pekko"       %% "pekko-actor-typed"           % pekkoVersion,
