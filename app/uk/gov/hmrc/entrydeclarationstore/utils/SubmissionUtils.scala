@@ -22,10 +22,10 @@ import uk.gov.hmrc.entrydeclarationstore.nrs.IdentityData
 import uk.gov.hmrc.entrydeclarationstore.reporting.SubmissionHandledData
 
 object SubmissionUtils {
-  def extractSubmissionHandledDetails(
-                                       eori: String, identityData: Option[IdentityData],
-                                       model: Either[ErrorWrapper[_],
-                                       EntrySummaryDeclaration]) : SubmissionHandledData = {
+  def extractSubmissionHandledDetails(eori: String,
+                                      identityData: Option[IdentityData],
+                                      model: Either[ErrorWrapper[_], EntrySummaryDeclaration]
+                                     ): SubmissionHandledData = {
 
     val parties: Option[Parties] = model match {
       case Right(p) => Some(p.parties)
@@ -35,7 +35,6 @@ object SubmissionUtils {
     SubmissionHandledData(
       identityData,
       eori,
-      identityData.flatMap(_.name),
       identityData.flatMap(_.itmpAddress.flatMap(_.countryName)),
       identityData.map(_.enrolments),
       parties

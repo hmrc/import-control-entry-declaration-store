@@ -70,7 +70,7 @@ class AuthServiceSpec
   private val nonCSPRetrievalNRSEnabled = (
     affinityGroup and
       internalId and externalId and agentCode and credentials
-      and confidenceLevel and nino and saUtr and name and dateOfBirth
+      and confidenceLevel and nino and saUtr and dateOfBirth
       and email and agentInformation and groupIdentifier and credentialRole
       and mdtpInformation and itmpName and itmpDateOfBirth and itmpAddress and credentialStrength and allEnrolments and loginTimes and allEnrolments
   )
@@ -79,7 +79,7 @@ class AuthServiceSpec
 
   private def nonCSPRetrievalResultsNRSEnabled(enrolments: Enrolments) =
     // @formatter:off
-    new ~(new ~(new ~(new ~(  new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(
+    new ~(new ~(new ~(new ~(  new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(
       identityData.affinityGroup,
       identityData.internalId),
       identityData.externalId),
@@ -88,7 +88,6 @@ class AuthServiceSpec
       identityData.confidenceLevel),
       identityData.nino),
       identityData.saUtr),
-      identityData.name),
       identityData.dateOfBirth),
       identityData.email),
       identityData.agentInformation),
@@ -110,7 +109,7 @@ class AuthServiceSpec
 
   private val cspRetrievalsNRSEnabled = (affinityGroup and
     internalId and externalId and agentCode and credentials
-    and confidenceLevel and nino and saUtr and name and dateOfBirth
+    and confidenceLevel and nino and saUtr and dateOfBirth
     and email and agentInformation and groupIdentifier and credentialRole
     and mdtpInformation and itmpName and itmpDateOfBirth and itmpAddress and credentialStrength and allEnrolments and loginTimes)
 
@@ -123,7 +122,7 @@ class AuthServiceSpec
 
   private val cspIdentityDataRetrievalNRSEnabled =
     // @formatter:off
-   new ~(new ~(new ~(  new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(
+   new ~(new ~(new ~(  new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(new ~(
      identityData.affinityGroup,
      identityData.internalId),
      identityData.externalId),
@@ -132,7 +131,6 @@ class AuthServiceSpec
      identityData.confidenceLevel),
      identityData.nino),
      identityData.saUtr),
-     identityData.name),
      identityData.dateOfBirth),
      identityData.email),
      identityData.agentInformation),

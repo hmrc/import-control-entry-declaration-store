@@ -125,24 +125,24 @@ class AuthService @Inject()(
 
   private lazy val nrsRetrievals =
     (affinityGroup and
-      internalId and externalId and agentCode and credentials and confidenceLevel and nino and saUtr and name and dateOfBirth
+      internalId and externalId and agentCode and credentials and confidenceLevel and nino and saUtr and dateOfBirth
       and email and agentInformation and groupIdentifier and credentialRole
       and mdtpInformation and itmpName and itmpDateOfBirth and itmpAddress and credentialStrength and allEnrolments and loginTimes)
 
   private def identityDataBuilder(
     identityParts: Option[AffinityGroup] ~ Option[String] ~ Option[String] ~ Option[String] ~
-      Option[Credentials] ~ ConfidenceLevel ~ Option[String] ~ Option[String] ~ Option[Name] ~ Option[LocalDate] ~
+      Option[Credentials] ~ ConfidenceLevel ~ Option[String] ~ Option[String] ~ Option[LocalDate] ~
       Option[String] ~ AgentInformation ~ Option[String] ~ Option[CredentialRole] ~ Option[MdtpInformation] ~
       Option[ItmpName] ~ Option[LocalDate] ~ Option[ItmpAddress] ~ Option[String] ~ Enrolments ~ LoginTimes): Option[IdentityData] =
     identityParts match {
 
       case affGroup ~ inId ~ exId ~ agCode ~ creds
-            ~ confLevel ~ ni ~ saRef ~ nme ~ dob
+            ~ confLevel ~ ni ~ saRef ~ dob
             ~ eml ~ agInfo ~ groupId ~ credRole
             ~ mdtpInfo ~ tmpName ~ itmpDob ~ tmpAddress ~ credStrength ~ enrolments ~ logins =>
         // @formatter:off
         Some(IdentityData(
-          inId, exId, agCode, creds, confLevel, ni, saRef, nme, dob,
+          inId, exId, agCode, creds, confLevel, ni, saRef, dob,
           eml, agInfo, groupId, credRole, mdtpInfo, tmpName, itmpDob,
           tmpAddress, affGroup, credStrength, enrolments, logins
         ))
