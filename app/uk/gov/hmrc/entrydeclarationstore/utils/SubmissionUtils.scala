@@ -17,15 +17,14 @@
 package uk.gov.hmrc.entrydeclarationstore.utils
 
 import uk.gov.hmrc.entrydeclarationstore.models.ErrorWrapper
-import uk.gov.hmrc.entrydeclarationstore.models.json.{EntrySummaryDeclaration, Parties}
+import uk.gov.hmrc.entrydeclarationstore.models.json.{EntrySummaryDeclarationNew, Parties}
 import uk.gov.hmrc.entrydeclarationstore.nrs.IdentityData
 import uk.gov.hmrc.entrydeclarationstore.reporting.SubmissionHandledData
 
 object SubmissionUtils {
   def extractSubmissionHandledDetails(
                                        eori: String, identityData: Option[IdentityData],
-                                       model: Either[ErrorWrapper[_],
-                                       EntrySummaryDeclaration]) : SubmissionHandledData = {
+                                       model: Either[ErrorWrapper[_], EntrySummaryDeclarationNew]) : SubmissionHandledData = {
 
     val parties: Option[Parties] = model match {
       case Right(p) => Some(p.parties)

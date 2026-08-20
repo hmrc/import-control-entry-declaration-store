@@ -85,10 +85,9 @@ class EntryDeclarationSubmissionController @Inject()(
 
       val xml = validationHandler.handleValidation(rawPayload, request.userDetails.eori, mrn)
 
-      // when enabling optionalFields in prod, update this to use new model
       val model = for {
         xml <- xml
-        model <- declarationToJsonConverter.convertToModel(xml, input)
+        model <- declarationToJsonConverter.convertToModelNew(xml, input)
         } yield model
 
       service
