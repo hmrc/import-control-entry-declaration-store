@@ -69,21 +69,10 @@ class DIModule extends AbstractModule {
   def eisTrafficSwitchConfig(appConfig: AppConfig): TrafficSwitchConfig =
     appConfig.eisTrafficSwitchConfig
 
-  @Named("ruleValidator315")
-  @Provides
-  def ruleValidator315(appConfig: AppConfig): RuleValidator =
-    ruleValidator("/ie:CC315A", appConfig.businessRules315)
-
   @Named("ruleValidator315New")
   @Provides
   def ruleValidator315New(appConfig: AppConfig): RuleValidator =
     ruleValidator("/ie:CC315A", appConfig.businessRules315New)
-
-
-  @Named("ruleValidator313")
-  @Provides
-  def ruleValidator313(appConfig: AppConfig): RuleValidator =
-    ruleValidator("/ie:CC313A", appConfig.businessRules313)
 
   @Named("ruleValidator313New")
   @Provides

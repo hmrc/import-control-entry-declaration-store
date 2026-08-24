@@ -30,7 +30,7 @@ import uk.gov.hmrc.entrydeclarationstore.validation.schema.*
 import scala.xml.NodeSeq
 
 class ValidationHandlerSpec extends AnyWordSpec with MockSchemaValidator with MockRuleValidator with MockAppConfig {
-
+  
   val metrics: MetricRegistry = new MetricRegistry()
   given lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
 
@@ -40,8 +40,6 @@ class ValidationHandlerSpec extends AnyWordSpec with MockSchemaValidator with Mo
     MockAppConfig.xmlFormatConfig.returns(xmlFormatConfig).anyNumberOfTimes()
     new ValidationHandlerImpl(
       mockSchemaValidator,
-      mockRuleValidator,
-      mockRuleValidator,
       mockRuleValidator,
       mockRuleValidator,
       metrics,
@@ -88,9 +86,9 @@ class ValidationHandlerSpec extends AnyWordSpec with MockSchemaValidator with Mo
 
       "all valid" must {
         "return the payload" in {
-          MockAppConfig.optionalFieldsEnabled returns false
+          
           MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Valid(payload)
-          MockAppConfig.optionalFieldsEnabled returns false
+          
           MockRuleValidator.validate(payload) returns Right(())
 
           validationHandler.handleValidation(RawPayload(payload), eori, mrn) shouldBe Right(payload)
@@ -99,7 +97,7 @@ class ValidationHandlerSpec extends AnyWordSpec with MockSchemaValidator with Mo
 
       "xml is not schema valid" must {
         "return an error" in {
-          MockAppConfig.optionalFieldsEnabled returns false
+          
           MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Invalid(payload, errors)
 
           validationHandler.handleValidation(RawPayload(payload), eori, mrn) shouldBe Left(ErrorWrapper(errors))
@@ -108,7 +106,7 @@ class ValidationHandlerSpec extends AnyWordSpec with MockSchemaValidator with Mo
 
       "xml is malformed" must {
         "return an error" in {
-          MockAppConfig.optionalFieldsEnabled returns false
+          
           MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Malformed(errors)
 
           validationHandler.handleValidation(RawPayload(payload), eori, mrn) shouldBe Left(ErrorWrapper(errors))
@@ -117,9 +115,9 @@ class ValidationHandlerSpec extends AnyWordSpec with MockSchemaValidator with Mo
 
       "xml has business rule errors" must {
         "return an error" in {
-          MockAppConfig.optionalFieldsEnabled returns false
+          
           MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Valid(payload)
-          MockAppConfig.optionalFieldsEnabled returns false
+          
           MockRuleValidator.validate(payload) returns Left(errors)
 
           validationHandler.handleValidation(RawPayload(payload), eori, mrn) shouldBe Left(ErrorWrapper(errors))
@@ -133,7 +131,7 @@ class ValidationHandlerSpec extends AnyWordSpec with MockSchemaValidator with Mo
     payloadBuilder: Option[String] => NodeSeq,
     mrn: Option[String]): Unit = {
     def validate(payload: NodeSeq) = {
-      MockAppConfig.optionalFieldsEnabled returns false
+      
       MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Valid(payload)
 
       validationHandler.handleValidation(RawPayload(payload), eori, mrn)
@@ -167,7 +165,7 @@ class ValidationHandlerSpec extends AnyWordSpec with MockSchemaValidator with Mo
     payloadBuilder: Option[String] => NodeSeq,
     mrn: Option[String]): Unit = {
     def validate(payload: NodeSeq) = {
-      MockAppConfig.optionalFieldsEnabled returns false
+      
       MockSchemaValidator.validate(schemaType, RawPayload(payload)) returns Invalid(payload, errors)
 
       validationHandler.handleValidation(RawPayload(payload), eori, mrn)
@@ -204,20 +202,20 @@ class ValidationHandlerSpec extends AnyWordSpec with MockSchemaValidator with Mo
 
   "ValidationHandler" when {
     "passed a 315" when {
-      behave like validationHandlerFor(SchemaTypeE315, ie315payload(), None)
-      behave like eoriCheckerSchemaValid(SchemaTypeE315, ie315payload, None)
-      behave like eoriCheckerSchemaInvalid(SchemaTypeE315, ie315payload, None)
+      behave like validationHandlerFor(SchemaTypeE315New, ie315payload(), None)
+      behave like eoriCheckerSchemaValid(SchemaTypeE315New, ie315payload, None)
+      behave like eoriCheckerSchemaInvalid(SchemaTypeE315New, ie315payload, None)
     }
 
     "passed a 313" when {
-      behave like validationHandlerFor(SchemaTypeE313, ie313payload(), Some(mrn))
-      behave like eoriCheckerSchemaValid(SchemaTypeE313, ie313payload, Some(mrn))
-      behave like eoriCheckerSchemaInvalid(SchemaTypeE313, ie313payload, Some(mrn))
+      behave like validationHandlerFor(SchemaTypeE313New, ie313payload(), Some(mrn))
+      behave like eoriCheckerSchemaValid(SchemaTypeE313New, ie313payload, Some(mrn))
+      behave like eoriCheckerSchemaInvalid(SchemaTypeE313New, ie313payload, Some(mrn))
 
       "mrn does not match that in payload" must {
         "return an error" in {
-          MockAppConfig.optionalFieldsEnabled returns false
-          MockSchemaValidator.validate(SchemaTypeE313, RawPayload(ie313payload())) returns Valid(ie313payload())
+          
+          MockSchemaValidator.validate(SchemaTypeE313New, RawPayload(ie313payload())) returns Valid(ie313payload())
 
           validationHandler.handleValidation(RawPayload(ie313payload()), eori, Some("otherMrn")) shouldBe Left(
             ErrorWrapper(MRNMismatchError))
