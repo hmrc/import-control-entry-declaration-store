@@ -20,7 +20,7 @@ import sbt.*
 object AppDependencies {
   val bootstrapVersion = "10.7.0"
   val pekkoVersion = "1.1.5"
-  val mongoVersion = "2.12.0"
+  val mongoVersion = "2.13.0"
 
   val compile: Seq[ModuleID] = Seq(
     "com.github.java-json-tools"   %  "json-schema-validator"     % "2.2.14",
