@@ -18,12 +18,13 @@ import buildinfo.BuildInfo.scalaVersion
 import sbt.*
 
 object AppDependencies {
-  val bootstrapVersion = "10.7.0"
-  val pekkoVersion = "1.1.5"
+  val bootstrapVersion = "10.8.0"
+  val pekkoVersion = "1.7.0"
   val mongoVersion = "2.13.0"
 
   val compile: Seq[ModuleID] = Seq(
-    "com.github.java-json-tools"   %  "json-schema-validator"     % "2.2.14",
+    "com.github.java-json-tools"   %  "json-schema-validator"     % "2.2.14" exclude("org.mozilla", "rhino"),
+    "org.mozilla"                  %  "rhino"                     % "1.9.1",
     "uk.gov.hmrc.mongo"            %% "hmrc-mongo-play-30"        % mongoVersion,
     "uk.gov.hmrc"                  %% "bootstrap-backend-play-30" % bootstrapVersion,
     "org.scala-lang.modules"       %% "scala-xml"                 % "2.4.0",
@@ -31,8 +32,8 @@ object AppDependencies {
     ("com.lucidchart"               %% "xtract"                    % "2.3.0").cross(CrossVersion.for3Use2_13)
       .exclude("org.scala-lang.modules", "scala-xml_2.13")
       .exclude("org.scala-lang.modules", "scala-collection-compat_2.13"),
-    "org.apache.groovy"             %  "groovy"                   % "5.0.6",
-    "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.22.0",
+    "org.apache.groovy"             %  "groovy"                   % "5.1.0",
+    "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.22.2",
     "org.scala-lang.modules"       %% "scala-collection-compat"   % "2.14.0"
   )
 
@@ -42,7 +43,7 @@ object AppDependencies {
     "org.scalamock"          %% "scalamock"                   % "7.5.5",
     "org.scalacheck"         %% "scalacheck"                  % "1.19.0",
     "org.mockito"            %  "mockito-core"                % "5.23.0",
-    "org.mockito"            %% "mockito-scala"               % "2.2.1",
+    "org.mockito"            %% "mockito-scala"               % "2.2.3",
     "com.github.pjfanning"   %% "pekko-mock-scheduler"        % "0.6.0",
     "org.apache.pekko"       %% "pekko-testkit"               % pekkoVersion,
     "org.apache.pekko"       %% "pekko-actor-typed"           % pekkoVersion,
