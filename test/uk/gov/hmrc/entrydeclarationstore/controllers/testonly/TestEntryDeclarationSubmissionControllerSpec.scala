@@ -50,7 +50,7 @@ class TestEntryDeclarationSubmissionControllerSpec
     with NRSMetadataTestData
     with MockValidationHandler
     with MockIdGenerator
-    with MockDeclarationToJsonConverter
+    with MockDeclarationToJsonConverterReducedDataset
     with MockReportSender
     with MockAppConfig {
 
@@ -81,13 +81,13 @@ class TestEntryDeclarationSubmissionControllerSpec
   private val rawPayload = RawPayload(xmlPayload)
   val jsonPayload: JsValue        = JsString("payload")
   val correlationId = "correlationId"
-  val entrySummaryDeclaration: EntrySummaryDeclaration = EntrySummaryDeclaration(
+  val entrySummaryDeclarationNew: EntrySummaryDeclarationNew = EntrySummaryDeclarationNew(
     submissionId,
     None,
     Metadata("", "", "", MessageType.IE315, "", "", ""),
     None,
     Parties(None, None, Trader(None, None,None, None), None, None, None),
-    Goods(1,None, None, None, None),
+    GoodsNew(Some(1),None, None, None, None),
     Itinerary("", None, None, None, None, None, None, OfficeOfFirstEntry("", ""), None),
     None
   )
@@ -210,7 +210,7 @@ class TestEntryDeclarationSubmissionControllerSpec
 
         mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.EORIMismatchError, extractSubmissionHandledDetails(eori,
           None,
-          Right(entrySummaryDeclaration)))
+          Right(entrySummaryDeclarationNew)))
 
         check(fakeRequest(xmlPayload), FORBIDDEN, "FORBIDDEN")
       }
@@ -224,7 +224,7 @@ class TestEntryDeclarationSubmissionControllerSpec
         setupMocks()
         mockServiceFailWithError(validationErrors, mrn, None)
         mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.ValidationErrors, extractSubmissionHandledDetails(eori, None,
-          Right(entrySummaryDeclaration)))
+          Right(entrySummaryDeclarationNew)))
         lazy val result: Future[Result] = handler(fakeRequest(xmlPayload))
         status(result) shouldBe BAD_REQUEST
         val xmlBody: Elem = xml.XML.loadString(contentAsString(result))
@@ -237,7 +237,7 @@ class TestEntryDeclarationSubmissionControllerSpec
         mockServiceFailWithError(validationErrors, mrn, None)
         mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.ValidationErrors, extractSubmissionHandledDetails(eori,
           None,
-          Right(entrySummaryDeclaration)))
+          Right(entrySummaryDeclarationNew)))
         MockNRSService.submit(nrsSubmission).never()
 
         await(handler(fakeRequest(xmlPayload)))
@@ -250,7 +250,7 @@ class TestEntryDeclarationSubmissionControllerSpec
         mockServiceFailWithError(ServerError, mrn, None)
         mockReportUnsuccessfulSubmission(mrn.isDefined,
           FailureType.InternalServerError,
-          extractSubmissionHandledDetails(eori, None, Right(entrySummaryDeclaration)))
+          extractSubmissionHandledDetails(eori, None, Right(entrySummaryDeclarationNew)))
         lazy val result: Future[Result] = handler(fakeRequest(xmlPayload))
         status(result) shouldBe INTERNAL_SERVER_ERROR
 
@@ -263,7 +263,7 @@ class TestEntryDeclarationSubmissionControllerSpec
         mockServiceFailWithError(validationErrors, mrn, None)
         mockReportUnsuccessfulSubmission(mrn.isDefined, FailureType.ValidationErrors, extractSubmissionHandledDetails(eori,
           None,
-          Right(entrySummaryDeclaration)))
+          Right(entrySummaryDeclarationNew)))
         MockNRSService.submit(nrsSubmission).never()
 
         await(handler(fakeRequest(xmlPayload)))
@@ -278,8 +278,8 @@ class TestEntryDeclarationSubmissionControllerSpec
       MockIdGenerator.generateCorrelationIdFor(clientInfo) returns correlationId
       MockIdGenerator.generateSubmissionId returns submissionId
       MockValidationHandler.handleValidation(rawPayload.copy(encoding = Some("US-ASCII")), eori, mrn) returns Right(xmlPayload)
-      MockDeclarationToJsonConverter.convertToModel(xmlPayload) returns Right(entrySummaryDeclaration)
-      mockReportSuccessfulSubmission(mrn.isDefined, extractSubmissionHandledDetails(eori, None, Right(entrySummaryDeclaration)))
+      MockDeclarationToJsonConverterReducedDataset.convertToModelReducedDataset(xmlPayload) returns Right(entrySummaryDeclarationNew)
+      mockReportSuccessfulSubmission(mrn.isDefined, extractSubmissionHandledDetails(eori, None, Right(entrySummaryDeclarationNew)))
       MockEntryDeclarationStore
         .handleSubmission(eori, rawPayload.copy(encoding = Some("US-ASCII")), mrn, now, clientInfo, submissionId, correlationId, inputParams(mrn))
         .returns(Future.successful(Right(SuccessResponse("12345678901234", "3216783621-123873821-12332"))))
@@ -294,7 +294,7 @@ class TestEntryDeclarationSubmissionControllerSpec
     "pass to the service without a character encoding if none is present in the request" in {
       MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, None)))
       setupMocks()
-      mockReportSuccessfulSubmission(mrn.isDefined, extractSubmissionHandledDetails(eori, None, Right(entrySummaryDeclaration)))
+      mockReportSuccessfulSubmission(mrn.isDefined, extractSubmissionHandledDetails(eori, None, Right(entrySummaryDeclarationNew)))
       MockEntryDeclarationStore
         .handleSubmission(eori, rawPayload.copy(encoding = None), mrn, now, clientInfo, submissionId, correlationId, inputParams(mrn))
         .returns(Future.successful(Right(SuccessResponse("12345678901234","3216783621-123873821-12332"))))
@@ -311,7 +311,7 @@ class TestEntryDeclarationSubmissionControllerSpec
         "submit to NRS and not wait until NRS submission completes" in {
           MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, Some(identityData))))
           setupMocks()
-          mockReportSuccessfulSubmission(mrn.isDefined, extractSubmissionHandledDetails(eori, Some(identityData), Right(entrySummaryDeclaration)))
+          mockReportSuccessfulSubmission(mrn.isDefined, extractSubmissionHandledDetails(eori, Some(identityData), Right(entrySummaryDeclarationNew)))
           MockEntryDeclarationStore
             .handleSubmission(eori, rawPayload, mrn, now, clientInfo, submissionId, correlationId, inputParams(mrn))
             .returns(Future.successful(Right(SuccessResponse("12345678901234", "3216783621-123873821-12332"))))
@@ -329,7 +329,7 @@ class TestEntryDeclarationSubmissionControllerSpec
         "not submit to NRS" in {
           MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, None)))
           setupMocks()
-          mockReportSuccessfulSubmission(mrn.isDefined, extractSubmissionHandledDetails(eori, None, Right(entrySummaryDeclaration)))
+          mockReportSuccessfulSubmission(mrn.isDefined, extractSubmissionHandledDetails(eori, None, Right(entrySummaryDeclarationNew)))
           MockEntryDeclarationStore
             .handleSubmission(eori, rawPayload, mrn, now, clientInfo, submissionId, correlationId, inputParams(mrn))
             .returns(Future.successful(Right(SuccessResponse("12345678901234", "3216783621-123873821-12332"))))
@@ -348,7 +348,7 @@ class TestEntryDeclarationSubmissionControllerSpec
       "The submission is handled successfully" in {
         MockAuthService.authenticate returns Future.successful(Some(UserDetails(eori, clientInfo, None)))
         setupMocks()
-        mockReportSuccessfulSubmission(isAmendment = false, extractSubmissionHandledDetails(eori, None, Right(entrySummaryDeclaration)))
+        mockReportSuccessfulSubmission(isAmendment = false, extractSubmissionHandledDetails(eori, None, Right(entrySummaryDeclarationNew)))
         MockEntryDeclarationStore
           .handleSubmission(eori, rawPayload, None, now, clientInfo, submissionId, correlationId, inputParams(None))
           .returns(Future.successful(Right(SuccessResponse("12345678901234", "3216783621-123873821-12332"))))
@@ -375,6 +375,6 @@ class TestEntryDeclarationSubmissionControllerSpec
     MockIdGenerator.generateCorrelationIdFor(clientInfo) returns correlationId
     MockIdGenerator.generateSubmissionId returns submissionId
     MockValidationHandler.handleValidation(rawPayload, eori, None) returns Right(xmlPayload)
-    MockDeclarationToJsonConverter.convertToModel(xmlPayload) returns Right(entrySummaryDeclaration)
+    MockDeclarationToJsonConverterReducedDataset.convertToModelReducedDataset(xmlPayload) returns Right(entrySummaryDeclarationNew)
   }
 }

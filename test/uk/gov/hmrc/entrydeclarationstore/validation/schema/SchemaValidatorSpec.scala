@@ -35,7 +35,7 @@ class SchemaValidatorSpec extends AnyWordSpec with Inside {
     "Validating a E313" when {
 
       factory.setNamespaceAware(true)
-      factory.setSchema(SchemaTypeE313.schema)
+      factory.setSchema(SchemaTypeE313New.schema)
       val saxParser = factory.newSAXParser()
 
       "passed valid sample" must {
@@ -46,7 +46,7 @@ class SchemaValidatorSpec extends AnyWordSpec with Inside {
           val xml                = XML.withSAXParser(saxParser).load(ResourceUtils.url(resourceName))
           val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
-          validator.validate(SchemaTypeE313, rawXml) shouldBe SchemaValidationResult.Valid(xml)
+          validator.validate(SchemaTypeE313New, rawXml) shouldBe SchemaValidationResult.Valid(xml)
         }
       }
 
@@ -57,7 +57,7 @@ class SchemaValidatorSpec extends AnyWordSpec with Inside {
           val xml                = XML.withSAXParser(saxParser).load(ResourceUtils.url(resourceName))
           val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
-          validator.validate(SchemaTypeE313, rawXml) shouldBe SchemaValidationResult.Invalid(
+          validator.validate(SchemaTypeE313New, rawXml) shouldBe SchemaValidationResult.Invalid(
             xml,
             ValidationErrors(Seq(
               ValidationError(
@@ -98,7 +98,7 @@ class SchemaValidatorSpec extends AnyWordSpec with Inside {
           val xml                = XML.withSAXParser(saxParser).load(ResourceUtils.url(resourceName))
           val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
-          validator.validate(SchemaTypeE313, rawXml) shouldBe SchemaValidationResult.Invalid(
+          validator.validate(SchemaTypeE313New, rawXml) shouldBe SchemaValidationResult.Invalid(
             xml,
             ValidationErrors(
               Seq(
@@ -120,7 +120,7 @@ class SchemaValidatorSpec extends AnyWordSpec with Inside {
           val xml                = XML.withSAXParser(saxParser).load(ResourceUtils.url(resourceName))
           val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
-          validator.validate(SchemaTypeE313, rawXml) shouldBe SchemaValidationResult.Invalid(
+          validator.validate(SchemaTypeE313New, rawXml) shouldBe SchemaValidationResult.Invalid(
             xml,
             ValidationErrors(
               Seq(
@@ -139,7 +139,7 @@ class SchemaValidatorSpec extends AnyWordSpec with Inside {
     "Validating a E315" when {
 
       factory.setNamespaceAware(true)
-      factory.setSchema(SchemaTypeE315.schema)
+      factory.setSchema(SchemaTypeE315New.schema)
       val saxParser = factory.newSAXParser()
 
       "passed valid sample" must {
@@ -149,7 +149,7 @@ class SchemaValidatorSpec extends AnyWordSpec with Inside {
           val xml                = XML.withSAXParser(saxParser)load(ResourceUtils.url(resourceName))
           val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
-          validator.validate(SchemaTypeE315, rawXml) shouldBe SchemaValidationResult.Valid(xml)
+          validator.validate(SchemaTypeE315New, rawXml) shouldBe SchemaValidationResult.Valid(xml)
         }
       }
 
@@ -160,7 +160,7 @@ class SchemaValidatorSpec extends AnyWordSpec with Inside {
           val xml                = XML.withSAXParser(saxParser).load(ResourceUtils.url(resourceName))
           val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
-          validator.validate(SchemaTypeE315, rawXml) shouldBe SchemaValidationResult.Invalid(
+          validator.validate(SchemaTypeE315New, rawXml) shouldBe SchemaValidationResult.Invalid(
             xml,
             ValidationErrors(Seq(
               ValidationError(
@@ -201,7 +201,7 @@ class SchemaValidatorSpec extends AnyWordSpec with Inside {
           val xml                = XML.withSAXParser(saxParser).load(ResourceUtils.url(resourceName))
           val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
-          validator.validate(SchemaTypeE315, rawXml) shouldBe SchemaValidationResult.Invalid(
+          validator.validate(SchemaTypeE315New, rawXml) shouldBe SchemaValidationResult.Invalid(
             xml,
             ValidationErrors(
               Seq(
@@ -223,7 +223,7 @@ class SchemaValidatorSpec extends AnyWordSpec with Inside {
           val xml                = XML.withSAXParser(saxParser).load(ResourceUtils.url(resourceName))
           val rawXml: RawPayload = RawPayload(ResourceUtils.asByteArray(resourceName))
 
-          validator.validate(SchemaTypeE315, rawXml) shouldBe SchemaValidationResult.Invalid(
+          validator.validate(SchemaTypeE315New, rawXml) shouldBe SchemaValidationResult.Invalid(
             xml,
             ValidationErrors(
               Seq(
@@ -242,7 +242,7 @@ class SchemaValidatorSpec extends AnyWordSpec with Inside {
         "return Malformed containing Validation Errors" in {
           val xml = "<xml><hello"
 
-          validator.validate(SchemaTypeE315, RawPayload(xml)) shouldBe a[SchemaValidationResult.Malformed]
+          validator.validate(SchemaTypeE315New, RawPayload(xml)) shouldBe a[SchemaValidationResult.Malformed]
         }
       }
     }
@@ -258,7 +258,7 @@ class SchemaValidatorSpec extends AnyWordSpec with Inside {
 
       "no explicit character encoding provided (from HTTP header)" must {
         def inferTheEncodingFrom(xmlBytes: Array[Byte]): Assertion =
-          inside(validator.validate(SchemaTypeE313, RawPayload(xmlBytes))) {
+          inside(validator.validate(SchemaTypeE313New, RawPayload(xmlBytes))) {
             case SchemaValidationResult.Valid(xml) => (xml \\ "StrAndNumPLD1").text shouldBe addressLine
           }
 
@@ -280,7 +280,7 @@ class SchemaValidatorSpec extends AnyWordSpec with Inside {
           val charset  = "UTF-16BE"
           val xmlBytes = xmlString.getBytes(charset)
 
-          inside(validator.validate(SchemaTypeE313, RawPayload(xmlBytes, Some(charset)))) {
+          inside(validator.validate(SchemaTypeE313New, RawPayload(xmlBytes, Some(charset)))) {
             case SchemaValidationResult.Valid(xml) => (xml \\ "StrAndNumPLD1").text shouldBe addressLine
           }
         }
@@ -289,7 +289,7 @@ class SchemaValidatorSpec extends AnyWordSpec with Inside {
           // The xml parser seems pretty good at getting the right character encoding on its own,
           // so one way to prove that it is using the encoding we are providing
           // deliberately give it the wrong one...
-          inside(validator.validate(SchemaTypeE313, RawPayload(rawFileXmlBytes, Some("ISO-8859-1")))) {
+          inside(validator.validate(SchemaTypeE313New, RawPayload(rawFileXmlBytes, Some("ISO-8859-1")))) {
             case SchemaValidationResult.Valid(xml) =>
               (xml \\ "StrAndNumPLD1").text shouldBe "1234 Avenue du SacrÃ©-CÅ\u0093ur"
           }

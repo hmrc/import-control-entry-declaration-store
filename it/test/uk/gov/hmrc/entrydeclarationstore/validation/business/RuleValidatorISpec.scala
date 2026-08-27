@@ -38,35 +38,17 @@ class RuleValidatorISpec extends AnyWordSpec with GuiceOneAppPerSuite {
     .build()
 
   "Rule validator for 315s" when {
-    "optionalFields feature switch is set to false" must {
-      val ruleValidator: RuleValidator =
-        app.injector.instanceOf(BindingKey(classOf[RuleValidator]).qualifiedWith("ruleValidator315"))
+    val ruleValidator: RuleValidator =
+      app.injector.instanceOf(BindingKey(classOf[RuleValidator]).qualifiedWith("ruleValidator315New"))
 
-      validateAll(ruleValidator, "xmls/ruleTestCases315/")
-    }
-
-    "optionalFields feature switch is set to true" must {
-      val ruleValidator: RuleValidator =
-        app.injector.instanceOf(BindingKey(classOf[RuleValidator]).qualifiedWith("ruleValidator315New"))
-
-      validateAll(ruleValidator, "xmls/ruleTestCases315New/")
-    }
+    validateAll(ruleValidator, "xmls/ruleTestCases315New/")
   }
 
   "Rule validator for 313s" when {
-    "optionalFields feature switch is set to false" must {
-      val ruleValidator: RuleValidator =
-        app.injector.instanceOf(BindingKey(classOf[RuleValidator]).qualifiedWith("ruleValidator313"))
+    val ruleValidator: RuleValidator =
+      app.injector.instanceOf(BindingKey(classOf[RuleValidator]).qualifiedWith("ruleValidator313New"))
 
-      validateAll(ruleValidator, "xmls/ruleTestCases313/")
-    }
-
-    "optionalFields feature switch is set to true" must {
-      val ruleValidator: RuleValidator =
-        app.injector.instanceOf(BindingKey(classOf[RuleValidator]).qualifiedWith("ruleValidator313New"))
-
-      validateAll(ruleValidator, "xmls/ruleTestCases313New/")
-    }
+    validateAll(ruleValidator, "xmls/ruleTestCases313New/")
   }
 
   def validateAll(ruleValidator: RuleValidator, directoryName: String): Unit = {

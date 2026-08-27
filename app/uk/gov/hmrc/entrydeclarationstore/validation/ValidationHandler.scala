@@ -36,9 +36,7 @@ trait ValidationHandler {
 
 class ValidationHandlerImpl @Inject()(
   schemaValidator: SchemaValidator,
-  @Named("ruleValidator313") ruleValidator313: RuleValidator,
   @Named("ruleValidator313New") ruleValidator313New: RuleValidator,
-  @Named("ruleValidator315") ruleValidator315: RuleValidator,
   @Named("ruleValidator315New") ruleValidator315New: RuleValidator,
   override val metrics: MetricRegistry,
   appConfig: AppConfig)
@@ -69,11 +67,10 @@ class ValidationHandlerImpl @Inject()(
       def logSchemaErrors(errs: ValidationErrors): Unit =
         ContextLogger.info(s"Schema validation errors found. Num errs=${errs.errors.length}")
 
-      val schemaType = (mrn.isDefined, appConfig.optionalFieldsFeature) match {
-        case (true, false) => SchemaTypeE313
-        case (false, false) => SchemaTypeE315
-        case (true, true) => SchemaTypeE313New
-        case (false, true) => SchemaTypeE315New
+      val schemaType = if (mrn.isDefined) {
+        SchemaTypeE313New
+      } else {
+        SchemaTypeE315New
       }
 
       val validationResult = schemaValidator.validate(schemaType, rawPayload)
@@ -106,12 +103,12 @@ class ValidationHandlerImpl @Inject()(
   private def validateRules(payload: NodeSeq, mrn: Option[String])(using lc: LoggingContext) =
     time("Rule validation", "handleSubmission.validateRules") {
 
-      val validationResult = (mrn.isDefined, appConfig.optionalFieldsFeature) match {
-        case (true, false) => ruleValidator313.validate(payload)
-        case (false, false) => ruleValidator315.validate(payload)
-        case (true, true) => ruleValidator313New.validate(payload)
-        case (false, true) => ruleValidator315New.validate(payload)
-      }
+    val validationResult = if (mrn.isDefined)  {
+      ruleValidator313New.validate(payload) }
+    else {
+       ruleValidator315New.validate(payload)
+    }
+
 
       validationResult.leftMap { errs =>
         ContextLogger.info(s"Business validation errors found. Num errs=${errs.errors.length}")

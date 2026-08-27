@@ -25,7 +25,7 @@ import uk.gov.hmrc.entrydeclarationstore.validation.{ValidationError, Validation
 class ValidatorVulnerabilitiesSpec extends AnyWordSpec with Inside {
 
   val validator                       = new SchemaValidator()
-  val schemaType: SchemaTypeE313.type = SchemaTypeE313
+  val schemaType: SchemaTypeE313New.type = SchemaTypeE313New
 
   val error: Option[ValidationErrors] = Some(
     ValidationErrors(
