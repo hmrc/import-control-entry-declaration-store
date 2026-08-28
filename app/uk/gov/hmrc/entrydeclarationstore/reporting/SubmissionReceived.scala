@@ -68,7 +68,7 @@ object SubmissionReceived {
       val auditEvent = AuditEvent(
         auditType       = "SubmissionReceived",
         transactionName = "ENS submission received",
-        JsObject(Seq("eori" -> JsString(eori), "correlationId" -> JsString(correlationId), "declarationBody" -> body))
+        detail = JsObject(Seq("eori" -> JsString(eori), "correlationId" -> JsString(correlationId), "declarationBody" -> body))
       )
 
       Some(auditEvent)

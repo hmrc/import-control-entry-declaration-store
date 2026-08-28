@@ -62,7 +62,7 @@ object SubmissionSentToEIS {
           AuditEvent(
             auditType       = "SubmissionForwarded",
             transactionName = "ENS submission forwarded to EIS",
-            JsObject(Seq("eori" -> JsString(eori), "correlationId" -> JsString(correlationId)))
+            detail          = JsObject(Seq("eori" -> JsString(eori), "correlationId" -> JsString(correlationId)))
           )
         case Some(_) => AuditEvent("SubmissionUndelivered", "ENS Submission failed to forward to EIS", JsObject.empty)
       }

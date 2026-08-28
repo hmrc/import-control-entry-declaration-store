@@ -47,10 +47,6 @@ trait NRSMetadataTestData {
                   |        "providerType": "GovernmmentGateway"
                   |      },
                   |      "confidenceLevel": 200,
-                  |      "name": {
-                  |        "name": "mickey",
-                  |        "lastName": "mouse"
-                  |      },
                   |      "dateOfBirth": "1985-01-01",
                   |      "email": "test@test.com",
                   |      "agentInformation": {
@@ -103,7 +99,6 @@ trait NRSMetadataTestData {
     confidenceLevel = ConfidenceLevel.L200,
     nino            = None,
     saUtr           = None,
-    name            = Some(Name(Some("mickey"), Some("mouse"))),
     dateOfBirth     = Some(LocalDate.parse("1985-01-01")),
     email           = Some("test@test.com"),
     agentInformation = AgentInformation(

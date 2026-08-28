@@ -31,7 +31,6 @@ case class IdentityData(
   confidenceLevel: ConfidenceLevel,
   nino: Option[String]           = None,
   saUtr: Option[String]          = None,
-  name: Option[Name]             = None,
   dateOfBirth: Option[LocalDate] = None,
   email: Option[String]          = None,
   agentInformation: AgentInformation,
@@ -50,7 +49,6 @@ object IdentityData {
   given localDateTimeWrites: Writes[LocalDate]    = Writes.DefaultLocalDateWrites
   given instantWrites: Writes[Instant]            = InstantFormatter.instantWrites
   given credWrites: Writes[Credentials]           = Json.writes[Credentials]
-  given nameWrites: Writes[Name]                  = Json.writes[Name]
   given agentInfoWrites: Writes[AgentInformation] = Json.writes[AgentInformation]
   given mdtpInfoWrites: Writes[MdtpInformation]   = Json.writes[MdtpInformation]
   given itmpNameWrites: Writes[ItmpName]          = Json.writes[ItmpName]

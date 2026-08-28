@@ -19,7 +19,6 @@ package uk.gov.hmrc.entrydeclarationstore.reporting
 import cats.Show
 import play.api.libs.json.{Format, JsObject, Json, Writes}
 import uk.gov.hmrc.auth.core.Enrolments
-import uk.gov.hmrc.auth.core.retrieve.Name
 import uk.gov.hmrc.entrydeclarationstore.nrs.IdentityData
 import uk.gov.hmrc.entrydeclarationstore.reporting.audit.AuditEvent
 import uk.gov.hmrc.entrydeclarationstore.reporting.events.Event
@@ -30,13 +29,13 @@ import uk.gov.hmrc.entrydeclarationstore.models.json.Parties
 
 case class SubmissionHandledData(
                                   identityData: Option[IdentityData],
-                                  eori: String, name: Option[Name],
+                                  eori: String,
                                   country: Option[String],
                                   enrolments: Option[Enrolments],
-                                  parties: Option[Parties])
+                                  parties: Option[Parties]
+                                )
 
 object SubmissionHandledData {
-  given nameWrites: Writes[Name]              = Json.writes[Name]
   given enrolmentWrites: Writes[Enrolments]   = Json.writes[Enrolments]
   given writes: Writes[SubmissionHandledData] = Json.writes[SubmissionHandledData]
 }
@@ -50,15 +49,10 @@ sealed trait FailureType
 
 object SubmissionHandled {
   def createAuditObject(submissionHandledData: SubmissionHandledData, initialObject: JsObject = JsObject.empty): JsObject = {
-    given nameWrites: Writes[Name]              = Json.writes[Name]
+
     given enrolmentWrites: Writes[Enrolments]   = Json.writes[Enrolments]
 
     val optionalIdentityData = submissionHandledData.identityData match {
-      case Some(data) => Json.toJson(data)
-      case _ => JsObject.empty
-    }
-
-    val optionalNameData = submissionHandledData.name match {
       case Some(data) => Json.toJson(data)
       case _ => JsObject.empty
     }
@@ -81,7 +75,6 @@ object SubmissionHandled {
     initialObject ++ Json.obj(
       "eori" -> submissionHandledData.eori,
       "identityData" -> optionalIdentityData,
-      "name" -> optionalNameData,
       "country" -> optionalCountryData,
       "enrolments" -> optionalEnrolmentsData,
       "parties" -> optionalPartiesData

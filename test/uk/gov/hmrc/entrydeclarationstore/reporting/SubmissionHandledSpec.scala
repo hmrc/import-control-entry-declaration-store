@@ -28,8 +28,8 @@ import uk.gov.hmrc.entrydeclarationstore.models.json.{EntrySummaryDeclarationNew
 
 class SubmissionHandledSpec extends AnyWordSpec with NRSMetadataTestData {
 
-  val now: Instant  = Instant.now
-  val eori                   = "GB1234567890"
+  val now: Instant = Instant.now
+  val eori = "GB1234567890"
 
   val failureType: FailureType = FailureType.MRNMismatchError
   val entrySummaryDeclarationNew: EntrySummaryDeclarationNew = EntrySummaryDeclarationNew(
@@ -37,17 +37,77 @@ class SubmissionHandledSpec extends AnyWordSpec with NRSMetadataTestData {
     None,
     Metadata("", "", "", MessageType.IE315, "", "", ""),
     None,
-    Parties(None, None, Trader(None, None,None, None), None, None, None),
-    GoodsNew(Some(1),None, None, None, None),
+    Parties(None, None, Trader(None, None, None, None), None, None, None),
+    GoodsNew(Some(1), None, None, None, None),
     Itinerary("", None, None, None, None, None, None, OfficeOfFirstEntry("", ""), None),
     None
   )
+
+  val expectedIdentityDataJson: JsObject = Json
+    .parse(
+      """
+        |{
+        |  "internalId": "int-id",
+        |  "externalId": "ext-id",
+        |  "credentials": {
+        |    "providerId": "12345-credId",
+        |    "providerType": "GovernmmentGateway"
+        |  },
+        |  "confidenceLevel": 200,
+        |  "dateOfBirth": "1985-01-01",
+        |  "email": "test@test.com",
+        |  "agentInformation": {
+        |    "agentCode": "TZRXXV",
+        |    "agentFriendlyName": "Bodgitt & Legget LLP",
+        |    "agentId": "BDGL"
+        |  },
+        |  "groupIdentifier": "GroupId",
+        |  "credentialRole": "User",
+        |  "mdtpInformation": {
+        |    "deviceId": "DeviceId",
+        |    "sessionId": "SessionId"
+        |  },
+        |  "itmpName": {
+        |    "givenName": "michael",
+        |    "middleName": "h",
+        |    "familyName": "mouse"
+        |  },
+        |  "itmpDateOfBirth": "1985-01-01",
+        |  "itmpAddress": {
+        |    "line1": "Line 1",
+        |    "postCode": "NW94HD",
+        |    "countryName": "United Kingdom",
+        |    "countryCode": "UK"
+        |  },
+        |  "affinityGroup": "Individual",
+        |  "credentialStrength": "strong",
+        |  "enrolments": { "enrolments": [] },
+        |  "loginTimes": {
+        |    "currentLogin": "2016-11-27T09:00:00.000Z",
+        |    "previousLogin": "2016-11-01T12:00:00.000Z"
+        |  }
+        |}
+        |""".stripMargin
+    )
+    .as[JsObject]
+
+  val expectedDetail: JsObject = Json.obj(
+    "eori" -> eori,
+    "identityData" -> expectedIdentityDataJson,
+    "country" -> "United Kingdom",
+    "enrolments" -> Json.obj("enrolments" -> Json.arr()),
+    "parties" -> Json.obj("declarant" -> Json.obj())
+  )
+
+  val expectedFailureDetail: JsObject =
+    Json.obj("failureType" -> "MRNMismatchError") ++ expectedDetail
 
   def checkEvents(
     submissionHandled: SubmissionHandled,
     auditType: String,
     transactionName: String,
     detail: JsObject): Unit = {
+
     "have the correct associated JSON event" in {
       val event = summon[EventSources[SubmissionHandled]].eventFor(now, submissionHandled)
 
@@ -57,9 +117,9 @@ class SubmissionHandledSpec extends AnyWordSpec with NRSMetadataTestData {
     "have the correct associated audit event" in {
       val event = summon[EventSources[SubmissionHandled]].auditEventFor(submissionHandled).get
 
-      event.auditType       shouldBe auditType
+      event.auditType shouldBe auditType
       event.transactionName shouldBe transactionName
-      event.detail          shouldBe detail
+      event.detail shouldBe detail
     }
   }
 
@@ -67,27 +127,44 @@ class SubmissionHandledSpec extends AnyWordSpec with NRSMetadataTestData {
     val handledDetails = SubmissionUtils.extractSubmissionHandledDetails(eori, Some(identityData), Right(entrySummaryDeclarationNew))
 
     "Success(true)" must {
-      checkEvents(SubmissionHandled.Success(true, handledDetails), "SuccessfulAmendment", "Successful amendment", SubmissionHandled.createAuditObject(handledDetails))
+      checkEvents(
+        SubmissionHandled.Success(true, handledDetails),
+        "SuccessfulAmendment",
+        "Successful amendment",
+        expectedDetail
+      )
     }
 
     "Success(false)" must {
-      checkEvents(SubmissionHandled.Success(false, handledDetails), "SuccessfulDeclaration", "Successful declaration", SubmissionHandled.createAuditObject(handledDetails))
-    }
-    "Failure(true, FailureType)" must {
-
-
       checkEvents(
-        SubmissionHandled.Failure(isAmendment = true, failureType, handledDetails),
+        SubmissionHandled.Success(false, handledDetails),
+        "SuccessfulDeclaration",
+        "Successful declaration",
+        expectedDetail
+      )
+    }
+
+    "Failure(true, FailureType)" must {
+      checkEvents(
+        SubmissionHandled.Failure(
+          isAmendment = true,
+          failureType, handledDetails),
         "UnsuccessfulAmendment",
         "Unsuccessful amendment",
-        SubmissionHandled.createAuditObject(handledDetails, Json.obj("failureType" -> failureType)))
+        expectedFailureDetail
+      )
     }
+
     "Failure(false, FailureType)" must {
       checkEvents(
-        SubmissionHandled.Failure(isAmendment = false, failureType, handledDetails),
+        SubmissionHandled.Failure(
+          isAmendment = false,
+          failureType, handledDetails
+        ),
         "UnsuccessfulDeclaration",
         "Unsuccessful declaration",
-        SubmissionHandled.createAuditObject(handledDetails, Json.obj("failureType" -> failureType)))
+        expectedFailureDetail
+      )
     }
   }
 }
