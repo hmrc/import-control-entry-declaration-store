@@ -17,30 +17,32 @@
 package uk.gov.hmrc.entrydeclarationstore.utils
 
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
-import com.github.fge.jsonschema.core.report.ProcessingReport
-import com.github.fge.jsonschema.main.{JsonSchemaFactory, JsonValidator}
+import com.networknt.schema.{Schema, SchemaRegistry, SpecificationVersion}
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.entrydeclarationstore.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationstore.models.{ErrorWrapper, ServerError}
 
 import java.io.FileInputStream
+import scala.jdk.CollectionConverters.*
 
 object JsonSchemaValidator {
 
-  private val factory = JsonSchemaFactory.byDefault()
+  private val mapper: ObjectMapper = new ObjectMapper()
+  
+  private val schemaRegistry: SchemaRegistry =
+    SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_4)
+
   val basePath: String = System.getProperty("user.dir")
 
   def validateJSONAgainstSchema(inputDoc: JsValue, schemaDoc: String = "conf/jsonschemas/EntrySummaryDeclaration.json")(
     using lc: LoggingContext): Either[ErrorWrapper[_], Unit] =
     try {
-      val mapper: ObjectMapper     = new ObjectMapper()
-      val inputJson: JsonNode      = mapper.readTree(inputDoc.toString())
-      val jsonSchema: JsonNode     = mapper.readTree(new FileInputStream(s"$basePath/$schemaDoc"))
-      val validator: JsonValidator = factory.getValidator
-      val report: ProcessingReport = validator.validate(jsonSchema, inputJson)
-      if (!report.isSuccess) {
-        ContextLogger.debug(s"Failed to validate $inputDoc: $report")
-        ContextLogger.error(s"Failed to validate JSON: $report")
+      val inputJson: JsonNode = mapper.readTree(inputDoc.toString())
+      val schema: Schema      = loadSchema(schemaDoc)
+      val errors              = schema.validate(inputJson).asScala.toSeq
+      if (errors.nonEmpty) {
+        ContextLogger.debug(s"Failed to validate $inputDoc: $errors")
+        ContextLogger.error(s"Failed to validate JSON: $errors")
         Left(ErrorWrapper(ServerError))
       } else {
         Right(())
@@ -51,4 +53,10 @@ object JsonSchemaValidator {
         ContextLogger.error(s"Failed to validate JSON", e)
         Left(ErrorWrapper(ServerError))
     }
+
+  private def loadSchema(schemaDoc: String): Schema = {
+    val schemaStream = new FileInputStream(s"$basePath/$schemaDoc")
+    try schemaRegistry.getSchema(schemaStream)
+    finally schemaStream.close()
+  }
 }

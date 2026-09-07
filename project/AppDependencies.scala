@@ -23,16 +23,15 @@ object AppDependencies {
   val mongoVersion = "2.13.0"
 
   val compile: Seq[ModuleID] = Seq(
-    "com.github.java-json-tools"   %  "json-schema-validator"     % "2.2.14" exclude("org.mozilla", "rhino"),
-    "org.mozilla"                  %  "rhino"                     % "1.9.1",
+    "com.networknt"               %  "json-schema-validator"     % "2.0.7",
     "uk.gov.hmrc.mongo"            %% "hmrc-mongo-play-30"        % mongoVersion,
     "uk.gov.hmrc"                  %% "bootstrap-backend-play-30" % bootstrapVersion,
-    "org.scala-lang.modules"       %% "scala-xml"                 % "2.4.0",
+    "org.scala-lang.modules"       %% "scala-xml"                 % "2.5.0",
     // lucidchart is not available for Scala 3
     ("com.lucidchart"               %% "xtract"                    % "2.3.0").cross(CrossVersion.for3Use2_13)
       .exclude("org.scala-lang.modules", "scala-xml_2.13")
       .exclude("org.scala-lang.modules", "scala-collection-compat_2.13"),
-    "org.apache.groovy"             %  "groovy"                   % "5.1.0",
+    "org.apache.groovy"             %  "groovy"                   % "5.1.2",
     "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.22.2",
     "org.scala-lang.modules"       %% "scala-collection-compat"   % "2.14.0"
   )
@@ -41,7 +40,7 @@ object AppDependencies {
     "uk.gov.hmrc"            %% "bootstrap-test-play-30"      % bootstrapVersion,
     "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-30"     % mongoVersion,
     "org.scalamock"          %% "scalamock"                   % "7.5.5",
-    "org.scalacheck"         %% "scalacheck"                  % "1.19.0",
+    "org.scalacheck"         %% "scalacheck"                  % "1.20.0",
     "org.mockito"            %  "mockito-core"                % "5.23.0",
     "org.mockito"            %% "mockito-scala"               % "2.2.3",
     "com.github.pjfanning"   %% "pekko-mock-scheduler"        % "0.6.0",
