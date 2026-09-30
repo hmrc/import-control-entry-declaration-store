@@ -42,7 +42,7 @@ object EntrySummaryDeclaration {
       __.read[Goods],
       __.read[Itinerary],
       (__ \ "HEAHEA").read[Amendment].optional
-    ).mapN(
+      ).mapN(
       (
         specialCircummstancesIndicator: Option[String],
         metadata: Metadata,

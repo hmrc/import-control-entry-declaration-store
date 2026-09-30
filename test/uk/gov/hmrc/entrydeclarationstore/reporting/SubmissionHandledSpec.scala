@@ -24,7 +24,7 @@ import uk.gov.hmrc.entrydeclarationstore.utils.SubmissionUtils
 
 import java.time.Instant
 import uk.gov.hmrc.entrydeclarationstore.models.MessageType
-import uk.gov.hmrc.entrydeclarationstore.models.json.{EntrySummaryDeclarationNew, GoodsNew, Itinerary, Metadata, OfficeOfFirstEntry, Parties, Trader}
+import uk.gov.hmrc.entrydeclarationstore.models.json.{EntrySummaryDeclaration, Goods, Itinerary, Metadata, OfficeOfFirstEntry, Parties, Trader}
 
 class SubmissionHandledSpec extends AnyWordSpec with NRSMetadataTestData {
 
@@ -32,13 +32,13 @@ class SubmissionHandledSpec extends AnyWordSpec with NRSMetadataTestData {
   val eori = "GB1234567890"
 
   val failureType: FailureType = FailureType.MRNMismatchError
-  val entrySummaryDeclarationNew: EntrySummaryDeclarationNew = EntrySummaryDeclarationNew(
+  val entrySummaryDeclarationNew: EntrySummaryDeclaration = EntrySummaryDeclaration(
     "submissionId",
     None,
     Metadata("", "", "", MessageType.IE315, "", "", ""),
     None,
     Parties(None, None, Trader(None, None, None, None), None, None, None),
-    GoodsNew(Some(1), None, None, None, None),
+    Goods(1, None, None, None, None),
     Itinerary("", None, None, None, None, None, None, OfficeOfFirstEntry("", ""), None),
     None
   )

@@ -25,21 +25,10 @@ import uk.gov.hmrc.entrydeclarationstore.utils.JsonSchemaValidator
 import scala.xml.NodeSeq
 
 class DeclarationToJsonConverter {
+
   def convertToJson(xml: NodeSeq, inputParameters: InputParameters)(
     using lc: LoggingContext): Either[ErrorWrapper[_], JsValue] =
-    XmlReader.of(using EntrySummaryDeclaration.reader(using inputParameters)).read(xml) match {
-      case ParseSuccess(entrySummaryDeclaration) => Right(Json.toJson(entrySummaryDeclaration))
-      case ParseFailure(errors) =>
-        ContextLogger.error("Failed to convert to JSON " + errors)
-        Left(ErrorWrapper(ServerError))
-      case PartialParseSuccess(_, errors) =>
-        ContextLogger.error("Failed to convert to JSON (PartialParseSuccess) " + errors)
-        Left(ErrorWrapper(ServerError))
-    }
-
-  def convertToJsonNew(xml: NodeSeq, inputParameters: InputParameters)(
-    using lc: LoggingContext): Either[ErrorWrapper[_], JsValue] =
-    XmlReader.of(EntrySummaryDeclarationNew.reader(using inputParameters)).read(xml) match {
+    XmlReader.of(EntrySummaryDeclaration.reader(using inputParameters)).read(xml) match {
       case ParseSuccess(entrySummaryDeclaration) => Right(Json.toJson(entrySummaryDeclaration))
       case ParseFailure(errors) =>
         ContextLogger.error("Failed to convert to JSON " + errors)
@@ -60,22 +49,7 @@ class DeclarationToJsonConverter {
         ContextLogger.error("Failed to convert to model (PartialParseSuccess) " + errors)
         Left(ErrorWrapper(ServerError))
     }
-
-  def convertToModelNew(xml: NodeSeq, inputParameters: InputParameters)(
-    using lc: LoggingContext): Either[ErrorWrapper[_], EntrySummaryDeclarationNew] =
-    XmlReader.of(EntrySummaryDeclarationNew.reader(using inputParameters)).read(xml) match {
-      case ParseSuccess(entrySummaryDeclaration) => Right(entrySummaryDeclaration)
-      case ParseFailure(errors) =>
-        ContextLogger.error("Failed to convert to model " + errors)
-        Left(ErrorWrapper(ServerError))
-      case PartialParseSuccess(_, errors) =>
-        ContextLogger.error("Failed to convert to model (PartialParseSuccess) " + errors)
-        Left(ErrorWrapper(ServerError))
-    }
-
+  
   def validateJson(entrySummaryDeclaration: JsValue)(using lc: LoggingContext): Either[ErrorWrapper[_], Unit] =
-    JsonSchemaValidator.validateJSONAgainstSchema(entrySummaryDeclaration)
-
-  def validateJsonNew(entrySummaryDeclaration: JsValue)(using lc: LoggingContext): Either[ErrorWrapper[_], Unit] =
     JsonSchemaValidator.validateJSONAgainstSchema(entrySummaryDeclaration, "conf/jsonschemas/EntrySummaryDeclarationNew.json")
 }

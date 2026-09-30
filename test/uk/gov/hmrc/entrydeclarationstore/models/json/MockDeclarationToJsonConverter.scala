@@ -25,20 +25,20 @@ import uk.gov.hmrc.entrydeclarationstore.models.ErrorWrapper
 
 import scala.xml.NodeSeq
 
-trait MockDeclarationToJsonConverterReducedDataset extends TestSuite with MockFactory {
+trait MockDeclarationToJsonConverter extends TestSuite with MockFactory {
   val mockDeclarationToJsonConverter: DeclarationToJsonConverter = mock[DeclarationToJsonConverter]
 
-  object MockDeclarationToJsonConverterReducedDataset {
-    def convertToJsonReducedDataset(xml: NodeSeq): CallHandler[Either[ErrorWrapper[_], JsValue]] =
+  object MockDeclarationToJsonConverter {
+    def convertToJson(xml: NodeSeq): CallHandler[Either[ErrorWrapper[_], JsValue]] =
       (mockDeclarationToJsonConverter
-        .convertToJsonNew(_: NodeSeq, _: InputParameters)(using _: LoggingContext)).expects(xml, *, *)
+        .convertToJson(_: NodeSeq, _: InputParameters)(using _: LoggingContext)).expects(xml, *, *)
 
-    def convertToModelReducedDataset(xml: NodeSeq): CallHandler[Either[ErrorWrapper[_], EntrySummaryDeclarationNew]] =
+    def convertToModel(xml: NodeSeq): CallHandler[Either[ErrorWrapper[_], EntrySummaryDeclaration]] =
       (mockDeclarationToJsonConverter
-        .convertToModelNew(_: NodeSeq, _: InputParameters)(using _: LoggingContext)).expects(xml, *, *)
+        .convertToModel(_: NodeSeq, _: InputParameters)(using _: LoggingContext)).expects(xml, *, *)
 
-    def validateJsonReducedDataset(entrySummaryDeclaration: JsValue): CallHandler[Either[ErrorWrapper[_], Unit]] =
+    def validateJson(entrySummaryDeclaration: JsValue): CallHandler[Either[ErrorWrapper[_], Unit]] =
       (mockDeclarationToJsonConverter
-        .validateJsonNew(_: JsValue)(using _: LoggingContext)).expects(entrySummaryDeclaration, *)
+        .validateJson(_: JsValue)(using _: LoggingContext)).expects(entrySummaryDeclaration, *)
   }
 }
