@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "title": "Entry summary Declaration",
-  "description": "Entry summary Declaration",
+  "description": "Entry summary Declaration v1.2.0",
   "type": "object",
   "oneOf": [
     {

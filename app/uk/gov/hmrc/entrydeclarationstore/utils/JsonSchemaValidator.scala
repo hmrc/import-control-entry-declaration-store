@@ -30,7 +30,7 @@ object JsonSchemaValidator {
   private val factory = JsonSchemaFactory.byDefault()
   val basePath: String = System.getProperty("user.dir")
 
-  def validateJSONAgainstSchema(inputDoc: JsValue, schemaDoc: String = "conf/jsonschemas/EntrySummaryDeclaration.json")(
+  def validateJSONAgainstSchema(inputDoc: JsValue, schemaDoc: String)(
     using lc: LoggingContext): Either[ErrorWrapper[_], Unit] =
     try {
       val mapper: ObjectMapper     = new ObjectMapper()
