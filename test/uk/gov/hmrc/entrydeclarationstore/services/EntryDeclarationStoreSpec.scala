@@ -26,7 +26,7 @@ import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.entrydeclarationstore.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationstore.connectors.{EISSendFailure, MockEisConnector}
 import uk.gov.hmrc.entrydeclarationstore.models.*
-import uk.gov.hmrc.entrydeclarationstore.models.json.{InputParameters, MockDeclarationToJsonConverterReducedDataset}
+import uk.gov.hmrc.entrydeclarationstore.models.json.{InputParameters, MockDeclarationToJsonConverter}
 import uk.gov.hmrc.entrydeclarationstore.reporting.*
 import uk.gov.hmrc.entrydeclarationstore.repositories.MockEntryDeclarationRepo
 import uk.gov.hmrc.entrydeclarationstore.utils.{MockIdGenerator, XmlFormatConfig}
@@ -47,7 +47,7 @@ class EntryDeclarationStoreSpec
     with ScalaFutures
     with MockValidationHandler
     with MockIdGenerator
-    with MockDeclarationToJsonConverterReducedDataset
+    with MockDeclarationToJsonConverter
     with MockAppConfig
     with MockEisConnector
     with IntegrationPatience
@@ -151,7 +151,7 @@ class EntryDeclarationStoreSpec
 
       MockAppConfig.validateXMLtoJsonTransformation.returns(false)
       MockValidationHandler.handleValidation(payload, eori, movementRef) returns Right(xmlPayload)
-      MockDeclarationToJsonConverterReducedDataset.convertToJsonReducedDataset(xmlPayload).returns(Right(jsonPayload))
+      MockDeclarationToJsonConverter.convertToJson(xmlPayload).returns(Right(jsonPayload))
 
       MockEntryDeclarationRepo
         .saveEntryDeclaration(declarationWith(movementRef))
@@ -206,8 +206,8 @@ class EntryDeclarationStoreSpec
       "return Left(FailureResponse)" in new Test {
         MockAppConfig.validateXMLtoJsonTransformation.returns(true)
         MockValidationHandler.handleValidation(payload, eori, mrn) returns Right(xmlPayload)
-        MockDeclarationToJsonConverterReducedDataset.convertToJsonReducedDataset(xmlPayload).returns(Right(jsonPayload))
-        MockDeclarationToJsonConverterReducedDataset.validateJsonReducedDataset(jsonPayload).returns(Left(ErrorWrapper(ServerError)))
+        MockDeclarationToJsonConverter.convertToJson(xmlPayload).returns(Right(jsonPayload))
+        MockDeclarationToJsonConverter.validateJson(jsonPayload).returns(Left(ErrorWrapper(ServerError)))
 
         entryDeclarationStore.handleSubmission(eori, payload, mrn, receivedDateTime, clientInfo, submissionId, correlationId, inputParams(mrn)).futureValue shouldBe
           Left(ErrorWrapper(ServerError))
@@ -218,7 +218,7 @@ class EntryDeclarationStoreSpec
       "return Left(FailureResponse)" in new Test {
         MockAppConfig.validateXMLtoJsonTransformation.returns(false)
         MockValidationHandler.handleValidation(payload, eori, mrn) returns Right(xmlPayload)
-        MockDeclarationToJsonConverterReducedDataset.convertToJsonReducedDataset(xmlPayload).returns(Right(jsonPayload))
+        MockDeclarationToJsonConverter.convertToJson(xmlPayload).returns(Right(jsonPayload))
 
         MockEntryDeclarationRepo
           .saveEntryDeclaration(declarationWith(mrn))
@@ -233,7 +233,7 @@ class EntryDeclarationStoreSpec
       "return Left(FailureResponse)" in new Test {
         MockAppConfig.validateXMLtoJsonTransformation.returns(false)
         MockValidationHandler.handleValidation(payload, eori, mrn) returns Right(xmlPayload)
-        MockDeclarationToJsonConverterReducedDataset.convertToJsonReducedDataset(xmlPayload).returns(Right(jsonPayload))
+        MockDeclarationToJsonConverter.convertToJson(xmlPayload).returns(Right(jsonPayload))
 
         MockEntryDeclarationRepo
           .saveEntryDeclaration(declarationWith(mrn))
@@ -252,7 +252,7 @@ class EntryDeclarationStoreSpec
       "still send report and set failure status in database" in new Test {
         MockAppConfig.validateXMLtoJsonTransformation.returns(false)
         MockValidationHandler.handleValidation(payload, eori, mrn) returns Right(xmlPayload)
-        MockDeclarationToJsonConverterReducedDataset.convertToJsonReducedDataset(xmlPayload).returns(Right(jsonPayload))
+        MockDeclarationToJsonConverter.convertToJson(xmlPayload).returns(Right(jsonPayload))
 
         MockEntryDeclarationRepo
           .saveEntryDeclaration(declarationWith(mrn))
@@ -289,7 +289,7 @@ class EntryDeclarationStoreSpec
       "not wait for EIS submission to complete" in new Test {
         MockAppConfig.validateXMLtoJsonTransformation.returns(false)
         MockValidationHandler.handleValidation(payload, eori, mrn) returns Right(xmlPayload)
-        MockDeclarationToJsonConverterReducedDataset.convertToJsonReducedDataset(xmlPayload).returns(Right(jsonPayload))
+        MockDeclarationToJsonConverter.convertToJson(xmlPayload).returns(Right(jsonPayload))
 
         MockEntryDeclarationRepo
           .saveEntryDeclaration(declarationWith(mrn))
@@ -313,7 +313,7 @@ class EntryDeclarationStoreSpec
       "still send report and set failure status in database" in new Test {
         MockAppConfig.validateXMLtoJsonTransformation.returns(false)
         MockValidationHandler.handleValidation(payload, eori, mrn) returns Right(xmlPayload)
-        MockDeclarationToJsonConverterReducedDataset.convertToJsonReducedDataset(xmlPayload).returns(Right(jsonPayload))
+        MockDeclarationToJsonConverter.convertToJson(xmlPayload).returns(Right(jsonPayload))
 
         MockEntryDeclarationRepo
           .saveEntryDeclaration(declarationWith(mrn))

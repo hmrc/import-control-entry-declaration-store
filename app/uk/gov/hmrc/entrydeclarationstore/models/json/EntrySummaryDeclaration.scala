@@ -21,14 +21,14 @@ import com.lucidchart.open.xtract.{XmlReader, __}
 import play.api.libs.json.{Json, Writes}
 
 case class EntrySummaryDeclaration(
-  submissionId: String,
-  specificCircumstancesIndicator: Option[String],
-  metadata: Metadata,
-  declaration: Option[Declaration],
-  parties: Parties,
-  goods: Goods,
-  itinerary: Itinerary,
-  amendment: Option[Amendment]
+                                    submissionId: String,
+                                    specificCircumstancesIndicator: Option[String],
+                                    metadata: Metadata,
+                                    declaration: Option[Declaration],
+                                    parties: Parties,
+                                    goods: Goods,
+                                    itinerary: Itinerary,
+                                    amendment: Option[Amendment]
 )
 
 object EntrySummaryDeclaration {
@@ -42,7 +42,7 @@ object EntrySummaryDeclaration {
       __.read[Goods],
       __.read[Itinerary],
       (__ \ "HEAHEA").read[Amendment].optional
-    ).mapN(
+      ).mapN(
       (
         specialCircummstancesIndicator: Option[String],
         metadata: Metadata,
@@ -64,3 +64,6 @@ object EntrySummaryDeclaration {
 
   given writes: Writes[EntrySummaryDeclaration] = Json.writes[EntrySummaryDeclaration]
 }
+
+
+

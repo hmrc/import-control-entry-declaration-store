@@ -87,7 +87,7 @@ class EntryDeclarationSubmissionController @Inject()(
 
       val model = for {
         xml <- xml
-        model <- declarationToJsonConverter.convertToModelNew(xml, input)
+        model <- declarationToJsonConverter.convertToModel(xml, input)
         } yield model
 
       service
